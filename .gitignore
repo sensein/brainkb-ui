@@ -34,3 +34,24 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# editor directories and files
+.idea
+*.iml
+*.swp
+*.swo
+
+# macOS files
+._*
+.Spotlight-V100
+.Trashes
+.DS_Store?
+.AppleDouble
+.LSOverride
