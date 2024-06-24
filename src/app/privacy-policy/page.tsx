@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title:"Register",
+    title:"Privacy Policy",
 
 };
 
-export default function Register(){
+export default function PrivacyPolicy(){
     return (
-        <h1>Register Page</h1>
-
+        <h1>Privacy policy</h1>
     );
 }

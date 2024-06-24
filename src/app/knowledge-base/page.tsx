@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title:"Register",
+    title:"Knowledge Base",
 
 };
 
-export default function Register(){
+export default function KnowledgeBase(){
     return (
-        <h1>Register Page</h1>
-
+        <h1>Knowledge Base</h1>
     );
 }
