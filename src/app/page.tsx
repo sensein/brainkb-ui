@@ -15,8 +15,8 @@ export default function Home() {
                       BrainKB: A Large Scale Neuroscience Knowledge Graph
                   </h3>
               </div>
-              <br/>
-              <p className="text-2xl font-light text-sky-900 text-center animate-slide-up">
+              <br/><br/>
+              <p className="text-2xl  font-light text-sky-900 text-center animate-slide-up">
                   Facilitating Evidence-Based Decision Making to Unlock the Mysteries of the Mind
               </p>
 
