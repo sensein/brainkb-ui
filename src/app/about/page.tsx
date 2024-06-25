@@ -10,9 +10,9 @@ export default function About(){
         <div>
 
             <div className="text-left">
-                <h2 className="text-3xl dark:text-white">What is BrainKB?</h2>
+                <h2 className="mb-4 text-3xl font-extrabold font-extrabold leading-none text-sky-900 animate-slide-up">What is BrainKB?</h2>
                 <br/>
-                <p className="mb-3 font-normal text-justify text-gray-500 dark:text-gray-400">
+                <p className="mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
                     BrainKB serves as a knowledge base platform that provides scientists worldwide with tools for
                     searching, exploring, and visualizing Neuroscience knowledge represented by knowledge graphs (KGs).
                     Moreover, BrainKB provides cutting-edge tools that enable scientists to contribute new information
@@ -24,9 +24,9 @@ export default function About(){
             </div>
 
             <div className="text-left">
-                <h2 className="text-3xl dark:text-white">Objective(s)</h2>
+                <h2 className="mb-4 text-3xl font-extrabold font-extrabold leading-none text-sky-900 animate-slide-up">Objective(s)</h2>
                 <br/>
-                <p className="mb-3 font-normal text-justify text-gray-500 dark:text-gray-400">
+                <p className="mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
                     The main objective of BrainKB is to represent neuroscience knowledge as a knowledge graph such that
                     it can be used for different downstream tasks, such as making predictions and new inferences in
                     addition to querying and viewing information.
@@ -36,11 +36,11 @@ export default function About(){
             </div>
 
             <div className="text-left">
-                <h2 className="text-3xl dark:text-white">Expected outcome</h2>
+                <h2 className="mb-4 text-3xl font-extrabold font-extrabold leading-none text-sky-900 animate-slide-up">Expected outcome</h2>
                 <br/>
-                <p className="mb-3 font-normal text-justify text-gray-500 dark:text-gray-400">
-                    The expected outcome of the BrainKB includes the following:
-                    <ul className="list-disc pl-5 mb-3">
+                <p className="mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
+                    The expected outcome of the BrainKB includes the following:</p>
+                    <ul className="list-disc pl-5 mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
                         <li>
                             (Semi-)Automated extraction of neuroscience knowledge from structured, semi-structured, and unstructured sources, and representing the knowledge via KGs.
 Visualization of the KGs.
@@ -57,8 +57,7 @@ Visualization of the KGs.
                         </li>
                     </ul>
 
-                </p>
-                <br/>
+
             </div>
 
         </div>
