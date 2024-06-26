@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 };
 export default function Home() {
   return (
-      <>
+      <div className="main-holder-brainkb">
 
           <div className="pt-32 sm:pt-40 md:pt-48">
               <div className="lg:w-2/3 mx-auto animate-fade-in">
@@ -21,7 +21,7 @@ export default function Home() {
               </p>
 
           </div>
-      </>
+      </div>
 
   );
 }

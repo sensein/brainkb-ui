@@ -23,6 +23,7 @@ body {
       rgb(var(--background-start-rgb)),
       rgb(var(--background-end-rgb))
     );
+
 }
 
 @layer utilities {
@@ -58,3 +59,4 @@ body {
             opacity: 1;
           }
         }
+
