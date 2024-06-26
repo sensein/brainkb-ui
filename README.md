@@ -5,6 +5,15 @@
 
 ## Getting Started
 
+## Features
+- Github and Google based authentication
+    ![](images/login.png)
+    ![](images/admin.png)
+
+#Requirements
+- Nextjs dependencies
+- Google and Github OAuth setup for login
+  - Update the OAuth details in .env file
 First, run the development server:
 
 ```bash
