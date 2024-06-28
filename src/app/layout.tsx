@@ -34,7 +34,7 @@ export default async  function RootLayout({
           </header>
 
 
-          <main className="flex min-h-screen flex-col p-24">
+          <main className="flex min-h-screen flex-col">
               {children}
           </main>
 
