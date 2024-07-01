@@ -1,7 +1,6 @@
-import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "../globals.css";
-import NavbarAdmin from "@/src/app/components/NavbarAdmin";
+import NavbarAdmin from "@/src/app/components/NavBarAdmin";
 import FooterAdmin from "@/src/app/components/FooterAdmin";
 import { getServerSession } from "next-auth";
 import SessionProvider from "@/src/app/components/SessionProvider";
