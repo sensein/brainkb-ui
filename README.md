@@ -11,7 +11,7 @@
     ![](images/admin.png)
 
 # Running
-For configuration and deployment, please see instructions at [https://sensein.group/brainkbdocs/deployment_userinterface.html](https://sensein.group/brainkbdocs/deployment_userinterface.html) and
+For configuration and deployment, please see instructions at [https://sensein.group/brainkbdocs/deployment_userinterface.html](https://sensein.group/brainkbdocs/deployment_userinterface.html).
 
 ## License
 MIT
