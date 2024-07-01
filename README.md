@@ -10,25 +10,8 @@
     ![](images/login.png)
     ![](images/admin.png)
 
-#Requirements
-- Nextjs dependencies
-- Google and Github OAuth setup for login
-  - Update the OAuth details in .env file
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
- 
- 
+# Deployment Instructions
+-  [https://sensein.group/brainkbdocs/deployment_userinterface.html](https://sensein.group/brainkbdocs/deployment_userinterface.html)
 
 ## License
 MIT
