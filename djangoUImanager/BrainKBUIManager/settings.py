@@ -24,7 +24,12 @@ SECRET_KEY = "django-insecure-)@-kr16hschn*ezk-=_tfg(pomnf2e*qk&p#avw+^=y-t0ibsu
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+'http://127.0.0.1:3000',
+]
 
+CORS_ORIGIN_ALLOW_ALL = False
 ALLOWED_HOSTS = ['*']
 
 JAZZMIN_SETTINGS = {
@@ -69,6 +74,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'django_summernote',
 
+    'corsheaders',
     'drf_yasg',
     'rest_framework',
     'api',
@@ -79,11 +85,13 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+
 ]
 
 ROOT_URLCONF = "BrainKBUIManager.urls"

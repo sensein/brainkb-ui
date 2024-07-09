@@ -40,15 +40,17 @@ def create_query_endpoint(request):
     except json.JSONDecodeError:
         return Response({'error': 'Invalid JSON'}, status=400)
 
+    print(data)
     query_type = data.get('query_endpoint_type', None)
     endpoint_title = data.get('endpoint_title', None)
     query_url = data.get('query_url', None)
     service_endpoint_type = data.get('endpoint_service_type', None)
     status_active = data.get('status_active', True)
 
+
     if service_endpoint_type is None or query_type is None or endpoint_title is None or query_url is None:
         return Response(
-            {"error": "Missing required data. query_type, endpoint_title, endpoint_title and query_url are required"},
+            {"error": "Missing required data! endpoint_service_type, query_endpoint_type, endpoint_title and query_url are required"},
             status=400)
 
     try:

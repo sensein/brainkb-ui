@@ -6,3 +6,4 @@ gunicorn==22.0.0
 whitenoise==6.6.0
 validators==0.28.1
 requests==2.32.2
+django-cors-headers==4.4.0
