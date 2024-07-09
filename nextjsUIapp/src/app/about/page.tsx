@@ -13,7 +13,7 @@ export default async function About(){
     //user is logged in so redirect to admin page
     if (current_session) return redirect("/admin");
     return (
-        <div>
+        <div className="set-margin-hundred">
 
             <div className="text-left">
                 <h2 className="mb-4 text-3xl font-extrabold font-extrabold leading-none text-sky-900 animate-slide-up">What is BrainKB?</h2>
