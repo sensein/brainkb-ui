@@ -17,7 +17,7 @@ export async function insertData(formData, endpoint) {
     });
 
     if (!response.ok) {
-      throw new Error('Network response was not ok'+ response);
+      throw new Error('Network response was not ok. Status: '+ response.status);
     }
 
     return await response;

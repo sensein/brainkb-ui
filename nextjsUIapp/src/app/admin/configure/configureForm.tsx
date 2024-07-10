@@ -6,7 +6,11 @@ import {
     insertData
 } from "@/src/app/components/insertData";
 
-export default function ConfigureFormPage() {
+
+
+export default function ConfigureFormPage(){
+
+
     const router = useRouter();
     const [step1Data, setStep1Data] = useState({
         endpoint_title: "",
@@ -37,12 +41,14 @@ export default function ConfigureFormPage() {
         try {
             const endpoint = process.env.NEXT_PUBLIC_API_ADMIN_CREATE_QUERY_ENDPOINT as string;
             const response = await insertData(step1Data, endpoint);
-            console.log(response.status)
+            alert("Data inserted successfully:");
             if (response.status == 201) {
-                router.push("/admin");
+                router.push("/admin/configure");
             }
-            console.log("Step 1 data inserted successfully:", response);
+
+
         } catch (error) {
+            alert("Error inserting Step 1 data:"+ error);
             console.error("Error inserting Step 1 data:", error);
         }
     };
