@@ -1,5 +1,8 @@
+import uuid
+
 from django.db import models
 from autoslug import AutoSlugField
+from django.utils.html import mark_safe
 
 ENDPOINT_TYPE = (
     ('get', 'GET'),
@@ -11,6 +14,13 @@ ENDPOINT_TYPE = (
 ENDPOINT_SERVICE_TYPE = (
     ('search', 'SEARCH'),
     ('query', 'QUERY'),
+)
+
+ROLES_BRAINKB = (
+    ('admin', 'ADMIN'),
+    ('curator', 'CURATOR'),
+    ('reviewer', 'REVIEWER'),
+
 )
 
 
@@ -41,3 +51,62 @@ class QueryEndpoint(models.Model):
     status_active = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class UserProfile(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user_email = models.EmailField(blank=False, unique=True)
+    full_name = models.CharField(max_length=350)
+    profile_pic = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+    biography = models.TextField()
+    github_id = models.CharField(blank=True, max_length=350)
+    twitter_id = models.CharField(blank=True, max_length=350)
+    google_scholar_id = models.CharField(blank=True, max_length=350)
+    linkedin_id = models.CharField(blank=True, max_length=350)
+    research_gate_id = models.CharField(blank=True, max_length=350)
+    orcid_id = models.CharField(blank=True, max_length=350)
+    role = models.CharField(max_length=30, choices=ROLES_BRAINKB, default='curator')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def picture(self):  # new
+        return mark_safe(f'<img src = "{self.profile_pic.url}" width = "100"/>')
+
+class Comment(models.Model):
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='comments')
+    comment_text = models.TextField()
+    commented_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class Revision(models.Model):
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='revisions')
+    revision_text = models.TextField()
+    revised_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class Institution(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=350, unique=True)
+    address = models.TextField(blank=True)
+    website = models.URLField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+
+class UserInstitution(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    institution = models.ForeignKey(Institution, on_delete=models.CASCADE)
+    position = models.CharField(max_length=350, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'institution', 'position')
+
+    def __str__(self):
+        return f"{self.user.full_name} at {self.institution.name} ({self.position})"

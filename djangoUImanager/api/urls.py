@@ -33,6 +33,7 @@ urlpatterns = [
     path('get-query-endpoint', views.get_query_endpoint, name='get_query_endpoint'),
     path('create-query-endpoint', views.create_query_endpoint, name='create_query_endpoint'),
     path('delete-query-endpoint/<int:id>', views.delete_query_endpoint, name='delete_query_endpoint'),
+    path('create-user-profile', views.create_user_profile, name='create_user_profile'),
 
     path('', views.api_root, name='api_root'),
 ]

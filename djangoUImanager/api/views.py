@@ -1,9 +1,10 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from Web.models import KnowledgeBaseViewerModel, QueryEndpoint
+from Web.models import KnowledgeBaseViewerModel, QueryEndpoint, UserProfile
 from drf_yasg.utils import swagger_auto_schema
-from .serializers import QueryEndpointSerializer, KnowledgeBaseViewerModelSerializer
+from .serializers import QueryEndpointSerializer, KnowledgeBaseViewerModelSerializer, UserProfileSerializer
 import json
+from rest_framework import status
 from drf_yasg import openapi
 
 
@@ -40,7 +41,6 @@ def create_query_endpoint(request):
     except json.JSONDecodeError:
         return Response({'error': 'Invalid JSON'}, status=400)
 
-    print(data)
     query_type = data.get('query_endpoint_type', None)
     endpoint_title = data.get('endpoint_title', None)
     query_url = data.get('query_url', None)
@@ -547,6 +547,13 @@ def delete_knowledgebase(request, id):
     except Exception as e:
         return Response({"error": str(e)}, status=500)
 
+@api_view(['POST'])
+def create_user_profile(request):
+    serializer = UserProfileSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 ##############################################################################################
 @api_view(['GET'])
