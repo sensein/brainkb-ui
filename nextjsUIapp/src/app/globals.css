@@ -63,3 +63,15 @@ body {
 .set-margin-hundred{
    margin:100px;
 }
+
+.fix-left-margin{
+    margin-left: 10rem;
+}
+.kb-page-margin{
+    margin-top: 74px;
+    margin-right: 17px;
+}
+.fix-margin-left-footer{
+    position: relative;
+    z-index: 999999999;
+}

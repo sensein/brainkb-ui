@@ -7,7 +7,7 @@ const Footer: React.FC = () => {
     return (
 
 
-        <footer className="bg-white rounded-lg shadow dark:bg-gray-900 ">
+        <footer className="bg-white fix-margin-left-footer rounded-lg shadow dark:bg-gray-900 ">
             <div className="w-full max-w-screen-xl mx-auto p-4 md:py-8">
                 <div className="sm:flex sm:items-center sm:justify-between">
                     <a href="#"
