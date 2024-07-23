@@ -1,17 +1,17 @@
-// Navbar.client.js
-"use client";
 import { useState } from 'react';
 import Link from "next/link";
 
-import { signIn, signOut, useSession } from "next-auth/react";
+import {getData} from "@/src/app/components/getData";
 
-const SideBarKB: React.FC = () => {
-    const [isOpen, setIsOpen] = useState(false);
-    const { data: session } = useSession();
+export default async function SideBarKB() {
+
+    const menuoptions = await getData({}, "get-all-knowledgebases", "http://127.0.0.1:8001/api");
 
     return (
         <>
-            <aside id="logo-sidebar" className="fixed left-0 z-40 h-screen pt-20 transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700" aria-label="Sidebar">
+            <aside id="logo-sidebar"
+                   className="fixed sidebarwidth left-0 z-40 h-screen pt-20 transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700"
+                   aria-label="Sidebar">
                 <div className="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-gray-800">
                     <ul className="space-y-2 font-medium">
                         <li>
@@ -42,9 +42,12 @@ const SideBarKB: React.FC = () => {
                             </Link>
                         </li>
 
+                        {menuoptions.map((item) => (
+                            <li>
+                            <Link href={{
+                                pathname: `/knowledge-base/${item.id}/${item.slug}`,
 
-                        <li>
-                            <Link href="/admin/profile"
+                            }}
                                   className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
                                 <svg
                                     className="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
@@ -72,18 +75,19 @@ const SideBarKB: React.FC = () => {
                                     </g>
                                 </svg>
 
-                                <span className="flex-1 ms-3 whitespace-nowrap">Profile</span>
+                                <span className="flex-1 ms-3">{item.left_side_menu_title}</span>
                             </Link>
                         </li>
+
+                       ))}
+
 
 
                     </ul>
                 </div>
             </aside>
 
-
         </>
     );
 };
 
-export default SideBarKB;

@@ -65,7 +65,7 @@ body {
 }
 
 .fix-left-margin{
-    margin-left: 10rem;
+    margin-left: 13rem;
 }
 .kb-page-margin{
     margin-top: 74px;
@@ -74,4 +74,7 @@ body {
 .fix-margin-left-footer{
     position: relative;
     z-index: 999999999;
+}
+.sidebarwidth{
+    width: 200px;
 }

@@ -21,7 +21,8 @@ export async function insertData(formData, endpoint) {
     }
 
     return await response;
-  } catch (error) {
+  } catch (e) {
+     const error = e as Error;
     throw new Error('Error: ' + error.message);
   }
 }
