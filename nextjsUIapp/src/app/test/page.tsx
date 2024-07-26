@@ -1,67 +1,85 @@
 "use client";
-import { useState } from 'react';
-import {getData} from "@/src/app/components/getData";
-import {apiBaseUrl} from "next-auth/client/_utils";
-import yaml from './pages-config.yml'
+import { useState, useEffect } from 'react';
+import { getData } from "@/src/app/components/getData";
+import yaml from './pages-config.yml';
+
 const TestData = () => {
-  const [data, setData] = useState(null);
- const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
     setError(null);
-    setData(null);
-   const page = yaml.pages.find((page) => page.slug === "test");
+    setData([]);
+    const page = yaml.pages.find((page) => page.slug === "test");
     const query_to_execute = page ? page.sparql_query : "";
 
-    const queryParameter = { sparql_query:query_to_execute};
+    const queryParameter = { sparql_query: query_to_execute };
 
     const baseurl = process.env.NEXT_PUBLIC_API_ADMIN_HOST;
     const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT;
-    alert(endpoint)
+
+    console.log('Fetching data with parameters:', queryParameter, endpoint, baseurl);
 
     try {
       const response = await getData(queryParameter, endpoint, baseurl);
-      setData(response);
+      console.log('Raw response:', response);
+
+      if (response.status === 'success' && response.message?.results?.bindings) {
+        const bindings = response.message.results.bindings;
+        console.log('Bindings:', bindings);
+        setData(bindings);
+      } else {
+        console.error('Unexpected response format:', response);
+        setError("Invalid data format");
+      }
     } catch (e) {
       const error = e as Error;
+      console.log('Error fetching data:', error.message);
       setError(error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-      <div className="set-margin-hundred flex items-center justify-center h-48 mb-4 rounded bg-gray-50 dark:bg-gray-800">
-          <br/>
+  useEffect(() => {
+    fetchData();
+  }, []);
 
+  const renderTable = () => {
+    if (!data || !Array.isArray(data) || data.length === 0) return null;
 
-          <h1 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Test Data Fetch</h1><br/>
-          <br/><br/><br/><br/>
-          {yaml.pages.map((page, index) => (
-              <div key={index}>
-                  <h2>{page.page}</h2>
-                  <p>Slug: {page.slug}</p>
-                  <pre>{page.sparql_query}</pre>
-                  <p>Default KB: {page.default_kb.toString()}</p>
-                  <p>Display
-                      Columns: {page.display_column_first}, {page.display_column_second}{page.display_column_third ? `, ${page.display_column_third}` : ''}</p>
-              </div>
+    return (
+      <table className="table-auto border-collapse border border-gray-400 w-full">
+        <thead>
+          <tr>
+            <th className="border border-gray-400 px-4 py-2">ID</th>
+            <th className="border border-gray-400 px-4 py-2">Label</th>
+            <th className="border border-gray-400 px-4 py-2">Category</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((item, index) => (
+            <tr key={index}>
+              <td className="border border-gray-400 px-4 py-2">{item.id?.value}</td>
+              <td className="border border-gray-400 px-4 py-2">{item.label?.value}</td>
+              <td className="border border-gray-400 px-4 py-2">{item.category?.value}</td>
+            </tr>
           ))}
+        </tbody>
+      </table>
+    );
+  };
 
-
-
-        <button onClick={fetchData} disabled={loading}
-                  className="max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-              {loading ? 'Loading...' : 'Fetch Data'}
-          </button>
-          {error && <p style={{color: 'red'}}>Error: {error}</p>}
-          {data && <pre>{JSON.stringify(data, null, 2)}</pre>}
-
-          <br/>
-
-      </div>
+  return (
+    <div className="set-margin-hundred flex items-center justify-center h-48 mb-4 rounded bg-gray-50 dark:bg-gray-800">
+      <h1 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Test Data Fetch</h1>
+      {loading && <p>Loading...</p>}
+      {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+      {renderTable()}
+      {data.length > 0 && <pre className="jsondatapre">{JSON.stringify(data, null, 2)}</pre>}
+    </div>
   );
 };
 
