@@ -5,6 +5,7 @@ import yaml from './pages-config.yml';
 
 const TestData = () => {
   const [data, setData] = useState<any[]>([]);
+  const [headers, setHeaders] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -12,6 +13,7 @@ const TestData = () => {
     setLoading(true);
     setError(null);
     setData([]);
+    setHeaders([]);
     const page = yaml.pages.find((page) => page.slug === "test");
     const query_to_execute = page ? page.sparql_query : "";
 
@@ -28,7 +30,10 @@ const TestData = () => {
 
       if (response.status === 'success' && response.message?.results?.bindings) {
         const bindings = response.message.results.bindings;
+        const vars = response.message.head.vars;
         console.log('Bindings:', bindings);
+        console.log('Vars:', vars);
+        setHeaders(vars);
         setData(bindings);
       } else {
         console.error('Unexpected response format:', response);
@@ -51,35 +56,36 @@ const TestData = () => {
     if (!data || !Array.isArray(data) || data.length === 0) return null;
 
     return (
-      <table className="table-auto border-collapse border border-gray-400 w-full">
-        <thead>
+        <table className="table-auto border-collapse border border-gray-400 w-full">
+          <thead>
           <tr>
-            <th className="border border-gray-400 px-4 py-2">ID</th>
-            <th className="border border-gray-400 px-4 py-2">Label</th>
-            <th className="border border-gray-400 px-4 py-2">Category</th>
+            {headers.map((header, index) => (
+                <th key={index} className="border border-gray-400 px-4 py-2">{header}</th>
+            ))}
           </tr>
-        </thead>
-        <tbody>
+          </thead>
+          <tbody>
           {data.map((item, index) => (
-            <tr key={index}>
-              <td className="border border-gray-400 px-4 py-2">{item.id?.value}</td>
-              <td className="border border-gray-400 px-4 py-2">{item.label?.value}</td>
-              <td className="border border-gray-400 px-4 py-2">{item.category?.value}</td>
-            </tr>
+              <tr key={index}>
+                {headers.map((header, headerIndex) => (
+                    <td key={headerIndex} className="border border-gray-400 px-4 py-2">{item[header]?.value}</td>
+                ))}
+              </tr>
           ))}
-        </tbody>
-      </table>
+          </tbody>
+        </table>
     );
   };
 
   return (
-    <div className="set-margin-hundred flex items-center justify-center h-48 mb-4 rounded bg-gray-50 dark:bg-gray-800">
-      <h1 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Test Data Fetch</h1>
-      {loading && <p>Loading...</p>}
-      {error && <p style={{ color: 'red' }}>Error: {error}</p>}
-      {renderTable()}
-      {data.length > 0 && <pre className="jsondatapre">{JSON.stringify(data, null, 2)}</pre>}
-    </div>
+      <div
+          className="set-margin-hundred flex items-center justify-center h-48 mb-4 rounded bg-gray-50 dark:bg-gray-800">
+        <h1 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Test Data Fetch</h1>
+        {loading && <p>Loading...</p>}
+        {error && <p style={{color: 'red'}}>Error: {error}</p>}
+        {renderTable()}
+        {data.length > 0 && <pre className="jsondatapre">{JSON.stringify(data, null, 2)}</pre>}
+      </div>
   );
 };
 
