@@ -1,4 +1,8 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+import withYAML from 'next-yaml';
+
+const nextConfig = withYAML({
+  //  Next.js config options here
+});
 
 export default nextConfig;
