@@ -1,28 +1,73 @@
-import type {Metadata} from "next";
+"use client";
 import {getServerSession} from "next-auth";
 import {redirect, useRouter} from "next/navigation";
 import {authOptions} from "@/lib/auth";
+import yaml from "@/src/app/components/config-home.yaml";
+import {useEffect, useState} from "react";
+import {getData} from "@/src/app/components/getData";
 
-export const metadata: Metadata = {
-    title: "Home",
 
-};
-export default async function Home() {
-    const current_session = await getServerSession(authOptions);
-    //user is logged in so redirect to admin page
-    if (current_session) return redirect("/admin");
+export default function Home() {
+
+    const [modelBoxCountHeaderTitle, setModelBoxCountHeaderTitle] = useState("");
+    const [modelBoxCountHeaderSubTitle, setModelBoxCountHeaderSubTitle] = useState("");
+
+    const [structuedModelHeaderTitle, setStructuedModelHeaderTitle] = useState("");
+    const [structuedModelHeaderSubTitle, setStructuedModelHeaderSubTitle] = useState("");
+
+     const [brainkbMainPageTitle, setBrainkbMainPageTitle] = useState("");
+    const [brainkbMainPageSubTitle, setBrainkbMainPageSubTitle] = useState("");
+
+    const fetchAndSetData = async () => {
+
+        setModelBoxCountHeaderTitle(null);
+        setModelBoxCountHeaderSubTitle(null);
+
+        const boxiconsdetailsCounter = yaml.headersboxpage.find((page) => page.slug === "statisticsboxheader");
+        console.log(boxiconsdetailsCounter)
+
+        const page_title = boxiconsdetailsCounter ? boxiconsdetailsCounter.title : "";
+        const page_sub_title = boxiconsdetailsCounter ? boxiconsdetailsCounter.subtitle : "";
+        setModelBoxCountHeaderTitle(page_title);
+        setModelBoxCountHeaderSubTitle(page_sub_title);
+
+        const structuredmodelHeader = yaml.headersboxpage.find((page) => page.slug === "structuredmodelsheader");
+        console.log(structuredmodelHeader)
+
+
+        const structured_page_title = structuredmodelHeader ? structuredmodelHeader.title : "";
+        const structured_page_sub_title = structuredmodelHeader ? structuredmodelHeader.subtitle : "";
+        setStructuedModelHeaderTitle(structured_page_title);
+        setStructuedModelHeaderSubTitle(structured_page_sub_title);
+
+         const brainkbmainpge = yaml.headersboxpage.find((page) => page.slug === "brainkbmainpge");
+         console.log(brainkbmainpge)
+
+        const brainkb_title = brainkbmainpge ? brainkbmainpge.title : "";
+        const brainkb_sub_title = brainkbmainpge ? brainkbmainpge.subtitle : "";
+        setBrainkbMainPageTitle(brainkb_title);
+        setBrainkbMainPageSubTitle(brainkb_sub_title);
+
+
+    };
+
+    useEffect(() => {
+        fetchAndSetData();
+    }, []);
+
+
     return (
         <div className="main-holder-brainkb">
 
             <div className="pt-32 sm:pt-40 md:pt-48">
                 <div className="lg:w-2/3 mx-auto animate-fade-in">
                     <h3 className="animate-slide-up text-center text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r to-emerald-600 from-sky-400 sm:text-5xl lg:text-6xl">
-                        BrainKB: A Large Scale Neuroscience Knowledge Graph
+                        {brainkbMainPageTitle}
                     </h3>
                 </div>
                 <br/><br/>
                 <p className="text-2xl  font-light text-sky-900 text-center animate-slide-up">
-                    Facilitating Evidence-Based Decision Making to Unlock the Mysteries of the Mind
+                    {brainkbMainPageSubTitle}
                 </p>
                 <div className="h-64"></div>
             </div>
@@ -30,13 +75,12 @@ export default async function Home() {
             <div className="pt-32 sm:pt-40 md:pt-48 bg-gray-100">
                 <div className="lg:w-2/3 mx-auto animate-fade-in">
                     <h3 className="animate-slide-up text-center text-4xl font-bold ">
-                        Structured Models
+                        {structuedModelHeaderTitle}
                     </h3>
                 </div>
                 <br/>
-                <p className="text-2xl  font-light text-sky-900 text-center animate-slide-up">
-                    Structured models used in BrainKB. <a href="https://sensein.group/brainkbdocs" target="_blank">Click
-                    here</a> to view all models.
+                <p className="text-2xl  font-light text-sky-900 text-center animate-slide-up" dangerouslySetInnerHTML={{ __html: structuedModelHeaderSubTitle }}>
+
                 </p>
                 <br/>
                 <div className="flex justify-center space-x-10 animate-slide-up">
@@ -53,7 +97,7 @@ export default async function Home() {
                             Read more
                             <svg className="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true"
                                  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                <path stroke="currentColor" strokeLinecap="round" stroke-linejoin="round"
                                       stroke-width="2"
                                       d="M1 5h12m0 0L9 1m4 4L9 9"/>
                             </svg>
@@ -67,13 +111,13 @@ export default async function Home() {
                                 Annotation Registry Service (GARS)</h5>
                         </a>
                         <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">A data model designed to
-                            represent types and relationships of an organism's annotated genome.</p>
+                            represent types and relationships of an organism&apos;s annotated genome.</p>
                         <a href="https://brain-bican.github.io/models/index_genome_annotation" target="_blank"
                            className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                             Read more
                             <svg className="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true"
                                  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                <path stroke="currentColor" strokeLinecap="round" stroke-linejoin="round"
                                       stroke-width="2"
                                       d="M1 5h12m0 0L9 1m4 4L9 9"/>
                             </svg>
@@ -93,7 +137,7 @@ export default async function Home() {
                             Read more
                             <svg className="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true"
                                  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                <path stroke="currentColor" strokeLinecap="round" stroke-linejoin="round"
                                       stroke-width="2"
                                       d="M1 5h12m0 0L9 1m4 4L9 9"/>
                             </svg>
@@ -111,7 +155,7 @@ export default async function Home() {
                             Read more
                             <svg className="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true"
                                  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                <path stroke="currentColor" strokeLinecap="round" stroke-linejoin="round"
                                       stroke-width="2"
                                       d="M1 5h12m0 0L9 1m4 4L9 9"/>
                             </svg>
@@ -126,13 +170,12 @@ export default async function Home() {
             <div className="pt-32 sm:pt-40 md:pt-48">
                 <div className="lg:w-2/3 mx-auto animate-fade-in">
                     <h3 className="animate-slide-up text-center text-4xl font-bold ">
-                        Knolwedge Base Statistics
+                        {modelBoxCountHeaderTitle}
                     </h3>
                 </div>
                 <br/>
                 <p className="text-2xl  font-light text-sky-900 text-center animate-slide-up">
-                    Structured models used in BrainKB. <a href="https://sensein.group/brainkbdocs" target="_blank">Click
-                    here</a> to view all models.
+                    {modelBoxCountHeaderSubTitle}
                 </p>
                 <br/>
                 <div className="flex justify-center space-x-10 animate-slide-up">
@@ -161,7 +204,7 @@ export default async function Home() {
                             <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Evidence</h5>
                         </a>
                         <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">A data model designed to
-                            represent types and relationships of an organism's annotated genome.</p>
+                            represent types and relationships of an organism&apos;s annotated genome.</p>
                         <a href="https://brain-bican.github.io/models/index_genome_annotation" target="_blank"
                            className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                             Read more

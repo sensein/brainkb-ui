@@ -1,0 +1,57 @@
+boxicons:
+  - name: "Species"
+    slug: "species"
+    short_description: ""
+    sparql_query: |-
+      PREFIX biolink: <https://w3id.org/biolink/vocab/> 
+      select DISTINCT (COUNT(?s) as ?count) where {
+        ?s biolink:iri ?o.
+      }
+  - name: "Donor"
+    slug: "donor"
+    slugcategory: "counts"
+    short_description: ""
+    sparql_query: |-
+      PREFIX bican: <https://identifiers.org/brain-bican/vocab/> 
+      PREFIX biolink: <https://w3id.org/biolink/vocab/>   
+      SELECT DISTINCT (COUNT(?id) as ?count )
+      WHERE {
+        ?id biolink:category bican:Donor; 
+      }
+  - name: "Structure"
+    slug: "structure"
+    slugcategory: "counts"
+    short_description: ""
+    sparql_query: |-
+      PREFIX bican: <https://identifiers.org/brain-bican/vocab/>  
+      SELECT DISTINCT (COUNT (?id) as ?count)
+      WHERE {
+        ?id bican:structure ?o; 
+      }
+  - name: "Library Aliquot"
+    slug: "libraryaliquot"
+    slugcategory: "counts"
+    short_description: ""
+    sparql_query: |-
+      PREFIX bican: <https://identifiers.org/brain-bican/vocab/> 
+      PREFIX biolink: <https://w3id.org/biolink/vocab/>   
+      SELECT DISTINCT (COUNT(?id) as ?count )
+      WHERE {
+        ?id biolink:category bican:LibraryAliquot; 
+      }
+
+headersboxpage:
+  - name: "brainkb main page"
+    slug: "brainkbmainpge"
+    title: "BrainKB: A Large Scale Neuroscience Knowledge Graph"
+    subtitle: "Facilitating Evidence-Based Decision Making to Unlock the Mysteries of the Mind"
+
+  - name: "statistics boxheader"
+    slug: "statisticsboxheader"
+    title: "Knolwedge Base Statistics"
+    subtitle: "Number of unique samples from different models."
+
+  - name: "structured models boxheader"
+    slug: "structuredmodelsheader"
+    title: "Structured Models"
+    subtitle: "Structured models used in BrainKB. <a href='https://sensein.group/brainkbdocs/' target='_blank'>Click here</a> to view all models."
