@@ -28,8 +28,8 @@ const KnowledgeBase = (
         setError(null);
         setData([]);
         setHeaders([]);
-        setPageTitle(null);
-        setSubPageTitle(null);
+        setPageTitle("");
+        setSubPageTitle("");
         const page = yaml.pages.find((page) => page.slug === "default");
         const query_to_execute = page ? page.sparql_query : "";
         console.log(query_to_execute);
@@ -40,8 +40,8 @@ const KnowledgeBase = (
 
         const queryParameter = {sparql_query: query_to_execute};
 
-        const baseurl = process.env.NEXT_PUBLIC_API_ADMIN_HOST;
-        const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT;
+        const baseurl = process.env.NEXT_PUBLIC_API_ADMIN_HOST || "http://3.134.90.242:8010";
+        const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql"; //default is "query/sparql"
 
         console.log('Fetching data with parameters:', queryParameter, endpoint, baseurl);
 
