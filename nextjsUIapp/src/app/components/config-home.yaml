@@ -1,45 +1,3 @@
-boxicons:
-  - name: "Species"
-    slug: "species"
-    short_description: ""
-    sparql_query: |-
-      PREFIX biolink: <https://w3id.org/biolink/vocab/> 
-      select DISTINCT (COUNT(?s) as ?count) where {
-        ?s biolink:iri ?o.
-      }
-  - name: "Donor"
-    slug: "donor"
-    slugcategory: "counts"
-    short_description: ""
-    sparql_query: |-
-      PREFIX bican: <https://identifiers.org/brain-bican/vocab/> 
-      PREFIX biolink: <https://w3id.org/biolink/vocab/>   
-      SELECT DISTINCT (COUNT(?id) as ?count )
-      WHERE {
-        ?id biolink:category bican:Donor; 
-      }
-  - name: "Structure"
-    slug: "structure"
-    slugcategory: "counts"
-    short_description: ""
-    sparql_query: |-
-      PREFIX bican: <https://identifiers.org/brain-bican/vocab/>  
-      SELECT DISTINCT (COUNT (?id) as ?count)
-      WHERE {
-        ?id bican:structure ?o; 
-      }
-  - name: "Library Aliquot"
-    slug: "libraryaliquot"
-    slugcategory: "counts"
-    short_description: ""
-    sparql_query: |-
-      PREFIX bican: <https://identifiers.org/brain-bican/vocab/> 
-      PREFIX biolink: <https://w3id.org/biolink/vocab/>   
-      SELECT DISTINCT (COUNT(?id) as ?count )
-      WHERE {
-        ?id biolink:category bican:LibraryAliquot; 
-      }
-
 headersboxpage:
   - name: "brainkb main page"
     slug: "brainkbmainpge"
@@ -78,3 +36,45 @@ structuredmodelsbox:
     title: "Library Generation Schema"
     description: "A schema that is designed to represent types and relationships of samples and digital data assets generated during processes that generate multimodal genomic data."
     links: "https://brain-bican.github.io/models/index_library_generation/"
+
+boxiconsstatisticscount:
+  - name: "Species"
+    slug: "species"
+    short_description: ""
+    sparql_query: |-
+      PREFIX biolink: <https://w3id.org/biolink/vocab/> 
+      select DISTINCT (COUNT(?s) as ?count) where {
+        ?s biolink:iri ?o.
+      }
+  - name: "Donor"
+    slug: "donor"
+    slugcategory: "counts"
+    short_description: "A person or organism that is the source of a biological sample for scientific study. Many biological samples are generated from a single donor."
+    sparql_query: |-
+      PREFIX bican: <https://identifiers.org/brain-bican/vocab/> 
+      PREFIX biolink: <https://w3id.org/biolink/vocab/>   
+      SELECT DISTINCT (COUNT(?id) as ?count )
+      WHERE {
+        ?id biolink:category bican:Donor; 
+      }
+  - name: "Structure"
+    slug: "structure"
+    slugcategory: "counts"
+    short_description: ""
+    sparql_query: |-
+      PREFIX bican: <https://identifiers.org/brain-bican/vocab/>  
+      SELECT DISTINCT (COUNT (?id) as ?count)
+      WHERE {
+        ?id bican:structure ?o; 
+      }
+  - name: "Library Aliquot"
+    slug: "libraryaliquot"
+    slugcategory: "counts"
+    short_description: "One library in the library pool."
+    sparql_query: |-
+      PREFIX bican: <https://identifiers.org/brain-bican/vocab/> 
+      PREFIX biolink: <https://w3id.org/biolink/vocab/>   
+      SELECT DISTINCT (COUNT(?id) as ?count )
+      WHERE {
+        ?id biolink:category bican:LibraryAliquot; 
+      }
