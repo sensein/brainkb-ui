@@ -66,6 +66,7 @@ body {
 
 .fix-left-margin{
     margin-left: 13rem;
+    margin-top:60px;
 }
 .kb-page-margin{
     margin-top: 74px;
@@ -77,4 +78,9 @@ body {
 }
 .sidebarwidth{
     width: 200px;
+}
+
+thead.sticky {
+    position: sticky;
+    z-index: 1;
 }
