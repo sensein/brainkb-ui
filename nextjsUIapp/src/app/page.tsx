@@ -1,10 +1,8 @@
 "use client";
-import { getServerSession } from "next-auth";
-import { redirect, useRouter } from "next/navigation";
-import { authOptions } from "@/lib/auth";
+
 import yaml from "@/src/app/components/config-home.yaml";
 import { useEffect, useState } from "react";
-import { getData } from "@/src/app/components/getData";
+import { getData } from "@/src/app/components/getData"; 
 
 export default function Home() {
   const [modelBoxCountHeaderTitle, setModelBoxCountHeaderTitle] = useState("");
