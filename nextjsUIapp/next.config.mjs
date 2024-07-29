@@ -2,7 +2,10 @@
 import withYAML from 'next-yaml';
 
 const nextConfig = withYAML({
-  //  Next.js config options here
+  // Enable React Strict Mode
+  reactStrictMode: true,
+
+
 });
 
 export default nextConfig;
