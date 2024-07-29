@@ -48,7 +48,6 @@ boxiconsstatisticscount:
       }
   - name: "Donor"
     slug: "donor"
-    slugcategory: "counts"
     short_description: "A person or organism that is the source of a biological sample for scientific study. Many biological samples are generated from a single donor."
     sparql_query: |-
       PREFIX bican: <https://identifiers.org/brain-bican/vocab/> 
@@ -59,7 +58,6 @@ boxiconsstatisticscount:
       }
   - name: "Structure"
     slug: "structure"
-    slugcategory: "counts"
     short_description: ""
     sparql_query: |-
       PREFIX bican: <https://identifiers.org/brain-bican/vocab/>  
@@ -69,7 +67,6 @@ boxiconsstatisticscount:
       }
   - name: "Library Aliquot"
     slug: "libraryaliquot"
-    slugcategory: "counts"
     short_description: "One library in the library pool."
     sparql_query: |-
       PREFIX bican: <https://identifiers.org/brain-bican/vocab/> 
