@@ -1,0 +1,5 @@
+EntityViewCardsMaper:
+  - card: LA_card
+    slug: "library-aliquot" #this should match the one from the config-knowledgebases.yaml
+    filename: "LA_card.yaml"
+     
