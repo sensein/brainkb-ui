@@ -5,7 +5,6 @@ import {getData} from "@/src/app/components/getData";
 import yaml from "@/src/app/components/config-knowledgebases.yaml";
 export default function SideBarKBFromConfig() {
 
-
     return (
         <>
             <aside id="logo-sidebar"
@@ -79,15 +78,10 @@ export default function SideBarKBFromConfig() {
                             </Link>
                                 )}
                         </li>
-
                        ))}
-
-
-
                     </ul>
                 </div>
             </aside>
-
         </>
     );
 };
