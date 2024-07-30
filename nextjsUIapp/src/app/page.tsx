@@ -109,23 +109,23 @@ export default function Home() {
             </div>
 
             <div className="pt-32 sm:pt-40 md:pt-48 bg-gray-100">
-                <div className="lg:w-2/3 mx-auto animate-fade-in">
-                    <h3 className="animate-slide-up text-center text-4xl font-bold ">
+                <div className="lg:w-2/3 mx-auto animate-fade-in px-4 sm:px-6 lg:px-8">
+                    <h3 className="animate-slide-up text-center text-2xl sm:text-3xl md:text-4xl font-bold ">
                         {structuedModelHeaderTitle}
                     </h3>
                 </div>
                 <br/>
-                <p className="text-2xl font-light text-sky-900 text-center animate-slide-up"
+                <p className="text-lg sm:text-xl md:text-2xl font-light text-sky-900 text-center animate-slide-up"
                    dangerouslySetInnerHTML={{__html: structuedModelHeaderSubTitle}}></p>
                 <br/>
-                <div className="flex justify-center space-x-10 animate-slide-up">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-slide-up">
                     {yaml.structuredmodelsbox.map((page, index) => (
                         <div
                             key={index}
-                            className="max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700"
+                            className="p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700"
                         >
                             <a href="#">
-                                <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{page.title}</h5>
+                                <h5 className="mb-2 text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{page.title}</h5>
                             </a>
                             <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">{page.description}</p>
                             <a
@@ -155,37 +155,35 @@ export default function Home() {
                 <br/>
             </div>
 
+
             <div className="pt-32 sm:pt-40 md:pt-48">
-                <div className="lg:w-2/3 mx-auto animate-fade-in">
-                    <h3 className="animate-slide-up text-center text-4xl font-bold ">
+                <div className="lg:w-2/3 mx-auto animate-fade-in px-4 sm:px-6 lg:px-8">
+                    <h3 className="animate-slide-up text-center text-2xl sm:text-3xl md:text-4xl font-bold ">
                         {modelBoxCountHeaderTitle}
                     </h3>
                 </div>
                 <br/>
-                <p className="text-2xl font-light text-sky-900 text-center animate-slide-up">
+                <p className="text-lg sm:text-xl md:text-2xl font-light text-sky-900 text-center animate-slide-up">
                     {modelBoxCountHeaderSubTitle}
                 </p>
                 <br/>
-                <div className="flex justify-center space-x-10 animate-slide-up">
+                <div className="flex flex-wrap justify-center space-x-0 sm:space-x-10 animate-slide-up">
                     {dataCount.map((count, index) => (
                         <div
                             key={index}
-                            className="max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700"
+                            className="max-w-full sm:max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 m-4"
                         >
-
                             <div className="flex flex-col items-center">
-                                <h2 className="mb-2 text-5xl font-bold tracking-tight text-gray-900 dark:text-white">{count}</h2>
-                                <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{yaml.boxiconsstatisticscount[index]?.name}</h5>
+                                <h2 className="mb-2 text-4xl sm:text-5xl font-bold tracking-tight text-gray-900 dark:text-white">{count}</h2>
+                                <h5 className="mb-2 text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{yaml.boxiconsstatisticscount[index]?.name}</h5>
                             </div>
-
                             <p className="mb-3 font-light text-gray-700 dark:text-gray-400">{yaml.boxiconsstatisticscount[index]?.short_description}</p>
-
-
                         </div>
                     ))}
                 </div>
                 <br/>
             </div>
+
         </div>
     );
 }
