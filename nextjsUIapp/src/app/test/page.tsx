@@ -27,26 +27,22 @@ const TestData = () => {
         const baseurl = process.env.NEXT_PUBLIC_API_ADMIN_HOST || "http://3.134.90.242:8010";
         const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql"; //default is "query/sparql"
 
-        console.log('Fetching data with parameters:', queryParameter, endpoint, baseurl);
-
         try {
             const response = await getData(queryParameter, endpoint, baseurl);
-            console.log('Raw response:', response);
+
 
             if (response.status === 'success' && response.message?.results?.bindings) {
                 const bindings = response.message.results.bindings;
                 const vars = response.message.head.vars;
-                console.log('Bindings:', bindings);
-                console.log('Vars:', vars);
+
                 setHeaders(vars);
                 setData(bindings);
             } else {
-                console.error('Unexpected response format:', response);
+
                 setError("Invalid data format");
             }
         } catch (e) {
             const error = e as Error;
-            console.log('Error fetching data:', error.message);
             setError(error.message);
         } finally {
             setLoading(false);

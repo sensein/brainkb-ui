@@ -14,7 +14,7 @@ export async function getData(query_parameter = {}, endpoint: string, baseurl: s
     const urlWithQuery = queryString ? `${api_endpoint}?${queryString}` : api_endpoint;
 
 
-    console.log(urlWithQuery);
+
     const response = await fetch(urlWithQuery, {
       method: 'GET',
       headers: {

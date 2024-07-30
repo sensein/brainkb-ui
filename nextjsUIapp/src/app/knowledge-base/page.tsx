@@ -22,7 +22,7 @@ const KnowledgeBase = (
     const [currentPage, setCurrentPage] = useState(1);
     const [pagetitle, setPageTitle] = useState("");
     const [pagesubtitle, setSubPageTitle] = useState("");
-    const [currentPageData, setCurrentPageData] = useState(1);
+    const [entityPageSlug, setEntityPageSlug] = useState("");
 
     const fetchData = async () => {
         setLoading(true);
@@ -31,9 +31,11 @@ const KnowledgeBase = (
         setHeaders([]);
         setPageTitle("");
         setSubPageTitle("");
+        setEntityPageSlug("");
         const page = yaml.pages.find((page) => page.slug === "default");
         const query_to_execute = page ? page.sparql_query : "";
-        console.log(query_to_execute);
+        const entitypage = page ? page.entitypageslug : "";
+        setEntityPageSlug(entitypage);
         const page_title = page ? page.page : "";
         const page_sub_title = page ? page.description : "";
         setPageTitle(page_title);
@@ -44,26 +46,25 @@ const KnowledgeBase = (
         const baseurl = process.env.NEXT_PUBLIC_API_ADMIN_HOST || "http://3.134.90.242:8010";
         const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql"; //default is "query/sparql"
 
-        console.log('Fetching data with parameters:', queryParameter, endpoint, baseurl);
+
 
         try {
             const response = await getData(queryParameter, endpoint, baseurl);
-            console.log('Raw response:', response);
+
 
             if (response.status === 'success' && response.message?.results?.bindings) {
                 const bindings = response.message.results.bindings;
                 const vars = response.message.head.vars;
-                console.log('Bindings:', bindings);
-                console.log('Vars:', vars);
+
                 setHeaders(vars);
                 setData(bindings);
             } else {
-                console.error('Unexpected response format:', response);
+
                 setError("Invalid data format");
             }
         } catch (e) {
             const error = e as Error;
-            console.log('Error fetching data:', error.message);
+
             setError(error.message);
         } finally {
             setLoading(false);
@@ -96,8 +97,17 @@ const KnowledgeBase = (
                     <tr key={index}
                         className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                         {headers.map((header, headerIndex) => (
-                            <td key={headerIndex}
-                                className="px-6 py-4">{item[header]?.value.substring(item[header]?.value.lastIndexOf('/') + 1)}</td>
+                            <td key={headerIndex} className="px-6 py-4">
+                                {headerIndex === 0 ? (
+                                    <a href={`knowledge-base/${entityPageSlug}/${item[header]?.value.substring(item[header]?.value.lastIndexOf('/') + 1)}`}
+                                       rel="noopener noreferrer">
+                                        {item[header]?.value.substring(item[header]?.value.lastIndexOf('/') + 1)}
+                                    </a>
+                                ) : (
+                                    item[header]?.value.substring(item[header]?.value.lastIndexOf('/') + 1)
+                                )}
+
+                            </td>
                         ))}
                     </tr>
                 ))}
@@ -133,13 +143,13 @@ const KnowledgeBase = (
                     {data.length > 0 && (
                         <nav className="flex items-center flex-column flex-wrap md:flex-row justify-between pt-4"
                              aria-label="Table navigation">
-    <span
-        className="text-sm font-normal text-gray-500 dark:text-gray-400 mb-4 md:mb-0 block w-full md:inline md:w-auto">
-       Showing <span
-        className="font-semibold text-gray-900 dark:text-white">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span
-        className="font-semibold text-gray-900 dark:text-white">{Math.min(currentPage * ITEMS_PER_PAGE, data.length)}</span> of <span
-        className="font-semibold text-gray-900 dark:text-white">{data.length}</span>
-    </span>
+                            <span
+                                className="text-sm font-normal text-gray-500 dark:text-gray-400 mb-4 md:mb-0 block w-full md:inline md:w-auto">
+                               Showing <span
+                                className="font-semibold text-gray-900 dark:text-white">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span
+                                className="font-semibold text-gray-900 dark:text-white">{Math.min(currentPage * ITEMS_PER_PAGE, data.length)}</span> of <span
+                                className="font-semibold text-gray-900 dark:text-white">{data.length}</span>
+                            </span>
                             <ul className="inline-flex -space-x-px rtl:space-x-reverse text-sm h-8">
                                 <li>
                                     <button
