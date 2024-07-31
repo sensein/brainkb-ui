@@ -1,0 +1,34 @@
+
+#EntityView:
+id: ui:1
+name: LA_card
+slug: library-aliquot
+description: a view of a library aliquot
+boxes:
+  - id: ui:2
+    name: SummaryBox
+    box_header:
+      key: nshaid
+      sqrl_query: TODO (SELECT local_name FROM library_aliquot WHERE library_aliquot_id = 1)
+    box_description:
+      value: One library in the library pool. Each library aliquot in a library pool will have a unique R1/R2 index ...
+    box_additional_info:
+      properties:
+      - key: local_name
+        sqrl_query: "TODO (SELECT local_name FROM library_aliquot WHERE library_aliquot_id = 1)"
+      - key: category
+        sqrl_query: "TODO: query"
+  - id: ui:3
+    name: DonorBox
+    box_header:
+      key: Donor
+    box_description:
+      value: A person or organism that is the source of a biological sample for scientific study.
+    box_additional_info:
+      header: List of donors
+      is_iterable: true
+      properties:
+      - key: local_name
+        sqrl_query: "TODO (SELECT local_name FROM library_aliquot WHERE library_aliquot_id = 1)"
+      - key: age_of_death
+        sqrl_query: "TODO: query"
