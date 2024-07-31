@@ -27,7 +27,7 @@ export default function Home() {
 
 
         const boxiconsdetailsCounter = yaml.headersboxpage.find((page) => page.slug === "statisticsboxheader");
-        console.log(boxiconsdetailsCounter);
+        // console.log(boxiconsdetailsCounter);
 
         const page_title = boxiconsdetailsCounter ? boxiconsdetailsCounter.title : "";
         const page_sub_title = boxiconsdetailsCounter ? boxiconsdetailsCounter.subtitle : "";
@@ -35,7 +35,7 @@ export default function Home() {
         setModelBoxCountHeaderSubTitle(page_sub_title);
 
         const structuredmodelHeader = yaml.headersboxpage.find((page) => page.slug === "structuredmodelsheader");
-        console.log(structuredmodelHeader);
+        // console.log(structuredmodelHeader);
 
         const structured_page_title = structuredmodelHeader ? structuredmodelHeader.title : "";
         const structured_page_sub_title = structuredmodelHeader ? structuredmodelHeader.subtitle : "";
@@ -43,7 +43,7 @@ export default function Home() {
         setStructuedModelHeaderSubTitle(structured_page_sub_title);
 
         const brainkbmainpge = yaml.headersboxpage.find((page) => page.slug === "brainkbmainpge");
-        console.log(brainkbmainpge);
+        // console.log(brainkbmainpge);
 
         const brainkb_title = brainkbmainpge ? brainkbmainpge.title : "";
         const brainkb_sub_title = brainkbmainpge ? brainkbmainpge.subtitle : "";
@@ -73,22 +73,22 @@ export default function Home() {
         const baseurl = process.env.NEXT_PUBLIC_API_ADMIN_HOST || "http://3.134.90.242:8010";
         const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql"; //default is "query/sparql"
 
-        console.log("Fetching data with parameters:", queryParameter, endpoint, baseurl);
+        // console.log("Fetching data with parameters:", queryParameter, endpoint, baseurl);
 
         try {
             const response = await getData(queryParameter, endpoint, baseurl);
-            console.log("Raw response:", response);
+            // console.log("Raw response:", response);
 
             if (response.status === "success" && response.message?.results?.bindings) {
                 const bindings = response.message.results.bindings;
-                console.log("Bindings:", bindings[0].count.value);
+                // console.log("Bindings:", bindings[0].count.value);
                 return response;
             } else {
                 console.error("Unexpected response format:", response);
             }
         } catch (e) {
             const error = e;
-            console.log("Error fetching data:");
+            console.error("Error fetching data:");
         }
     };
 
