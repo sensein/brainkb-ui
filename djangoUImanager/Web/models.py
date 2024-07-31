@@ -26,8 +26,9 @@ ROLES_BRAINKB = (
 
 class KnowledgeBaseViewerModel(models.Model):
     """This model is used for displaying knowledge base data as well as for setting the menu"""
+    id = models.AutoField(primary_key=True)
     left_side_menu_title = models.CharField(max_length=350, blank=False, unique=True, help_text="Left side menu title")
-    slug = AutoSlugField(populate_from='left_side_menu_title', unique=False)
+    slug = AutoSlugField(populate_from='left_side_menu_title', unique=True)
     sparql_query = models.TextField(blank=False)
     default_kb = models.BooleanField(blank=False, default=False)
     display_column_first = models.CharField(max_length=150, blank=False,
@@ -44,6 +45,7 @@ class KnowledgeBaseViewerModel(models.Model):
 
 
 class QueryEndpoint(models.Model):
+    id = models.AutoField(primary_key=True)
     endpoint_title = models.CharField(max_length=350, blank=False, unique=True)
     query_url = models.URLField(blank=False, unique=True)
     query_endpoint_type = models.CharField(max_length=20, unique=True, choices=ENDPOINT_TYPE, default='get')
@@ -73,13 +75,15 @@ class UserProfile(models.Model):
         return mark_safe(f'<img src = "{self.profile_pic.url}" width = "100"/>')
 
 class Comment(models.Model):
-    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='comments')
+    id = models.AutoField(primary_key=True)
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, related_name='comments')
     comment_text = models.TextField()
     commented_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
 class Revision(models.Model):
-    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='revisions')
+    id = models.AutoField(primary_key=True)
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.SET_NULL, related_name='revisions')
     revision_text = models.TextField()
     revised_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -99,8 +103,8 @@ class Institution(models.Model):
 
 class UserInstitution(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
-    institution = models.ForeignKey(Institution, on_delete=models.CASCADE)
+    user = models.ForeignKey(UserProfile, on_delete=models.SET_NULL)
+    institution = models.ForeignKey(Institution, on_delete=models.SET_NULL)
     position = models.CharField(max_length=350, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
