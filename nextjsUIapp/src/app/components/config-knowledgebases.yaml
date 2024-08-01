@@ -43,7 +43,7 @@ pages:
   - page: "Library Aliquot"
     title: "Library Aliquot"
     description: "One library in the library pool. Each library aliquot in a library pool will have a unique R1/R2 index to allow for sequencing together then separating the sequencing output by originating library aliquot through the process of demultiplexing. The resulting demultiplexed fastq files will include the library aliquot name.  A given library may produce multiple library aliquots, which is done in the case of resequencing.  Each library aliquot will produce a set of fastq files."
-    slug: "library-aliquot"
+    slug: "LibraryAliquot"
     sparql_query: |-
       PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
       PREFIX NIMP: <http://example.org/NIMP/>
