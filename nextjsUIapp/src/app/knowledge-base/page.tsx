@@ -99,7 +99,7 @@ const KnowledgeBase = (
                         {headers.map((header, headerIndex) => (
                             <td key={headerIndex} className="px-6 py-4">
                                 {headerIndex === 0 ? (
-                                    <a href={`knowledge-base/${entityPageSlug}/${item[header]?.value.substring(item[header]?.value.lastIndexOf('/') + 1)}`}
+                                    <a href={`knowledge-base/${entityPageSlug}/${encodeURIComponent(item[header]?.value)}`}
                                        rel="noopener noreferrer">
                                         {item[header]?.value.substring(item[header]?.value.lastIndexOf('/') + 1)}
                                     </a>

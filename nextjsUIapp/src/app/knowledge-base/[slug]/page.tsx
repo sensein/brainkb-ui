@@ -95,7 +95,7 @@ const KbIndividualPageAllData = (
                         {headers.map((header, headerIndex) => (
                             <td key={headerIndex} className="px-6 py-4">
                                 {headerIndex === 0 ? (
-                                    <a href={`${params.slug}/${item[header]?.value.substring(item[header]?.value.lastIndexOf('/') + 1)}`}
+                                    <a href={`${params.slug}/${encodeURIComponent(item[header]?.value)}`}
                                        rel="noopener noreferrer">
                                         {item[header]?.value.substring(item[header]?.value.lastIndexOf('/') + 1)}
                                     </a>
