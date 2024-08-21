@@ -14,19 +14,75 @@ export default async function Contact() {
     if (current_session) return redirect("/admin");
     return (
         <div className="set-margin-hundred">
-            <h2 className="mb-4 text-3xl font-extrabold font-extrabold leading-none text-sky-900 animate-slide-up">Data
-                Release</h2>
-
+            <div className="flex justify-center">
+                <h2 className="mb-4 text-3xl font-extrabold leading-none text-sky-900 animate-slide-up">
+                    BrainKB Data Releases
+                </h2>
+            </div>
+            <h3 className="mb-4 text-2xl font-extrabold leading-none text-sky-900 animate-slide-up">
+                Overview
+            </h3>
 
             <p className="mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
-                BrainKB serves as a knowledge base platform that provides scientists worldwide with tools for
-                searching, exploring, and visualizing Neuroscience knowledge represented by knowledge graphs (KGs).
-                Moreover, BrainKB provides cutting-edge tools that enable scientists to contribute new information
-                (or knowledge) to the platform and is expected to be a go-to destination for all
-                neuroscience-related research needs.
+                BrainKB provides regular data releases that include comprehensive records of all primary entities such
+                as Assertions, Evidence, Library Aliquot and Barcoded Cell Sample. These releases are available in
+                various formats, including CSV and JSON. Users can easily download the specific entity type and data
+                format they need by selecting the corresponding download button on the BrainKB platform.
 
-            </p><br/><br/>
+            </p>
+            <h3 className="mb-4 text-2xl font-extrabold leading-none text-sky-900 animate-slide-up">
+                Release Frequency
+            </h3>
+            <p className="mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
+                BrainKB offers two types of data release schedules to meet different user needs:</p>
+            <ul className="list-disc pl-5 mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
+                <li><b>Monthly Releases:</b> These comprehensive releases provide a full snapshot of the current
+                    BrainKB database, including all validated entities and knowledge representations. They are ideal
+                    for users who require the most up-to-date and complete dataset for their analyses.
+                </li>
+                <li><b>Nightly Releases:</b> These releases include incremental updates to the BrainKB database,
+                    capturing
+                    any new or updated entities since the last release. Nightly releases are perfect for users who
+                    need the latest data for ongoing projects or applications requiring real-time information.
+                </li>
+            </ul>
 
+
+            <h3 className="mb-4 text-2xl font-extrabold leading-none text-sky-900 animate-slide-up">
+                File Formats
+            </h3>
+            <p className="mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
+                BrainKB data is available in two primary file formats</p>
+            <ul className="list-disc pl-5 mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
+                <li><b>CSV (Comma-Separated Values):</b> These files provide a tabular representation of the data,
+                    suitable for most data processing pipelines.
+                </li>
+                <li><b>JSON (JavaScript Object Notation):</b> These files offer a structured, hierarchical format that
+                    is ideal for applications requiring detailed metadata or integration with other systems.
+                </li>
+            </ul>
+
+            <h3 className="mb-4 text-2xl font-extrabold leading-none text-sky-900 animate-slide-up">
+                Compliance
+            </h3>
+            <p className="mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
+                To adhere to best practices and format specifications, certain limitations may apply, depending on the
+                file type. For example, CSV files may include entities with incomplete metadata, while JSON
+                files ensure comprehensive metadata inclusion.
+
+            </p>
+            <h3 className="mb-4 text-2xl font-extrabold leading-none text-sky-900 animate-slide-up">
+                Licensing
+            </h3>
+            <p className="mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
+                All data made available through BrainKB is released under the <b>CC0 license (Creative Commons Public
+                Domain Dedication, CC0 1.0 Universal)</b>, ensuring that the data can be freely used, shared, and
+                adapted
+                without restrictions. We encourage users to cite BrainKB in their publications when utilizing the
+                platform’s data.
+
+            </p>
+            <br/><br/>
 
             <div className="relative overflow-x-auto shadow-md sm:rounded-lg animate-slide-up">
                 <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
@@ -43,7 +99,7 @@ export default async function Contact() {
                         </th>
                         <th scope="col" className="px-6 py-3">
                             <div className="flex items-center">
-                               Individual KGs by Type
+                                Individual KGs by Type
 
                             </div>
                         </th>
@@ -73,7 +129,7 @@ export default async function Contact() {
 
                     </tr>
 
-                     
+
                     </tbody>
                 </table>
             </div>
