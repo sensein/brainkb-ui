@@ -1,7 +1,7 @@
 
 export async function getData(query_parameter = {}, endpoint: string, baseurl: string) {
   try {
-    const apiEndpointbase =  baseurl
+    const apiEndpointbase =  baseurl;
     if (!apiEndpointbase) {
       throw new Error('NEXT_PUBLIC_API_ADMIN_HOST is not defined in the environment variables');
     }
