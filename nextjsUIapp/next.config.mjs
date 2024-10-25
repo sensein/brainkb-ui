@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+
 import withYAML from 'next-yaml';
 
 const nextConfig = withYAML({
@@ -14,6 +15,6 @@ const nextConfig = withYAML({
     }
     return config;
   },
-});
+}); 
 
 export default nextConfig;
