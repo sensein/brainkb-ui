@@ -1,0 +1,77 @@
+headersboxpage:
+  - name: "brainkb main page"
+    slug: "brainkbmainpge"
+    title: "BrainKB: A Large Scale Neuroscience Knowledge Graph"
+    subtitle: "Facilitating Evidence-Based Decision Making to Unlock the Mysteries of the Mind"
+
+  - name: "statistics boxheader"
+    slug: "statisticsboxheader"
+    title: "Knolwedge Base Statistics"
+    subtitle: "Number of unique samples from different models."
+
+  - name: "structured models boxheader"
+    slug: "structuredmodelsheader"
+    title: "Structured Models"
+    subtitle: "Structured models used in BrainKB. <a href='https://sensein.group/brainkbdocs/' target='_blank'>Click here</a> to view all models."
+
+
+structuredmodelsbox:
+  - name: "evidence assertion ontology"
+    slug: "evidenceassertionontology"
+    title: "Evidence Assertion Ontology"
+    description: "A data model designed to represent types and relationships of evidence and assertions."
+    links: "#"
+  - name: "GARS model"
+    slug: "garsmodel"
+    title: "Genome Annotation Schema"
+    description: "A data model designed to represent types and relationships of an organism&apos;s annotated genome."
+    links: "https://brain-bican.github.io/models/index_genome_annotation"
+  - name: "ansrs model"
+    slug: "ansrsmodel"
+    title: "Anatomical Structure Schema"
+    description: "A data model designed to represent types and relationships of anatomical brain structures."
+    links: "https://brain-bican.github.io/models/index_anatomical_structure"
+  - name: "library model"
+    slug: "librarygenerationschema"
+    title: "Library Generation Schema"
+    description: "A schema that is designed to represent types and relationships of samples and digital data assets generated during processes that generate multimodal genomic data."
+    links: "https://brain-bican.github.io/models/index_library_generation/"
+
+boxiconsstatisticscount:
+  - name: "Species"
+    slug: "species"
+    short_description: ""
+    sparql_query: |-
+      PREFIX biolink: <https://w3id.org/biolink/vocab/> 
+      select DISTINCT (COUNT(?s) as ?count) where {
+        ?s biolink:iri ?o.
+      }
+  - name: "Donor"
+    slug: "donor"
+    short_description: "A person or organism that is the source of a biological sample for scientific study. Many biological samples are generated from a single donor."
+    sparql_query: |-
+      PREFIX bican: <https://identifiers.org/brain-bican/vocab/> 
+      PREFIX biolink: <https://w3id.org/biolink/vocab/>   
+      SELECT DISTINCT (COUNT(?id) as ?count )
+      WHERE {
+        ?id biolink:category bican:Donor; 
+      }
+  - name: "Structure"
+    slug: "structure"
+    short_description: ""
+    sparql_query: |-
+      PREFIX bican: <https://identifiers.org/brain-bican/vocab/>  
+      SELECT DISTINCT (COUNT (?id) as ?count)
+      WHERE {
+        ?id bican:structure ?o; 
+      }
+  - name: "Library Aliquot"
+    slug: "libraryaliquot"
+    short_description: "One library in the library pool."
+    sparql_query: |-
+      PREFIX bican: <https://identifiers.org/brain-bican/vocab/> 
+      PREFIX biolink: <https://w3id.org/biolink/vocab/>   
+      SELECT DISTINCT (COUNT(?id) as ?count )
+      WHERE {
+        ?id biolink:category bican:LibraryAliquot; 
+      }

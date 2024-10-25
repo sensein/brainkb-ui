@@ -1,0 +1,64 @@
+pages:
+  - page: "Barcoded Cell Sample" #default one
+    title: "It will be shown when the knowledge base page is clicked"
+    slug: "default"
+    entitypageslug: "barcodedcellsample"
+    description: "A collection of molecularly barcoded cells. Input will be either dissociated cell sample or enriched cell sample. Cell barcodes are only guaranteed to be unique within this one collection. One dissociated cell sample or enriched cell sample can lead to multiple barcoded cell samples.  The sequences of the molecular barcodes are revealed during alignment of the resulting fastq files for the barcoded cell sample. The barcoded cell sample name and the cell level molecular barcode together uniquely identify a single cell. A collection of molecularly barcoded cells. Input will be either dissociated cell sample or enriched cell sample. Cell barcodes are only guaranteed to be unique within this one collection. One dissociated cell sample or enriched cell sample can lead to multiple barcoded cell samples.  The sequences of the molecular barcodes are revealed during alignment of the resulting fastq files for the barcoded cell sample. The barcoded cell sample name and the cell level molecular barcode together uniquely identify a single cell."
+    sparql_query: |-
+      PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+      PREFIX NIMP: <http://example.org/NIMP/>
+      PREFIX biolink: <https://w3id.org/biolink/vocab/>
+      PREFIX prov: <http://www.w3.org/ns/prov#>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+      SELECT DISTINCT ?id ?label ?category
+      WHERE {
+        ?id biolink:category bican:BarcodedCellSample;
+            rdfs:label ?label;
+          biolink:category ?category;
+      }
+  - page: "Barcoded Cell Sample"
+    title: "Barcoded Cell Sample"
+    slug: "barcodedcellsample"
+    description: "A collection of molecularly barcoded cells. Input will be either dissociated cell sample or enriched cell sample. Cell barcodes are only guaranteed to be unique within this one collection. One dissociated cell sample or enriched cell sample can lead to multiple barcoded cell samples.  The sequences of the molecular barcodes are revealed during alignment of the resulting fastq files for the barcoded cell sample. The barcoded cell sample name and the cell level molecular barcode together uniquely identify a single cell. A collection of molecularly barcoded cells. Input will be either dissociated cell sample or enriched cell sample. Cell barcodes are only guaranteed to be unique within this one collection. One dissociated cell sample or enriched cell sample can lead to multiple barcoded cell samples.  The sequences of the molecular barcodes are revealed during alignment of the resulting fastq files for the barcoded cell sample. The barcoded cell sample name and the cell level molecular barcode together uniquely identify a single cell."
+    sparql_query: |-
+      PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+      PREFIX NIMP: <http://example.org/NIMP/>
+      PREFIX biolink: <https://w3id.org/biolink/vocab/>
+      PREFIX prov: <http://www.w3.org/ns/prov#>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+      SELECT DISTINCT ?id ?label ?category
+      WHERE {
+        ?id biolink:category bican:BarcodedCellSample;
+            rdfs:label ?label;
+          biolink:category ?category;
+      }
+
+    display_column_first: "id"
+    display_column_second: "label"
+
+  - page: "Library Aliquot"
+    title: "Library Aliquot"
+    description: "One library in the library pool. Each library aliquot in a library pool will have a unique R1/R2 index to allow for sequencing together then separating the sequencing output by originating library aliquot through the process of demultiplexing. The resulting demultiplexed fastq files will include the library aliquot name.  A given library may produce multiple library aliquots, which is done in the case of resequencing.  Each library aliquot will produce a set of fastq files."
+    slug: "LibraryAliquot"
+    sparql_query: |-
+      PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+      PREFIX NIMP: <http://example.org/NIMP/>
+      PREFIX biolink: <https://w3id.org/biolink/vocab/>
+      PREFIX prov: <http://www.w3.org/ns/prov#>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+      SELECT DISTINCT ?id ?label ?category
+      WHERE {
+        ?id biolink:category bican:LibraryAliquot;
+            rdfs:label ?label;
+            biolink:category ?category;
+      }
+    default_kb: false
+    display_column_first: "id"
+    display_column_second: "label"
+    display_column_third: "category"

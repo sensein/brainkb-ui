@@ -16,6 +16,13 @@
 # production
 /build
 
+node_modules
+build
+.next
+.git
+.DS_Store
+
+
 #env file
 .env
 # misc

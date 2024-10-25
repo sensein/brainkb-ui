@@ -60,3 +60,29 @@ body {
           }
         }
 
+ 
+.set-margin-hundred{
+   margin:100px;
+}
+
+.fix-left-margin{
+    margin-left: 13rem;
+    margin-top:60px;
+}
+.kb-page-margin{
+    margin-top: 5rem;
+    margin-right: 6rem;
+}
+.fix-margin-left-footer{
+    position: relative;
+    z-index: 999999999;
+}
+.sidebarwidth{
+    width: 200px;
+}
+
+thead.sticky {
+    position: sticky;
+    z-index: 1;
+}
+

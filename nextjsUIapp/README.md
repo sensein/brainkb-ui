@@ -1,4 +1,7 @@
-# BrainKB UI
+# BrainKB UI 
+
+For configuration and deployment, please see instructions at [https://sensein.group/brainkbdocs/deployment_userinterface.html](https://sensein.group/brainkbdocs/deployment_userinterface.html).
+
 ![](images/home.png)
 ![](images/about.png)
 ![](images/404.png)
@@ -28,7 +31,5 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
  
- 
-
 ## License
 MIT
