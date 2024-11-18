@@ -26,7 +26,7 @@ export default async function Contact() {
             <p className="mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
                 BrainKB provides regular data releases that include comprehensive records of all primary entities such
                 as Assertions, Evidence, Library Aliquot and Barcoded Cell Sample. These releases are available in
-                various formats, including CSV and JSON. Users can easily download the specific entity type and data
+                various formats, including CSV and JSON or API-access. Users can easily download the specific entity type and data
                 format they need by selecting the corresponding download button on the BrainKB platform.
 
             </p>
@@ -115,18 +115,17 @@ export default async function Contact() {
                     <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                         <th scope="row"
                             className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                            NA
+                            03 October, 2024
                         </th>
                         <td className="px-6 py-4">
-                            Na
+                            BICAN Rapid Release
                         </td>
                         <td className="px-6 py-4">
                             NA
                         </td>
                         <td className="px-6 py-4">
-                            NA
+                            <a href="/data-release/all_data.csv" download>Download</a>
                         </td>
-
                     </tr>
 
 
