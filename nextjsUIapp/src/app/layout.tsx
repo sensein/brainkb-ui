@@ -35,6 +35,7 @@ export default async  function RootLayout({
 
 
           <main className="flex min-h-screen flex-col">
+
               {children}
           </main>
 

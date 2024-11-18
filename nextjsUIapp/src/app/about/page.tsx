@@ -1,19 +1,23 @@
 import type { Metadata } from "next";
+ 
 import {getServerSession} from "next-auth";
 import {authOptions} from "@/lib/auth";
 import {redirect} from "next/navigation";
+
 
 export const metadata: Metadata = {
     title:"About",
 
 };
 
+ 
 export default async function About(){
         const current_session = await getServerSession(authOptions);
     //user is logged in so redirect to admin page
     if (current_session) return redirect("/admin");
     return (
         <div className="set-margin-hundred">
+
 
             <div className="text-left">
                 <h2 className="mb-4 text-3xl font-extrabold font-extrabold leading-none text-sky-900 animate-slide-up">What is BrainKB?</h2>

@@ -14,6 +14,7 @@ export default  async function AdminIndex(){
     return (
         <>
 
+
                   <div className="flex items-center justify-center h-48 mb-4 rounded bg-gray-50 dark:bg-gray-800">
                       <p className="text-2xl text-gray-400 dark:text-gray-500">
                           <svg className="w-3.5 h-3.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -110,5 +111,6 @@ export default  async function AdminIndex(){
                   </div>
 
         </>
+
     );
 }
