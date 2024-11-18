@@ -20,7 +20,7 @@ structuredmodelsbox:
     slug: "evidenceassertionontology"
     title: "Evidence Assertion Ontology"
     description: "A data model designed to represent types and relationships of evidence and assertions."
-    links: "#"
+    links: "https://brain-bican.github.io/models/#4-assertion-evidence-model"
   - name: "GARS model"
     slug: "garsmodel"
     title: "Genome Annotation Schema"
