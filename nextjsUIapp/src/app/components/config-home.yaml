@@ -44,7 +44,9 @@ boxiconsstatisticscount:
     sparql_query: |-
       PREFIX biolink: <https://w3id.org/biolink/vocab/> 
       select DISTINCT (COUNT(?s) as ?count) where {
-        ?s biolink:iri ?o.
+        GRAPH <https://www.portal.brain-bican.org/grapidrelease> {
+          ?s biolink:iri ?o.
+      }
       }
   - name: "Donor"
     slug: "donor"
@@ -54,7 +56,9 @@ boxiconsstatisticscount:
       PREFIX biolink: <https://w3id.org/biolink/vocab/>   
       SELECT DISTINCT (COUNT(?id) as ?count )
       WHERE {
-        ?id biolink:category bican:Donor; 
+        GRAPH <https://www.portal.brain-bican.org/grapidrelease> {
+          ?id biolink:category bican:Donor; 
+        }
       }
   - name: "Structure"
     slug: "structure"
@@ -63,7 +67,9 @@ boxiconsstatisticscount:
       PREFIX bican: <https://identifiers.org/brain-bican/vocab/>  
       SELECT DISTINCT (COUNT (?id) as ?count)
       WHERE {
-        ?id bican:structure ?o; 
+        GRAPH <https://www.portal.brain-bican.org/grapidrelease> {
+          ?id bican:structure ?o; 
+        }
       }
   - name: "Library Aliquot"
     slug: "libraryaliquot"
@@ -73,5 +79,7 @@ boxiconsstatisticscount:
       PREFIX biolink: <https://w3id.org/biolink/vocab/>   
       SELECT DISTINCT (COUNT(?id) as ?count )
       WHERE {
-        ?id biolink:category bican:LibraryAliquot; 
+        GRAPH <https://www.portal.brain-bican.org/grapidrelease> {
+            ?id biolink:category bican:LibraryAliquot; 
+        }
       }
