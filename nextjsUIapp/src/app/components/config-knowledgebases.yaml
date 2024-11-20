@@ -14,8 +14,8 @@ pages:
 
       SELECT DISTINCT ?id ?label ?category
       WHERE {
-      GRAPH <https://www.portal.brain-bican.org/grapidrelease> {
-          ?id biolink:category bican:BarcodedCellSample;
+      GRAPH <https://www.portal.brain-bican.org/grapidreleasev01> {
+          ?id biolink:category "bican:BarcodedCellSample"^^<http://www.w3.org/2001/XMLSchema#anyURI>;
               rdfs:label ?label;
             biolink:category ?category;
         }
@@ -34,8 +34,8 @@ pages:
 
       SELECT DISTINCT ?id ?label ?category
       WHERE {
-      GRAPH <https://www.portal.brain-bican.org/grapidrelease> {
-          ?id biolink:category bican:BarcodedCellSample;
+      GRAPH <https://www.portal.brain-bican.org/grapidreleasev01> {
+          ?id biolink:category "bican:BarcodedCellSample"^^<http://www.w3.org/2001/XMLSchema#anyURI>;
               rdfs:label ?label;
             biolink:category ?category;
         }
@@ -58,8 +58,8 @@ pages:
 
       SELECT DISTINCT ?id ?label ?category
       WHERE {
-      GRAPH <https://www.portal.brain-bican.org/grapidrelease> {
-          ?id biolink:category bican:LibraryAliquot;
+      GRAPH <https://www.portal.brain-bican.org/grapidreleasev01> {
+          ?id biolink:category "bican:LibraryAliquot"^^<http://www.w3.org/2001/XMLSchema#anyURI>;
               rdfs:label ?label;
               biolink:category ?category;
         }

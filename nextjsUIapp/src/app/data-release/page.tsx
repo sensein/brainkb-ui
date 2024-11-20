@@ -105,6 +105,12 @@ export default async function Contact() {
                         </th>
                         <th scope="col" className="px-6 py-3">
                             <div className="flex items-center">
+                                Format
+
+                            </div>
+                        </th>
+                        <th scope="col" className="px-6 py-3">
+                            <div className="flex items-center">
                                 Combined
                             </div>
                         </th>
@@ -121,10 +127,41 @@ export default async function Contact() {
                             BICAN Rapid Release
                         </td>
                         <td className="px-6 py-4">
-                            NA
+                            -
                         </td>
                         <td className="px-6 py-4">
-                            <a href="/data-release/all_data.csv" download>Download</a>
+                            CSV
+                        </td>
+                        <td className="px-6 py-4">
+                            <a href="/data-release/all_data.csv" download>All Data</a>
+                        </td>
+                    </tr>
+                    <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                        <th scope="row"
+                            className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                            03 October, 2024
+                        </th>
+                        <td className="px-6 py-4">
+                            BICAN Rapid Release
+                        </td>
+                        <td className="px-6 py-4">
+                            <a href="/data-release/Enriched-Cell-Sample-data.csv" download>EnrichedCellSample</a> | <a
+                            href="/data-release/Library-data.csv" download>Library</a> | <a
+                            href="/data-release/Tissue-Sample-data.csv" download>TissueSample</a> | <a
+                            href="/data-release/Brain-Slab-data.csv" download>BrainSlab</a> | <a
+                            href="/data-release/AmplifiedCdna.csv.csv" download>AmplifiedCdna</a> | <a
+                            href="/data-release/BarcodedCellSample.csv" download>BarcodedCellSample</a>
+                            | <a
+                            href="/data-release/DissectionRoiPolygon.csv" download>DissectionRoiPolygon</a> | <a
+                            href="/data-release/DissociatedCellSample.csv" download>DissociatedCellSample</a> | <a
+                            href="/data-release/LibraryAliquot.csv" download>LibraryAliquot</a> | <a
+                            href="/data-release/Donor.csv" download>Donor</a>
+                        </td>
+                        <td className="px-6 py-4">
+                            CSV
+                        </td>
+                        <td className="px-6 py-4">
+                            -
                         </td>
                     </tr>
 

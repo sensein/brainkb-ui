@@ -43,9 +43,9 @@ boxiconsstatisticscount:
     short_description: ""
     sparql_query: |-
       PREFIX biolink: <https://w3id.org/biolink/vocab/> 
-      select DISTINCT (COUNT(?s) as ?count) where {
-        GRAPH <https://www.portal.brain-bican.org/grapidrelease> {
-          ?s biolink:iri ?o.
+      select  (COUNT(DISTINCT(?o)) as ?count) where {
+        GRAPH <https://www.portal.brain-bican.org/grapidreleasev01> {
+          ?s <https://identifiers.org/brain-bican/vocab/species> ?o.
       }
       }
   - name: "Donor"
@@ -56,8 +56,8 @@ boxiconsstatisticscount:
       PREFIX biolink: <https://w3id.org/biolink/vocab/>   
       SELECT DISTINCT (COUNT(?id) as ?count )
       WHERE {
-        GRAPH <https://www.portal.brain-bican.org/grapidrelease> {
-          ?id biolink:category bican:Donor; 
+        GRAPH <https://www.portal.brain-bican.org/grapidreleasev01> {
+          ?id biolink:category "bican:Donor"^^<http://www.w3.org/2001/XMLSchema#anyURI>; 
         }
       }
   - name: "Structure"
@@ -65,9 +65,9 @@ boxiconsstatisticscount:
     short_description: ""
     sparql_query: |-
       PREFIX bican: <https://identifiers.org/brain-bican/vocab/>  
-      SELECT DISTINCT (COUNT (?id) as ?count)
+      SELECT  (COUNT (DISTINCT(?id)) as ?count)
       WHERE {
-        GRAPH <https://www.portal.brain-bican.org/grapidrelease> {
+        GRAPH <https://www.portal.brain-bican.org/grapidreleasev01> {
           ?id bican:structure ?o; 
         }
       }
@@ -77,9 +77,9 @@ boxiconsstatisticscount:
     sparql_query: |-
       PREFIX bican: <https://identifiers.org/brain-bican/vocab/> 
       PREFIX biolink: <https://w3id.org/biolink/vocab/>   
-      SELECT DISTINCT (COUNT(?id) as ?count )
+      SELECT  (COUNT(DISTINCT(?id)) as ?count )
       WHERE {
-        GRAPH <https://www.portal.brain-bican.org/grapidrelease> {
-            ?id biolink:category bican:LibraryAliquot; 
+        GRAPH <https://www.portal.brain-bican.org/grapidreleasev01> {
+            ?id biolink:category "bican:LibraryAliquot"^^<http://www.w3.org/2001/XMLSchema#anyURI>; 
         }
       }
