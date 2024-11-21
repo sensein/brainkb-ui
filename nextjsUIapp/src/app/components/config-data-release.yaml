@@ -1,0 +1,10 @@
+datareleasesetup:
+  - setup: "bucketsetup"
+    slug: "bucketsetup"
+    description: "Name of the S3 public bucket."
+    region: "us-east-2"
+    bucketname: "brainkb-data-release"
+
+
+
+
