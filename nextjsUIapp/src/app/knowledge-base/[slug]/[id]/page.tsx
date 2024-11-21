@@ -87,7 +87,6 @@ const IndividualEntityPage = ({ params }) => {
                                         <div className="bg-gray-400 p-4">
                                             <h2 className="text-white text-xl font-bold">
                                                 {entitycards.name}
-                                                {/*{decodeURIComponent(id).substring(decodeURIComponent(id).lastIndexOf("/") + 1)}*/}
                                             </h2>
                                         </div>
                                         <div className="p-4">
