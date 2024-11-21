@@ -14,7 +14,7 @@ const IndividualEntityPage = ({ params }) => {
     const [error, setError] = useState<string | null>(null);
 
     const fetchData = async (queryParameter) => {
-        const baseurl = process.env.NEXT_PUBLIC_API_ADMIN_HOST;
+        const baseurl = process.env.NEXT_PUBLIC_API_ADMIN_HOST || "https://queryservice.brainkb.org";
         const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql";
 
         try {
