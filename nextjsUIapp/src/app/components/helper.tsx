@@ -68,6 +68,49 @@ export async function formatextractPredicateObjectPairs(data) {
     return result;
 };
 
+/**
+ * Formats a date string in the format "day_month_year" to "Day Month, Year".
+ *
+ * @param {string} date - The input date string in "DD_MM_YYYY" format.
+ * @returns {string} - The formatted date in "Day Month, Year" format.
+ * @throws {Error} - Throws an error if the input date is invalid or cannot be parsed.
+ */
+function format_date(date) {
+    const months = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+
+    // Validate input: Ensure the input is a string and matches the "DD_MM_YYYY" pattern
+    if (typeof date !== "string" || !/^\d{2}_\d{2}_\d{4}$/.test(date)) {
+        throw new Error("Invalid date format. Expected format is 'DD_MM_YYYY'.");
+    }
+
+    const [day, month, year] = date.split("_");
+
+    // Validate day, month, and year components
+    const dayNumber = parseInt(day, 10);
+    const monthNumber = parseInt(month, 10);
+    const yearNumber = parseInt(year, 10);
+
+    if (isNaN(dayNumber) || isNaN(monthNumber) || isNaN(yearNumber)) {
+        throw new Error("Invalid date components. Please ensure all parts are numeric.");
+    }
+
+    if (monthNumber < 1 || monthNumber > 12) {
+        throw new Error(`Invalid month value: ${month}. Must be between 01 and 12.`);
+    }
+
+    if (dayNumber < 1 || dayNumber > 31) {
+        throw new Error(`Invalid day value: ${day}. Must be between 01 and 31.`);
+    }
+
+    const monthName = months[monthNumber - 1]; // Convert month number to name
+
+    return `${dayNumber} ${monthName}, ${yearNumber}`; // Format the output
+}
+
+
 
 /**
  * Helper function to process and format S3 file information.
@@ -75,44 +118,107 @@ export async function formatextractPredicateObjectPairs(data) {
  * @param {String} bucketName - The S3 bucket name.
  * @param {Object} data - The S3 response object containing file metadata.
  * @param {Array} data.Contents - List of objects in the S3 bucket. Each object should have a 'Key' property.
- * @returns {Object} - A dictionary where keys are file paths, and values are formatted file identifiers.
+ * @returns {Object} - - A list of dictionaries grouped by date, where each dictionary contains information about releases,
+ *  *                    combined files, and individual file types, categorized by folder.
+ *
  *
  * Output:
- * {
- *     "https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/10_2024/combined/all_data.csv": "COMBINED",
- *     "https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/10_2024/individual/AmplifiedCdna.csv": "AMPLIFIEDCDNA",
- *     "https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/10_2024/individual/BarcodedCellSample.csv": "BARCODEDCELLSAMPLE",
- *     "https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/10_2024/individual/BrainSlab.csv": "BRAINSLAB",
- *     "https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/10_2024/individual/DissectionRoiPolygon.csv": "DISSECTIONROIPOLYGON",
- *     "https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/10_2024/individual/DissociatedCellSample.csv": "DISSOCIATEDCELLSAMPLE",
- *     "https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/10_2024/individual/Donor.csv": "DONOR",
- *     "https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/10_2024/individual/EnrichedCellSample.csv": "ENRICHEDCELLSAMPLE",
- *     "https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/10_2024/individual/Library.csv": "LIBRARY",
- *     "https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/10_2024/individual/LibraryAliquot.csv": "LIBRARYALIQUOT",
- *     "https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/10_2024/individual/TissueSample.csv": "TISSUESAMPLE"
- * }
+ * [
+ *     {
+ *         "date": "03_10_2024",
+ *         "folders": {
+ *             "bican-rapid-release": {
+ *                 "release": "BICAN RAPID RELEASE",
+ *                 "released_date": "3 October, 2024",
+ *                 "combined": {
+ *                     "https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/03_10_2024/combined/all_data.csv": "COMBINED"
+ *                 },
+ *                 "individualtypes": {
+ *                     "https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/03_10_2024/individual/AmplifiedCdna.csv": "AMPLIFIEDCDNA",
+ *                     "https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/03_10_2024/individual/BarcodedCellSample.csv": "BARCODEDCELLSAMPLE",
+ *                     "https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/03_10_2024/individual/BrainSlab.csv": "BRAINSLAB",
+ *                 }
+ *             }
+ *         }
+ *     },
+ *     {
+ *         "date": "05_10_2024",
+ *         "folders": {
+ *             "bican-rapid-release": {
+ *                 "release": "BICAN RAPID RELEASE",
+ *                 "released_date": "5 October, 2024",
+ *                 "combined": {},
+ *                 "individualtypes": {
+ *                     "https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/05_10_2024/Brain.json": "BRAIN"
+ *                 }
+ *             }
+ *         }
+ *     },
+ *     {
+ *         "date": "04_11_2024",
+ *         "folders": {
+ *             "brainkb-cell-data-test": {
+ *                 "release": "BRAINKB CELL DATA TEST",
+ *                 "released_date": "4 November, 2024",
+ *                 "combined": {
+ *                     "https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/brainkb-cell-data-test/04_11_2024/combined/Cell.json": "COMBINED"
+ *                 },
+ *                 "individualtypes": {}
+ *             }
+ *         }
+ *     }
+ * ]
  */
 function helper_format_s3_files_information(bucketName, data) {
-    const files = {}; // Initialize an empty object to store the formatted file information.
     const filePath = `https://${bucketName}.s3.us-east-2.amazonaws.com`;
+    const datePattern = /\b(\d{2}_\d{2}_\d{4})\b/; // Matches dates in DD_MM_YYYY format
+    const groupedFiles = {}; // Store grouped results
 
-    // Iterate over the contents of the S3 response.
-    data.Contents.map((item) => {
+    data.Contents.forEach((item) => {
         const extractedFile = item.Key;
+        const matchedDate = extractedFile.match(datePattern);
 
-        // Process files that have a .csv or .json extension.
+        if (!matchedDate) return; // Skip files without a matching date
+
+        const date = matchedDate[0]; // Extract date (e.g., "03_10_2024")
+        const folder = extractedFile.split("/")[1]; // Extract folder (e.g., "bican-rapid-release")
+        const release = folder.split("-").map((word) => word.toUpperCase()).join(" ");
+
+        // Ensure structure exists for the date
+        if (!groupedFiles[date]) {
+            groupedFiles[date] = {};
+        }
+
+        // Ensure structure exists for the folder
+        if (!groupedFiles[date][folder]) {
+            groupedFiles[date][folder] = {
+                release,
+                released_date: format_date(date),
+                combined: {},
+                individualtypes: {},
+            };
+        }
+
+        // Process files with .csv or .json extensions
         if (extractedFile.endsWith("csv") || extractedFile.endsWith("json")) {
-            // Check if the file name includes the word "combined".
             if (extractedFile.includes("combined")) {
-                files[`${filePath}/${extractedFile}`] = "COMBINED"; // Assign a "COMBINED" label to such files.
+                // Handle combined files
+                groupedFiles[date][folder].combined[`${filePath}/${extractedFile}`] = "COMBINED";
             } else {
-                // For other files, extract the file name and convert it to uppercase.
-                const fileName = extractedFile.split("/").pop().split(".")[0];
-                files[`${filePath}/${extractedFile}`] = fileName.toUpperCase();
+                // Handle individual files
+                const fileName = extractedFile.split("/").pop().split(".")[0]; // Extract the file name
+                groupedFiles[date][folder].individualtypes[`${filePath}/${extractedFile}`] = fileName.toUpperCase();
             }
         }
     });
-    return files; // Return the formatted file information as an object.
+
+    // Convert grouped files into a list of dictionaries
+    const groupedFilesList = Object.entries(groupedFiles).map(([date, folders]) => ({
+        date,
+        folders,
+    }));
+
+    return groupedFilesList;
 }
 
 
@@ -127,21 +233,18 @@ function helper_format_s3_files_information(bucketName, data) {
  */
 export async function get_rapid_release_file(data) {
 
-    let releasedFiles = {};
     const REGION = data?.bucketdetails?.region;
     const BUCKET_NAME = data?.bucketdetails?.bucketname;
-
-
 
     if (!REGION || !BUCKET_NAME) {
         throw new Error('Bucket details (region and bucket name) must be provided.');
     }
     AWS.config.update({region: REGION});
     const s3 = new AWS.S3();
-     return new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
         s3.makeUnauthenticatedRequest(
             'listObjectsV2',
-            { Bucket: BUCKET_NAME },
+            {Bucket: BUCKET_NAME},
             function (err, data) {
                 if (err) {
                     console.error("Error fetching files:", err);
