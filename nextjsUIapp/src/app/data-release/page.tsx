@@ -6,10 +6,26 @@ import {getData} from "@/src/app/components/getData";
 import {useEffect, useRef, useState} from "react";
 import {get_rapid_release_file} from "@/src/app/components/helper";
 
+type AwsDataType =   {
+  date: string;
+  folders: {
+    [folderName: string]: {
+      release: string;
+      released_date: string;
+      combined: {
+        [url: string]: string;
+      };
+      individualtypes: {
+        [url: string]: string;
+      };
+    };
+  };
+}
+
 export default function Contact() {
 
     const hasFetched = useRef(false);
-    const [awsData, setAWSData] = useState({});
+    const [awsData, setAWSData] = useState<AwsDataType | null>(null);
     const fetchDataRapidRelease = async () => {
         if (hasFetched.current) return; // Prevent multiple calls
         hasFetched.current = true;
