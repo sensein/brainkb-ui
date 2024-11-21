@@ -6,20 +6,20 @@ import {getData} from "@/src/app/components/getData";
 import {useEffect, useRef, useState} from "react";
 import {get_rapid_release_file} from "@/src/app/components/helper";
 
-type AwsDataType =   {
-  date: string;
-  folders: {
-    [folderName: string]: {
-      release: string;
-      released_date: string;
-      combined: {
-        [url: string]: string;
-      };
-      individualtypes: {
-        [url: string]: string;
-      };
+type AwsDataType = {
+    date: string;
+    folders: {
+        [folderName: string]: {
+            release: string;
+            released_date: string;
+            combined: {
+                [url: string]: string;
+            };
+            individualtypes: {
+                [url: string]: string;
+            };
+        };
     };
-  };
 }
 
 export default function Contact() {
@@ -35,14 +35,15 @@ export default function Contact() {
         const data = {};
         data["bucketdetails"] = bucketDetails;
         const files = await get_rapid_release_file(data);
-         setAWSData(files as AwsDataType);
+        setAWSData(files as AwsDataType);
 
     }
 
     useEffect(() => {
         fetchDataRapidRelease();
     }, []);
-    console.log(awsData);
+
+
     return (
         <div className="set-margin-hundred">
             <div className="flex justify-center">
@@ -147,53 +148,63 @@ export default function Contact() {
                     <tbody>
                     {Array.isArray(awsData) &&
                         awsData.map((item, dataIndex) =>
-                            Object.entries(item.folders || {}).map(([folderKey, folderValue], folderIndex) => (
-                                <tr key={`${dataIndex}-${folderIndex}`}
-                                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                    {/* Date */}
-                                    <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                        {item.date || "N/A"}
-                                    </td>
+                            Object.entries(item.folders || {}).map(([folderKey, folderValue], folderIndex) => {
+                                // Assert or validate the type of folderValue
+                                const folder = folderValue as {
+                                    release: string;
+                                    released_date: string;
+                                    combined: { [url: string]: string };
+                                    individualtypes: { [url: string]: string };
+                                };
 
-                                    {/* Release Type */}
-                                    <td className="px-6 py-4">
-                                        {folderValue.release || "N/A"}
-                                    </td>
+                                return (
+                                    <tr
+                                        key={`${dataIndex}-${folderIndex}`}
+                                        className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
+                                    >
+                                        {/* Date */}
+                                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                            {item.date || "N/A"}
+                                        </td>
 
-                                    {/* Released Date */}
-                                    <td className="px-6 py-4">
-                                        {folderValue.released_date || "N/A"}
-                                    </td>
+                                        {/* Release Type */}
+                                        <td className="px-6 py-4">
+                                            {folder.release || "N/A"}
+                                        </td>
 
-                                    {/* Individual Types */}
-                                    <td className="px-6 py-4">
-                                        {folderValue.individualtypes
-                                            ? Object.entries(folderValue.individualtypes).map(([key, value], index, arr) => (
-                                                <span key={key}>
-                                                    <a href={key} target="_blank" rel="noopener noreferrer">
-                                                        {value}
+                                        {/* Released Date */}
+                                        <td className="px-6 py-4">
+                                            {folder.released_date || "N/A"}
+                                        </td>
+
+                                        {/* Individual Types */}
+                                        <td className="px-6 py-4">
+                                            {folder.individualtypes
+                                                ? Object.entries(folder.individualtypes).map(([key, value], index, arr) => (
+                                                    <span key={key}>
+                                        <a href={key} target="_blank" rel="noopener noreferrer">
+                                            {value}
+                                        </a>
+                                                        {index < arr.length - 1 && " | "}
+                                    </span>
+                                                ))
+                                                : ""}
+                                        </td>
+
+                                        {/* Combined */}
+                                        <td className="px-6 py-4">
+                                            {folder.combined
+                                                ? Object.entries(folder.combined).map(([key, value]) => (
+                                                    <a key={key} href={key} target="_blank" rel="noopener noreferrer">
+                                                        {value === "COMBINED" ? "All Data" : ""}
                                                     </a>
-                                                    {index < arr.length - 1 && " | "}
-                                                </span>
-                                            ))
-                                            : ""}
-
-                                    </td>
-
-                                    {/* Combined */}
-                                    <td className="px-6 py-4">
-                                        {folderValue.combined
-                                            ? Object.entries(folderValue.combined).map(([key, value]) => (
-                                                <a key={key} href={key} target="_blank" rel="noopener noreferrer">
-                                                    {value === "COMBINED" ? "All Data" : ""}
-                                                </a>
-                                            ))
-                                            : ""}
-                                    </td>
-                                </tr>
-                            ))
+                                                ))
+                                                : ""}
+                                        </td>
+                                    </tr>
+                                );
+                            })
                         )}
-
 
                     </tbody>
                 </table>
