@@ -172,10 +172,7 @@ export default function Contact() {
                                             {folder.release || "N/A"}
                                         </td>
 
-                                        {/* Released Date */}
-                                        <td className="px-6 py-4">
-                                            {folder.released_date || "N/A"}
-                                        </td>
+                                    
 
                                         {/* Individual Types */}
                                         <td className="px-6 py-4">
