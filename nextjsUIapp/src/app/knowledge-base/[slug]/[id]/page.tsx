@@ -102,7 +102,10 @@ const IndividualEntityPage = ({params}) => {
                                         <div className="p-4">
                                             <p className="text-gray-700">{entitycards.description}</p>
                                             <p className="text-gray-700">
-                                                {(JSON.stringify(data[entitycards.slug]) || "No data available")}
+                                                <p className="text-gray-700">
+                                                    {JSON.stringify(data[entitycards.slug ?? "unknown"]) || "No data available"}
+                                                </p>
+
                                             </p>
                                         </div>
                                     </div>
