@@ -145,17 +145,17 @@ export default async function Contact() {
                             BICAN Rapid Release
                         </td>
                         <td className="px-6 py-4">
-                            <a href="/data-release/Enriched-Cell-Sample-data.csv" download>EnrichedCellSample</a> | <a
-                            href="/data-release/Library-data.csv" download>Library</a> | <a
-                            href="/data-release/Tissue-Sample-data.csv" download>TissueSample</a> | <a
-                            href="/data-release/Brain-Slab-data.csv" download>BrainSlab</a> | <a
-                            href="/data-release/AmplifiedCdna.csv.csv" download>AmplifiedCdna</a> | <a
-                            href="/data-release/BarcodedCellSample.csv" download>BarcodedCellSample</a>
+                            <a href="https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/10_2024/Enriched-Cell-Sample-data.csv" download>EnrichedCellSample</a> | <a
+                            href="https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/10_2024/Library-data.csv" download>Library</a> | <a
+                            href="https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/10_2024/Tissue-Sample-data.csv" download>TissueSample</a> | <a
+                            href="https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/10_2024/Brain-Slab-data.csv" download>BrainSlab</a> | <a
+                            href="https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/10_2024/AmplifiedCdna.csv.csv" download>AmplifiedCdna</a> | <a
+                            href="https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/10_2024/BarcodedCellSample.csv" download>BarcodedCellSample</a>
                             | <a
-                            href="/data-release/DissectionRoiPolygon.csv" download>DissectionRoiPolygon</a> | <a
-                            href="/data-release/DissociatedCellSample.csv" download>DissociatedCellSample</a> | <a
-                            href="/data-release/LibraryAliquot.csv" download>LibraryAliquot</a> | <a
-                            href="/data-release/Donor.csv" download>Donor</a>
+                            href="https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/10_2024/DissectionRoiPolygon.csv" download>DissectionRoiPolygon</a> | <a
+                            href="https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/10_2024/DissociatedCellSample.csv" download>DissociatedCellSample</a> | <a
+                            href="https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/10_2024/LibraryAliquot.csv" download>LibraryAliquot</a> | <a
+                            href="https://brainkb-data-release.s3.us-east-2.amazonaws.com/data-release/bican-rapid-release/10_2024/Donor.csv" download>Donor</a>
                         </td>
                         <td className="px-6 py-4">
                             CSV
