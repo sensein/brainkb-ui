@@ -35,7 +35,7 @@ export default function Contact() {
         const data = {};
         data["bucketdetails"] = bucketDetails;
         const files = await get_rapid_release_file(data);
-        setAWSData(files);
+         setAWSData(files as AwsDataType);
 
     }
 
