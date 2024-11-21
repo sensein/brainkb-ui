@@ -1,15 +1,24 @@
 "use client";
 import SideBarKBFromConfig from "@/src/app/components/SideBarKBFromConfig";
-import { useEffect, useState } from "react";
+import {useEffect, useState} from "react";
 import enititycardmapperconfig from '@/src/app/components/enititycardmapper.yaml';
-import { getData } from "@/src/app/components/getData";
+import {getData} from "@/src/app/components/getData";
 import {extractPredicateObjectPairs} from "@/src/app/components/helper";
 import {formatextractPredicateObjectPairs} from "@/src/app/components/helper";
-const IndividualEntityPage = ({ params }) => {
-    const { slug, id } = params;
+
+type ExtractedBox = {
+    cardtype: string;
+    sparql_query?: string;
+    slug?: string;
+    name?: string;
+    description?: string;
+};
+
+const IndividualEntityPage = ({params}) => {
+    const {slug, id} = params;
     const [mainCardTitle, setMainCardTitle] = useState("");
     const [mainCardDescription, setMainCardDescription] = useState("");
-    const [extractedBoxes, setExtractedBoxes] = useState([]);
+    const [extractedBoxes, setExtractedBoxes] = useState<ExtractedBox[]>([]);
     const [data, setData] = useState({});
     const [error, setError] = useState<string | null>(null);
 
@@ -54,16 +63,17 @@ const IndividualEntityPage = ({ params }) => {
             for (const box of extractedBoxes) {
                 if (box.cardtype === "card" && box.sparql_query) {
                     const query = box.sparql_query.replace(/\{0\}/g, decodeURIComponent(id));
-                    const boxData = await fetchData({ sparql_query: query });
+                    const boxData = await fetchData({sparql_query: query});
                     const cleanedData = await extractPredicateObjectPairs(boxData);
                     const formattedData = await formatextractPredicateObjectPairs(cleanedData);
                     setData((prevData) => ({
                         ...prevData,
-                        [box.slug]: formattedData,
+                        [box.slug || "unknown"]: formattedData,
                     }));
                 }
             }
         };
+
 
         if (extractedBoxes.length > 0) {
             fetchBoxData();
@@ -72,7 +82,7 @@ const IndividualEntityPage = ({ params }) => {
 
     return (
         <div className="kb-page-margin">
-            <SideBarKBFromConfig />
+            <SideBarKBFromConfig/>
             <div className="grid fix-left-margin grid-cols-1">
                 <div className="w-full bg-white shadow-md rounded-lg overflow-hidden">
                     <div className="p-4">
