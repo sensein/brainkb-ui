@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import {
-    GoogleOAuthSignInButton,
+import { 
     GithubOAuthSignInButton
 } from "@/src/app/components/oauthloginbuttons";
 import { getServerSession } from "next-auth";
