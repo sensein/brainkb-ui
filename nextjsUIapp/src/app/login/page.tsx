@@ -19,7 +19,6 @@ export default async function OAuthLogin(){
         <div className="main-holder-brainkb flex justify-center items-center min-h-screen">
             <div className="flex flex-col items-center p-10 shadow-lg rounded-lg bg-white animate-fade-in">
                 <h1 className="text-4xl font-bold mb-4">Sign In</h1>
-                <GoogleOAuthSignInButton/>
                 <GithubOAuthSignInButton/>
             </div>
         </div>
