@@ -50,15 +50,15 @@ export async function formatextractPredicateObjectPairs(data) {
 
         // Process the object
         let processedValue = object;
-        if (object.includes("//")) {
+        if (typeof object === 'string' && object.includes("//")) {
             processedValue = object.split("/").pop(); // Extract part after ':'
 
-        } else if (object.includes(":")) {
+        } else if (typeof object === 'string' && object.includes(":")) {
             processedValue = object.split(":").pop(); // Extract file name from file URI
-        } else if (object.includes("/")) {
+        } else if (typeof object === 'string' && object.includes("/")) {
             processedValue = object.split("/").pop();
         } else {
-            throw new Error("Unexpected format in object string");
+            console.error("Unexpected format in object string" + object);
         }
 
         result[processedKey] = processedValue;
