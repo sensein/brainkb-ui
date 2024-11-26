@@ -1,4 +1,4 @@
-Django==3.2.18
+Django>=4.2.16
 django-jazzmin==2.6.0
 django-summernote==0.8.20.0
 django_autoslug==1.9.8
