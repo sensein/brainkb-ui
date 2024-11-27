@@ -1,8 +1,9 @@
-import NextAuth from "next-auth";
+import NextAuth, { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import GithubProvider from "next-auth/providers/github";
+import type { OAuthConfig } from "next-auth/providers";
 
-export const authOptions = {
+export const authOptions: AuthOptions = {
   providers: [
     // Google OAuth Provider
     GoogleProvider({
@@ -25,9 +26,9 @@ export const authOptions = {
       authorization: { params: { scope: "/authenticate" } }, // ORCID specific scope
       idToken: true,
       checks: ["pkce", "state"], // Security checks
-      clientId: process.env.ORCID_CLIENT_ID,
-      clientSecret: process.env.ORCID_CLIENT_SECRET,
-      profile(profile) {
+      clientId: process.env.ORCID_CLIENT_ID as string,
+      clientSecret: process.env.ORCID_CLIENT_SECRET as string,
+      profile(profile: any) {
         return {
           id: profile.sub, // ORCID iD
           name: profile.name, // User's name
@@ -35,7 +36,7 @@ export const authOptions = {
           image: profile.picture, // Profile picture (not commonly used in ORCID)
         };
       },
-    },
+    } as OAuthConfig<any>, // Cast the ORCID provider as an OAuthConfig
   ],
   callbacks: {
     async jwt({ token, account, profile }) {
