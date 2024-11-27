@@ -6,6 +6,7 @@ import SignInButtons from  "@/src/app/components/SignInButtons"; // Import the c
 
 export const metadata: Metadata = {
   title: "Login",
+
 };
 
 export default async function OAuthLogin() {
@@ -16,12 +17,14 @@ export default async function OAuthLogin() {
     redirect("/admin");
   }
 
+
   return (
     <div className="main-holder-brainkb flex justify-center items-center min-h-screen">
       <div className="flex flex-col items-center p-10 shadow-lg rounded-lg bg-white animate-fade-in">
         <h1 className="text-4xl font-bold mb-4">Sign In</h1>
         {/* Render client-side sign-in buttons */}
         <SignInButtons />
+
       </div>
     </div>
   );
