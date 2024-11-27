@@ -1,6 +1,13 @@
-import type { OAuthUserConfig } from "next-auth/providers";
+import { OAuthUserConfig, OAuthConfig } from "next-auth/providers/oauth";
 
-const ORCIDProvider = (options: OAuthUserConfig<any>): OAuthUserConfig<any> => ({
+interface ORCIDProfile {
+  sub: string;
+  name: string;
+  email: string;
+  picture?: string;
+}
+
+const ORCIDProvider = (options:  OAuthUserConfig<ORCIDProfile>): OAuthConfig<ORCIDProfile> => ({
   id: "orcid",
   name: "ORCID",
   type: "oauth",
