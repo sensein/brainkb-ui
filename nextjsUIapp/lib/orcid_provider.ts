@@ -12,7 +12,8 @@ const ORCIDProvider = (options:  OAuthUserConfig<ORCIDProfile>): OAuthConfig<ORC
   name: "ORCID",
   type: "oauth",
   wellKnown: "https://orcid.org/.well-known/openid-configuration",
-  authorization: { params: { scope: "/authenticate" } },
+  authorization: { params: { scope: "openid name email profile" } },
+
   idToken: true,
   checks: ["pkce", "state"],
   profile(profile: any) {
