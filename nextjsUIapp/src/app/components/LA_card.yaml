@@ -8,7 +8,7 @@ boxes:
   - box:
     slug: summarybox
     id: ui:2
-    name: SummaryBox
+    name: Summary
     cardtype: card
     box_header:
       key: id
@@ -19,19 +19,21 @@ boxes:
                 
                 SELECT DISTINCT ?subject ?predicate ?object ?category_type
                 WHERE {
-          {  BIND(<{0}> AS ?id)
-              ?subject ?predicate ?id . }
-              UNION
-              { BIND(<{0}> AS ?id)
-              ?id ?predicate ?object . }
-              UNION
-              { BIND(<{0}> AS ?id)
-              ?subject ?id ?object . }
-              
-              OPTIONAL {
-              ?id prov:wasDerivedFrom ?derivedFrom .
-              ?derivedFrom biolink:category ?category_type .
-              }
+                GRAPH <https://www.portal.brain-bican.org/grapidreleasev01> {
+                  {  BIND(<{0}> AS ?id)
+                      ?subject ?predicate ?id . }
+                      UNION
+                      { BIND(<{0}> AS ?id)
+                      ?id ?predicate ?object . }
+                      UNION
+                      { BIND(<{0}> AS ?id)
+                      ?subject ?id ?object . }
+                      
+                      OPTIONAL {
+                      ?id prov:wasDerivedFrom ?derivedFrom .
+                      ?derivedFrom biolink:category ?category_type .
+                      }
+                  }
               }
     description: One library in the library pool. Each library aliquot in a library pool will have a unique R1/R2 index ...
     box_additional_info:

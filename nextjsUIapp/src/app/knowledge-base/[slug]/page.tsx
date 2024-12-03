@@ -40,7 +40,7 @@ const KbIndividualPageAllData = (
 
         const queryParameter = {sparql_query: query_to_execute};
 
-        const baseurl = process.env.NEXT_PUBLIC_API_ADMIN_HOST || "http://3.134.90.242:8010";
+        const baseurl = process.env.NEXT_PUBLIC_API_ADMIN_HOST || "https://queryservice.brainkb.org";
         const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql"; //default is "query/sparql"
 
 

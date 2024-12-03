@@ -1,17 +1,49 @@
-import type {Metadata} from "next";
-import {getServerSession} from "next-auth";
-import {authOptions} from "@/lib/auth";
-import {redirect} from "next/navigation";
+"use client";
 
-export const metadata: Metadata = {
-    title: "Data Release",
 
-};
+import yaml from "@/src/app/components/config-data-release.yaml";
+import {getData} from "@/src/app/components/getData";
+import {useEffect, useRef, useState} from "react";
+import {get_rapid_release_file} from "@/src/app/components/helper";
 
-export default async function Contact() {
-    const current_session = await getServerSession(authOptions);
-    //user is logged in so redirect to admin page
-    if (current_session) return redirect("/admin");
+type AwsDataType = {
+    date: string;
+    folders: {
+        [folderName: string]: {
+            release: string;
+            released_date: string;
+            combined: {
+                [url: string]: string;
+            };
+            individualtypes: {
+                [url: string]: string;
+            };
+        };
+    };
+}
+
+export default function Contact() {
+
+    const hasFetched = useRef(false);
+    const [awsData, setAWSData] = useState<AwsDataType | null>(null);
+    const fetchDataRapidRelease = async () => {
+        if (hasFetched.current) return; // Prevent multiple calls
+        hasFetched.current = true;
+
+        const bucketDetails = yaml.datareleasesetup.find((setup) => setup.slug === "bucketsetup");
+
+        const data = {};
+        data["bucketdetails"] = bucketDetails;
+        const files = await get_rapid_release_file(data);
+        setAWSData(files as AwsDataType);
+
+    }
+
+    useEffect(() => {
+        fetchDataRapidRelease();
+    }, []);
+
+
     return (
         <div className="set-margin-hundred">
             <div className="flex justify-center">
@@ -26,7 +58,8 @@ export default async function Contact() {
             <p className="mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
                 BrainKB provides regular data releases that include comprehensive records of all primary entities such
                 as Assertions, Evidence, Library Aliquot and Barcoded Cell Sample. These releases are available in
-                various formats, including CSV and JSON. Users can easily download the specific entity type and data
+                various formats, including CSV and JSON or API-access. Users can easily download the specific entity
+                type and data
                 format they need by selecting the corresponding download button on the BrainKB platform.
 
             </p>
@@ -103,6 +136,7 @@ export default async function Contact() {
 
                             </div>
                         </th>
+
                         <th scope="col" className="px-6 py-3">
                             <div className="flex items-center">
                                 Combined
@@ -112,23 +146,62 @@ export default async function Contact() {
                     </tr>
                     </thead>
                     <tbody>
-                    <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                        <th scope="row"
-                            className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                            NA
-                        </th>
-                        <td className="px-6 py-4">
-                            Na
-                        </td>
-                        <td className="px-6 py-4">
-                            NA
-                        </td>
-                        <td className="px-6 py-4">
-                            NA
-                        </td>
+                    {Array.isArray(awsData) &&
+                        awsData.map((item, dataIndex) =>
+                            Object.entries(item.folders || {}).map(([folderKey, folderValue], folderIndex) => {
+                                // Assert or validate the type of folderValue
+                                const folder = folderValue as {
+                                    release: string;
+                                    released_date: string;
+                                    combined: { [url: string]: string };
+                                    individualtypes: { [url: string]: string };
+                                };
 
-                    </tr>
+                                return (
+                                    <tr
+                                        key={`${dataIndex}-${folderIndex}`}
+                                        className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
+                                    >
+                                        {/* Date */}
+                                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                            {item.date.replace(/_/g, "/") || "N/A"}
+                                        </td>
 
+                                        {/* Release Type */}
+                                        <td className="px-6 py-4">
+                                            {folder.release || "N/A"}
+                                        </td>
+
+                                    
+
+                                        {/* Individual Types */}
+                                        <td className="px-6 py-4">
+                                            {folder.individualtypes
+                                                ? Object.entries(folder.individualtypes).map(([key, value], index, arr) => (
+                                                    <span key={key}>
+                                        <a href={key} target="_blank" rel="noopener noreferrer">
+                                            {value}
+                                        </a>
+                                                        {index < arr.length - 1 && " | "}
+                                    </span>
+                                                ))
+                                                : ""}
+                                        </td>
+
+                                        {/* Combined */}
+                                        <td className="px-6 py-4">
+                                            {folder.combined
+                                                ? Object.entries(folder.combined).map(([key, value]) => (
+                                                    <a key={key} href={key} target="_blank" rel="noopener noreferrer">
+                                                        {value === "COMBINED" ? "All Data" : ""}
+                                                    </a>
+                                                ))
+                                                : ""}
+                                        </td>
+                                    </tr>
+                                );
+                            })
+                        )}
 
                     </tbody>
                 </table>

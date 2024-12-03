@@ -27,6 +27,9 @@ export default async  function RootLayout({
 
   return (
       <html lang="en">
+      <head>
+          <meta httpEquiv="Content-Security-Policy" content="upgrade-insecure-requests"/>
+      </head>
       <body className={inter.className}>
       <SessionProvider session={session}>
           <header>
