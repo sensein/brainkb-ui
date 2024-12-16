@@ -1,15 +1,8 @@
 "use client";
-import type {Metadata} from "next";
 import {useState, useEffect} from "react";
-import {getServerSession} from "next-auth";
 import {useRouter} from "next/navigation";
 import {useSession} from "next-auth/react";
-import {redirect} from "next/navigation";
 
-
-// export const metadata: Metadata = {
-//     title: "Profile",
-// };
 
 export default function Profile() {
     const {data: session} = useSession();
@@ -225,8 +218,6 @@ export default function Profile() {
                                 rel="noopener noreferrer"
                                 className="text-blue-500 dark:text-blue-400 flex items-center"
                             >
-
-
                                 Google Scholar
                             </a>
                             <div
@@ -296,10 +287,6 @@ export default function Profile() {
                         Conflict of Interest Statement
                     </h4>
                     <div className="flex justify-between text-sm mt-2">
-                        {/*<p className="text-gray-600 dark:text-gray-400">Status: Expired</p>*/}
-                        {/*<p className="text-gray-600 dark:text-gray-400">*/}
-                        {/*    Updated: 12/1/23 | Expires: 12/1/24*/}
-                        {/*</p>*/}
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
                         {profileData.conflict_of_interest}
