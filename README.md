@@ -12,87 +12,83 @@ For deployment instructions, please visit the [BrainKB Deployment Documentation]
 This project is licensed under the [Apache License 2.0](https://opensource.org/license/apache-2-0).
 
 
-## BrainKB UI Code of Conduct
+# BrainKB UI Code of Conduct
 
 **Version:** 1.0  
-**Last Updated:** December 11, 2024
+**Last Updated:** Jan 02, 2025
 
-### Our Commitment
+## Our Pledge
 
-At BrainKB UI, we value the participation of every contributor. We aim to foster a welcoming, respectful, and inclusive environment where people of all backgrounds and identities can collaborate, learn, and grow. We are committed to providing an open and friendly space—free of harassment, discrimination, and other forms of intimidation—so that our community can focus on what matters: building great software and knowledge tools together.
+We as members, contributors, and leaders pledge to make participation in our community a harassment-free experience for everyone, regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, religion, or sexual identity and orientation.
 
-### Who This Code Applies To
+We pledge to act and interact in ways that contribute to an open, welcoming, diverse, inclusive, and healthy community.
 
-This Code of Conduct (CoC) applies to all contributors, maintainers, and community members involved in this project’s activities. It covers:
+## Our Standards
 
-- Participation in public project forums, such as issue trackers, pull requests, and discussion boards.
-- Communication through community channels, including GitHub comments, Slack or Discord discussions, mailing lists, and other project-related mediums.
-- In-person interactions at events, meetups, or conferences representing the project.
+Examples of behavior that contributes to a positive environment for our community include:
 
-### Expected Behavior
+- Demonstrating empathy and kindness toward other people
+- Being respectful of differing opinions, viewpoints, and experiences
+- Giving and gracefully accepting constructive feedback
+- Accepting responsibility and apologizing to those affected by our mistakes, and learning from the experience
+- Focusing on what is best not just for us as individuals, but for the overall community
 
-**In all project spaces, we expect community members to:**
+Examples of unacceptable behavior include:
 
-1. **Be Respectful and Kind:**  
-   Treat everyone you interact with as a valued collaborator. Use welcoming and inclusive language. Be patient and supportive of others, especially newcomers.
+- The use of sexualized language or imagery, and sexual attention or advances of any kind
+- Trolling, insulting or derogatory comments, and personal or political attacks
+- Public or private harassment
+- Publishing others’ private information, such as a physical or email address, without their explicit permission
+- Other conduct which could reasonably be considered inappropriate in a professional setting
 
-2. **Be Open to Different Perspectives:**  
-   Approach discussions with an open mind. Understand that others may have viewpoints, backgrounds, and experiences different from your own. Constructively share opinions while acknowledging and learning from feedback.
+## Enforcement Responsibilities
 
-3. **Maintain a Collaborative Spirit:**  
-   Engage in dialogue that helps move the project forward. Offer help and support when possible, and celebrate the contributions of others. Give credit where it’s due, and strive to address conflicts in a spirit of cooperation.
+Community leaders are responsible for clarifying and enforcing our standards of acceptable behavior and will take appropriate and fair corrective action in response to any behavior that they deem inappropriate, threatening, offensive, or harmful.
 
-4. **Respect Personal Boundaries and Privacy:**  
-   Refrain from sharing personal information about others without their consent. Show respect for each individual’s comfort levels and personal boundaries.
+Community leaders have the right and responsibility to remove, edit, or reject comments, commits, code, wiki edits, issues, and other contributions that are not aligned to this Code of Conduct, and will communicate reasons for moderation decisions when appropriate.
 
-### Unacceptable Behavior
+## Scope
 
-The following behaviors are considered unacceptable in any project space, and will not be tolerated:
+This Code of Conduct applies within all community spaces, and also applies when an individual is officially representing the community in public spaces. Examples of representing our community include using an official email address, posting via an official social media account, or acting as an appointed representative at an online or offline event.
 
-1. **Harassment, Hate, and Discrimination:**  
-   Slurs, insults, or demeaning comments based on race, ethnicity, nationality, gender identity or expression, sexual orientation, religion, disability, or other personal characteristics.
+## Enforcement
 
-2. **Threats, Intimidation, and Incitement of Violence:**  
-   Direct or indirect threats, bullying, or calls for violence, as well as encouraging others to engage in these behaviors.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement at [tekraj@mit.edu](mailto:tekraj@mit.edu) (or other BrainKB members). All complaints will be reviewed and investigated promptly and fairly.
 
-3. **Personal Attacks and Demeaning Language:**  
-   Sustained personal insults, name-calling, ad hominem attacks, or rudeness intended to degrade or belittle others.
+All community leaders are obligated to respect the privacy and security of the reporter of any incident.
 
-4. **Disruptive Behavior and Excessive Criticism:**  
-   Non-constructive criticism intended solely to disrupt or tear down other people’s work; persistent interruptions of discussions; repeated unwelcome comments that interfere with others’ ability to contribute.
+## Enforcement Guidelines
 
-5. **Unwelcome Sexual Attention or Imagery:**  
-   Sexualized language, imagery, or advances; sharing of sexually explicit or violent material; unwelcome or inappropriate touching or physical contact if meeting in person.
+Community leaders will follow these Community Impact Guidelines in determining the consequences for any action they deem in violation of this Code of Conduct:
 
-### Reporting and Enforcement
+### 1. Correction
+**Community Impact:** Use of inappropriate language or other behavior deemed unprofessional or unwelcome in the community.
 
-If you experience or witness behavior that violates this Code of Conduct, or have any concerns, please take one or more of the following steps:
+**Consequence:** A private, written warning from community leaders, providing clarity around the nature of the violation and an explanation of why the behavior was inappropriate. A public apology may be requested.
+### 2. Warning
 
-- **Private Report:** Contact the project maintainers at [tekraj@mit.edu](tekraj@mit.edu) to report the issue. All reports will be reviewed and investigated promptly and confidentially.
-- **Public Request for Moderation:** If a situation occurs in a public forum (e.g., a GitHub issue, pull request, or discussion), you may respectfully request that moderators intervene.
+**Community Impact:** A violation through a single incident or series of actions.
 
-**The project maintainers will:**
+**Consequence:**  A warning with consequences for continued behavior. No interaction with the people involved, including unsolicited interaction with those enforcing the Code of Conduct, for a specified period of time. This includes avoiding interactions in community spaces as well as external channels like social media. Violating these terms may lead to a temporary or permanent ban.
 
-- Review all reported incidents.
-- Keep reports confidential to the greatest extent possible.
-- Take actions deemed appropriate to the situation, which may include warnings, temporary communication bans, permanent bans, or other measures to maintain a safe and respectful environment.
+### 3. Temporary Ban
+**Community Impact:** A serious violation of community standards, including sustained inappropriate behavior.
 
-### Consequences for Violations
+**Consequence:** A temporary ban from any sort of interaction or public communication with the community for a specified period of time. No public or private interaction with the people involved, including unsolicited interaction with those enforcing the Code of Conduct, is allowed during this period. Violating these terms may lead to a permanent ban.
 
-Actions taken in response to violations will be proportionate to the severity, frequency, and intent of the misconduct. Possible consequences include, but are not limited to:
+### 4. Permanent Ban
+**Community Impact:** Demonstrating a pattern of violation of community standards, including sustained inappropriate behavior, harassment of an individual, or aggression toward or disparagement of classes of individuals.
 
-- A private, written warning with instructions for improved behavior.
-- A request for a public or private apology.
-- Removal of content that violates this CoC.
-- Temporary or permanent ban from participation in the project’s spaces.
+**Consequence:** A permanent ban from any sort of public interaction within the community.
 
-### Acknowledgments
+## Attribution
 
-This Code of Conduct is inspired by guidelines and recommendations from [Project Include](https://projectinclude.org), various open source communities, and the Contributor Covenant. We believe that building and maintaining an inclusive culture is a continuous process. We welcome feedback and suggestions from the community on how we can improve.
+This Code of Conduct is adapted from the Contributor Covenant, version 2.0, available at [https://www.contributor-covenant.org/version/2/0/code_of_conduct.html](https://www.contributor-covenant.org/version/2/0/code_of_conduct.html).
 
-### Attribution
+Community Impact Guidelines were inspired by [Mozilla's code of conduct enforcement ladder](https://github.com/mozilla/inclusion). 
 
-This Code of Conduct is adapted from the principles outlined by [Project Include’s guide to writing codes of conduct](https://projectinclude.org/writing_cocs).
+For answers to frequently asked questions about this code of conduct, see [https://www.contributor-covenant.org/faq](https://www.contributor-covenant.org/faq). Translations are also available at [https://www.contributor-covenant.org/translations](https://www.contributor-covenant.org/translations).
+
 
 ---
 
