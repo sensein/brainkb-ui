@@ -78,4 +78,4 @@ For answers to frequently asked questions about this code of conduct, see [https
 
 ---
 
-By participating in the BrainKB UI project, you agree to abide by this Code of Conduct. Let’s work together to create an inclusive, empowering, and vibrant community.
+By participating in the BrainKB project, you agree to abide by this Code of Conduct. Let’s work together to create an inclusive, empowering, and vibrant community.
