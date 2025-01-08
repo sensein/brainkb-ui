@@ -199,7 +199,7 @@ export default function PlaygroundPage() {
         <div className="mx-auto">
           <div className="flex justify-center mb-8">
             <FileUpload
-                title="Upload Knowledge Graph"
+                title="Upload Knowledge Graph/PDF file to extract knowledge graphs"
                 acceptedFileTypes={{
                   // 'application/pdf': ['.pdf'], to be enabled later.
                   'application/json': ['.jsonld'],
