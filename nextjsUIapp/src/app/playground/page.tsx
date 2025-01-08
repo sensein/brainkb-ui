@@ -1,71 +1,83 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import FileUpload from '../components/playground/FileUpload';
 import GraphVisualization from '../components/playground/GraphVisualization';
-import { parseTriplesFile, triplesToGraphData, sampleTriples, graphDataToJsonLD, extractTriplesFromPDF } from './utils/pdfProcessor';
+import { parseTriplesFile, triplesToGraphData, getSampleTriples, extractTriplesFromPDF } from './utils/pdfProcessor';
 import { Triple, GraphData, Node as GraphNode } from './types/index';
 import {color} from "d3";
 
 export default function PlaygroundPage() {
-  const [graphData, setGraphData] = useState<GraphData>(() => {
-    const nodesMap = new Map<string, GraphNode>();
-    const rootNode = sampleTriples[0].subject;
+  const [graphData, setGraphData] = useState<GraphData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-    sampleTriples.forEach(triple => {
-      if (!nodesMap.has(triple.subject)) {
-        nodesMap.set(triple.subject, {
-          id: triple.subject,
-          label: triple.subject,
-          type: 'subject',
-          expanded: triple.subject === rootNode,
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        const sampleTriples = await getSampleTriples();
+        const nodesMap = new Map<string, GraphNode>();
+        const rootNode = sampleTriples[0].subject;
+
+        sampleTriples.forEach(triple => {
+          if (!nodesMap.has(triple.subject)) {
+            nodesMap.set(triple.subject, {
+              id: triple.subject,
+              label: triple.subject,
+              type: 'subject',
+              expanded: triple.subject === rootNode,
+              visible: triple.subject === rootNode
+            });
+          }
+          if (!nodesMap.has(triple.object)) {
+            nodesMap.set(triple.object, {
+              id: triple.object,
+              label: triple.object,
+              type: 'object',
+              expanded: false,
+              visible: false
+            });
+          }
+        });
+
+        sampleTriples.forEach(triple => {
+          if (triple.subject === rootNode) {
+            const node = nodesMap.get(triple.object);
+            if (node) {
+              node.visible = true;
+            }
+          }
+        });
+
+        const links = sampleTriples.map(triple => ({
+          source: triple.subject,
+          target: triple.object,
+          label: triple.predicate,
           visible: triple.subject === rootNode
+        }));
+
+        const uniqueNodes = Array.from(nodesMap.values());
+
+        setGraphData({
+          nodes: uniqueNodes,
+          links,
+          metadata: {
+            totalNodes: uniqueNodes.length,
+            totalLinks: links.length,
+            visibleNodes: uniqueNodes.length,
+            maxVisibleNodes: 50,
+            hasMore: false,
+            processedTriples: sampleTriples.length
+          }
         });
-      }
-      if (!nodesMap.has(triple.object)) {
-        nodesMap.set(triple.object, {
-          id: triple.object,
-          label: triple.object,
-          type: 'object',
-          expanded: false,
-          visible: false
-        });
-      }
-    });
-
-    sampleTriples.forEach(triple => {
-      if (triple.subject === rootNode) {
-        const node = nodesMap.get(triple.object);
-        if (node) {
-          node.visible = true;
-        }
-      }
-    });
-
-    const links = sampleTriples.map(triple => ({
-      source: triple.subject,
-      target: triple.object,
-      label: triple.predicate,
-      visible: triple.subject === rootNode
-    }));
-
-    const uniqueNodes = Array.from(nodesMap.values());
-
-    return {
-      nodes: uniqueNodes,
-      links,
-      metadata: {
-        totalNodes: uniqueNodes.length,
-        totalLinks: links.length,
-        visibleNodes: uniqueNodes.length,
-        maxVisibleNodes: 50,
-        hasMore: false,
-        processedTriples: sampleTriples.length
+      } catch (error) {
+        console.error('Error loading sample data:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
-  });
 
-  const [isLoading, setIsLoading] = useState(false);
+    loadInitialData();
+  }, []);
 
   const handleFileUpload = useCallback(async (files: File[]) => {
     try {
@@ -108,6 +120,7 @@ export default function PlaygroundPage() {
 
   const handleNodeClick = useCallback((nodeId: string) => {
     setGraphData(prevData => {
+       if (!prevData) return null;
       const node = prevData.nodes.find(n => n.id === nodeId);
       if (!node) return prevData;
 
@@ -222,10 +235,12 @@ export default function PlaygroundPage() {
                   </div>
                 </div>
             )}
-            <GraphVisualization
+           {graphData && (
+              <GraphVisualization
                 data={graphData}
                 onNodeClick={handleNodeClick}
-            />
+              />
+            )}
           </div>
         </div>
       </div>

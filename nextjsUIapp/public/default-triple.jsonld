@@ -1,0 +1,239 @@
+{
+  "@context": "https://raw.githubusercontent.com/brain-bican/models/main/jsonld-context-autogen/library_generation.context.jsonld",
+  "@graph": [
+    {
+      "id": "NIMP:LA-AABXZF814447HEKFMF968366",
+      "iri": null,
+      "category": [
+        "bican:LibraryAliquot"
+      ],
+      "type": null,
+      "name": "NY-AT16044-1",
+      "description": null,
+      "has_attribute": null,
+      "deprecated": null,
+      "provided_by": null,
+      "xref": null,
+      "full_name": null,
+      "synonym": null,
+      "was_derived_from": "LI-AABXZF814447",
+      "was_generated_by": null
+    },
+    {
+      "id": "NIMP:LI-AABXZF814447",
+      "iri": null,
+      "category": [
+        "bican:Library"
+      ],
+      "type": null,
+      "name": "L8XA_240223_01_E05",
+      "description": null,
+      "has_attribute": null,
+      "deprecated": null,
+      "provided_by": null,
+      "xref": null,
+      "full_name": null,
+      "synonym": null,
+      "was_derived_from": "AC-IFXYBU524334",
+      "was_generated_by": null,
+      "average_size_bp": 748,
+      "concentration_nm": 193.63172021,
+      "pass_fail_result": "Pass",
+      "quantity_fmol": 3872.63440422,
+      "quantity_ng": 1911.84215268,
+      "r1_r2_index": "SI-NA-E5"
+    },
+    {
+      "id": "NIMP:AC-IFXYBU524334",
+      "iri": null,
+      "category": [
+        "bican:AmplifiedCdna"
+      ],
+      "type": null,
+      "name": "B8XM_240223_01_B02",
+      "description": null,
+      "has_attribute": null,
+      "deprecated": null,
+      "provided_by": null,
+      "xref": null,
+      "full_name": null,
+      "synonym": null,
+      "was_derived_from": "BC-QXSSQN569230",
+      "was_generated_by": null,
+      "quantity_ng": null,
+      "pass_fail_result": "Pass",
+      "percent_cdna_longer_than_400bp": null
+    },
+    {
+      "id": "NIMP:BC-QXSSQN569230",
+      "iri": null,
+      "category": [
+        "bican:BarcodedCellSample"
+      ],
+      "type": null,
+      "name": "2079_B04",
+      "description": null,
+      "has_attribute": null,
+      "deprecated": null,
+      "provided_by": null,
+      "xref": null,
+      "full_name": null,
+      "synonym": null,
+      "was_derived_from": [
+        "EC-NCODCJ881918",
+        "EC-QFELGG418366"
+      ],
+      "was_generated_by": null,
+      "number_of_expected_cells": 10000
+    },
+    {
+      "id": "NIMP:EC-NCODCJ881918",
+      "iri": null,
+      "category": [
+        "bican:EnrichedCellSample"
+      ],
+      "type": null,
+      "name": "M1XM_240220_221-A_B01",
+      "description": null,
+      "has_attribute": null,
+      "deprecated": null,
+      "provided_by": null,
+      "xref": null,
+      "full_name": null,
+      "synonym": null,
+      "was_derived_from": [
+        "DC-PEQFEL660396"
+      ],
+      "was_generated_by": null,
+      "enrichment_population": "50% NeuN+, 35% OLIG2-, 15% OLIG2+",
+      "cell_source_oligo_name": null,
+      "histone_modification_marker": null
+    },
+    {
+      "id": "NIMP:EC-QFELGG418366",
+      "iri": null,
+      "category": [
+        "bican:EnrichedCellSample"
+      ],
+      "type": null,
+      "name": "M1XM_240220_221-R_B01",
+      "description": null,
+      "has_attribute": null,
+      "deprecated": null,
+      "provided_by": null,
+      "xref": null,
+      "full_name": null,
+      "synonym": null,
+      "was_derived_from": [
+        "DC-PEQFEL660396"
+      ],
+      "was_generated_by": null,
+      "enrichment_population": "50% NeuN+, 35% OLIG2-, 15% OLIG2+",
+      "cell_source_oligo_name": null,
+      "histone_modification_marker": null
+    },
+    {
+      "id": "NIMP:DC-PEQFEL660396",
+      "iri": null,
+      "category": [
+        "bican:DissociatedCellSample"
+      ],
+      "type": null,
+      "name": "20240220_H23.30.001.BS.05.Pn.09.Multiome",
+      "description": null,
+      "has_attribute": null,
+      "deprecated": null,
+      "provided_by": null,
+      "xref": null,
+      "full_name": null,
+      "synonym": null,
+      "was_derived_from": [
+        "TI-UJIP903247"
+      ],
+      "was_generated_by": null,
+      "cell_prep_type": "Nuclei",
+      "cell_source_oligo_name": null
+    },
+    {
+      "id": "NIMP:TI-UJIP903247",
+      "iri": null,
+      "category": [
+        "bican:TissueSample"
+      ],
+      "type": null,
+      "name": "H23.30.001.BS.05.Pn.09_Pn",
+      "description": null,
+      "has_attribute": null,
+      "deprecated": null,
+      "provided_by": null,
+      "xref": null,
+      "full_name": null,
+      "synonym": null,
+      "was_derived_from": "RI-CXAZAC345199",
+      "was_generated_by": null,
+      "dissection_was_guided_by": null,
+      "structure": [
+        "DHBA:10661"
+      ]
+    },
+    {
+      "id": "NIMP:RI-CXAZAC345199",
+      "iri": null,
+      "category": [
+        "bican:DissectionRoiPolygon"
+      ],
+      "type": null,
+      "name": "H23.30.001.BS.05.Pn.09",
+      "description": null,
+      "has_attribute": null,
+      "deprecated": null,
+      "was_derived_from": "SL-CYPHIG532483",
+      "was_generated_by": null,
+      "annotates": null
+    },
+    {
+      "id": "NIMP:DO-CYPH5324",
+      "iri": null,
+      "category": [
+        "bican:Donor"
+      ],
+      "type": null,
+      "name": "H23.30.001",
+      "description": null,
+      "has_attribute": null,
+      "deprecated": null,
+      "provided_by": null,
+      "xref": null,
+      "full_name": null,
+      "synonym": null,
+      "in_taxon": null,
+      "in_taxon_label": null,
+      "was_derived_from": null,
+      "was_generated_by": null,
+      "biological_sex": "1",
+      "age_at_death_description": "50 yrs",
+      "age_at_death_reference_point": "birth",
+      "age_at_death_unit": "years",
+      "age_at_death_value": null,
+      "species": "NCBITaxon:9606"
+    },
+    {
+      "id": "NIMP:SL-CYPHIG532483",
+      "iri": null,
+      "category": [
+        "bican:BrainSlab"
+      ],
+      "type": null,
+      "name": "H23.30.001.BS.05",
+      "description": null,
+      "has_attribute": null,
+      "deprecated": null,
+      "provided_by": null,
+      "xref": null,
+      "full_name": null,
+      "synonym": null,
+      "was_derived_from": "DO-CYPH5324",
+      "was_generated_by": null
+    }
+  ]
+}
