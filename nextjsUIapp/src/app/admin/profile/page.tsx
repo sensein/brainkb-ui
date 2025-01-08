@@ -81,7 +81,6 @@ export default function Profile() {
                     <div className="flex justify-center mt-5 space-x-4">
                         <div className="relative group">
                             <a
-                                name="websiteURL"
                                 href={profileData.websiteURL}
                                 className="text-blue-500 dark:text-blue-400 flex items-center"
                                 target="_blank"
@@ -134,7 +133,7 @@ export default function Profile() {
                         </div>
                         <div className="relative group">
                             <a
-                                name={"email"}
+
                                 href="mailto:{profileData.email}"
                                 className="text-blue-500 dark:text-blue-400 flex items-center"
                             >
