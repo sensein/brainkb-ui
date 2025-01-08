@@ -14,11 +14,8 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
- 
     // enable this rule:
-
     "noImplicitAny": false,
-
     "jsx": "preserve",
     "incremental": true,
     "plugins": [
@@ -30,7 +27,8 @@
       "@/*": [
         "./*"
       ]
-    }
+    },
+    "target": "ES2017"
   },
   "include": [
     "next-env.d.ts",
