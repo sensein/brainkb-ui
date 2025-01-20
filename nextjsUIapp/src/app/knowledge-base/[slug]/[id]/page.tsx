@@ -6,6 +6,8 @@ import {getData} from "@/src/app/components/getData";
 import {extractPredicateObjectPairs} from "@/src/app/components/helper";
 import {formatextractPredicateObjectPairs} from "@/src/app/components/helper";
 
+
+
 type ExtractedBox = {
     cardtype: string;
     sparql_query?: string;
@@ -14,15 +16,33 @@ type ExtractedBox = {
     description?: string;
 };
 
-const IndividualEntityPage = ({params}) => {
+interface PageParams {
+    slug: string;
+    id: string;
+}
+
+interface QueryParameter {
+    sparql_query: string;
+}
+
+interface DataObject {
+    [key: string]: Record<string, string>;
+}
+
+interface EntityViewCard {
+    slug: string;
+    filename: string;
+}
+
+const IndividualEntityPage = ({params}: {params: PageParams}) => {
     const {slug, id} = params;
     const [mainCardTitle, setMainCardTitle] = useState("");
     const [mainCardDescription, setMainCardDescription] = useState("");
     const [extractedBoxes, setExtractedBoxes] = useState<ExtractedBox[]>([]);
-    const [data, setData] = useState({});
+    const [data, setData] = useState<DataObject>({});
     const [error, setError] = useState<string | null>(null);
 
-    const fetchData = async (queryParameter) => {
+    const fetchData = async (queryParameter: QueryParameter) => {
         const baseurl = process.env.NEXT_PUBLIC_API_ADMIN_HOST || "https://queryservice.brainkb.org";
         const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql";
 
@@ -40,7 +60,7 @@ const IndividualEntityPage = ({params}) => {
 
     const loadData = async () => {
         try {
-            const page = enititycardmapperconfig.EntityViewCardsMaper.find((page) => page.slug === slug);
+            const page = enititycardmapperconfig.EntityViewCardsMaper.find((page: EntityViewCard) => page.slug === slug);
             const filename = page ? page.filename : "";
 
             const model_data = await import(`@/src/app/components/${filename}`);
@@ -74,7 +94,6 @@ const IndividualEntityPage = ({params}) => {
             }
         };
 
-
         if (extractedBoxes.length > 0) {
             fetchBoxData();
         }
@@ -86,7 +105,7 @@ const IndividualEntityPage = ({params}) => {
             <div className="grid fix-left-margin grid-cols-1">
                 <div className="w-full bg-white shadow-md rounded-lg overflow-hidden">
                     <div className="p-4">
-                        <h2 className="text-xl font-bold"> {decodeURIComponent(id).substring(decodeURIComponent(id).lastIndexOf("/") + 1)}</h2>
+                        <h2 className="text-xl font-bold">{decodeURIComponent(id).substring(decodeURIComponent(id).lastIndexOf("/") + 1)}</h2>
                         <p className="text-gray-700">{mainCardDescription}</p>
                     </div>
                     <div className="p-4 border-t border-gray-200 flex">
@@ -100,13 +119,19 @@ const IndividualEntityPage = ({params}) => {
                                             </h2>
                                         </div>
                                         <div className="p-4">
-                                            <p className="text-gray-700">{entitycards.description}</p>
-                                            <p className="text-gray-700">
-                                                <p className="text-gray-700">
-                                                    {JSON.stringify(data[entitycards.slug ?? "unknown"]) || "No data available"}
-                                                </p>
-
-                                            </p>
+                                            <p className="text-gray-700 mb-4">{entitycards.description}</p>
+                                            <div className="bg-white p-4 rounded-lg border border-gray-300">
+                                                {data[entitycards.slug ?? "unknown"] ? (
+                                                    Object.entries(data[entitycards.slug ?? "unknown"]).map(([key, value], idx) => (
+                                                        <div key={idx} className="mb-2">
+                                                            <span className="font-semibold">{key}:</span>{" "}
+                                                            <span>{value}</span>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    "No data available"
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -120,3 +145,4 @@ const IndividualEntityPage = ({params}) => {
 };
 
 export default IndividualEntityPage;
+
