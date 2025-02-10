@@ -6,7 +6,7 @@ import {getData} from "@/src/app/components/getData";
 import {extractPredicateObjectPairs} from "@/src/app/components/helper";
 import {formatextractPredicateObjectPairs} from "@/src/app/components/helper";
 
-
+import { useParams } from "next/navigation";
 
 type ExtractedBox = {
     cardtype: string;
@@ -34,7 +34,9 @@ interface EntityViewCard {
     filename: string;
 }
 
-const IndividualEntityPage = ({params}: {params: PageParams}) => {
+const IndividualEntityPage = () => {
+    const params = useParams();
+    if (!params) return <div>Loading...</div>;
     const {slug, id} = params;
     const [mainCardTitle, setMainCardTitle] = useState("");
     const [mainCardDescription, setMainCardDescription] = useState("");
