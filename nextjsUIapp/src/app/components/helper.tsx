@@ -58,7 +58,7 @@ export async function formatextractPredicateObjectPairs(data) {
         } else if (typeof object === 'string' && object.includes("/")) {
             processedValue = object.split("/").pop();
         } else {
-            console.error("Unexpected format in object string" + object);
+            console.error("Unexpected format in object string");
         }
 
         result[processedKey] = processedValue;
