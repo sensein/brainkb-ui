@@ -3,18 +3,18 @@ import {useState, useEffect} from 'react';
 import {getData} from "@/src/app/components/getData";
 import yaml from "@/src/app/components/config-knowledgebases.yaml";
 import SideBarKBFromConfig from "@/src/app/components/SideBarKBFromConfig";
+import {useParams} from "next/navigation";
+
+// Do not import this again as it has been imported in other place already
+// Re-importing will cause an error.
+// import { useParams } from "next/navigation";
 
 const ITEMS_PER_PAGE = 50;
 
-const KbIndividualPageAllData = (
-    {
-        params,
-    }: {
-        params: {
-            slug: string;
-        }
-    }
-) => {
+const KbIndividualPageAllData = () => {
+    const params = useParams();
+    if (!params) return <div>Loading...</div>;
+
     const [data, setData] = useState<any[]>([]);
     const [headers, setHeaders] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
