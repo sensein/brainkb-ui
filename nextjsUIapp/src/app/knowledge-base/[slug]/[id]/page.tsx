@@ -37,7 +37,8 @@ interface EntityViewCard {
 const IndividualEntityPage = () => {
     const params = useParams();
     if (!params) return <div>Loading...</div>;
-    const {slug, id} = params;
+    const {slug, id: rawId} = params;
+    const id = Array.isArray(rawId) ? rawId[0] : rawId; // Ensure id is always a string
     const [mainCardTitle, setMainCardTitle] = useState("");
     const [mainCardDescription, setMainCardDescription] = useState("");
     const [extractedBoxes, setExtractedBoxes] = useState<ExtractedBox[]>([]);
