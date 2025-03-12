@@ -18,7 +18,7 @@ export default async function About() {
   const sections = yaml.sections;
 
   return (
-    <div className="w-full p-8 space-y-12 set-margin-hundred">
+    <div className="p-8 space-y-12 set-margin-hundred">
       {sections.map((section, sectionIndex) => (
         <section
           key={sectionIndex}
