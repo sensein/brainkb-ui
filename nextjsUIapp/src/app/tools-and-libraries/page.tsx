@@ -13,7 +13,7 @@ export default function ToolsLibraries() {
       </div>
 
       {/* Overview */}
-      <section className="bg-gray-100 p-8 rounded-lg shadow-md">
+      <section className="bg-gray-100 p-8 rounded-lg shadow-md animate-slide-up">
         <h3 className="text-3xl font-bold text-sky-900 mb-4 flex items-center">
           <WrenchScrewdriverIcon className="w-8 h-8 text-blue-500 mr-3" />
           Overview
@@ -24,7 +24,7 @@ export default function ToolsLibraries() {
       </section>
 
       {/* List of Libraries */}
-      <section className="bg-gray-100 p-8 rounded-lg shadow-md">
+      <section className="bg-gray-100 p-8 rounded-lg shadow-md animate-slide-up">
         <h3 className="text-3xl font-bold text-sky-900 mb-4 flex items-center">
           <WrenchScrewdriverIcon className="w-8 h-8 text-blue-500 mr-3" />
           Available Libraries
