@@ -1,0 +1,30 @@
+page_meta:
+  - section: "privacypolicy"
+    title: "Privacy Policy"
+    subtitle: "Learn how BrainKB collects, uses, and protects your data."
+    description: "Welcome to BrainKB. Your privacy is important to us, and we are committed to protecting your personal information. This Privacy Policy explains what data we collect, how we use it, and the measures we take to safeguard your information."
+
+sections:
+  - section: "informationwecollect"
+    title: "Information We Collect"
+    subsections:
+      - title: "Cookies"
+        description: >
+          We use cookies to enhance your browsing experience and ensure secure authentication. Cookies are small data files stored on your device. For more details on how cookies work, you can refer to HTTP cookies.
+          
+          Specifically, we use cookies from Google and GitHub for authentication purposes. These cookies help us verify your identity when you log in using Google or GitHub OAuth.
+
+      - title: "Personal Information"
+        description: "When you log in using Google or GitHub OAuth, we may collect basic profile details such as your name and email address. This information is used solely for authentication and account management purposes."
+
+  - section: "useofdata"
+    title: "Use of Data"
+    subsections:
+      - title: "Data Submission"
+        description: "Any data you submit to our platform is released under the Creative Commons Attribution 0 (CC BY 0) license. By submitting data, you acknowledge and agree to these terms. This means that:"
+        bullet_points:
+          - content: "The content you provide is dedicated to the public domain."
+          - content: "It can be freely used, modified, and shared by anyone for any purpose without restrictions."
+      - title: "Personal Information"
+        description: "When you log in using Google or GitHub OAuth, we may collect basic profile details such as your name and email address. This information is used solely for authentication and account management purposes."
+
