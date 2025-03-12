@@ -6,7 +6,7 @@ export default function ToolsLibraries() {
 
 
   return (
-    <div className="w-full p-8 space-y-12">
+    <div className="w-full p-8 space-y-12 set-margin-hundred">
       {/* Title */}
       <div className="text-center">
         <h2 className="text-4xl font-bold text-sky-900 mb-6">Tools & Libraries</h2>
