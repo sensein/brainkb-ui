@@ -1,0 +1,33 @@
+contact:
+  title: "Contact Us"
+  subtitle: "Have questions or need assistance? Reach out to us using the details below or fill out the contact form."
+
+  details:
+    - label: "Email"
+      value: "contact@brainkb.org"
+      icon: "email"
+
+    - label: "Phone"
+      value: "+1 (123) 456-7890"
+      icon: "phone"
+
+    - label: "Address"
+      value: "McGovern Institute for Brain Research 46-4033F 43 Vassar St Cambridge, MA 02139 USA"
+      icon: "location"
+
+  form:
+    title: "Send us a message"
+    fields:
+      - name: "name"
+        placeholder: "Your Name"
+        type: "text"
+
+      - name: "email"
+        placeholder: "Your Email"
+        type: "email"
+
+      - name: "message"
+        placeholder: "Your Message"
+        type: "textarea"
+
+    submit_text: "Send Message"
