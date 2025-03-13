@@ -1,83 +1,95 @@
 import type {Metadata} from "next";
+import {getServerSession} from "next-auth";
+import {authOptions} from "@/lib/auth";
+import {redirect} from "next/navigation";
+import yaml from "@/src/app/components/privacy-policy.yaml";
 
 export const metadata: Metadata = {
     title: "Privacy Policy",
-
 };
 
-export default function PrivacyPolicy() {
+export default async function PrivacyPolicy() {
+    const current_session = await getServerSession(authOptions);
+
+    // Redirect logged-in users to the admin page
+    if (current_session) return redirect("/admin");
+
+    const sections = yaml.sections;
+    const page_meta = yaml.page_meta;
+
     return (
-        <div className="set-margin-hundred">
+        <div className="p-8 space-y-12 set-margin-hundred">
+            {/* Header Section */}
+            {page_meta.map((section, sectionIndex) => (
+                <div className="text-center" key={sectionIndex}>
+                    {section.title && (
+                        <h1 className="text-4xl font-bold text-sky-900">{section.title}</h1>
+                    )}
+                    {section.subtitle && (<p className="text-lg text-gray-600 mt-2 max-w-3xl mx-auto">
+                        {section.subtitle}
+                    </p>)}<br/><br/>
+                    {section.description && (
+                        <p className="text-lg text-gray-700">{section.description}</p>
+                    )}
 
-            <div className="text-left">
-                <h2 className="mb-4 text-3xl font-extrabold font-extrabold leading-none text-sky-900 animate-slide-up">
-                    Privacy Policy</h2>
-                <br/>
-                <p className="mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
-                    Welcome to BrainKB. We value your privacy and are committed to protecting your personal information.
-                    This Privacy Policy outlines the types of information we collect, how we use it, and the measures we
-                    take to ensure your data is secure.
-
-
-                </p>
-                <br/>
-            </div>
-
-            <div className="text-left">
-                <h2 className="mb-4 text-3xl font-extrabold font-extrabold leading-none text-sky-900 animate-slide-up">
-                    Information We Collect
-                </h2>
-                <br/>
-                <h4 className="mb-3 text-2xl font-extrabold font-extrabold leading-none text-sky-900 animate-slide-up">
-                    Cookies
-                </h4>
-                <ul className=" space-y-1 text-gray-500 list-disc list-inside dark:text-gray-400 mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
-                    <li>
-                        Our website uses cookies to enhance your browsing experience. Cookies are small data files
-                        stored on your device. More information regarding cookie is available at <a
-                        href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies" target="_blank">HTTP
-                        cookies</a>.
-
-                    </li>
-                    <li>
-                        We specifically use cookies from Google and GitHub for authentication purposes. These cookies
-                        help us verify your identity when you log in using Google or GitHub OAuth.
-                    </li>
-                </ul>
-                <br/>
-                <h4 className="mb-3 text-2xl font-extrabold font-extrabold leading-none text-sky-900 animate-slide-up">
-                    Personal Information
-                </h4>
-                <ul className=" space-y-1 text-gray-500 list-disc list-inside dark:text-gray-400 mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
-                    <li>
+                </div>
+            ))
+            }
 
 
-                    </li>
-                    <li>
+            {/* Privacy Policy Sections */}
+            {sections.map((section, sectionIndex) => (
+                <section key={sectionIndex} className="pb-8 border-b border-gray-300 last:border-b-0">
+                    {/* Section Title */}
+                    <h2 className="text-2xl font-semibold text-sky-900 mb-4">{section.title}</h2>
 
-                    </li>
-                </ul>
-                <h2 className="mb-4 text-3xl font-extrabold font-extrabold leading-none text-sky-900 animate-slide-up">
-                    Use of Data
-                </h2>
-                <br/>
-                <h4 className="mb-3 text-2xl font-extrabold font-extrabold leading-none text-sky-900 animate-slide-up">
-                    Data Submission
-                </h4>
-                <ul className=" space-y-1 text-gray-500 list-disc list-inside dark:text-gray-400 mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
-                    <li>
-                        Any data you submit to our portal is released under the Creative Commons Attribution 0 (CC BY 0)
-                        license. This means that any content you provide is dedicated to the public domain, and can be
-                        freely used by anyone for any purpose without any restrictions.
-                    </li>
+                    {/* Section Subtitle (if available) */}
+                    {section.subtitle && (
+                        <p className="text-lg text-gray-700 mb-6 max-w-3xl">{section.subtitle}</p>
+                    )}
 
-                </ul>
+                    {/* Subsections */}
+                    {section.subsections && (
+                        <div className="space-y-6">
+                            {section.subsections.map((subsection, index) => (
+                                <div key={index} className="p-4 bg-gray-50 rounded-md">
+                                    {/* Subsection Title */}
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-2">{subsection.title}</h3>
 
-                <br/>
-            </div>
+                                    {/* Description */}
+                                    <p className="text-gray-600 text-base">
+                                        {subsection.description.split("\n").map((line, i) => (
+                                            <span key={i} className="block">
+                        {line.includes("HTTP cookies") ? (
+                            <a
+                                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-500 hover:underline"
+                            >
+                                HTTP cookies
+                            </a>
+                        ) : (
+                            line
+                        )}
+                      </span>
+                                        ))}
+                                    </p>
 
-
+                                    {/* Bullet Points (if any) */}
+                                    {subsection.bullet_points && (
+                                        <ul className="mt-3 list-disc list-inside space-y-2 text-gray-600">
+                                            {subsection.bullet_points.map((point, bpIndex) => (
+                                                <li key={bpIndex} className="ml-4">{point.content}</li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </section>
+            ))}
         </div>
-
     );
 }

@@ -1,75 +1,63 @@
 import type { Metadata } from "next";
- 
-import {getServerSession} from "next-auth";
-import {authOptions} from "@/lib/auth";
-import {redirect} from "next/navigation";
-
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { CheckCircleIcon } from "@heroicons/react/24/solid";
+import yaml from "@/src/app/components/about.yaml";
 
 export const metadata: Metadata = {
-    title:"About",
-
+  title: "About",
 };
 
- 
-export default async function About(){
-        const current_session = await getServerSession(authOptions);
-    //user is logged in so redirect to admin page
-    if (current_session) return redirect("/admin");
-    return (
-        <div className="set-margin-hundred">
+export default async function About() {
+  const current_session = await getServerSession(authOptions);
 
+  // Redirect logged-in users to the admin page
+  if (current_session) return redirect("/admin");
 
-            <div className="text-left">
-                <h2 className="mb-4 text-3xl font-extrabold font-extrabold leading-none text-sky-900 animate-slide-up">What is BrainKB?</h2>
-                <br/>
-                <p className="mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
-                    BrainKB serves as a knowledge base platform that provides scientists worldwide with tools for
-                    searching, exploring, and visualizing Neuroscience knowledge represented by knowledge graphs (KGs).
-                    Moreover, BrainKB provides cutting-edge tools that enable scientists to contribute new information
-                    (or knowledge) to the platform and is expected to be a go-to destination for all
-                    neuroscience-related research needs.
+  const sections = yaml.sections;
 
-                </p>
-                <br/>
-            </div>
+  return (
+    <div className="p-8 space-y-12 set-margin-hundred">
+      {sections.map((section, sectionIndex) => (
+        <section
+          key={sectionIndex}
+          className="bg-gray-100 p-8 rounded-lg shadow-md animate-slide-up"
+        >
+          {/* Section Title */}
+          <h2 className="text-4xl font-bold text-sky-900 mb-6 text-center">
+            {section.title}
+          </h2>
 
-            <div className="text-left">
-                <h2 className="mb-4 text-3xl font-extrabold font-extrabold leading-none text-sky-900 animate-slide-up">Objective(s)</h2>
-                <br/>
-                <p className="mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
-                    The main objective of BrainKB is to represent neuroscience knowledge as a knowledge graph such that
-                    it can be used for different downstream tasks, such as making predictions and new inferences in
-                    addition to querying and viewing information.
+          {/* Section Subtitle aka text description (if available)  */}
+          {section.subtitle && (
+            <p className="text-lg text-gray-700 mb-6 text-center">
+              {section.subtitle}
+            </p>
+          )}
 
-                </p>
-                <br/>
-            </div>
-
-            <div className="text-left">
-                <h2 className="mb-4 text-3xl font-extrabold font-extrabold leading-none text-sky-900 animate-slide-up">Expected outcome</h2>
-                <br/>
-                <p className="mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
-                    The expected outcome of the BrainKB includes the following:</p>
-                    <ul className="list-disc pl-5 mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
-                        <li>
-                            (Semi-)Automated extraction of neuroscience knowledge from structured, semi-structured, and unstructured sources, and representing the knowledge via KGs.
-Visualization of the KGs.
-                        </li>
-                        <li>
-                            Platform to perform different analytics operations over the BrainKB KGs.
-                        </li>
-                        <li>
-                            (Semi-)Automated validation of the BrainKGs to ensure the high quality of the content.
-
-                        </li>
-                        <li>
-                            Provides the ability to ingest data in batch or streaming mode for the automated extraction of KGs.
-                        </li>
-                    </ul>
-
-
-            </div>
-
-        </div>
-    );
+          {/* Bullet Points */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {section.bullet_points &&
+              section.bullet_points.map((point, index) => (
+                <div
+                  key={index}
+                  className="flex items-start space-x-4 p-5 bg-white rounded-lg shadow"
+                >
+                  <CheckCircleIcon className="w-8 h-8 text-blue-500 flex-shrink-0" />
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-800">
+                      {point.title}
+                    </h3>
+                    {point.description && (
+                      <p className="text-gray-600">{point.description}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
 }

@@ -1,0 +1,24 @@
+libraries:
+  - name: "EviSense"
+    description: "A Python library to extract evidence and rationales for specific terms within documents, including scientific publications. It supports multiple LLM providers (e.g., Ollama and OpenRouter) and allows the use of multiple models for greater flexibility."
+    link_library: "https://pypi.org/project/EviSense/"
+    link_example: "https://github.com/sensein/EviSense/tree/experiment/example"
+
+
+  - name: "SchemaExtractor"
+    description: "A multi-agent based Python library for extracting and analyzing schemas from knowledge graphs."
+    link_library: "https://pypi.org/project/SchemaExtractor/"
+
+
+  - name: "GrobidArticleExtractor"
+    description: "A Python library that extracts content from PDF files using GROBID and organizes it by sections, providing a structured way to extract both metadata and content from academic papers."
+    link_library: "https://pypi.org/project/GrobidArticleExtractor "
+    link_example: "https://github.com/sensein/GrobidArticleExtractor/tree/dev/examples"
+
+
+  - name: "ProvSense"
+    description: "A Python library that allows comparing the changes in the knowledge graphs."
+    link_library: "https://pypi.org/project/ProvSense/"
+    link_example: "https://github.com/sensein/ProvSense/tree/dev/example"
+
+

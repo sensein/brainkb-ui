@@ -1,0 +1,54 @@
+sections:
+  - section: "whatisbrainkb"
+    title: "What is BrainKB?"
+    subtitle: "BrainKB is a platform designed to support neuroscience research by structuring and organizing scientific knowledge using knowledge graphs (KGs) for delivering evidence-based insights."
+    bullet_points:
+      - title: "BrainKB structures neuroscience knowledge into an accessible and scalable knowledge graph."
+      - title: "It provides tools for searching, exploring, visualizing, and analyzing neuroscience data."
+      - title: "Researchers can contribute new findings, represented as assertions with supporting evidence from publications."
+      - title: "BrainKB aims to be the go-to resource for neuroscientists worldwide, fostering collaboration and accelerating discoveries."
+  - section: "objectives"
+    title: "Objective(s)"
+    bullet_points:
+      - title: "Organize and Structure Neuroscience Knowledge"
+        description: "Develop a comprehensive knowledge base using knowledge graphs (KGs) to systematically represent neuroscience research and findings."
+
+      - title: "Enable Efficient Knowledge Discovery"
+        description: "Provide advanced tools for searching, exploring, visualizing, and analyzing complex neuroscience data to help researchers uncover meaningful insights."
+
+      - title: "Facilitate Evidence-Based Research"
+        description: "Integrate scientific publications and experimental data into structured assertions with supporting evidence, ensuring the credibility and reliability of neuroscience knowledge."
+
+      - title: "Support Collaborative Contributions"
+        description: "Enable scientists to contribute new findings in a semi-automated fashion, fostering a continuously evolving repository of neuroscience insights."
+
+      - title: "Accelerate Neuroscience Discoveries"
+        description: "Serve as a central platform for neuroscientists worldwide, enhancing collaboration and knowledge sharing to drive advancements in the field."
+
+      - title: "Ensure Accessibility and Usability"
+        description: "Design an intuitive and scalable platform that accommodates researchers at all levels, providing seamless access to structured neuroscience knowledge."
+
+      - title: "Promote Interdisciplinary Integration"
+        description: "Facilitate connections between neuroscience and related domains, supporting cross-disciplinary research and innovative applications."
+
+
+  - section: "expectedoutcome"
+    title: "Expected Outcome"
+    subtitle: "The BrainKB platform aims to deliver the following key outcomes:"
+    bullet_points:
+      - title: "Automated Knowledge Extraction"
+        description: "Extract neuroscience knowledge from structured, semi-structured, and unstructured sources, representing it through KGs."
+
+      - title: "Interactive Knowledge Graph Visualization"
+        description: "Enable visualization of KGs using entity cards to help researchers understand relationships between neuroscience concepts."
+
+      - title: "Advanced Analytics Capabilities"
+        description: "Provide a platform to perform various analytics operations over the BrainKB KGs."
+
+      - title: "High-Quality Content Validation"
+        description: "Implement semi-automated validation of BrainKB to ensure the reliability and integrity of its knowledge."
+
+      - title: "Real-Time & Batch Data Processing"
+        description: "Support both batch and streaming data ingestion to automate KG extraction and updates."
+
+

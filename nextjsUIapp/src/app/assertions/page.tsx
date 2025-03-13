@@ -3,18 +3,12 @@ import {useState, useEffect} from 'react';
 import {getData} from "@/src/app/components/getData";
 import yaml from "@/src/app/components/config-knowledgebases.yaml";
 import SideBarKBFromConfig from "@/src/app/components/SideBarKBFromConfig";
-import {useParams} from "next/navigation";
-
-// Do not import this again as it has been imported in other place already
-// Re-importing will cause an error.
-// import { useParams } from "next/navigation";
 
 const ITEMS_PER_PAGE = 50;
 
-const KbIndividualPageAllData = () => {
-    const params = useParams();
-    if (!params) return <div>Loading...</div>;
-
+const Assertions = (
+) => {
+    // these are retained here because later we would like to implement the pagination
     const [data, setData] = useState<any[]>([]);
     const [headers, setHeaders] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
@@ -22,54 +16,8 @@ const KbIndividualPageAllData = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [pagetitle, setPageTitle] = useState("");
     const [pagesubtitle, setSubPageTitle] = useState("");
+    const [entityPageSlug, setEntityPageSlug] = useState("");
 
-    const fetchData = async () => {
-        setLoading(true);
-        setError(null);
-        setData([]);
-        setHeaders([]);
-        setPageTitle("");
-        setSubPageTitle("");
-        const page = yaml.pages.find((page) => page.slug === params.slug);
-        const query_to_execute = page ? page.sparql_query : "";
-
-        const page_title = page ? page.page : "";
-        const page_sub_title = page ? page.description : "";
-        setPageTitle(page_title);
-        setSubPageTitle(page_sub_title);
-
-        const queryParameter = {sparql_query: query_to_execute};
-
-        const baseurl = process.env.NEXT_PUBLIC_API_ADMIN_HOST || "https://queryservice.brainkb.org";
-        const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql"; //default is "query/sparql"
-
-
-        try {
-            const response = await getData(queryParameter, endpoint, baseurl);
-
-
-            if (response.status === 'success' && response.message?.results?.bindings) {
-                const bindings = response.message.results.bindings;
-                const vars = response.message.head.vars;
-
-                setHeaders(vars);
-                setData(bindings);
-            } else {
-
-                setError("Invalid data format");
-            }
-        } catch (e) {
-            const error = e as Error;
-
-            setError(error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchData();
-    }, []);
 
     const renderTable = () => {
         if (!data || !Array.isArray(data) || data.length === 0) return null;
@@ -95,7 +43,7 @@ const KbIndividualPageAllData = () => {
                         {headers.map((header, headerIndex) => (
                             <td key={headerIndex} className="px-6 py-4">
                                 {headerIndex === 0 ? (
-                                    <a href={`${params.slug}/${encodeURIComponent(item[header]?.value)}`}
+                                    <a href={`knowledge-base/${entityPageSlug}/${encodeURIComponent(item[header]?.value)}`}
                                        rel="noopener noreferrer">
                                         {item[header]?.value.substring(item[header]?.value.lastIndexOf('/') + 1)}
                                     </a>
@@ -125,7 +73,9 @@ const KbIndividualPageAllData = () => {
                             {pagetitle}
                         </p>
                         <p className="text-gray-400 dark:text-gray-500">
-                            {pagesubtitle}
+                            On this page, you'll find all the assertions extracted from the paper, along with their corresponding links to the evidence. Our team is actively working on this, and we anticipate releasing the first version by May 30, 2025. Please check back for updates!
+<br/>
+Would you like to contribute? If so, we’d love your support—feel free to get involved! Please contact tekraj@mit.edu.
                         </p>
                     </div>
                 </div>
@@ -135,12 +85,13 @@ const KbIndividualPageAllData = () => {
 
                 <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
                     {renderTable()}
+
                     {data.length > 0 && (
                         <nav className="flex items-center flex-column flex-wrap md:flex-row justify-between pt-4"
                              aria-label="Table navigation">
                             <span
                                 className="text-sm font-normal text-gray-500 dark:text-gray-400 mb-4 md:mb-0 block w-full md:inline md:w-auto">
-                              Showing <span
+                               Showing <span
                                 className="font-semibold text-gray-900 dark:text-white">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span
                                 className="font-semibold text-gray-900 dark:text-white">{Math.min(currentPage * ITEMS_PER_PAGE, data.length)}</span> of <span
                                 className="font-semibold text-gray-900 dark:text-white">{data.length}</span>
@@ -178,6 +129,7 @@ const KbIndividualPageAllData = () => {
                             </ul>
                         </nav>
                     )}
+
                 </div>
             </div>
 
@@ -185,4 +137,5 @@ const KbIndividualPageAllData = () => {
     );
 };
 
-export default KbIndividualPageAllData;
+export default Assertions;
+

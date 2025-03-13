@@ -1,0 +1,33 @@
+contact:
+  title: "Contact Us"
+  subtitle: "Have questions or need assistance or have use case for us? Reach out to us."
+
+  details:
+    - label: "Email"
+      value: "tekraj@mit.edu"
+      icon: "email"
+
+    - label: "Phone"
+      value: "+1 (617) 324-7195"
+      icon: "phone"
+
+    - label: "Address"
+      value: "McGovern Institute for Brain Research 46-4033F 43 Vassar St Cambridge, MA 02139 USA"
+      icon: "location"
+
+#  form:
+#    title: "Send us a message"
+#    fields:
+#      - name: "name"
+#        placeholder: "Your Name"
+#        type: "text"
+#
+#      - name: "email"
+#        placeholder: "Your Email"
+#        type: "email"
+#
+#      - name: "message"
+#        placeholder: "Your Message"
+#        type: "textarea"
+#
+#    submit_text: "Send Message"

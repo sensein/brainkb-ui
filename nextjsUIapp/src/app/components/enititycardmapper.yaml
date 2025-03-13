@@ -2,4 +2,8 @@ EntityViewCardsMaper:
   - card: LA_card
     slug: "LibraryAliquot" #this should match the one from the config-knowledgebases.yaml
     filename: "LA_card.yaml"
+
+  - card: barcodedcellsample_card
+    slug: "barcodedcellsample" #this should match the one from the config-knowledgebases.yaml
+    filename: "barcodedcellsample_card.yaml"
      
