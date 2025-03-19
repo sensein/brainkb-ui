@@ -75,7 +75,7 @@ export default function EntityTypeClassificationDropdown({
                     value ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-300 cursor-not-allowed'
                 }`}
             >
-                Update Classification
+                Send Feedback
             </button>
         </div>
     );

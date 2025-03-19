@@ -231,7 +231,7 @@ export default function EntityTypePage({ params }: EntityTypePageProps) {
             await saveEntityData(results);
 
             // Show success message
-            setError("Results saved successfully!");
+            setError("Feedback Sent Successfully!");
 
             // Refresh data
             const data = await fetchEntityData();
@@ -250,8 +250,8 @@ export default function EntityTypePage({ params }: EntityTypePageProps) {
                 setStats(typeStats);
             }
         } catch (err) {
-            console.error("Error saving results:", err);
-            setError("Failed to save results. Please try again.");
+            console.error("Error sending feedback:", err);
+            setError("Failed to send feedback. Please try again.");
         } finally {
             setIsLoading(false);
         }
@@ -609,7 +609,7 @@ export default function EntityTypePage({ params }: EntityTypePageProps) {
                             onClick={handleSave}
                             className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
                         >
-                            Save Results
+                            Send Feedback
                         </button>
                     </div>
                 )}
