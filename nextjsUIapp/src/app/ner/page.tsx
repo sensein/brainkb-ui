@@ -8,15 +8,15 @@ import Link from "next/link";
 import EntityTypeDropdown from "@/src/app/ner/components/EntityTypeDropdown";
 
 export default function NamedEntityRecognitionViewer() {
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
     const [stats, setStats] = useState({
         totalEntities: 0,
         approvedEntities: 0,
         correctedEntities: 0,
         pendingReview: 0
     });
-    const [entityTypes, setEntityTypes] = useState([]);
+    const [entityTypes, setEntityTypes] = useState<string[]>([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -39,7 +39,21 @@ export default function NamedEntityRecognitionViewer() {
     return (
         <div className="flex flex-col max-w-6xl mx-auto p-4">
             <h1 className="text-2xl font-bold mb-6">Named Entity Recognition (NER)</h1>
-            <StatsSection stats={stats} isLoading={isLoading} error={error} />
+            <div className="stats-navigation">
+                <StatsSection
+                    stats={stats}
+                    isLoading={isLoading}
+                    error={error}
+                    // Custom click handler for navigation
+                    customClickHandler={(filter) => {
+                        // Navigate to all/page.tsx with the selected filter
+                        window.location.href = `/ner/all?filter=${filter}`;
+                    }}
+                />
+                <div className="text-center text-sm text-gray-500 mt-2">
+                    Click on any statistic to view the corresponding entities
+                </div>
+            </div>
 
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md mb-8">
                 <h2 className="text-xl font-semibold mb-4">Entity Types</h2>

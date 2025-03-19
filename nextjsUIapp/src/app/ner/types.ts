@@ -1,10 +1,13 @@
 // Define types for our entities and results
 export interface CorrectionHistory {
-    originalText: string;
-    correctedText: string;
+    originalText?: string;
+    correctedText?: string;
+    originalType?: string;
+    newType?: string;
     correctedBy: string;
     correctedAt: string;
     reason?: string;
+    changeType: 'text' | 'type' | 'both'; // Indicates what was changed
 }
 
 export interface Entity {
@@ -17,6 +20,7 @@ export interface Entity {
     corrected?: boolean;
     originalText?: string;
     correction?: string;
+    entityType?: string;  // New field for entity type classification
     contributedBy?: string;
     submittedAt?: string;
     correctionHistory?: CorrectionHistory[];

@@ -6,6 +6,7 @@ import { fetchEntityData, saveEntityData } from "@/src/app/ner/services/dataServ
 import Link from "next/link";
 import { calculateStats, downloadAsCSV, downloadAsJSON } from "@/src/app/ner/utils/entityUtils";
 import EntityDetailModal from "../../components/EntityDetailModal";
+import StatsSection from "../../components/StatsSection";
 
 interface EntityTypePageProps {
     params: {
@@ -24,7 +25,7 @@ export default function EntityTypePage({ params }: EntityTypePageProps) {
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [itemsPerPage, setItemsPerPage] = useState<number>(10);
     const [editingEntity, setEditingEntity] = useState<number | null>(null);
-    const [correction, setCorrection] = useState<string>('');
+    const [entityType, setEntityType] = useState<string>('');
     const [selectedEntities, setSelectedEntities] = useState<{[key: string]: boolean}>({});
     const [selectAll, setSelectAll] = useState<boolean>(true);
     const [allApproved, setAllApproved] = useState<boolean>(false);
@@ -119,7 +120,8 @@ export default function EntityTypePage({ params }: EntityTypePageProps) {
         // If thumbs down, set up for editing
         if (feedback === 'down') {
             setEditingEntity(index);
-            setCorrection(updatedEntities[index].text);
+            // Set initial entity type to the current type or empty string
+            setEntityType(updatedEntities[index].entityType || '');
         } else if (editingEntity === index) {
             // If changing from down to up, clear editing state
             setEditingEntity(null);
@@ -146,41 +148,75 @@ export default function EntityTypePage({ params }: EntityTypePageProps) {
         setStats(updatedStats);
     };
 
-    // Handle correction submission
+    // Handle entity type change
+    const handleEntityTypeChange = (type: string) => {
+        setEntityType(type);
+    };
+
+    // Handle entity type submission
     const handleCorrectionSubmit = () => {
         if (editingEntity === null || !results) return;
 
         const updatedEntities = [...entities];
         const entity = updatedEntities[editingEntity];
+        const originalType = entity.entityType || type;
 
-        // Store original text if not already stored
-        if (!entity.originalText) {
-            entity.originalText = entity.text;
-        }
+        // Create a history entry for this change
+        const historyEntry = {
+            originalType: originalType,
+            newType: entityType,
+            correctedBy: "User", // This should be the actual user name in a real app
+            correctedAt: new Date().toISOString(),
+            changeType: 'type' as const
+        };
 
-        // Update with correction
-        entity.correction = correction;
+        // Update entity with new type and history
+        entity.entityType = entityType;
+        entity.feedback = 'up'; // Auto-approve after classification
         entity.corrected = true;
-        entity.feedback = 'up'; // Auto-approve after correction
+
+        if (!entity.correctionHistory) {
+            entity.correctionHistory = [];
+        }
+        entity.correctionHistory.push(historyEntry);
 
         // Update the entities in the results object
         const updatedResults = { ...results };
-        updatedResults.entities[type] = updatedEntities;
 
-        setEntities(updatedEntities);
+        // If the entity type has changed and it's different from the current tab
+        if (entityType !== type) {
+            // Remove from current type array
+            updatedResults.entities[type] = updatedEntities.filter((_, i) => i !== editingEntity);
+
+            // Add to the new type array (create it if it doesn't exist)
+            if (!updatedResults.entities[entityType]) {
+                updatedResults.entities[entityType] = [];
+            }
+            updatedResults.entities[entityType].push(entity);
+
+            // Update local entities state (remove the entity that was moved)
+            setEntities(updatedEntities.filter((_, i) => i !== editingEntity));
+        } else {
+            // Just update the current type array
+            updatedResults.entities[type] = updatedEntities;
+            setEntities(updatedEntities);
+        }
+
         setResults(updatedResults);
         setEditingEntity(null);
 
         // Check if all entities now have thumbs up
-        const allUp = updatedEntities.every(entity => entity.feedback === 'up');
+        const allUp = updatedEntities.filter((_, i) => i !== (entityType !== type ? editingEntity : -1))
+            .every(entity => entity.feedback === 'up');
         setAllApproved(allUp);
 
         // Update stats
+        const remainingEntities = updatedEntities.filter((_, i) => i !== (entityType !== type ? editingEntity : -1));
         const updatedStats = {
-            totalEntities: updatedEntities.length,
-            approvedEntities: updatedEntities.filter(e => e.feedback === 'up').length,
-            correctedEntities: updatedEntities.filter(e => e.corrected).length,
-            pendingReview: updatedEntities.filter(e => e.feedback === 'down').length
+            totalEntities: remainingEntities.length,
+            approvedEntities: remainingEntities.filter(e => e.feedback === 'up').length,
+            correctedEntities: remainingEntities.filter(e => e.corrected).length,
+            pendingReview: remainingEntities.filter(e => e.feedback === 'down').length
         };
         setStats(updatedStats);
     };
@@ -335,24 +371,16 @@ export default function EntityTypePage({ params }: EntityTypePageProps) {
                     </div>
                 </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg text-center">
-                        <p className="text-2xl font-bold text-blue-600 dark:text-blue-300">{stats.totalEntities}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Total</p>
-                    </div>
-                    <div className="bg-green-50 dark:bg-green-900 p-4 rounded-lg text-center">
-                        <p className="text-2xl font-bold text-green-600 dark:text-green-300">{stats.approvedEntities}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Approved</p>
-                    </div>
-                    <div className="bg-yellow-50 dark:bg-yellow-900 p-4 rounded-lg text-center">
-                        <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-300">{stats.correctedEntities}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Corrected</p>
-                    </div>
-                    <div className="bg-red-50 dark:bg-red-900 p-4 rounded-lg text-center">
-                        <p className="text-2xl font-bold text-red-600 dark:text-red-300">{stats.pendingReview}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Pending Review</p>
-                    </div>
+                {/* Stats Section */}
+                <div className="mb-6">
+                    <StatsSection
+                        stats={stats}
+                        isLoading={isLoading}
+                        error={error}
+                        activeStatusFilter={activeStatusFilter}
+                        setActiveStatusFilter={setActiveStatusFilter}
+                        setCurrentPage={setCurrentPage}
+                    />
                 </div>
 
                 {/* Search and Filters */}
@@ -373,67 +401,6 @@ export default function EntityTypePage({ params }: EntityTypePageProps) {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
                         </div>
-                    </div>
-
-                    <div className="flex space-x-2 mb-4">
-                        <button
-                            onClick={() => {
-                                setActiveStatusFilter('all');
-                                setCurrentPage(1);
-                            }}
-                            className={`px-3 py-1 rounded text-sm ${
-                                activeStatusFilter === 'all'
-                                    ? 'bg-blue-500 text-white'
-                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
-                        >
-                            All ({stats.totalEntities})
-                        </button>
-                        {stats.approvedEntities > 0 && (
-                            <button
-                                onClick={() => {
-                                    setActiveStatusFilter('approved');
-                                    setCurrentPage(1);
-                                }}
-                                className={`px-3 py-1 rounded text-sm ${
-                                    activeStatusFilter === 'approved'
-                                        ? 'bg-green-500 text-white'
-                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                }`}
-                            >
-                                Approved ({stats.approvedEntities})
-                            </button>
-                        )}
-                        {stats.correctedEntities > 0 && (
-                            <button
-                                onClick={() => {
-                                    setActiveStatusFilter('corrected');
-                                    setCurrentPage(1);
-                                }}
-                                className={`px-3 py-1 rounded text-sm ${
-                                    activeStatusFilter === 'corrected'
-                                        ? 'bg-yellow-500 text-white'
-                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                }`}
-                            >
-                                Corrected ({stats.correctedEntities})
-                            </button>
-                        )}
-                        {stats.pendingReview > 0 && (
-                            <button
-                                onClick={() => {
-                                    setActiveStatusFilter('pending');
-                                    setCurrentPage(1);
-                                }}
-                                className={`px-3 py-1 rounded text-sm ${
-                                    activeStatusFilter === 'pending'
-                                        ? 'bg-red-500 text-white'
-                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                }`}
-                            >
-                                Pending Review ({stats.pendingReview})
-                            </button>
-                        )}
                     </div>
 
                     <div className="flex justify-end">
@@ -539,20 +506,26 @@ export default function EntityTypePage({ params }: EntityTypePageProps) {
                                                     </div>
                                                 </div>
 
-                                                {/* Correction input field */}
+                                                {/* Entity type classification dropdown */}
                                                 {editingEntity === actualIndex && (
-                                                    <div className="mt-2 flex items-center space-x-2">
-                                                        <input
-                                                            type="text"
-                                                            value={correction}
-                                                            onChange={(e) => setCorrection(e.target.value)}
+                                                    <div className="mt-2 space-y-2">
+                                                        <select
+                                                            value={entityType}
+                                                            onChange={(e) => handleEntityTypeChange(e.target.value)}
                                                             className="px-2 py-1 border border-gray-300 rounded text-sm flex-1"
-                                                            placeholder="Enter correct term"
-                                                        />
+                                                        >
+                                                            <option value="">Select entity type</option>
+                                                            <option value="GENE">GENE</option>
+                                                            <option value="CELL_TYPE">CELL_TYPE</option>
+                                                            <option value="ANATOMICAL_REGION">ANATOMICAL_REGION</option>
+                                                            <option value="NEURON_TYPE">NEURON_TYPE</option>
+                                                            <option value="UNCLASSIFIED">UNCLASSIFIED</option>
+                                                        </select>
                                                         <button
                                                             type="button"
                                                             onClick={handleCorrectionSubmit}
-                                                            className="px-2 py-1 bg-blue-500 text-white rounded text-sm"
+                                                            className="px-2 py-1 bg-blue-500 text-white rounded text-sm mt-2"
+                                                            disabled={!entityType}
                                                         >
                                                             Apply
                                                         </button>
@@ -622,6 +595,12 @@ export default function EntityTypePage({ params }: EntityTypePageProps) {
                     </div>
                 )}
 
+                {/* Entity Detail Modal */}
+                <EntityDetailModal
+                    selectedEntity={selectedEntity}
+                    onClose={() => setSelectedEntity(null)}
+                />
+
                 {/* Save button */}
                 {allApproved && (
                     <div className="mt-6 flex justify-end">
@@ -637,16 +616,9 @@ export default function EntityTypePage({ params }: EntityTypePageProps) {
 
                 {results && (
                     <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
-                        Document: {results.documentName} • Processed
-                        at: {new Date(results.processedAt).toLocaleString()}
+                        Document: {results.documentName} • Processed at: {new Date(results.processedAt).toLocaleString()}
                     </div>
                 )}
-
-                {/* Entity Detail Modal */}
-                <EntityDetailModal
-                    selectedEntity={selectedEntity}
-                    onClose={() => setSelectedEntity(null)}
-                />
             </div>
         </div>
     );

@@ -22,6 +22,7 @@ export default function NamedEntityRecognitionViewerAll() {
     const [selectAll, setSelectAll] = useState<boolean>(true);
     const [editingEntity, setEditingEntity] = useState<{type: string, index: number} | null>(null);
     const [correction, setCorrection] = useState<string>('');
+    const [entityType, setEntityType] = useState<string>('');
     const [allApproved, setAllApproved] = useState<boolean>(false);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [currentPage, setCurrentPage] = useState<number>(1);
@@ -34,9 +35,19 @@ export default function NamedEntityRecognitionViewerAll() {
     });
     const [entityTypes, setEntityTypes] = useState<string[]>([]);
 
-    // Fetch data on component mount
+    // Fetch data on component mount and handle URL filter parameter
     useEffect(() => {
         fetchData();
+
+        // Check for filter parameter in URL
+        if (typeof window !== 'undefined') {
+            const urlParams = new URLSearchParams(window.location.search);
+            const filterParam = urlParams.get('filter');
+
+            if (filterParam && ['all', 'approved', 'corrected', 'pending'].includes(filterParam as StatusFilter)) {
+                setActiveStatusFilter(filterParam as StatusFilter);
+            }
+        }
     }, []);
 
     // Fetch data from API
@@ -117,6 +128,8 @@ export default function NamedEntityRecognitionViewerAll() {
         if (feedback === 'down') {
             setEditingEntity({ type, index });
             setCorrection(updatedResults.entities[type][index].text);
+            // Set initial entity type to the current type or empty string
+            setEntityType(updatedResults.entities[type][index].entityType || '');
         } else if (editingEntity?.type === type && editingEntity?.index === index) {
             // If changing from down to up, clear editing state
             setEditingEntity(null);
@@ -135,7 +148,12 @@ export default function NamedEntityRecognitionViewerAll() {
         setStats(calculatedStats);
     };
 
-    // Handle correction submission
+    // Handle entity type change
+    const handleEntityTypeChange = (type: string) => {
+        setEntityType(type);
+    };
+
+    // Handle entity type submission
     const handleCorrectionSubmit = () => {
         if (!editingEntity || !results) return;
 
@@ -143,15 +161,9 @@ export default function NamedEntityRecognitionViewerAll() {
         const updatedResults = { ...results };
         const entity = updatedResults.entities[type][index];
 
-        // Store original text if not already stored
-        if (!entity.originalText) {
-            entity.originalText = entity.text;
-        }
-
-        // Update with correction
-        entity.correction = correction;
-        entity.corrected = true;
-        entity.feedback = 'up'; // Auto-approve after correction
+        // Update with entity type only
+        entity.entityType = entityType;
+        entity.feedback = 'up'; // Auto-approve after classification
 
         setResults(updatedResults);
         setEditingEntity(null);
@@ -211,6 +223,9 @@ export default function NamedEntityRecognitionViewerAll() {
                 stats={stats}
                 isLoading={isLoading}
                 error={error}
+                activeStatusFilter={activeStatusFilter}
+                setActiveStatusFilter={setActiveStatusFilter}
+                setCurrentPage={setCurrentPage}
             />
 
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md mb-8">
@@ -273,6 +288,8 @@ export default function NamedEntityRecognitionViewerAll() {
                         setEditingEntity={setEditingEntity}
                         correction={correction}
                         setCorrection={setCorrection}
+                        entityType={entityType}
+                        setEntityType={setEntityType}
                         searchTerm={searchTerm}
                         setSearchTerm={setSearchTerm}
                         currentPage={currentPage}
@@ -284,6 +301,7 @@ export default function NamedEntityRecognitionViewerAll() {
                         handleSelectAll={handleSelectAll}
                         handleFeedback={handleFeedback}
                         handleCorrectionSubmit={handleCorrectionSubmit}
+                        handleEntityTypeChange={handleEntityTypeChange}
                         setSelectedEntity={setSelectedEntity}
                         downloadCSV={downloadCSV}
                         downloadJSON={downloadJSON}

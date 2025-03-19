@@ -18,7 +18,7 @@ export default function EntityDetailModal({ selectedEntity, onClose }: EntityDet
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold">Entity Details</h3>
-                    <button 
+                    <button
                         onClick={onClose}
                         className="text-gray-500 hover:text-gray-700"
                     >
@@ -27,12 +27,18 @@ export default function EntityDetailModal({ selectedEntity, onClose }: EntityDet
                         </svg>
                     </button>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
                         <p className="text-sm font-medium text-gray-500">Entity Type</p>
                         <p className="text-base">{selectedEntity.type}</p>
                     </div>
+                    {selectedEntity.entity.entityType && (
+                        <div>
+                            <p className="text-sm font-medium text-gray-500">Classification</p>
+                            <p className="text-base">{selectedEntity.entity.entityType}</p>
+                        </div>
+                    )}
                     <div>
                         <p className="text-sm font-medium text-gray-500">Current Text</p>
                         <p className="text-base font-medium">{selectedEntity.entity.correction || selectedEntity.entity.text}</p>
@@ -69,7 +75,7 @@ export default function EntityDetailModal({ selectedEntity, onClose }: EntityDet
                         <p className="text-base">{selectedEntity.entity.submittedAt ? new Date(selectedEntity.entity.submittedAt).toLocaleString() : "Unknown"}</p>
                     </div>
                 </div>
-                
+
                 {/* Sentence Context */}
                 {selectedEntity.entity.sentence && (
                     <div className="mb-4">
@@ -84,26 +90,42 @@ export default function EntityDetailModal({ selectedEntity, onClose }: EntityDet
                         </div>
                     </div>
                 )}
-                
+
                 {/* Correction History */}
                 <div>
-                    <p className="text-sm font-medium text-gray-500 mb-2">Correction History</p>
+                    <p className="text-sm font-medium text-gray-500 mb-2">Change History</p>
                     {selectedEntity.entity.correctionHistory && selectedEntity.entity.correctionHistory.length > 0 ? (
                         <div className="border rounded-lg overflow-hidden">
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50 dark:bg-gray-700">
                                     <tr>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Original Text</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Corrected Text</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Corrected By</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Change Type</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Original</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Changed To</th>
+                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Changed By</th>
                                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                     {selectedEntity.entity.correctionHistory.map((history, idx) => (
                                         <tr key={idx}>
-                                            <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">{history.originalText}</td>
-                                            <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">{history.correctedText}</td>
+                                            <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {history.changeType === 'text' ? 'Text Correction' :
+                                                 history.changeType === 'type' ? 'Type Change' :
+                                                 'Text & Type Change'}
+                                            </td>
+                                            <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                                {history.changeType === 'text' || history.changeType === 'both' ?
+                                                    history.originalText :
+                                                    history.changeType === 'type' ?
+                                                        history.originalType : ''}
+                                            </td>
+                                            <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                                                {history.changeType === 'text' || history.changeType === 'both' ?
+                                                    history.correctedText :
+                                                    history.changeType === 'type' ?
+                                                        history.newType : ''}
+                                            </td>
                                             <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">{history.correctedBy}</td>
                                             <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">{new Date(history.correctedAt).toLocaleString()}</td>
                                         </tr>

@@ -3,6 +3,7 @@
 import {useState, useEffect} from "react";
 import {useRouter} from "next/navigation";
 import {useSession} from "next-auth/react";
+import EntityTypeClassificationDropdown from "../../ner/components/EntityTypeClassificationDropdown";
 
 // Define types for our entities and results
 interface Entity {
@@ -15,6 +16,7 @@ interface Entity {
     corrected?: boolean;
     originalText?: string;
     sentence?: string;
+    entityType?: string;
 }
 
 interface EntityResults {
@@ -37,6 +39,7 @@ export default function NamedEntityRecognition() {
     const [activeEntityType, setActiveEntityType] = useState<string | null>(null);
     const [editingEntity, setEditingEntity] = useState<{type: string, index: number} | null>(null);
     const [correction, setCorrection] = useState<string>('');
+    const [entityType, setEntityType] = useState<string>('');
     const [allApproved, setAllApproved] = useState<boolean>(false);
 
     // Check if user is logged in
@@ -131,6 +134,8 @@ export default function NamedEntityRecognition() {
         if (feedback === 'down') {
             setEditingEntity({ type, index });
             setCorrection(updatedResults.entities[type][index].text);
+            // Set initial entity type to the current type or empty string
+            setEntityType(updatedResults.entities[type][index].entityType || '');
         } else if (editingEntity?.type === type && editingEntity?.index === index) {
             // If changing from down to up, clear editing state
             setEditingEntity(null);
@@ -145,14 +150,19 @@ export default function NamedEntityRecognition() {
         setResults(updatedResults);
     };
 
-    // Handle correction submission
+    // Handle entity type change
+    const handleEntityTypeChange = (type: string) => {
+        setEntityType(type);
+    };
+
+    // Handle entity type submission
     const handleCorrectionSubmit = () => {
         if (!editingEntity || !results) return;
 
         const { type, index } = editingEntity;
         const updatedResults = { ...results };
-        updatedResults.entities[type][index].correction = correction;
-        updatedResults.entities[type][index].feedback = 'up'; // Auto-approve after correction
+        updatedResults.entities[type][index].entityType = entityType;
+        updatedResults.entities[type][index].feedback = 'up'; // Auto-approve after classification
 
         setResults(updatedResults);
         setEditingEntity(null);
@@ -398,23 +408,14 @@ export default function NamedEntityRecognition() {
                                                         </button>
                                                     </div>
 
-                                                    {/* Correction input field */}
+                                                    {/* Entity type classification dropdown and correction input field */}
                                                     {editingEntity?.type === activeEntityType && editingEntity?.index === index && (
-                                                        <div className="flex items-center space-x-2 mt-2">
-                                                            <input
-                                                                type="text"
-                                                                value={correction}
-                                                                onChange={(e) => setCorrection(e.target.value)}
-                                                                className="px-2 py-1 border border-gray-300 rounded text-sm"
-                                                                placeholder="Enter correct term"
+                                                        <div className="mt-2 space-y-2">
+                                                            <EntityTypeClassificationDropdown
+                                                                value={entityType}
+                                                                onChange={handleEntityTypeChange}
+                                                                onSubmit={handleCorrectionSubmit}
                                                             />
-                                                            <button
-                                                                type="button"
-                                                                onClick={handleCorrectionSubmit}
-                                                                className="px-2 py-1 bg-blue-500 text-white rounded text-sm"
-                                                            >
-                                                                Apply
-                                                            </button>
                                                         </div>
                                                     )}
                                                 </div>

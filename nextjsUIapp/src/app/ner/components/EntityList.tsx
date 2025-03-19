@@ -25,6 +25,8 @@ interface EntityListProps {
     setEditingEntity: (entity: {type: string, index: number} | null) => void;
     correction: string;
     setCorrection: (correction: string) => void;
+    entityType: string;
+    setEntityType: (type: string) => void;
     searchTerm: string;
     setSearchTerm: (term: string) => void;
     currentPage: number;
@@ -36,6 +38,7 @@ interface EntityListProps {
     handleSelectAll: (checked: boolean) => void;
     handleFeedback: (type: string | null, index: number, feedback: 'up' | 'down') => void;
     handleCorrectionSubmit: () => void;
+    handleEntityTypeChange: (type: string) => void;
     setSelectedEntity: (entity: {type: string, entity: Entity} | null) => void;
     downloadCSV: () => void;
     downloadJSON: () => void;
@@ -59,6 +62,8 @@ export default function EntityList({
     setEditingEntity,
     correction,
     setCorrection,
+    entityType,
+    setEntityType,
     searchTerm,
     setSearchTerm,
     currentPage,
@@ -70,6 +75,7 @@ export default function EntityList({
     handleSelectAll,
     handleFeedback,
     handleCorrectionSubmit,
+    handleEntityTypeChange,
     setSelectedEntity,
     downloadCSV,
     downloadJSON
@@ -77,26 +83,26 @@ export default function EntityList({
     // Helper function to filter entities based on status and search term
     const filterEntity = (entity: Entity) => {
         // Status filter
-        const statusMatch = 
+        const statusMatch =
             activeStatusFilter === 'all' ? true :
             activeStatusFilter === 'approved' ? entity.feedback === 'up' :
             activeStatusFilter === 'corrected' ? entity.corrected :
             activeStatusFilter === 'pending' ? entity.feedback === 'down' :
             true;
-        
+
         // Search filter
         const searchMatch = searchTerm === '' ? true :
             entity.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (entity.correction && entity.correction.toLowerCase().includes(searchTerm.toLowerCase())) ||
             (entity.sentence && entity.sentence.toLowerCase().includes(searchTerm.toLowerCase()));
-        
+
         return statusMatch && searchMatch;
     };
 
     // Get filtered entities for pagination
     const getFilteredEntities = () => {
         if (showAllEntityTypes) {
-            return Object.keys(results.entities).flatMap(type => 
+            return Object.keys(results.entities).flatMap(type =>
                 results.entities[type]
                     .filter(filterEntity)
                     .map((entity, index) => ({ type, entity, index }))
@@ -112,7 +118,7 @@ export default function EntityList({
     const filteredEntities = getFilteredEntities();
     const totalPages = Math.ceil(filteredEntities.length / itemsPerPage);
     const paginatedEntities = filteredEntities.slice(
-        (currentPage - 1) * itemsPerPage, 
+        (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
 
@@ -129,7 +135,7 @@ export default function EntityList({
             <div className="mb-4">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-lg font-semibold">Extracted Entities</h2>
-                    
+
                     {/* Download Options */}
                     <div className="flex space-x-2">
                         <div className="flex items-center mr-4">
@@ -156,7 +162,7 @@ export default function EntityList({
                         </button>
                     </div>
                 </div>
-                
+
                 {/* Search Box */}
                 <div className="mb-4">
                     <div className="relative">
@@ -194,7 +200,7 @@ export default function EntityList({
                         </label>
                     </div>
                 </div>
-                
+
                 {/* Items Per Page Selector */}
                 <div className="flex items-center justify-end mb-2">
                     <label htmlFor="itemsPerPage" className="mr-2 text-sm text-gray-600">Items per page:</label>
@@ -217,7 +223,7 @@ export default function EntityList({
             </div>
 
             {/* Status Filter Tabs */}
-            <StatusFilterTabs 
+            <StatusFilterTabs
                 stats={stats}
                 activeStatusFilter={activeStatusFilter}
                 onFilterChange={setActiveStatusFilter}
@@ -225,7 +231,7 @@ export default function EntityList({
 
             {/* Entity Type Tabs */}
             {!showAllEntityTypes && (
-                <EntityTypeTabs 
+                <EntityTypeTabs
                     entities={results.entities}
                     activeEntityType={activeEntityType}
                     onEntityTypeChange={setActiveEntityType}
@@ -254,7 +260,9 @@ export default function EntityList({
                                         onViewDetails={() => setSelectedEntity({ type, entity })}
                                         isEditing={editingEntity?.type === type && editingEntity?.index === index}
                                         correction={correction}
+                                        entityType={entityType}
                                         onCorrectionChange={setCorrection}
+                                        onEntityTypeChange={handleEntityTypeChange}
                                         onCorrectionSubmit={handleCorrectionSubmit}
                                     />
                                 ))}

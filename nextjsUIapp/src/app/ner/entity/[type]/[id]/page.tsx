@@ -95,6 +95,12 @@ export default function EntityDetailPage({ params }: EntityDetailPageProps) {
                                 <p className="text-sm font-medium text-gray-500">Entity Type</p>
                                 <p className="text-base">{type}</p>
                             </div>
+                            {entity.entityType && (
+                                <div>
+                                    <p className="text-sm font-medium text-gray-500">Classification</p>
+                                    <p className="text-base">{entity.entityType}</p>
+                                </div>
+                            )}
                             <div>
                                 <p className="text-sm font-medium text-gray-500">Current Text</p>
                                 <p className="text-base font-medium">{entity.correction || entity.text}</p>

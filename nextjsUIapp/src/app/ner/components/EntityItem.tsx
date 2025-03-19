@@ -2,6 +2,7 @@
 
 import { Entity } from "@/src/app/ner/types";
 import Link from "next/link";
+import EntityTypeClassificationDropdown from "./EntityTypeClassificationDropdown";
 
 interface EntityItemProps {
     type: string;
@@ -13,7 +14,9 @@ interface EntityItemProps {
     onViewDetails: () => void;
     isEditing: boolean;
     correction: string;
+    entityType: string;
     onCorrectionChange: (value: string) => void;
+    onEntityTypeChange: (value: string) => void;
     onCorrectionSubmit: () => void;
 }
 
@@ -27,7 +30,9 @@ export default function EntityItem({
     onViewDetails,
     isEditing,
     correction,
+    entityType,
     onCorrectionChange,
+    onEntityTypeChange,
     onCorrectionSubmit
 }: EntityItemProps) {
     return (
@@ -54,6 +59,11 @@ export default function EntityItem({
                             <span className="ml-2 text-xs px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded">
                                 {type}
                             </span>
+                            {entity.entityType && (
+                                <span className="ml-2 text-xs px-2 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 rounded">
+                                    {entity.entityType}
+                                </span>
+                            )}
                             <span className="flex items-center">
                                 <button
                                     onClick={onViewDetails}
@@ -61,7 +71,7 @@ export default function EntityItem({
                                 >
                                     Quick View
                                 </button>
-                                <Link 
+                                <Link
                                     href={`/ner/entity/${type}/${index}`}
                                     className="ml-2 text-xs text-blue-500 hover:underline"
                                 >
@@ -103,27 +113,18 @@ export default function EntityItem({
                             </span>
                         </div>
                     </div>
-                    
-                    {/* Correction input field */}
+
+                    {/* Entity type classification dropdown */}
                     {isEditing && (
-                        <div className="mt-2 flex items-center space-x-2">
-                            <input
-                                type="text"
-                                value={correction}
-                                onChange={(e) => onCorrectionChange(e.target.value)}
-                                className="px-2 py-1 border border-gray-300 rounded text-sm flex-1"
-                                placeholder="Enter correct term"
+                        <div className="mt-2">
+                            <EntityTypeClassificationDropdown
+                                value={entityType}
+                                onChange={onEntityTypeChange}
+                                onSubmit={onCorrectionSubmit}
                             />
-                            <button
-                                type="button"
-                                onClick={onCorrectionSubmit}
-                                className="px-2 py-1 bg-blue-500 text-white rounded text-sm"
-                            >
-                                Apply
-                            </button>
                         </div>
                     )}
-                    
+
                     {/* Sentence with highlighted entity */}
                     {entity.sentence && (
                         <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-600 rounded text-sm">
