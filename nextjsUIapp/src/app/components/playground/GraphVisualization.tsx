@@ -77,22 +77,31 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
       return { ...link, source, target };
     }) as SimulationLink[];
 
-    // Create force simulation with improved forces
+    // Create force simulation with optimized forces for better performance
+    // Use higher decay values to stop movement faster
     const simulation = d3.forceSimulation<SimulationNode>(data.nodes)
       .force("link", d3.forceLink<SimulationNode, SimulationLink>(links)
         .id(d => d.id)
-        .distance(250))
+        .distance(150))
       .force("charge", d3.forceManyBody<SimulationNode>()
-        .strength(-1000)
-        .distanceMax(width * 0.5))
+        .strength(-600)
+        .distanceMax(width * 0.2)
+        .theta(0.9)) // Performance optimization parameter
       .force("center", d3.forceCenter(width / 2, height / 2))
       .force("collision", d3.forceCollide<SimulationNode>()
-        .radius(100)
-        .strength(1))
+        .radius(40)
+        .strength(0.8))
       .force("x", d3.forceX(width / 2).strength(0.05))
       .force("y", d3.forceY(height / 2).strength(0.05))
-      .alphaDecay(0.01)
-      .alphaMin(0.001);
+      .alphaDecay(0.05) // Much faster decay for quicker stabilization
+      .alphaMin(0.01)   // Higher minimum alpha to stop sooner
+      .velocityDecay(0.6); // Higher damping to reduce oscillations
+
+    // Stop the simulation after 3 seconds to prevent continuous movement
+    setTimeout(() => {
+      simulation.stop();
+      console.log("Force simulation stopped after timeout");
+    }, 3000);
 
     simulationRef.current = simulation;
 
@@ -229,34 +238,82 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
 
     node.call(drag);
 
-    // Update positions on simulation tick
-    simulation.on("tick", () => {
-      link.selectAll<SVGLineElement, SimulationLink>("line")
+    // Throttle updates for better performance
+    let tickCount = 0;
+    const tickThreshold = 3; // Only update DOM every N ticks
+
+    // Filter visible nodes and links for better performance
+    const visibleNodes = data.nodes.filter(n => n.visible);
+    const visibleLinks = links.filter(l => l.visible);
+
+    // Use requestAnimationFrame for smoother rendering
+    let animationFrameId: number | null = null;
+    let needsUpdate = false;
+
+    const updatePositions = () => {
+      // Only update visible elements
+      link.filter(d => d.visible)
+        .selectAll<SVGLineElement, SimulationLink>("line")
         .attr("x1", d => d.source.x ?? 0)
         .attr("y1", d => d.source.y ?? 0)
         .attr("x2", d => d.target.x ?? 0)
         .attr("y2", d => d.target.y ?? 0);
 
-      link.selectAll<SVGGElement, SimulationLink>(".link-label")
+      link.filter(d => d.visible)
+        .selectAll<SVGGElement, SimulationLink>(".link-label")
         .attr("transform", d => {
           const x = ((d.source.x ?? 0) + (d.target.x ?? 0)) / 2;
           const y = ((d.source.y ?? 0) + (d.target.y ?? 0)) / 2;
           return `translate(${x},${y})`;
         });
 
-      node.attr("transform", d => `translate(${d.x ?? 0},${d.y ?? 0})`);
+      node.filter(d => d.visible)
+        .attr("transform", d => `translate(${d.x ?? 0},${d.y ?? 0})`);
+
+      needsUpdate = false;
+    };
+
+    const scheduleUpdate = () => {
+      if (!needsUpdate) {
+        needsUpdate = true;
+        animationFrameId = requestAnimationFrame(() => {
+          updatePositions();
+          animationFrameId = null;
+        });
+      }
+    };
+
+    // Update positions on simulation tick with throttling
+    simulation.on("tick", () => {
+      tickCount++;
+      if (tickCount >= tickThreshold) {
+        tickCount = 0;
+        scheduleUpdate();
+      }
     });
 
-    // Cleanup
+    // Cleanup function to properly cancel all animations and simulations
     return () => {
+      // Stop the simulation
       simulation.stop();
+
+      // Cancel any pending animation frame
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+      }
+
+      // Remove event listeners to prevent memory leaks
+      node.on('click', null);
+
+      // Clear references
+      needsUpdate = false;
     };
   }, [data, onNodeClick]);
 
   return (
     <div className="relative flex gap-4">
-      <div ref={containerRef} className="flex-1 border rounded-lg overflow-hidden bg-white" style={{ minHeight: '80vh' }}>
-        <svg ref={svgRef} className="w-full h-full" />
+      <div ref={containerRef} className="flex-1 border rounded-lg overflow-auto bg-white" style={{ minHeight: '80vh', maxHeight: '80vh' }}>
+        <svg ref={svgRef} className="w-full h-full" style={{ minWidth: '2000px', minHeight: '2000px' }} />
       </div>
       <div className="w-64 flex flex-col bg-white rounded-lg shadow-lg sticky top-4 h-[calc(100vh-2rem)] overflow-hidden">
         <div className="p-3 border-b border-gray-200">

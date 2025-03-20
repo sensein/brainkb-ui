@@ -68,10 +68,8 @@ export default function FileUpload({ title, acceptedFileTypes, onFileUpload }: F
         <div className="text-xs text-gray-500">
           <p>Supported formats:</p>
           <ul className="list-none">
-            <li>• JSON-LD (.jsonld)</li>
-            <li>• RDF/XML (.rdf)</li>
-            <li>• Turtle (.ttl, .n3)</li>
-            <li>• CSV (.csv)</li>
+            <li>• JSON-LD (.jsonld)</li> 
+            <li>• Turtle (.ttl)</li>
             {/*<li>• PDF (.pdf)</li> to enable later*/}
           </ul>
         </div>
