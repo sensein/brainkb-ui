@@ -38,8 +38,12 @@ export default function NamedEntityRecognitionViewer() {
 
     return (
         <div className="flex flex-col max-w-6xl mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-6">Named Entity Recognition (NER)</h1>
+            <h1 className="text-2xl font-bold mb-6">Named Entity Recognition (NER) <br/><span
+                className="text-1xl font-bold mb-6 text-red-500 italic">
+                Note: The data you see in here is fake.
+            </span></h1>
             <div className="stats-navigation">
+
                 <StatsSection
                     stats={stats}
                     isLoading={isLoading}
