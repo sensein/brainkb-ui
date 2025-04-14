@@ -4,29 +4,36 @@ import {useState, useEffect} from "react";
 import {useRouter} from "next/navigation";
 import {useSession} from "next-auth/react";
 import EntityTypeClassificationDropdown from "../../ner/components/EntityTypeClassificationDropdown";
+import { ThumbsUp, ThumbsDown } from "lucide-react";
 
 // Define types for our entities and results
 interface Entity {
     text: string;
+    type: string;
     start: number;
     end: number;
-    confidence: number;
+    sentence: string;
+    paper_location: string;
+    paper_title: string;
+    doi: string;
+    ontology_id: string | null;
+    ontology_label: string | null;
+    judge_score: number;
     feedback?: 'up' | 'down';
     correction?: string;
     corrected?: boolean;
     originalText?: string;
-    sentence?: string;
-    entityType?: string;
 }
 
 interface EntityResults {
     [key: string]: Entity[];
 }
 
-interface ProcessingResult {
+interface Results {
     entities: EntityResults;
-    documentName: string;
-    processedAt: string;
+    documentName?: string;
+    processedAt?: string;
+    corrected?: boolean;
 }
 
 export default function NamedEntityRecognition() {
@@ -34,13 +41,14 @@ export default function NamedEntityRecognition() {
     const router = useRouter();
     const [file, setFile] = useState<File | null>(null);
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
-    const [results, setResults] = useState<ProcessingResult | null>(null);
+    const [results, setResults] = useState<Results | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [activeEntityType, setActiveEntityType] = useState<string | null>(null);
     const [editingEntity, setEditingEntity] = useState<{type: string, index: number} | null>(null);
     const [correction, setCorrection] = useState<string>('');
     const [entityType, setEntityType] = useState<string>('');
     const [allApproved, setAllApproved] = useState<boolean>(false);
+    const [allEntityTypes, setAllEntityTypes] = useState<string[]>([]);
 
     // Check if user is logged in
     useEffect(() => {
@@ -55,8 +63,7 @@ export default function NamedEntityRecognition() {
         if (selectedFile) {
             // Check if file is PDF or text
             if (
-                selectedFile.type === "application/pdf" ||
-                selectedFile.type === "text/plain"
+                selectedFile.type === "application/pdf"
             ) {
                 setFile(selectedFile);
                 setError(null);
@@ -70,7 +77,6 @@ export default function NamedEntityRecognition() {
     // Handle form submission
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
         if (!file) {
             setError("Please select a file to upload.");
             return;
@@ -81,20 +87,94 @@ export default function NamedEntityRecognition() {
         setResults(null);
 
         try {
+            console.log('Starting form submission...');
             const formData = new FormData();
-            formData.append("document", file);
+            formData.append("pdf_file", file);
+            formData.append("email", process.env.NEXT_PUBLIC_JWT_USER);
+            console.log("env:", process.env.NEXT_PUBLIC_JWT_USER);
+            formData.append("password", process.env.NEXT_PUBLIC_JWT_PASSWORD);
+            console.log("env pwd:", process.env.NEXT_PUBLIC_JWT_PASSWORD);
+            
+            console.log('File details:', {
+                name: file.name,
+                size: file.size,
+                type: file.type
+            });
+            
+            // Read and append all required YAML files
+            const filesToLoad = [
+                { name: 'agent_config_file', file: process.env.NEXT_PUBLI_AGENT_CONFIG || 'ner_agent.yaml' },
+                { name: 'task_config_file', file: process.env.NEXT_PUBLI_TASK_CONFIG || 'ner_task.yaml' },
+                { name: 'embedder_config_file', file: process.env.NEXT_PUBLI_EMBEDDING_CONFIG || 'embedding.yaml' },
+                { name: 'knowledge_config_file', file: process.env.NEXT_PUBLI_KNOWLEDGE_CONFIG || 'search_ontology_knowledge.yaml' }
+            ];
 
-            // call the API that process the document
+            console.log('Loading YAML files...');
+            for (const fileConfig of filesToLoad) {
+                console.log(`Loading ${fileConfig.name}...`);
+                const response = await fetch(`/api/config?file=${fileConfig.file}`);
+                if (!response.ok) {
+                    console.error(`Failed to load ${fileConfig.name}:`, response.status, response.statusText);
+                    throw new Error(`Failed to load ${fileConfig.name}`);
+                }
+                const text = await response.text();
+                const blob = new Blob([text], { type: 'application/yaml' });
+                formData.append(fileConfig.name, blob, fileConfig.file);
+                console.log(`Successfully loaded ${fileConfig.name}`);
+            }
+
+            // Add boolean flags
+            formData.append("ENABLE_WEIGHTSANDBIAS", process.env.NEXT_PUBLIC_ENABLE_WEIGHTSANDBIAS);
+            formData.append("ENABLE_MLFLOW", process.env.NEXT_PUBLIC_ENABLE_MLFLOW);
+            formData.append("ENABLE_KG_SOURCE", process.env.NEXT_PUBLIC_ENABLE_KG_SOURCE);
+
+            // Add Weaviate configuration
+            formData.append("ONTOLOGY_DATABASE", process.env.NEXT_PUBLIC_ONTOLOGY_DATABASE);
+            formData.append("WEAVIATE_API_KEY", process.env.NEXT_PUBLIC_WEAVIATE_API_KEY);
+            formData.append("WEAVIATE_HTTP_HOST", process.env.NEXT_PUBLIC_WEAVIATE_HTTP_HOST);
+            formData.append("WEAVIATE_HTTP_PORT", process.env.NEXT_PUBLIC_WEAVIATE_HTTP_PORT);
+            formData.append("WEAVIATE_HTTP_SECURE", process.env.NEXT_PUBLIC_WEAVIATE_HTTP_SECURE);
+            formData.append("WEAVIATE_GRPC_HOST", process.env.NEXT_PUBLIC_WEAVIATE_GRPC_HOST);
+            formData.append("WEAVIATE_GRPC_PORT", process.env.NEXT_PUBLIC_WEAVIATE_GRPC_PORT);
+            formData.append("WEAVIATE_GRPC_SECURE", process.env.NEXT_PUBLIC_WEAVIATE_GRPC_SECURE);
+
+            // Add Ollama configuration
+            formData.append("OLLAMA_API_ENDPOINT", process.env.NEXT_PUBLIC_OLLAMA_API_ENDPOINT);
+            formData.append("OLLAMA_MODEL", process.env.NEXT_PUBLIC_OLLAMA_MODEL);
+
+            // Add Grobid configuration
+            formData.append("GROBID_SERVER_URL_OR_EXTERNAL_SERVICE",
+                process.env.NEXT_PUBLIC_GROBID_SERVER_URL_OR_EXTERNAL_SERVICE);
+            formData.append("EXTERNAL_PDF_EXTRACTION_SERVICE",
+                process.env.NEXT_PUBLIC_EXTERNAL_PDF_EXTRACTION_SERVICE);
+            
+            console.log('All form data prepared, making API call...');
+            
+            // call our API route
             const response = await fetch("/api/process-document", {
                 method: "POST",
                 body: formData,
             });
 
             if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API call failed:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    error: errorText
+                });
                 throw new Error(`Error: ${response.status}`);
             }
 
+            console.log('API call successful, processing response...');
             const data = await response.json();
+
+            // Extract unique entity types from the response
+            const entityTypes = new Set<string>();
+            Object.keys(data.entities).forEach(type => {
+                entityTypes.add(type);
+            });
+            setAllEntityTypes(Array.from(entityTypes));
 
             // Initialize all entities with thumbs up feedback
             const resultsWithFeedback = {
@@ -105,11 +185,14 @@ export default function NamedEntityRecognition() {
                         feedback: 'up' as 'up'
                     }));
                     return acc;
-                }, {} as EntityResults)
+                }, {} as EntityResults),
+                documentName: file.name,
+                processedAt: new Date().toISOString(),
+                corrected: false
             };
 
             setResults(resultsWithFeedback);
-            setAllApproved(true); // Initially all are approved
+            setAllApproved(true);
 
             // Set the first entity type as active
             if (data.entities && Object.keys(data.entities).length > 0) {
@@ -135,7 +218,7 @@ export default function NamedEntityRecognition() {
             setEditingEntity({ type, index });
             setCorrection(updatedResults.entities[type][index].text);
             // Set initial entity type to the current type or empty string
-            setEntityType(updatedResults.entities[type][index].entityType || '');
+            setEntityType(updatedResults.entities[type][index].type || '');
         } else if (editingEntity?.type === type && editingEntity?.index === index) {
             // If changing from down to up, clear editing state
             setEditingEntity(null);
@@ -161,7 +244,7 @@ export default function NamedEntityRecognition() {
 
         const { type, index } = editingEntity;
         const updatedResults = { ...results };
-        updatedResults.entities[type][index].entityType = entityType;
+        updatedResults.entities[type][index].type = entityType;
         updatedResults.entities[type][index].feedback = 'up'; // Auto-approve after classification
 
         setResults(updatedResults);
@@ -209,7 +292,8 @@ export default function NamedEntityRecognition() {
 
             // Get updated results with corrections applied
             const data = await response.json();
-
+            console.log("Final response from API");
+            console.log(data);
             // Update results with the corrected entities
             const resultsWithFeedback = {
                 ...data,
@@ -233,6 +317,29 @@ export default function NamedEntityRecognition() {
         } finally {
             setIsProcessing(false);
         }
+    };
+
+    // Update the handleTypeChange function
+    const handleTypeChange = (oldType: string, index: number, newType: string) => {
+        if (!results) return;
+
+        const updatedResults = { ...results };
+        const entity = updatedResults.entities[oldType][index];
+
+        // Remove from old type
+        updatedResults.entities[oldType] = updatedResults.entities[oldType].filter((_, i) => i !== index);
+
+        // Add to new type
+        if (!updatedResults.entities[newType]) {
+            updatedResults.entities[newType] = [];
+        }
+        updatedResults.entities[newType].push({
+            ...entity,
+            type: newType,
+            feedback: 'up' // Auto-approve after type change
+        });
+
+        setResults(updatedResults);
     };
 
     // If not logged in, show loading
@@ -349,76 +456,15 @@ export default function NamedEntityRecognition() {
                                     <ul className="space-y-4">
                                         {results.entities[activeEntityType].map((entity, index) => (
                                             <li key={index} className="border-b border-gray-200 dark:border-gray-600 pb-3">
-                                                <div className="flex flex-col mb-2">
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="text-sm font-medium">
-                                                            {entity.correction || entity.text}
-                                                            {(entity.correction || entity.corrected) && (
-                                                                <span className="text-xs text-gray-500 ml-2">
-                                                                    (corrected from: {entity.originalText || entity.text})
-                                                                </span>
-                                                            )}
-                                                        </span>
-                                                        <span className="text-xs text-gray-500">
-                                                            Confidence: {(entity.confidence * 100).toFixed(1)}%
-                                                        </span>
-                                                    </div>
-
-                                                    {/* Sentence with highlighted entity */}
-                                                    {entity.sentence && (
-                                                        <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-600 rounded text-sm">
-                                                            <p dangerouslySetInnerHTML={{
-                                                                __html: entity.sentence.replace(
-                                                                    entity.text,
-                                                                    `<span class="bg-yellow-200 dark:bg-yellow-600 px-1 rounded font-medium">${entity.correction || entity.text}</span>`
-                                                                )
-                                                            }} />
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Feedback buttons */}
-                                                <div className="flex items-center justify-between mt-2">
-                                                    <div className="flex space-x-2">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleFeedback(activeEntityType, index, 'up')}
-                                                            className={`p-1 rounded ${
-                                                                entity.feedback === 'up' 
-                                                                    ? 'bg-green-100 text-green-600 dark:bg-green-800 dark:text-green-200' 
-                                                                    : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
-                                                            }`}
-                                                        >
-                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                                                <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
-                                                            </svg>
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleFeedback(activeEntityType, index, 'down')}
-                                                            className={`p-1 rounded ${
-                                                                entity.feedback === 'down' 
-                                                                    ? 'bg-red-100 text-red-600 dark:bg-red-800 dark:text-red-200' 
-                                                                    : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
-                                                            }`}
-                                                        >
-                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                                                <path d="M18 9.5a1.5 1.5 0 11-3 0v-6a1.5 1.5 0 013 0v6zM14 9.667v-5.43a2 2 0 00-1.105-1.79l-.05-.025A4 4 0 0011.055 2H5.64a2 2 0 00-1.962 1.608l-1.2 6A2 2 0 004.44 12H8v4a2 2 0 002 2 1 1 0 001-1v-.667a4 4 0 01.8-2.4l1.4-1.866a4 4 0 00.8-2.4z" />
-                                                            </svg>
-                                                        </button>
-                                                    </div>
-
-                                                    {/* Entity type classification dropdown and correction input field */}
-                                                    {editingEntity?.type === activeEntityType && editingEntity?.index === index && (
-                                                        <div className="mt-2 space-y-2">
-                                                            <EntityTypeClassificationDropdown
-                                                                value={entityType}
-                                                                onChange={handleEntityTypeChange}
-                                                                onSubmit={handleCorrectionSubmit}
-                                                            />
-                                                        </div>
-                                                    )}
-                                                </div>
+                                                <EntityCard 
+                                                    entity={entity} 
+                                                    onFeedbackChange={handleFeedback}
+                                                    onTypeChange={handleTypeChange}
+                                                    type={activeEntityType}
+                                                    index={index}
+                                                    isEditing={entity.feedback === 'down'}
+                                                    allEntityTypes={allEntityTypes}
+                                                />
                                             </li>
                                         ))}
                                     </ul>
@@ -451,10 +497,132 @@ export default function NamedEntityRecognition() {
 
                     <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
                         Document: {results.documentName} • Processed
-                        at: {new Date(results.processedAt).toLocaleString()}
+                        at: {results.processedAt ? new Date(results.processedAt).toLocaleString() : 'N/A'}
                     </div>
                 </div>
             )}
         </div>
     );
 }
+
+const EntityCard = ({ 
+    entity, 
+    onFeedbackChange,
+    type,
+    index,
+    onTypeChange,
+    isEditing,
+    allEntityTypes
+}: { 
+    entity: Entity; 
+    onFeedbackChange: (type: string, index: number, feedback: 'up' | 'down') => void;
+    onTypeChange: (oldType: string, index: number, newType: string) => void;
+    type: string;
+    index: number;
+    isEditing: boolean;
+    allEntityTypes: string[];
+}) => {
+    // Function to highlight the entity in the sentence
+    // Function to highlight the entity in the sentence
+    const highlightEntityInSentence = (sentence: string, entityText: string, start: number, end: number) => {
+        if (!sentence || !entityText) return sentence;
+        
+        // Create the highlighted version
+        const before = sentence.substring(0, start);
+        const highlighted = `<span class="bg-yellow-200 dark:bg-yellow-600 px-1 rounded font-medium">${entityText}</span>`;
+        const after = sentence.substring(end);
+        
+        return `${before}${highlighted}${after}`;
+    };
+
+    return (
+        <div className="bg-white rounded-lg shadow p-4 mb-4">
+            <div className="flex justify-between items-start mb-2">
+                <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                        {entity.correction || entity.text}
+                        {entity.corrected && (
+                            <span className="text-xs text-gray-500 ml-2">
+                                (corrected from: {entity.originalText || entity.text})
+                            </span>
+                        )}
+                    </h3>
+                    {isEditing ? (
+                        <div className="mt-2">
+                            <label className="block text-sm font-medium text-gray-700">Entity Type</label>
+                            <select
+                                value={entity.type}
+                                onChange={(e) => onTypeChange(type, index, e.target.value)}
+                                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                            >
+                                {allEntityTypes.map((type) => (
+                                    <option key={type} value={type}>
+                                        {type}
+                                    </option>
+                                ))}
+                                <option value="Unclassified">Unclassified</option>
+                            </select>
+                        </div>
+                    ) : (
+                        <p className="text-sm text-gray-500">Type: {entity.type}</p>
+                    )}
+                    <p className="text-sm text-gray-500">Confidence: {(entity.judge_score * 100).toFixed(1)}%</p>
+                </div>
+                <div className="flex space-x-2">
+                    <button
+                        onClick={() => onFeedbackChange(type, index, 'up')}
+                        className={`p-2 rounded-full ${entity.feedback === 'up' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'}`}
+                    >
+                        <ThumbsUp className="h-5 w-5" />
+                    </button>
+                    <button
+                        onClick={() => onFeedbackChange(type, index, 'down')}
+                        className={`p-2 rounded-full ${entity.feedback === 'down' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'}`}
+                    >
+                        <ThumbsDown className="h-5 w-5" />
+                    </button>
+                </div>
+            </div>
+            
+            <div className="space-y-2">
+                <div className="text-sm text-gray-600">
+                    <span className="font-medium">Sentence:</span>{" "}
+                    <div 
+                        className="mt-1 p-2 bg-gray-50 rounded"
+                        dangerouslySetInnerHTML={{
+                            __html: highlightEntityInSentence(
+                                entity.sentence,
+                                entity.text,
+                                entity.start,
+                                entity.end
+                            )
+                        }}
+                    />
+                </div>
+                <div className="text-sm text-gray-600">
+                    <span className="font-medium">Location:</span> {entity.paper_location}
+                </div>
+                {entity.paper_title && (
+                    <div className="text-sm text-gray-600">
+                        <span className="font-medium">Paper:</span> {entity.paper_title}
+                    </div>
+                )}
+                {entity.doi && (
+                    <div className="text-sm text-gray-600">
+                        <span className="font-medium">DOI:</span> {entity.doi}
+                    </div>
+                )}
+                {entity.ontology_id && (
+                    <div className="text-sm text-gray-600">
+                        <span className="font-medium">Ontology ID:</span> {entity.ontology_id}
+                    </div>
+                )}
+                {entity.ontology_label && (
+                    <div className="text-sm text-gray-600">
+                        <span className="font-medium">Ontology Label:</span> {entity.ontology_label}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
