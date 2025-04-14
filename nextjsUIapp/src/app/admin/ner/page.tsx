@@ -339,6 +339,12 @@ export default function NamedEntityRecognition() {
             feedback: 'up' // Auto-approve after type change
         });
 
+        // Check if all entities now have thumbs up
+        const allUp = Object.keys(updatedResults.entities).every(entityType =>
+            updatedResults.entities[entityType].every(entity => entity.feedback === 'up')
+        );
+
+        setAllApproved(allUp);
         setResults(updatedResults);
     };
 
