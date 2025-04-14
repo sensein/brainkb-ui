@@ -3,7 +3,6 @@
 import {useState, useEffect} from "react";
 import {useRouter} from "next/navigation";
 import {useSession} from "next-auth/react";
-import EntityTypeClassificationDropdown from "../../ner/components/EntityTypeClassificationDropdown";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
 
 // Define types for our entities and results
@@ -90,16 +89,12 @@ export default function NamedEntityRecognition() {
             console.log('Starting form submission...');
             const formData = new FormData();
             formData.append("pdf_file", file);
-            formData.append("email", process.env.NEXT_PUBLIC_JWT_USER);
-            console.log("env:", process.env.NEXT_PUBLIC_JWT_USER);
-            formData.append("password", process.env.NEXT_PUBLIC_JWT_PASSWORD);
-            console.log("env pwd:", process.env.NEXT_PUBLIC_JWT_PASSWORD);
-            
-            console.log('File details:', {
-                name: file.name,
-                size: file.size,
-                type: file.type
-            });
+            if (process.env.NEXT_PUBLIC_JWT_USER) {
+                formData.append("email", process.env.NEXT_PUBLIC_JWT_USER);
+            }
+            if (process.env.NEXT_PUBLIC_JWT_PASSWORD) {
+                formData.append("password", process.env.NEXT_PUBLIC_JWT_PASSWORD);
+            }
             
             // Read and append all required YAML files
             const filesToLoad = [
@@ -124,29 +119,59 @@ export default function NamedEntityRecognition() {
             }
 
             // Add boolean flags
-            formData.append("ENABLE_WEIGHTSANDBIAS", process.env.NEXT_PUBLIC_ENABLE_WEIGHTSANDBIAS);
-            formData.append("ENABLE_MLFLOW", process.env.NEXT_PUBLIC_ENABLE_MLFLOW);
-            formData.append("ENABLE_KG_SOURCE", process.env.NEXT_PUBLIC_ENABLE_KG_SOURCE);
+            if (process.env.NEXT_PUBLIC_ENABLE_WEIGHTSANDBIAS) {
+                formData.append("ENABLE_WEIGHTSANDBIAS", process.env.NEXT_PUBLIC_ENABLE_WEIGHTSANDBIAS);
+            }
+            if (process.env.NEXT_PUBLIC_ENABLE_MLFLOW) {
+                formData.append("ENABLE_MLFLOW", process.env.NEXT_PUBLIC_ENABLE_MLFLOW);
+            }
+            if (process.env.NEXT_PUBLIC_ENABLE_KG_SOURCE) {
+                formData.append("ENABLE_KG_SOURCE", process.env.NEXT_PUBLIC_ENABLE_KG_SOURCE);
+            }
 
             // Add Weaviate configuration
-            formData.append("ONTOLOGY_DATABASE", process.env.NEXT_PUBLIC_ONTOLOGY_DATABASE);
-            formData.append("WEAVIATE_API_KEY", process.env.NEXT_PUBLIC_WEAVIATE_API_KEY);
-            formData.append("WEAVIATE_HTTP_HOST", process.env.NEXT_PUBLIC_WEAVIATE_HTTP_HOST);
-            formData.append("WEAVIATE_HTTP_PORT", process.env.NEXT_PUBLIC_WEAVIATE_HTTP_PORT);
-            formData.append("WEAVIATE_HTTP_SECURE", process.env.NEXT_PUBLIC_WEAVIATE_HTTP_SECURE);
-            formData.append("WEAVIATE_GRPC_HOST", process.env.NEXT_PUBLIC_WEAVIATE_GRPC_HOST);
-            formData.append("WEAVIATE_GRPC_PORT", process.env.NEXT_PUBLIC_WEAVIATE_GRPC_PORT);
-            formData.append("WEAVIATE_GRPC_SECURE", process.env.NEXT_PUBLIC_WEAVIATE_GRPC_SECURE);
+            if (process.env.NEXT_PUBLIC_ONTOLOGY_DATABASE) {
+                formData.append("ONTOLOGY_DATABASE", process.env.NEXT_PUBLIC_ONTOLOGY_DATABASE);
+            }
+            if (process.env.NEXT_PUBLIC_WEAVIATE_API_KEY) {
+                formData.append("WEAVIATE_API_KEY", process.env.NEXT_PUBLIC_WEAVIATE_API_KEY);
+            }
+            if (process.env.NEXT_PUBLIC_WEAVIATE_HTTP_HOST) {
+                formData.append("WEAVIATE_HTTP_HOST", process.env.NEXT_PUBLIC_WEAVIATE_HTTP_HOST);
+            }
+            if (process.env.NEXT_PUBLIC_WEAVIATE_HTTP_PORT) {
+                formData.append("WEAVIATE_HTTP_PORT", process.env.NEXT_PUBLIC_WEAVIATE_HTTP_PORT);
+            }
+            if (process.env.NEXT_PUBLIC_WEAVIATE_HTTP_SECURE) {
+                formData.append("WEAVIATE_HTTP_SECURE", process.env.NEXT_PUBLIC_WEAVIATE_HTTP_SECURE);
+            }
+            if (process.env.NEXT_PUBLIC_WEAVIATE_GRPC_HOST) {
+                formData.append("WEAVIATE_GRPC_HOST", process.env.NEXT_PUBLIC_WEAVIATE_GRPC_HOST);
+            }
+            if (process.env.NEXT_PUBLIC_WEAVIATE_GRPC_PORT) {
+                formData.append("WEAVIATE_GRPC_PORT", process.env.NEXT_PUBLIC_WEAVIATE_GRPC_PORT);
+            }
+            if (process.env.NEXT_PUBLIC_WEAVIATE_GRPC_SECURE) {
+                formData.append("WEAVIATE_GRPC_SECURE", process.env.NEXT_PUBLIC_WEAVIATE_GRPC_SECURE);
+            }
 
             // Add Ollama configuration
-            formData.append("OLLAMA_API_ENDPOINT", process.env.NEXT_PUBLIC_OLLAMA_API_ENDPOINT);
-            formData.append("OLLAMA_MODEL", process.env.NEXT_PUBLIC_OLLAMA_MODEL);
+            if (process.env.NEXT_PUBLIC_OLLAMA_API_ENDPOINT) {
+                formData.append("OLLAMA_API_ENDPOINT", process.env.NEXT_PUBLIC_OLLAMA_API_ENDPOINT);
+            }
+            if (process.env.NEXT_PUBLIC_OLLAMA_MODEL) {
+                formData.append("OLLAMA_MODEL", process.env.NEXT_PUBLIC_OLLAMA_MODEL);
+            }
 
             // Add Grobid configuration
-            formData.append("GROBID_SERVER_URL_OR_EXTERNAL_SERVICE",
-                process.env.NEXT_PUBLIC_GROBID_SERVER_URL_OR_EXTERNAL_SERVICE);
-            formData.append("EXTERNAL_PDF_EXTRACTION_SERVICE",
-                process.env.NEXT_PUBLIC_EXTERNAL_PDF_EXTRACTION_SERVICE);
+            if (process.env.NEXT_PUBLIC_GROBID_SERVER_URL_OR_EXTERNAL_SERVICE) {
+                formData.append("GROBID_SERVER_URL_OR_EXTERNAL_SERVICE",
+                    process.env.NEXT_PUBLIC_GROBID_SERVER_URL_OR_EXTERNAL_SERVICE);
+            }
+            if (process.env.NEXT_PUBLIC_EXTERNAL_PDF_EXTRACTION_SERVICE) {
+                formData.append("EXTERNAL_PDF_EXTRACTION_SERVICE",
+                    process.env.NEXT_PUBLIC_EXTERNAL_PDF_EXTRACTION_SERVICE);
+            }
             
             console.log('All form data prepared, making API call...');
             
@@ -260,6 +285,7 @@ export default function NamedEntityRecognition() {
 
     // Handle final save
     const handleSave = async () => {
+
         if (!results || !file) return;
 
         setIsProcessing(true);
@@ -280,6 +306,11 @@ export default function NamedEntityRecognition() {
             formData.append("document", file);
             formData.append("corrections", JSON.stringify(corrections));
 
+            console.log("Saving data:");
+
+            console.log(results);
+            console.log("Corrected");
+            console.log(formData);
             // Call API with corrections
             const response = await fetch("/api/process-document", {
                 method: "POST",
@@ -528,7 +559,6 @@ const EntityCard = ({
     isEditing: boolean;
     allEntityTypes: string[];
 }) => {
-    // Function to highlight the entity in the sentence
     // Function to highlight the entity in the sentence
     const highlightEntityInSentence = (sentence: string, entityText: string, start: number, end: number) => {
         if (!sentence || !entityText) return sentence;
