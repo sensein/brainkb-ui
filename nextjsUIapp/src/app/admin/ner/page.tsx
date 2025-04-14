@@ -7,8 +7,9 @@ import { ThumbsUp, ThumbsDown } from "lucide-react";
 
 // Define types for our entities and results
 interface Entity {
-    text: string;
-    type: string;
+    entity: string;
+    entityType: string;
+    originalEntityType: string;
     start: number;
     end: number;
     sentence: string;
@@ -19,9 +20,7 @@ interface Entity {
     ontology_label: string | null;
     judge_score: number;
     feedback?: 'up' | 'down';
-    correction?: string;
-    corrected?: boolean;
-    originalText?: string;
+    contributed_by?: string;
 }
 
 interface EntityResults {
@@ -241,9 +240,9 @@ export default function NamedEntityRecognition() {
         // If thumbs down, set up for editing
         if (feedback === 'down') {
             setEditingEntity({ type, index });
-            setCorrection(updatedResults.entities[type][index].text);
+            setCorrection(updatedResults.entities[type][index].entity);
             // Set initial entity type to the current type or empty string
-            setEntityType(updatedResults.entities[type][index].type || '');
+            setEntityType(updatedResults.entities[type][index].entityType || '');
         } else if (editingEntity?.type === type && editingEntity?.index === index) {
             // If changing from down to up, clear editing state
             setEditingEntity(null);
@@ -269,8 +268,15 @@ export default function NamedEntityRecognition() {
 
         const { type, index } = editingEntity;
         const updatedResults = { ...results };
-        updatedResults.entities[type][index].type = entityType;
-        updatedResults.entities[type][index].feedback = 'up'; // Auto-approve after classification
+        const entity = updatedResults.entities[type][index];
+
+        updatedResults.entities[type][index] = {
+            ...entity,
+            entityType: entityType,
+            originalEntityType: entity.entityType,
+            feedback: 'up', // Auto-approve after classification
+            contributed_by: session?.user?.email || 'unknown'
+        };
 
         setResults(updatedResults);
         setEditingEntity(null);
@@ -296,7 +302,7 @@ export default function NamedEntityRecognition() {
             Object.keys(results.entities).forEach(type => {
                 results.entities[type].forEach(entity => {
                     if (entity.correction) {
-                        corrections[entity.text] = entity.correction;
+                        corrections[entity.entity] = entity.correction;
                     }
                 });
             });
@@ -366,8 +372,10 @@ export default function NamedEntityRecognition() {
         }
         updatedResults.entities[newType].push({
             ...entity,
-            type: newType,
-            feedback: 'up' // Auto-approve after type change
+            entityType: newType,
+            originalEntityType: entity.entityType,
+            feedback: 'up', // Auto-approve after type change
+            contributed_by: session?.user?.email || 'unknown'
         });
 
         // Check if all entities now have thumbs up
@@ -572,48 +580,50 @@ const EntityCard = ({
     };
 
     return (
-        <div className="bg-white rounded-lg shadow p-4 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-4">
             <div className="flex justify-between items-start mb-2">
                 <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                        {entity.correction || entity.text}
-                        {entity.corrected && (
-                            <span className="text-xs text-gray-500 ml-2">
-                                (corrected from: {entity.originalText || entity.text})
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        {entity.entity}
+                        {entity.originalEntityType !== entity.entityType && (
+                            <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                                (changed from: {entity.originalEntityType})
                             </span>
                         )}
                     </h3>
                     {isEditing ? (
                         <div className="mt-2">
-                            <label className="block text-sm font-medium text-gray-700">Entity Type</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Entity Type</label>
                             <select
-                                value={entity.type}
+                                value={entity.entityType}
                                 onChange={(e) => onTypeChange(type, index, e.target.value)}
-                                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md dark:bg-gray-700 dark:text-gray-100"
                             >
                                 {allEntityTypes.map((type) => (
                                     <option key={type} value={type}>
                                         {type}
                                     </option>
                                 ))}
-                                <option value="Unclassified">Unclassified</option>
                             </select>
                         </div>
                     ) : (
-                        <p className="text-sm text-gray-500">Type: {entity.type}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Type: {entity.entityType}</p>
                     )}
-                    <p className="text-sm text-gray-500">Confidence: {(entity.judge_score * 100).toFixed(1)}%</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Confidence: {(entity.judge_score * 100).toFixed(1)}%</p>
+                    {entity.contributed_by && (
+                        <p className="text-xs text-gray-400 dark:text-gray-500">Changed by: {entity.contributed_by}</p>
+                    )}
                 </div>
                 <div className="flex space-x-2">
                     <button
                         onClick={() => onFeedbackChange(type, index, 'up')}
-                        className={`p-2 rounded-full ${entity.feedback === 'up' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'}`}
+                        className={`p-2 rounded-full ${entity.feedback === 'up' ? 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}
                     >
                         <ThumbsUp className="h-5 w-5" />
                     </button>
                     <button
                         onClick={() => onFeedbackChange(type, index, 'down')}
-                        className={`p-2 rounded-full ${entity.feedback === 'down' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'}`}
+                        className={`p-2 rounded-full ${entity.feedback === 'down' ? 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}
                     >
                         <ThumbsDown className="h-5 w-5" />
                     </button>
@@ -621,40 +631,40 @@ const EntityCard = ({
             </div>
             
             <div className="space-y-2">
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600 dark:text-gray-300">
                     <span className="font-medium">Sentence:</span>{" "}
                     <div 
-                        className="mt-1 p-2 bg-gray-50 rounded"
+                        className="mt-1 p-2 bg-gray-50 dark:bg-gray-700 rounded"
                         dangerouslySetInnerHTML={{
                             __html: highlightEntityInSentence(
                                 entity.sentence,
-                                entity.text,
+                                entity.entity,
                                 entity.start,
                                 entity.end
                             )
                         }}
                     />
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600 dark:text-gray-300">
                     <span className="font-medium">Location:</span> {entity.paper_location}
                 </div>
                 {entity.paper_title && (
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-gray-600 dark:text-gray-300">
                         <span className="font-medium">Paper:</span> {entity.paper_title}
                     </div>
                 )}
                 {entity.doi && (
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-gray-600 dark:text-gray-300">
                         <span className="font-medium">DOI:</span> {entity.doi}
                     </div>
                 )}
                 {entity.ontology_id && (
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-gray-600 dark:text-gray-300">
                         <span className="font-medium">Ontology ID:</span> {entity.ontology_id}
                     </div>
                 )}
                 {entity.ontology_label && (
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-gray-600 dark:text-gray-300">
                         <span className="font-medium">Ontology Label:</span> {entity.ontology_label}
                     </div>
                 )}
