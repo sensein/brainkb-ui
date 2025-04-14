@@ -4,6 +4,7 @@ import {useState, useEffect} from "react";
 import {useRouter} from "next/navigation";
 import {useSession} from "next-auth/react";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
+import {list} from "postcss";
 
 // Define types for our entities and results
 interface Entity {
@@ -21,6 +22,7 @@ interface Entity {
     judge_score: number;
     feedback?: 'up' | 'down';
     contributed_by?: string;
+    changed_by?: list
 }
 
 interface EntityResults {
@@ -31,7 +33,6 @@ interface Results {
     entities: EntityResults;
     documentName?: string;
     processedAt?: string;
-    corrected?: boolean;
 }
 
 export default function NamedEntityRecognition() {
@@ -88,6 +89,9 @@ export default function NamedEntityRecognition() {
             console.log('Starting form submission...');
             const formData = new FormData();
             formData.append("pdf_file", file);
+
+            formData.append("current_loggedin_user", session?.user?.email || 'unknown');
+            console.log(formData);
             if (process.env.NEXT_PUBLIC_JWT_USER) {
                 formData.append("email", process.env.NEXT_PUBLIC_JWT_USER);
             }
@@ -173,6 +177,7 @@ export default function NamedEntityRecognition() {
             }
             
             console.log('All form data prepared, making API call...');
+
             
             // call our API route
             const response = await fetch("/api/process-document", {
@@ -212,7 +217,6 @@ export default function NamedEntityRecognition() {
                 }, {} as EntityResults),
                 documentName: file.name,
                 processedAt: new Date().toISOString(),
-                corrected: false
             };
 
             setResults(resultsWithFeedback);
@@ -229,6 +233,8 @@ export default function NamedEntityRecognition() {
             setIsProcessing(false);
         }
     };
+
+
 
     // Handle feedback (thumbs up/down)
     const handleFeedback = (type: string, index: number, feedback: 'up' | 'down') => {
@@ -262,32 +268,6 @@ export default function NamedEntityRecognition() {
         setEntityType(type);
     };
 
-    // Handle entity type submission
-    const handleCorrectionSubmit = () => {
-        if (!editingEntity || !results) return;
-
-        const { type, index } = editingEntity;
-        const updatedResults = { ...results };
-        const entity = updatedResults.entities[type][index];
-
-        updatedResults.entities[type][index] = {
-            ...entity,
-            entityType: entityType,
-            originalEntityType: entity.entityType,
-            feedback: 'up', // Auto-approve after classification
-            contributed_by: session?.user?.email || 'unknown'
-        };
-
-        setResults(updatedResults);
-        setEditingEntity(null);
-
-        // Check if all entities now have thumbs up
-        const allUp = Object.keys(updatedResults.entities).every(entityType =>
-            updatedResults.entities[entityType].every(entity => entity.feedback === 'up')
-        );
-
-        setAllApproved(allUp);
-    };
 
     // Handle final save
     const handleSave = async () => {
@@ -297,54 +277,22 @@ export default function NamedEntityRecognition() {
         setIsProcessing(true);
 
         try {
-            // Prepare data with corrections
-            const corrections = {};
-            Object.keys(results.entities).forEach(type => {
-                results.entities[type].forEach(entity => {
-                    if (entity.correction) {
-                        corrections[entity.entity] = entity.correction;
-                    }
-                });
-            });
 
-            // Create form data with file and corrections
-            const formData = new FormData();
-            formData.append("document", file);
-            formData.append("corrections", JSON.stringify(corrections));
 
             console.log("Saving data:");
 
             console.log(results);
-            console.log("Corrected");
-            console.log(formData);
-            // Call API with corrections
-            const response = await fetch("/api/process-document", {
-                method: "POST",
-                body: formData,
-            });
+            // const response = await fetch("/api/process-document", {
+            //     method: "POST",
+            //     body: formData,
+            // });
 
-            if (!response.ok) {
-                throw new Error(`Error: ${response.status}`);
-            }
+            // if (!response.ok) {
+            //     throw new Error(`Error: ${response.status}`);
+            // }
 
-            // Get updated results with corrections applied
-            const data = await response.json();
-            console.log("Final response from API");
-            console.log(data);
-            // Update results with the corrected entities
-            const resultsWithFeedback = {
-                ...data,
-                entities: Object.keys(data.entities).reduce((acc, type) => {
-                    acc[type] = data.entities[type].map(entity => ({
-                        ...entity,
-                        feedback: 'up' as 'up'
-                    }));
-                    return acc;
-                }, {} as EntityResults)
-            };
 
-            setResults(resultsWithFeedback);
-            setAllApproved(true);
+
 
             // Show success message
             setError("Results saved successfully!");
@@ -362,6 +310,7 @@ export default function NamedEntityRecognition() {
 
         const updatedResults = { ...results };
         const entity = updatedResults.entities[oldType][index];
+        const currentUser = session?.user?.email || 'unknown';
 
         // Remove from old type
         updatedResults.entities[oldType] = updatedResults.entities[oldType].filter((_, i) => i !== index);
@@ -370,12 +319,19 @@ export default function NamedEntityRecognition() {
         if (!updatedResults.entities[newType]) {
             updatedResults.entities[newType] = [];
         }
+
+        // Update changed_by list
+        const existingChangedBy = entity.changed_by || [];
+        const updatedChangedBy = existingChangedBy.includes(currentUser) 
+            ? existingChangedBy 
+            : [...existingChangedBy, currentUser];
+
         updatedResults.entities[newType].push({
             ...entity,
             entityType: newType,
             originalEntityType: entity.entityType,
             feedback: 'up', // Auto-approve after type change
-            contributed_by: session?.user?.email || 'unknown'
+            changed_by: updatedChangedBy
         });
 
         // Check if all entities now have thumbs up
@@ -509,6 +465,7 @@ export default function NamedEntityRecognition() {
                                                     index={index}
                                                     isEditing={entity.feedback === 'down'}
                                                     allEntityTypes={allEntityTypes}
+                                                    session={session}
                                                 />
                                             </li>
                                         ))}
@@ -557,7 +514,8 @@ const EntityCard = ({
     index,
     onTypeChange,
     isEditing,
-    allEntityTypes
+    allEntityTypes,
+    session
 }: { 
     entity: Entity; 
     onFeedbackChange: (type: string, index: number, feedback: 'up' | 'down') => void;
@@ -566,7 +524,10 @@ const EntityCard = ({
     index: number;
     isEditing: boolean;
     allEntityTypes: string[];
+    session: any;
 }) => {
+    const otherContributors = (entity.changed_by ?? []).filter(email => email !== (session?.user?.email || 'unknown'));
+    
     // Function to highlight the entity in the sentence
     const highlightEntityInSentence = (sentence: string, entityText: string, start: number, end: number) => {
         if (!sentence || !entityText) return sentence;
@@ -579,26 +540,30 @@ const EntityCard = ({
         return `${before}${highlighted}${after}`;
     };
 
+
+
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-4">
+        <div className="bg-white rounded-lg shadow p-4 mb-4">
             <div className="flex justify-between items-start mb-2">
                 <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    <h3 className="text-lg font-semibold text-gray-900">
                         {entity.entity}
+
                         {entity.originalEntityType !== entity.entityType && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                            <span className="text-xs text-red-700 ml-2">
                                 (changed from: {entity.originalEntityType})
                             </span>
                         )}
                     </h3>
                     {isEditing ? (
                         <div className="mt-2">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Entity Type</label>
+                            <label className="block text-sm font-medium text-gray-700">Entity Type</label>
                             <select
                                 value={entity.entityType}
                                 onChange={(e) => onTypeChange(type, index, e.target.value)}
                                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md dark:bg-gray-700 dark:text-gray-100"
                             >
+                                <option value="Unclassified">Unclassified</option>
                                 {allEntityTypes.map((type) => (
                                     <option key={type} value={type}>
                                         {type}
@@ -607,23 +572,28 @@ const EntityCard = ({
                             </select>
                         </div>
                     ) : (
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Type: {entity.entityType}</p>
+                        <p className="text-sm text-gray-500">Type: {entity.entityType}</p>
                     )}
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Confidence: {(entity.judge_score * 100).toFixed(1)}%</p>
+                    <p className="text-sm text-gray-500">Confidence: {(entity.judge_score * 100).toFixed(1)}%</p>
                     {entity.contributed_by && (
-                        <p className="text-xs text-gray-400 dark:text-gray-500">Changed by: {entity.contributed_by}</p>
+                        <p className="text-xs text-gray-400">Contributed by: {entity.contributed_by}</p>
+                    )}
+                    {entity.changed_by && entity.changed_by.length > 0 && (
+                        <p className="text-xs text-gray-400">
+                            Updated by: {entity.changed_by.join(', ')}
+                        </p>
                     )}
                 </div>
                 <div className="flex space-x-2">
                     <button
                         onClick={() => onFeedbackChange(type, index, 'up')}
-                        className={`p-2 rounded-full ${entity.feedback === 'up' ? 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}
+                        className={`p-2 rounded-full ${entity.feedback === 'up' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'}`}
                     >
                         <ThumbsUp className="h-5 w-5" />
                     </button>
                     <button
                         onClick={() => onFeedbackChange(type, index, 'down')}
-                        className={`p-2 rounded-full ${entity.feedback === 'down' ? 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}
+                        className={`p-2 rounded-full ${entity.feedback === 'down' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'}`}
                     >
                         <ThumbsDown className="h-5 w-5" />
                     </button>
@@ -631,10 +601,10 @@ const EntityCard = ({
             </div>
             
             <div className="space-y-2">
-                <div className="text-sm text-gray-600 dark:text-gray-300">
+                <div className="text-sm text-gray-600">
                     <span className="font-medium">Sentence:</span>{" "}
                     <div 
-                        className="mt-1 p-2 bg-gray-50 dark:bg-gray-700 rounded"
+                        className="mt-1 p-2 bg-gray-50 rounded"
                         dangerouslySetInnerHTML={{
                             __html: highlightEntityInSentence(
                                 entity.sentence,
@@ -645,26 +615,26 @@ const EntityCard = ({
                         }}
                     />
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">
+                <div className="text-sm text-gray-600">
                     <span className="font-medium">Location:</span> {entity.paper_location}
                 </div>
                 {entity.paper_title && (
-                    <div className="text-sm text-gray-600 dark:text-gray-300">
+                    <div className="text-sm text-gray-600">
                         <span className="font-medium">Paper:</span> {entity.paper_title}
                     </div>
                 )}
                 {entity.doi && (
-                    <div className="text-sm text-gray-600 dark:text-gray-300">
+                    <div className="text-sm text-gray-600">
                         <span className="font-medium">DOI:</span> {entity.doi}
                     </div>
                 )}
                 {entity.ontology_id && (
-                    <div className="text-sm text-gray-600 dark:text-gray-300">
+                    <div className="text-sm text-gray-600">
                         <span className="font-medium">Ontology ID:</span> {entity.ontology_id}
                     </div>
                 )}
                 {entity.ontology_label && (
-                    <div className="text-sm text-gray-600 dark:text-gray-300">
+                    <div className="text-sm text-gray-600">
                         <span className="font-medium">Ontology Label:</span> {entity.ontology_label}
                     </div>
                 )}

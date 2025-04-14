@@ -1,33 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-
-// Apply corrections to entities
-function applyCorrections(entities: any, corrections: Record<string, string>): any {
-    if (!corrections || Object.keys(corrections).length === 0) {
-        return entities;
-    }
-
-    const updatedEntities = {...entities};
-
-    // Go through each entity type and apply corrections
-    Object.keys(updatedEntities).forEach(type => {
-        updatedEntities[type] = updatedEntities[type].map(entity => {
-            if (corrections[entity.text]) {
-                return {
-                    ...entity,
-                    text: corrections[entity.text],
-                    // Mark as corrected so frontend can display differently
-                    corrected: true,
-                    originalText: entity.text
-                };
-            }
-            return entity;
-        });
-    });
-
-    return updatedEntities;
-}
-
 export async function POST(request: NextRequest) {
     try {
         console.log('Starting document processing...');
@@ -43,6 +15,7 @@ export async function POST(request: NextRequest) {
         const correctionsStr = formData.get('corrections') as string;
         const email = formData.get('email') as string;
         const password = formData.get('password') as string;
+        const current_loggedin_user = formData.get("current_loggedin_user") as string;
 
         console.log('Form data received:', {
             hasFile: !!file,
@@ -69,10 +42,11 @@ export async function POST(request: NextRequest) {
                 {status: 400}
             );
         }
+        console.log("logged in user:",{current_loggedin_user});
 
         // Check file type
         const fileType = file.type;
-        if (fileType !== 'application/pdf' && fileType !== 'text/plain') {
+        if (fileType !== 'application/pdf') {
             console.error('Invalid file type:', fileType);
             return NextResponse.json(
                 {error: 'Only PDF and text files are supported'},
@@ -82,7 +56,7 @@ export async function POST(request: NextRequest) {
 
         console.log('Getting token from /api/token...');
         // Get token from /api/token with credentials
-        const tokenResponse = await fetch('http://localhost:8007/api/token', {
+        const tokenResponse = await fetch(process.env.NEXT_PUBLIC_TOKEN_ENDPOINT, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -94,6 +68,7 @@ export async function POST(request: NextRequest) {
             // Add timeout
             signal: AbortSignal.timeout(30000) // 30 seconds timeout
         });
+        console.log(formData);
 
         if (!tokenResponse.ok) {
             console.error('Token request failed:', tokenResponse.status, await tokenResponse.text());
@@ -197,6 +172,7 @@ export async function POST(request: NextRequest) {
                 // Convert each item to the expected format
                 const transformedItems = (items as any[]).map(item => ({
                     entity: item.entity,
+                    originalEntityType: item.label,
                     entityType: item.label,
                     start: item.start,
                     end: item.end,
@@ -206,7 +182,9 @@ export async function POST(request: NextRequest) {
                     doi: item.doi,
                     ontology_id: item.ontology_id,
                     ontology_label: item.ontology_label,
-                    judge_score: item.judge_score
+                    judge_score: item.judge_score,
+                    contributed_by: current_loggedin_user,
+                    changed_by: [current_loggedin_user]
                 }));
 
                 // Group by entity type
@@ -221,23 +199,12 @@ export async function POST(request: NextRequest) {
             }, {} as Record<string, any[]>)
         };
 
-        // Apply corrections if provided
-        if (correctionsStr) {
-            try {
-                const corrections = JSON.parse(correctionsStr);
-                if (transformedData.entities) {
-                    transformedData.entities = applyCorrections(transformedData.entities, corrections);
-                    console.log('Applied corrections:', corrections);
-                }
-            } catch (err) {
-                console.error('Error parsing corrections:', err);
-            }
-        }
+        console.log("logged in user: "+ current_loggedin_user);
 
         // Add document metadata
         transformedData.documentName = file.name;
         transformedData.processedAt = new Date().toISOString();
-        transformedData.corrected = !!correctionsStr;
+        // transformedData.corrected = !!correctionsStr;
 
         console.log('Processing complete, returning response');
         return NextResponse.json(transformedData);
