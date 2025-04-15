@@ -49,6 +49,7 @@ export default function NamedEntityRecognition() {
     const [entityType, setEntityType] = useState<string>('');
     const [allApproved, setAllApproved] = useState<boolean>(false);
     const [allEntityTypes, setAllEntityTypes] = useState<string[]>([]);
+    const [isSaved, setIsSaved] = useState<boolean>(false);
 
     // Check if user is logged in
     useEffect(() => {
@@ -264,11 +265,13 @@ export default function NamedEntityRecognition() {
 
         setAllApproved(allUp);
         setResults(updatedResults);
+        setIsSaved(false); // Reset saved state when changes are made
     };
 
     // Handle entity type change
     const handleEntityTypeChange = (type: string) => {
         setEntityType(type);
+        setIsSaved(false); // Reset saved state when type is changed
     };
 
 
@@ -315,8 +318,9 @@ export default function NamedEntityRecognition() {
             const data = await response.json();
             console.log('Data saved:', data);
             
-            // Show success message
+            // Show success message and update saved state
             setError("Results saved successfully!");
+            setIsSaved(true);
             return data;
 
         } catch (err) {
@@ -364,6 +368,7 @@ export default function NamedEntityRecognition() {
 
         setAllApproved(allUp);
         setResults(updatedResults);
+        setIsSaved(false); // Reset saved state when type is changed
     };
 
     // If not logged in, show loading
@@ -509,14 +514,14 @@ export default function NamedEntityRecognition() {
                             <button
                                 type="button"
                                 onClick={handleSave}
-                                disabled={!allApproved || isProcessing}
+                                disabled={!allApproved || isProcessing || isSaved}
                                 className={`px-4 py-2 rounded-lg ${
-                                    allApproved && !isProcessing
+                                    allApproved && !isProcessing && !isSaved
                                         ? 'bg-green-500 hover:bg-green-600 text-white'
                                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                 }`}
                             >
-                                {isProcessing ? 'Saving...' : 'Save Results'}
+                                {isProcessing ? 'Saving...' : isSaved ? 'Saved Result' : 'Save Results'}
                             </button>
                         </div>
                     )}
