@@ -3,8 +3,9 @@
 import {useState, useEffect} from "react";
 import {useRouter} from "next/navigation";
 import {useSession} from "next-auth/react";
-import { ThumbsUp, ThumbsDown } from "lucide-react";
+import {ThumbsUp, ThumbsDown} from "lucide-react";
 import {list} from "postcss";
+import {NextResponse} from "next/server";
 
 // Define types for our entities and results
 interface Entity {
@@ -43,7 +44,7 @@ export default function NamedEntityRecognition() {
     const [results, setResults] = useState<Results | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [activeEntityType, setActiveEntityType] = useState<string | null>(null);
-    const [editingEntity, setEditingEntity] = useState<{type: string, index: number} | null>(null);
+    const [editingEntity, setEditingEntity] = useState<{ type: string, index: number } | null>(null);
     const [correction, setCorrection] = useState<string>('');
     const [entityType, setEntityType] = useState<string>('');
     const [allApproved, setAllApproved] = useState<boolean>(false);
@@ -98,13 +99,16 @@ export default function NamedEntityRecognition() {
             if (process.env.NEXT_PUBLIC_JWT_PASSWORD) {
                 formData.append("password", process.env.NEXT_PUBLIC_JWT_PASSWORD);
             }
-            
+
             // Read and append all required YAML files
             const filesToLoad = [
-                { name: 'agent_config_file', file: process.env.NEXT_PUBLI_AGENT_CONFIG || 'ner_agent.yaml' },
-                { name: 'task_config_file', file: process.env.NEXT_PUBLI_TASK_CONFIG || 'ner_task.yaml' },
-                { name: 'embedder_config_file', file: process.env.NEXT_PUBLI_EMBEDDING_CONFIG || 'embedding.yaml' },
-                { name: 'knowledge_config_file', file: process.env.NEXT_PUBLI_KNOWLEDGE_CONFIG || 'search_ontology_knowledge.yaml' }
+                {name: 'agent_config_file', file: process.env.NEXT_PUBLI_AGENT_CONFIG || 'ner_agent.yaml'},
+                {name: 'task_config_file', file: process.env.NEXT_PUBLI_TASK_CONFIG || 'ner_task.yaml'},
+                {name: 'embedder_config_file', file: process.env.NEXT_PUBLI_EMBEDDING_CONFIG || 'embedding.yaml'},
+                {
+                    name: 'knowledge_config_file',
+                    file: process.env.NEXT_PUBLI_KNOWLEDGE_CONFIG || 'search_ontology_knowledge.yaml'
+                }
             ];
 
             console.log('Loading YAML files...');
@@ -116,7 +120,7 @@ export default function NamedEntityRecognition() {
                     throw new Error(`Failed to load ${fileConfig.name}`);
                 }
                 const text = await response.text();
-                const blob = new Blob([text], { type: 'application/yaml' });
+                const blob = new Blob([text], {type: 'application/yaml'});
                 formData.append(fileConfig.name, blob, fileConfig.file);
                 console.log(`Successfully loaded ${fileConfig.name}`);
             }
@@ -175,10 +179,10 @@ export default function NamedEntityRecognition() {
                 formData.append("EXTERNAL_PDF_EXTRACTION_SERVICE",
                     process.env.NEXT_PUBLIC_EXTERNAL_PDF_EXTRACTION_SERVICE);
             }
-            
+
             console.log('All form data prepared, making API call...');
 
-            
+
             // call our API route
             const response = await fetch("/api/process-document", {
                 method: "POST",
@@ -235,17 +239,16 @@ export default function NamedEntityRecognition() {
     };
 
 
-
     // Handle feedback (thumbs up/down)
     const handleFeedback = (type: string, index: number, feedback: 'up' | 'down') => {
         if (!results) return;
 
-        const updatedResults = { ...results };
+        const updatedResults = {...results};
         updatedResults.entities[type][index].feedback = feedback;
 
         // If thumbs down, set up for editing
         if (feedback === 'down') {
-            setEditingEntity({ type, index });
+            setEditingEntity({type, index});
             setCorrection(updatedResults.entities[type][index].entity);
             // Set initial entity type to the current type or empty string
             setEntityType(updatedResults.entities[type][index].entityType || '');
@@ -271,34 +274,54 @@ export default function NamedEntityRecognition() {
 
     // Handle final save
     const handleSave = async () => {
-
-        if (!results || !file) return;
+        if (!results) return;
 
         setIsProcessing(true);
+        setError(null);
 
         try {
+            console.log('Starting form submission...');
+            const formData = new FormData();
 
 
-            console.log("Saving data:");
+            // Add credentials if available
+            if (process.env.NEXT_PUBLIC_JWT_USER) {
+                formData.append("email", process.env.NEXT_PUBLIC_JWT_USER);
+            }
+            if (process.env.NEXT_PUBLIC_JWT_PASSWORD) {
+                formData.append("password", process.env.NEXT_PUBLIC_JWT_PASSWORD);
+            }
 
-            console.log(results);
-            // const response = await fetch("/api/process-document", {
-            //     method: "POST",
-            //     body: formData,
-            // });
+            // Convert results to JSON string before appending
+            const resultsJson = JSON.stringify(results);
+            formData.append("results", resultsJson);
 
-            // if (!response.ok) {
-            //     throw new Error(`Error: ${response.status}`);
-            // }
+            console.log("Saving data:", formData.get("results"));
+            const response = await fetch("/api/save-ner-result", {
+                method: 'POST',
+                body: formData,
+            });
 
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API call failed:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    error: errorText
+                });
+                throw new Error(`Error: ${response.status}`);
+            }
 
-
-
+            const data = await response.json();
+            console.log('Data saved:', data);
+            
             // Show success message
             setError("Results saved successfully!");
+            return data;
+
         } catch (err) {
             console.error("Error saving corrections:", err);
-            setError("Failed to save corrections. Please try again.");
+            setError("Failed to save results. Please try again.");
         } finally {
             setIsProcessing(false);
         }
@@ -308,7 +331,7 @@ export default function NamedEntityRecognition() {
     const handleTypeChange = (oldType: string, index: number, newType: string) => {
         if (!results) return;
 
-        const updatedResults = { ...results };
+        const updatedResults = {...results};
         const entity = updatedResults.entities[oldType][index];
         const currentUser = session?.user?.email || 'unknown';
 
@@ -322,8 +345,8 @@ export default function NamedEntityRecognition() {
 
         // Update changed_by list
         const existingChangedBy = entity.changed_by || [];
-        const updatedChangedBy = existingChangedBy.includes(currentUser) 
-            ? existingChangedBy 
+        const updatedChangedBy = existingChangedBy.includes(currentUser)
+            ? existingChangedBy
             : [...existingChangedBy, currentUser];
 
         updatedResults.entities[newType].push({
@@ -456,9 +479,10 @@ export default function NamedEntityRecognition() {
                                 {results.entities[activeEntityType].length > 0 ? (
                                     <ul className="space-y-4">
                                         {results.entities[activeEntityType].map((entity, index) => (
-                                            <li key={index} className="border-b border-gray-200 dark:border-gray-600 pb-3">
-                                                <EntityCard 
-                                                    entity={entity} 
+                                            <li key={index}
+                                                className="border-b border-gray-200 dark:border-gray-600 pb-3">
+                                                <EntityCard
+                                                    entity={entity}
                                                     onFeedbackChange={handleFeedback}
                                                     onTypeChange={handleTypeChange}
                                                     type={activeEntityType}
@@ -507,17 +531,17 @@ export default function NamedEntityRecognition() {
     );
 }
 
-const EntityCard = ({ 
-    entity, 
-    onFeedbackChange,
-    type,
-    index,
-    onTypeChange,
-    isEditing,
-    allEntityTypes,
-    session
-}: { 
-    entity: Entity; 
+const EntityCard = ({
+                        entity,
+                        onFeedbackChange,
+                        type,
+                        index,
+                        onTypeChange,
+                        isEditing,
+                        allEntityTypes,
+                        session
+                    }: {
+    entity: Entity;
     onFeedbackChange: (type: string, index: number, feedback: 'up' | 'down') => void;
     onTypeChange: (oldType: string, index: number, newType: string) => void;
     type: string;
@@ -527,19 +551,18 @@ const EntityCard = ({
     session: any;
 }) => {
     const otherContributors = (entity.changed_by ?? []).filter(email => email !== (session?.user?.email || 'unknown'));
-    
+
     // Function to highlight the entity in the sentence
     const highlightEntityInSentence = (sentence: string, entityText: string, start: number, end: number) => {
         if (!sentence || !entityText) return sentence;
-        
+
         // Create the highlighted version
         const before = sentence.substring(0, start);
         const highlighted = `<span class="bg-yellow-200 dark:bg-yellow-600 px-1 rounded font-medium">${entityText}</span>`;
         const after = sentence.substring(end);
-        
+
         return `${before}${highlighted}${after}`;
     };
-
 
 
     return (
@@ -589,21 +612,21 @@ const EntityCard = ({
                         onClick={() => onFeedbackChange(type, index, 'up')}
                         className={`p-2 rounded-full ${entity.feedback === 'up' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'}`}
                     >
-                        <ThumbsUp className="h-5 w-5" />
+                        <ThumbsUp className="h-5 w-5"/>
                     </button>
                     <button
                         onClick={() => onFeedbackChange(type, index, 'down')}
                         className={`p-2 rounded-full ${entity.feedback === 'down' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'}`}
                     >
-                        <ThumbsDown className="h-5 w-5" />
+                        <ThumbsDown className="h-5 w-5"/>
                     </button>
                 </div>
             </div>
-            
+
             <div className="space-y-2">
                 <div className="text-sm text-gray-600">
                     <span className="font-medium">Sentence:</span>{" "}
-                    <div 
+                    <div
                         className="mt-1 p-2 bg-gray-50 rounded"
                         dangerouslySetInnerHTML={{
                             __html: highlightEntityInSentence(
