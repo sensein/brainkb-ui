@@ -168,43 +168,53 @@ export async function POST(request: NextRequest) {
 
         // Transform the response format to match what the frontend expects
         const transformedData: TransformedData = {
-            entities: Object.entries(data.judged_structured_information).reduce((acc, [key, items]) => {
-                // Convert each item to the expected format
-                const transformedItems = (items as any[]).map(item => ({
-                    entity: item.entity,
-                    originalEntityType: item.label,
-                    entityType: item.label,
-                    start: item.start,
-                    end: item.end,
-                    sentence: item.sentence,
-                    paper_location: item.paper_location,
-                    paper_title: item.paper_title,
-                    doi: item.doi,
-                    ontology_id: item.ontology_id,
-                    ontology_label: item.ontology_label,
-                    judge_score: item.judge_score,
+            entities: {}
+        };
+
+        if (data.judged_structured_information) {
+            // Process all sections and collect all entities
+            const allEntities: any[] = [];
+            
+            // First, collect all entities from all sections
+            Object.values(data.judged_structured_information).forEach((section: any) => {
+                if (Array.isArray(section)) {
+                    allEntities.push(...section);
+                }
+            });
+
+            // Then group them by entity type
+            allEntities.forEach((entity: any) => {
+                const entityType = entity.label || 'UNKNOWN';
+                
+                if (!transformedData.entities[entityType]) {
+                    transformedData.entities[entityType] = [];
+                }
+
+                transformedData.entities[entityType].push({
+                    entity: entity.entity,
+                    entityType: entity.label,
+                    originalEntityType: entity.label,
+                    start: entity.start,
+                    end: entity.end,
+                    sentence: entity.sentence,
+                    paper_location: entity.paper_location || '',
+                    paper_title: entity.paper_title || '',
+                    doi: entity.doi || '',
+                    ontology_id: entity.ontology_id || null,
+                    ontology_label: entity.ontology_label || null,
+                    judge_score: entity.judge_score || 0,
+                    feedback: 'up',
                     contributed_by: current_loggedin_user,
                     changed_by: [current_loggedin_user]
-                }));
-
-                // Group by entity type
-                transformedItems.forEach(item => {
-                    if (!acc[item.entity]) {
-                        acc[item.entityType] = [];
-                    }
-                    acc[item.entityType].push(item);
                 });
-
-                return acc;
-            }, {} as Record<string, any[]>)
-        };
+            });
+        }
 
         console.log("logged in user: "+ current_loggedin_user);
 
         // Add document metadata
         transformedData.documentName = file.name;
         transformedData.processedAt = new Date().toISOString();
-        // transformedData.corrected = !!correctionsStr;
 
         console.log('Processing complete, returning response');
         return NextResponse.json(transformedData);

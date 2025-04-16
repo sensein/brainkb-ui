@@ -188,6 +188,8 @@ export default function NamedEntityRecognition() {
             const response = await fetch("/api/process-document", {
                 method: "POST",
                 body: formData,
+                 // Add timeout
+                signal: AbortSignal.timeout(2000000) // 20 minutes timeout
             });
 
             if (!response.ok) {
@@ -200,8 +202,12 @@ export default function NamedEntityRecognition() {
                 throw new Error(`Error: ${response.status}`);
             }
 
+            console.log("*****************************************************");
             console.log('API call successful, processing response...');
             const data = await response.json();
+            console.log("response data:", JSON.stringify(data, null, 2));
+            console.log("*****************************************************");
+
 
             // Extract unique entity types from the response
             const entityTypes = new Set<string>();
@@ -224,6 +230,7 @@ export default function NamedEntityRecognition() {
                 processedAt: new Date().toISOString(),
             };
 
+            console.log("resultsWithFeedback: "+resultsWithFeedback);
             setResults(resultsWithFeedback);
             setAllApproved(true);
 
@@ -303,6 +310,8 @@ export default function NamedEntityRecognition() {
             const response = await fetch("/api/save-ner-result", {
                 method: 'POST',
                 body: formData,
+                 // Add timeout
+                    signal: AbortSignal.timeout(2000000) // 20 minutes timeout
             });
 
             if (!response.ok) {
