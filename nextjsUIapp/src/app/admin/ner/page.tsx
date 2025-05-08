@@ -23,7 +23,7 @@ interface Entity {
     judge_score: number;
     feedback?: 'up' | 'down';
     contributed_by?: string;
-    changed_by?: list
+    changed_by?: string[];
 }
 
 interface EntityResults {
@@ -50,6 +50,17 @@ export default function NamedEntityRecognition() {
     const [allApproved, setAllApproved] = useState<boolean>(false);
     const [allEntityTypes, setAllEntityTypes] = useState<string[]>([]);
     const [isSaved, setIsSaved] = useState<boolean>(false);
+    const [apiKey, setApiKey] = useState<string>('');
+    const [isApiKeyValid, setIsApiKeyValid] = useState<boolean>(false);
+
+    // Check if API key exists in session storage
+    useEffect(() => {
+        const storedApiKey = sessionStorage.getItem('ner_api_key');
+        if (storedApiKey) {
+            setApiKey(storedApiKey);
+            setIsApiKeyValid(true);
+        }
+    }, []);
 
     // Check if user is logged in
     useEffect(() => {
@@ -58,19 +69,40 @@ export default function NamedEntityRecognition() {
         }
     }, [session, router]);
 
+    // Handle API key validation
+    const handleApiKeySubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!apiKey.trim()) {
+            setError("Please enter an API key");
+            return;
+        }
+
+        try {
+            // Store API key in session storage
+            sessionStorage.setItem('ner_api_key', apiKey.trim());
+            setIsApiKeyValid(true);
+            setError(null);
+        } catch (err) {
+            console.error("Error storing API key:", err);
+            setError("Failed to store API key. Please try again.");
+        }
+    };
+
     // Handle file selection
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!isApiKeyValid) {
+            setError("Please enter and validate API key first");
+            return;
+        }
+
         const selectedFile = e.target.files?.[0];
         if (selectedFile) {
-            // Check if file is PDF or text
-            if (
-                selectedFile.type === "application/pdf"
-            ) {
+            if (selectedFile.type === "application/pdf") {
                 setFile(selectedFile);
                 setError(null);
             } else {
                 setFile(null);
-                setError("Please upload a PDF or text file only.");
+                setError("Please upload a PDF file only.");
             }
         }
     };
@@ -78,6 +110,11 @@ export default function NamedEntityRecognition() {
     // Handle form submission
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (!isApiKeyValid) {
+            setError("Please enter and validate API key first");
+            return;
+        }
+
         if (!file) {
             setError("Please select a file to upload.");
             return;
@@ -91,9 +128,14 @@ export default function NamedEntityRecognition() {
             console.log('Starting form submission...');
             const formData = new FormData();
             formData.append("pdf_file", file);
-
             formData.append("current_loggedin_user", session?.user?.email || 'unknown');
-            console.log(formData);
+            
+            // Add API key to form data
+            const storedApiKey = sessionStorage.getItem('ner_api_key');
+            if (storedApiKey) {
+                formData.append("api_key", storedApiKey);
+            }
+
             if (process.env.NEXT_PUBLIC_JWT_USER) {
                 formData.append("email", process.env.NEXT_PUBLIC_JWT_USER);
             }
@@ -106,10 +148,7 @@ export default function NamedEntityRecognition() {
                 {name: 'agent_config_file', file: process.env.NEXT_PUBLI_AGENT_CONFIG || 'ner_agent.yaml'},
                 {name: 'task_config_file', file: process.env.NEXT_PUBLI_TASK_CONFIG || 'ner_task.yaml'},
                 {name: 'embedder_config_file', file: process.env.NEXT_PUBLI_EMBEDDING_CONFIG || 'embedding.yaml'},
-                {
-                    name: 'knowledge_config_file',
-                    file: process.env.NEXT_PUBLI_KNOWLEDGE_CONFIG || 'search_ontology_knowledge.yaml'
-                }
+                {name: 'knowledge_config_file', file: process.env.NEXT_PUBLI_KNOWLEDGE_CONFIG || 'search_ontology_knowledge.yaml'}
             ];
 
             console.log('Loading YAML files...');
@@ -120,7 +159,20 @@ export default function NamedEntityRecognition() {
                     console.error(`Failed to load ${fileConfig.name}:`, response.status, response.statusText);
                     throw new Error(`Failed to load ${fileConfig.name}`);
                 }
-                const text = await response.text();
+                let text = await response.text();
+
+                // If this is the agent config file, update the API key
+                if (fileConfig.name === 'agent_config_file' && storedApiKey) {
+                    const config = JSON.parse(text);
+                    // Update API key for all agents
+                    ['extractor_agent', 'alignment_agent', 'judge_agent'].forEach(agent => {
+                        if (config[agent] && config[agent].llm) {
+                            config[agent].llm.api_key = storedApiKey;
+                        }
+                    });
+                    text = JSON.stringify(config);
+                }
+
                 const blob = new Blob([text], {type: 'application/yaml'});
                 formData.append(fileConfig.name, blob, fileConfig.file);
                 console.log(`Successfully loaded ${fileConfig.name}`);
@@ -389,12 +441,59 @@ export default function NamedEntityRecognition() {
         <div className="flex flex-col max-w-6xl mx-auto p-4">
             <h1 className="text-2xl font-bold mb-6">Named Entity Recognition</h1>
 
-            {/* File Upload Section */}
+            {/* API Key Section */}
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md mb-6">
+                <h2 className="text-lg font-semibold mb-4">API Key Configuration</h2>
+                <form onSubmit={handleApiKeySubmit} className="space-y-4">
+                    <div className="flex gap-4">
+                        <input
+                            type="password"
+                            value={apiKey}
+                            onChange={(e) => setApiKey(e.target.value)}
+                            placeholder="Enter your API key"
+                            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                            disabled={isApiKeyValid}
+                        />
+                        <button
+                            type="submit"
+                            disabled={isApiKeyValid || !apiKey.trim()}
+                            className={`px-6 py-2 text-white rounded-lg ${
+                                isApiKeyValid || !apiKey.trim()
+                                    ? "bg-gray-400 cursor-not-allowed"
+                                    : "bg-blue-500 hover:bg-blue-600"
+                            }`}
+                        >
+                            {isApiKeyValid ? "API Key Valid" : "Validate API Key"}
+                        </button>
+                        {isApiKeyValid && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    sessionStorage.removeItem('ner_api_key');
+                                    setApiKey('');
+                                    setIsApiKeyValid(false);
+                                }}
+                                className="px-6 py-2 text-white bg-red-500 hover:bg-red-600 rounded-lg"
+                            >
+                                Clear API Key
+                            </button>
+                        )}
+                    </div>
+                    {isApiKeyValid && (
+                        <div className="text-sm text-green-600 dark:text-green-400">
+                            API key is valid and stored in session
+                        </div>
+                    )}
+                </form>
+            </div>
+
+            {/* File Upload Section */}
+            <div className={`bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md mb-6 ${
+                !isApiKeyValid ? 'opacity-50 pointer-events-none' : ''
+            }`}>
                 <h2 className="text-lg font-semibold mb-4">Upload Document</h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    Upload a PDF or text file to extract named entities such as people, organizations, locations, and
-                    more.
+                    Upload a PDF file to extract named entities such as people, organizations, locations, and more.
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">

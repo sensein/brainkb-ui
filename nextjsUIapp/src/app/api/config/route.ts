@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
+import yaml from 'js-yaml';
 
 export async function GET(request: NextRequest) {
     try {
@@ -14,35 +15,20 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        // Validate file name to prevent directory traversal
-        const validFiles = [
-            'ner_agent.yaml',
-            'ner_task.yaml',
-            'embedding.yaml',
-            'search_ontology_knowledge.yaml'
-        ];
+        // Construct the path to the config file
+        const configPath = path.join(process.cwd(), 'src', 'app', 'admin', 'ner', file);
 
-        if (!validFiles.includes(file)) {
-            return NextResponse.json(
-                { error: 'Invalid file requested' },
-                { status: 400 }
-            );
-        }
+        // Read the config file
+        const configContent = await fs.readFile(configPath, 'utf8');
+        
+        // Parse YAML to JSON for easier manipulation
+        const config = yaml.load(configContent);
 
-        // Read the file from the src directory
-        const filePath = path.join(process.cwd(), 'src/app/admin/ner', file);
-        const fileContent = fs.readFileSync(filePath, 'utf8');
-
-        return new NextResponse(fileContent, {
-            headers: {
-                'Content-Type': 'application/yaml',
-            },
-        });
-
+        return NextResponse.json(config);
     } catch (error) {
-        console.error('Error serving config file:', error);
+        console.error('Error reading config file:', error);
         return NextResponse.json(
-            { error: 'Failed to serve config file' },
+            { error: 'Failed to read config file' },
             { status: 500 }
         );
     }

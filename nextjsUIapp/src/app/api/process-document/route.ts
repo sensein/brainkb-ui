@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
         const email = formData.get('email') as string;
         const password = formData.get('password') as string;
         const current_loggedin_user = formData.get("current_loggedin_user") as string;
+        const api_key = formData.get("api_key") as string;
 
         console.log('Form data received:', {
             hasFile: !!file,
@@ -24,7 +25,8 @@ export async function POST(request: NextRequest) {
             fileType: file?.type,
             hasEmail: !!email,
             hasPassword: !!password,
-            hasCorrections: !!correctionsStr
+            hasCorrections: !!correctionsStr,
+            hasApiKey: !!api_key
         });
 
         if (!file) {
@@ -42,6 +44,15 @@ export async function POST(request: NextRequest) {
                 {status: 400}
             );
         }
+
+        if (!api_key) {
+            console.error('Missing API key');
+            return NextResponse.json(
+                {error: 'API key is required'},
+                {status: 400}
+            );
+        }
+
         console.log("logged in user:",{current_loggedin_user});
 
         // Check file type
@@ -49,7 +60,7 @@ export async function POST(request: NextRequest) {
         if (fileType !== 'application/pdf') {
             console.error('Invalid file type:', fileType);
             return NextResponse.json(
-                {error: 'Only PDF and text files are supported'},
+                {error: 'Only PDF files are supported'},
                 {status: 400}
             );
         }
@@ -115,6 +126,12 @@ export async function POST(request: NextRequest) {
             hasKnowledgeConfig: pdfFormData.has('knowledge_config_file')
         });
 
+        // Add the API key to the request headers
+        const headers = {
+            'Authorization': `Bearer ${token}`,
+            'X-API-Key': api_key
+        };
+
         // Add retry logic for the external API call
         const maxRetries = 3;
         let retryCount = 0;
@@ -125,9 +142,7 @@ export async function POST(request: NextRequest) {
                 console.log(`Calling external API with token (attempt ${retryCount + 1}/${maxRetries})...`);
                 externalResponse = await fetch(process.env.NEXT_PUBLIC_STRUCTSENSE_ENDPOINT, {
                     method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
+                    headers: headers,
                     body: pdfFormData,
                     // Add timeout
                     signal: AbortSignal.timeout(360000) // 6 minutes timeout
