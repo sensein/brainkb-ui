@@ -36,6 +36,20 @@ interface Results {
     processedAt?: string;
 }
 
+// Helper to correct start/end indices if they do not match the entity string
+function getCorrectedIndices(sentence: string, entity: string, origStart: number, origEnd: number) {
+    if (sentence.substring(origStart, origEnd) === entity) {
+        return { start: origStart, end: origEnd };
+    }
+    // Try to find the entity string in the sentence
+    const idx = sentence.indexOf(entity);
+    if (idx !== -1) {
+        return { start: idx, end: idx + entity.length };
+    }
+    // Fallback: return original indices
+    return { start: origStart, end: origEnd };
+}
+
 export default function NamedEntityRecognition() {
     const {data: session} = useSession();
     const router = useRouter();
@@ -325,7 +339,6 @@ export default function NamedEntityRecognition() {
         setIsSaved(false); // Reset saved state when type is changed
     };
 
-
     // Handle final save
     const handleSave = async () => {
         if (!results) return;
@@ -334,9 +347,29 @@ export default function NamedEntityRecognition() {
         setError(null);
 
         try {
+            // Deep copy results to avoid mutating state directly
+            const resultsToSave = JSON.parse(JSON.stringify(results));
+
+            // Correct all start/end indices for all entities
+            Object.keys(resultsToSave.entities).forEach(type => {
+                resultsToSave.entities[type] = resultsToSave.entities[type].map((entity: Entity) => {
+                    const correctedStarts: number[] = [];
+                    const correctedEnds: number[] = [];
+                    entity.sentence.forEach((sentence: string, i: number) => {
+                        const { start, end } = getCorrectedIndices(sentence, entity.entity, entity.start[i], entity.end[i]);
+                        correctedStarts.push(start);
+                        correctedEnds.push(end);
+                    });
+                    return {
+                        ...entity,
+                        start: correctedStarts,
+                        end: correctedEnds
+                    };
+                });
+            });
+
             console.log('Starting form submission...');
             const formData = new FormData();
-
 
             // Add credentials if available
             if (process.env.NEXT_PUBLIC_JWT_USER) {
@@ -347,15 +380,15 @@ export default function NamedEntityRecognition() {
             }
 
             // Convert results to JSON string before appending
-            const resultsJson = JSON.stringify(results);
+            const resultsJson = JSON.stringify(resultsToSave);
             formData.append("results", resultsJson);
 
             console.log("Saving data:", formData.get("results"));
             const response = await fetch("/api/save-ner-result", {
                 method: 'POST',
                 body: formData,
-                 // Add timeout
-                    signal: AbortSignal.timeout(2000000) // 20 minutes timeout
+                // Add timeout
+                signal: AbortSignal.timeout(2000000) // 20 minutes timeout
             });
 
             if (!response.ok) {
@@ -370,7 +403,7 @@ export default function NamedEntityRecognition() {
 
             const data = await response.json();
             console.log('Data saved:', data);
-            
+
             // Show success message and update saved state
             setError("Results saved successfully!");
             setIsSaved(true);
@@ -736,26 +769,29 @@ const EntityCard = ({
                 <div className="text-sm text-gray-600">
                     <span className="font-medium">Sentences:</span>
                     <div className="mt-2 space-y-2">
-                        {entity.sentence.map((sentence, i) => (
-                            <div key={i} className="p-2 bg-gray-50 rounded">
-                                <div className="flex items-start">
-                                    <span className="text-xs text-gray-500 mr-2 mt-1">{i + 1}.</span>
-                                    <div
-                                        className="flex-1"
-                                        dangerouslySetInnerHTML={{
-                                            __html: highlightEntityInSentence(
-                                                sentence,
-                                                entity.start[i],
-                                                entity.end[i]
-                                            )
-                                        }}
-                                    />
+                        {entity.sentence.map((sentence, i) => {
+                            const { start, end } = getCorrectedIndices(sentence, entity.entity, entity.start[i], entity.end[i]);
+                            return (
+                                <div key={i} className="p-2 bg-gray-50 rounded">
+                                    <div className="flex items-start">
+                                        <span className="text-xs text-gray-500 mr-2 mt-1">{i + 1}.</span>
+                                        <div
+                                            className="flex-1"
+                                            dangerouslySetInnerHTML={{
+                                                __html: highlightEntityInSentence(
+                                                    sentence,
+                                                    start,
+                                                    end
+                                                )
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="text-sm text-gray-500 mt-1">
+                                        <span className="font-medium">Location:</span> {entity.paper_location[i]}
+                                    </div>
                                 </div>
-                                <div className="text-sm text-gray-500 mt-1">
-                                    <span className="font-medium">Location:</span> {entity.paper_location[i]}
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
                 {entity.paper_title[0] && (
