@@ -1,13 +1,35 @@
 // Navbar.client.js
 "use client";
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from "next/link";
+import { useRouter } from 'next/navigation';
 
 import { signIn, signOut, useSession } from "next-auth/react";
 
 const NavbarAdmin: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const { data: session } = useSession();
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const router = useRouter();
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        if (!isOpen) return;
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isOpen]);
+
+    // Close dropdown on route change
+    useEffect(() => {
+        setIsOpen(false);
+    }, [router]);
 
     return (
         <>
@@ -34,9 +56,11 @@ const NavbarAdmin: React.FC = () => {
                                                 {session.user?.name || session.user?.email}
                                             </button>
                                             {isOpen && (
-                                                <div className="absolute mt-2 top-full bg-white border border-gray-200 rounded shadow py-1">
-                                                    <Link href="/admin/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</Link>
-                                                    <button onClick={() => signOut()} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                <div ref={dropdownRef} className="absolute mt-2 top-full bg-white border border-gray-200 rounded shadow py-1 z-50">
+                                                    <Link href="/admin/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onClick={() => setIsOpen(false)}>
+                                                        Profile
+                                                    </Link>
+                                                    <button onClick={() => { setIsOpen(false); signOut(); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                                         Logout
                                                     </button>
                                                 </div>
