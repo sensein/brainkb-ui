@@ -9,6 +9,16 @@ export async function POST(request: NextRequest) {
             console.warn('NER_API_KEY environment variable is not set.');
         }
 
+        // Check if NEXT_PUBLIC_TOKEN_ENDPOINT is defined
+        if (!process.env.NEXT_PUBLIC_TOKEN_ENDPOINT) {
+            console.error('NEXT_PUBLIC_TOKEN_ENDPOINT environment variable is not set.');
+            return NextResponse.json(
+                {error: 'NEXT_PUBLIC_TOKEN_ENDPOINT environment variable is not set.'},
+                {status: 500}
+            );
+        }
+        const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT!;
+
         // Get the form data from the request
         const formData = await request.formData();
         const file = formData.get('pdf_file') as File;
@@ -67,7 +77,7 @@ export async function POST(request: NextRequest) {
 
         console.log('Getting token from /api/token...');
         // Get token from /api/token with credentials
-        const tokenResponse = await fetch(process.env.NEXT_PUBLIC_TOKEN_ENDPOINT, {
+        const tokenResponse = await fetch(tokenEndpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
