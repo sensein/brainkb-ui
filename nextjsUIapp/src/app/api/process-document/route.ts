@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import {NextRequest, NextResponse} from 'next/server';
 
 export async function POST(request: NextRequest) {
     try {
         console.log('Starting document processing...');
-        
+
         // Check if API key is configured
         if (!process.env.NER_API_KEY) {
             console.warn('NER_API_KEY environment variable is not set.');
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
         }
 
         if (!email || !password) {
-            console.error('Missing credentials:', { email: !!email, password: !!password });
+            console.error('Missing credentials:', {email: !!email, password: !!password});
             return NextResponse.json(
                 {error: 'Email and password are required'},
                 {status: 400}
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log("logged in user:",{current_loggedin_user});
+        console.log("logged in user:", {current_loggedin_user});
 
         // Check file type
         const fileType = file.type;
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
 
         const tokenData = await tokenResponse.json();
         console.log('Token response:', tokenData);
-        
+
         if (!tokenData.access_token) {
             console.error('No access token in response:', tokenData);
             throw new Error('Invalid token response');
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
 
         // Create a new FormData without email and password
         const pdfFormData = new FormData();
-        
+
         // Add the PDF file first
         if (file) {
             console.log('Adding PDF file to FormData:', {
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
             });
             pdfFormData.append("pdf_file", file);
         }
-        
+
         // Add all other form fields except email and password
         for (const [key, value] of formData.entries()) {
             if (key !== 'email' && key !== 'password' && key !== 'pdf_file') {
@@ -147,10 +147,16 @@ export async function POST(request: NextRequest) {
         let retryCount = 0;
         let externalResponse;
 
+
         while (retryCount < maxRetries) {
             try {
+                const endpoint = process.env.NEXT_PUBLIC_STRUCTSENSE_ENDPOINT;
+                if (!endpoint) {
+                    throw new Error("NEXT_PUBLIC_STRUCTSENSE_ENDPOINT is not defined in the environment variables.");
+                }
+
                 console.log(`Calling external API with token (attempt ${retryCount + 1}/${maxRetries})...`);
-                externalResponse = await fetch(process.env.NEXT_PUBLIC_STRUCTSENSE_ENDPOINT, {
+                externalResponse = await fetch(endpoint, {
                     method: 'POST',
                     headers: headers,
                     body: pdfFormData,
@@ -199,7 +205,7 @@ export async function POST(request: NextRequest) {
         if (data.judged_structured_information) {
             // Process all sections and collect all entities
             const allEntities: any[] = [];
-            
+
             // First, collect all entities from all sections
             Object.values(data.judged_structured_information).forEach((section: any) => {
                 if (Array.isArray(section)) {
@@ -210,7 +216,7 @@ export async function POST(request: NextRequest) {
             // Then group them by entity type
             allEntities.forEach((entity: any) => {
                 const entityType = entity.label || 'UNKNOWN';
-                
+
                 if (!transformedData.entities[entityType]) {
                     transformedData.entities[entityType] = [];
                 }
@@ -235,7 +241,7 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        console.log("logged in user: "+ current_loggedin_user);
+        console.log("logged in user: " + current_loggedin_user);
 
         // Add document metadata
         transformedData.documentName = file.name;
