@@ -12,15 +12,15 @@ interface Entity {
     entity: string;
     entityType: string;
     originalEntityType: string;
-    start: number;
-    end: number;
-    sentence: string;
-    paper_location: string;
-    paper_title: string;
-    doi: string;
+    start: number[];
+    end: number[];
+    sentence: string[];
+    paper_location: string[];
+    paper_title: string[];
+    doi: string[];
     ontology_id: string | null;
     ontology_label: string | null;
-    judge_score: number;
+    judge_score: number[];
     feedback?: 'up' | 'down';
     contributed_by?: string;
     changed_by?: string[];
@@ -260,35 +260,29 @@ export default function NamedEntityRecognition() {
             console.log("response data:", JSON.stringify(data, null, 2));
             console.log("*****************************************************");
 
-
-            // Extract unique entity types from the response
-            const entityTypes = new Set<string>();
-            Object.keys(data.entities).forEach(type => {
-                entityTypes.add(type);
-            });
-            setAllEntityTypes(Array.from(entityTypes));
-
-            // Initialize all entities with thumbs up feedback
-            const resultsWithFeedback = {
-                ...data,
-                entities: Object.keys(data.entities).reduce((acc, type) => {
-                    acc[type] = data.entities[type].map(entity => ({
-                        ...entity,
-                        feedback: 'up' as 'up'
-                    }));
-                    return acc;
-                }, {} as EntityResults),
+            // Transform the data to match our interface
+            const transformedData: Results = {
+                entities: data.entities,
                 documentName: file.name,
                 processedAt: new Date().toISOString(),
             };
 
-            console.log("resultsWithFeedback: "+resultsWithFeedback);
-            setResults(resultsWithFeedback);
+            // Initialize all entities with thumbs up feedback if not already set
+            Object.keys(transformedData.entities).forEach(key => {
+                transformedData.entities[key] = transformedData.entities[key].map(entity => ({
+                    ...entity,
+                    feedback: entity.feedback || 'up',
+                    contributed_by: entity.contributed_by || session?.user?.email || 'unknown',
+                    changed_by: entity.changed_by || [session?.user?.email || 'unknown']
+                }));
+            });
+
+            setResults(transformedData);
             setAllApproved(true);
 
             // Set the first entity type as active
-            if (data.entities && Object.keys(data.entities).length > 0) {
-                setActiveEntityType(Object.keys(data.entities)[0]);
+            if (transformedData.entities && Object.keys(transformedData.entities).length > 0) {
+                setActiveEntityType(Object.keys(transformedData.entities)[0]);
             }
         } catch (err) {
             console.error("Error processing document:", err);
@@ -310,10 +304,8 @@ export default function NamedEntityRecognition() {
         if (feedback === 'down') {
             setEditingEntity({type, index});
             setCorrection(updatedResults.entities[type][index].entity);
-            // Set initial entity type to the current type or empty string
-            setEntityType(updatedResults.entities[type][index].entityType || '');
+            setEntityType(updatedResults.entities[type][index].entityType);
         } else if (editingEntity?.type === type && editingEntity?.index === index) {
-            // If changing from down to up, clear editing state
             setEditingEntity(null);
         }
 
@@ -324,7 +316,7 @@ export default function NamedEntityRecognition() {
 
         setAllApproved(allUp);
         setResults(updatedResults);
-        setIsSaved(false); // Reset saved state when changes are made
+        setIsSaved(false);
     };
 
     // Handle entity type change
@@ -414,13 +406,16 @@ export default function NamedEntityRecognition() {
             ? existingChangedBy
             : [...existingChangedBy, currentUser];
 
-        updatedResults.entities[newType].push({
+        // Create new entity with updated type
+        const updatedEntity: Entity = {
             ...entity,
             entityType: newType,
             originalEntityType: entity.entityType,
-            feedback: 'up', // Auto-approve after type change
+            feedback: 'up' as const,
             changed_by: updatedChangedBy
-        });
+        };
+
+        updatedResults.entities[newType].push(updatedEntity);
 
         // Check if all entities now have thumbs up
         const allUp = Object.keys(updatedResults.entities).every(entityType =>
@@ -429,7 +424,8 @@ export default function NamedEntityRecognition() {
 
         setAllApproved(allUp);
         setResults(updatedResults);
-        setIsSaved(false); // Reset saved state when type is changed
+        setIsSaved(false);
+        setEditingEntity(null); // Clear editing state after type change
     };
 
     // If not logged in, show loading
@@ -592,8 +588,7 @@ export default function NamedEntityRecognition() {
                                 {results.entities[activeEntityType].length > 0 ? (
                                     <ul className="space-y-4">
                                         {results.entities[activeEntityType].map((entity, index) => (
-                                            <li key={index}
-                                                className="border-b border-gray-200 dark:border-gray-600 pb-3">
+                                            <li key={index} className="border-b border-gray-200 dark:border-gray-600 pb-3">
                                                 <EntityCard
                                                     entity={entity}
                                                     onFeedbackChange={handleFeedback}
@@ -601,7 +596,7 @@ export default function NamedEntityRecognition() {
                                                     type={activeEntityType}
                                                     index={index}
                                                     isEditing={entity.feedback === 'down'}
-                                                    allEntityTypes={allEntityTypes}
+                                                    results={results}
                                                     session={session}
                                                 />
                                             </li>
@@ -644,47 +639,51 @@ export default function NamedEntityRecognition() {
     );
 }
 
+// Helper to get all unique entity types from results
+function getAllEntityTypes(results: Results): string[] {
+    if (!results || !results.entities) return [];
+    const types = Object.keys(results.entities);
+    // Add the special option
+    return [...types, 'Unknown / Unable to classify'];
+}
+
 const EntityCard = ({
-                        entity,
-                        onFeedbackChange,
-                        type,
-                        index,
-                        onTypeChange,
-                        isEditing,
-                        allEntityTypes,
-                        session
-                    }: {
+    entity,
+    onFeedbackChange,
+    type,
+    index,
+    onTypeChange,
+    isEditing,
+    results,
+    session
+}: {
     entity: Entity;
     onFeedbackChange: (type: string, index: number, feedback: 'up' | 'down') => void;
     onTypeChange: (oldType: string, index: number, newType: string) => void;
     type: string;
     index: number;
     isEditing: boolean;
-    allEntityTypes: string[];
+    results: Results;
     session: any;
 }) => {
     const otherContributors = (entity.changed_by ?? []).filter(email => email !== (session?.user?.email || 'unknown'));
+    const entityTypes = getAllEntityTypes(results);
 
-    // Function to highlight the entity in the sentence
-    const highlightEntityInSentence = (sentence: string, entityText: string, start: number, end: number) => {
-        if (!sentence || !entityText) return sentence;
-
-        // Create the highlighted version
+    // Function to highlight the entity in a sentence
+    const highlightEntityInSentence = (sentence: string, start: number, end: number) => {
+        if (!sentence) return '';
         const before = sentence.substring(0, start);
-        const highlighted = `<span class="bg-yellow-200 dark:bg-yellow-600 px-1 rounded font-medium">${entityText}</span>`;
+        const entityText = sentence.substring(start, end);
         const after = sentence.substring(end);
-
-        return `${before}${highlighted}${after}`;
+        return `${before}<span class="bg-yellow-200 dark:bg-yellow-600 px-1 rounded font-medium">${entityText}</span>${after}`;
     };
 
-
     return (
-        <div className="bg-white rounded-lg shadow p-4 mb-4">
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border border-gray-100">
             <div className="flex justify-between items-start mb-2">
                 <div>
                     <h3 className="text-lg font-semibold text-gray-900">
                         {entity.entity}
-
                         {entity.originalEntityType !== entity.entityType && (
                             <span className="text-xs text-red-700 ml-2">
                                 (changed from: {entity.originalEntityType})
@@ -699,18 +698,15 @@ const EntityCard = ({
                                 onChange={(e) => onTypeChange(type, index, e.target.value)}
                                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md dark:bg-gray-700 dark:text-gray-100"
                             >
-                                <option value="Unclassified">Unclassified</option>
-                                {allEntityTypes.map((type) => (
-                                    <option key={type} value={type}>
-                                        {type}
-                                    </option>
+                                {entityTypes.map((etype) => (
+                                    <option key={etype} value={etype}>{etype}</option>
                                 ))}
                             </select>
                         </div>
                     ) : (
                         <p className="text-sm text-gray-500">Type: {entity.entityType}</p>
                     )}
-                    <p className="text-sm text-gray-500">Confidence: {(entity.judge_score * 100).toFixed(1)}%</p>
+                    <p className="text-sm text-gray-500">Confidence: {(entity.judge_score[0] * 100).toFixed(1)}%</p>
                     {entity.contributed_by && (
                         <p className="text-xs text-gray-400">Contributed by: {entity.contributed_by}</p>
                     )}
@@ -738,30 +734,38 @@ const EntityCard = ({
 
             <div className="space-y-2">
                 <div className="text-sm text-gray-600">
-                    <span className="font-medium">Sentence:</span>{" "}
-                    <div
-                        className="mt-1 p-2 bg-gray-50 rounded"
-                        dangerouslySetInnerHTML={{
-                            __html: highlightEntityInSentence(
-                                entity.sentence,
-                                entity.entity,
-                                entity.start,
-                                entity.end
-                            )
-                        }}
-                    />
+                    <span className="font-medium">Sentences:</span>
+                    <div className="mt-2 space-y-2">
+                        {entity.sentence.map((sentence, i) => (
+                            <div key={i} className="p-2 bg-gray-50 rounded">
+                                <div className="flex items-start">
+                                    <span className="text-xs text-gray-500 mr-2 mt-1">{i + 1}.</span>
+                                    <div
+                                        className="flex-1"
+                                        dangerouslySetInnerHTML={{
+                                            __html: highlightEntityInSentence(
+                                                sentence,
+                                                entity.start[i],
+                                                entity.end[i]
+                                            )
+                                        }}
+                                    />
+                                </div>
+                                <div className="text-sm text-gray-500 mt-1">
+                                    <span className="font-medium">Location:</span> {entity.paper_location[i]}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-                <div className="text-sm text-gray-600">
-                    <span className="font-medium">Location:</span> {entity.paper_location}
-                </div>
-                {entity.paper_title && (
+                {entity.paper_title[0] && (
                     <div className="text-sm text-gray-600">
-                        <span className="font-medium">Paper:</span> {entity.paper_title}
+                        <span className="font-medium">Paper:</span> {entity.paper_title[0]}
                     </div>
                 )}
-                {entity.doi && (
+                {entity.doi[0] && (
                     <div className="text-sm text-gray-600">
-                        <span className="font-medium">DOI:</span> {entity.doi}
+                        <span className="font-medium">DOI:</span> {entity.doi[0]}
                     </div>
                 )}
                 {entity.ontology_id && (
