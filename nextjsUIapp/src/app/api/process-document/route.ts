@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
                     headers: headers,
                     body: pdfFormData,
                     // Add timeout
-                    signal: AbortSignal.timeout(360000) // 6 minutes timeout
+                    signal: AbortSignal.timeout(3600000) // 1hr minutes timeout
                 });
 
                 if (externalResponse.ok) {

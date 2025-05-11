@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
                 password
             }),
             // Add timeout
-            signal: AbortSignal.timeout(100000) // 30 seconds timeout
+            signal: AbortSignal.timeout(3600000) // 30 seconds timeout
         });
 
         if (!tokenResponse.ok) {
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
                     },
                     body: resultsJson,
                     // Add timeout
-                    signal: AbortSignal.timeout(2000000) // 6 minutes timeout
+                    signal: AbortSignal.timeout(3600000) // 6 minutes timeout
                 });
 
                 if (externalResponse.ok) {
