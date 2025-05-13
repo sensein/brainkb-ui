@@ -1,33 +1,30 @@
 extraction_task:
   description: >
-    Extract named entities from neuroscience literature sentence by sentence. 
-    A named entity refers to any term that can be uniquely identified with a proper name.
-    Each entity entry may contain multiple matched sentences.
+    Meticulously extract and classify all relevant entities into the most appropriate and specific category from the provided neuroscience text. 
+           The list of entities extracted should be exhaustive and comprehensive. You should identify and label all entities, including duplicates.                                                             
+           Please ensure that all entities are accurately identified and classified according to their role within the neuroscience domain. 
+           IMPORTANT: DO NOT modify the input text in any way. Use the text as is, without any alterations or corrections. Minimum numbers should be at least 100 entities or more for large text. Make sure about it.
 
-     Instructions: 
-    
-       User Feedback Handling instructions:
-         If the input includes modifications made based on human/user feedback:
-         Detect and respect these changes (e.g., altered extracted terms).
-         Do not overwrite user-modified terms.
-         Instead, annotate in remarks that user-defined values were retained and evaluated accordingly.
-    
-         NER Extractions instructions:
-             - Read the input {literature} carefully.
-             - Read the entire paper thoroughly, analyzing sentence by sentence.
-             - Do not skip over large sections of text—ensure full coverage of all paragraphs and sections (e.g., abstract, methods, results).
-             - If only a few entities are detected from a large block of text, reassess your extraction to avoid missing relevant entities.
-             - Identify and extract all the named entities relevant to neuroscience.
-             - A named entity is anything that can be referred to with a proper name.
-             - Examples of neuroscience related named entities include the following:
-                 - Animal species (e.g., mouse, drosophila, zebrafish)
-                 - Brain or anatomical regions (e.g., neocortex, mushroom body, cerebellum)
-                 - Experimental conditions (e.g., control, tetrodotoxin treatment, Scn1a knockout)
-                 - Cell types (e.g., pyramidal neuron, direction-sensitive mechanoreceptor, oligodendrocyte)
-             - Ensure each extracted entity is clearly labeled with its entity type (e.g., species, region, condition, cell type).
-             - If you are unsure about a term, include it with a flag for review (e.g., "uncertain").
-             - If there are multiple sentences that refer to the same entity extract all the sentences, the start end index and make it as a list in the output.
-        
+
+         Instructions: 
+
+             NER Extractions instructions:
+                 - Read the input {literature} carefully by paragraph. Split into small paragraph chunks as necessary.
+                 - Read the entire paper thoroughly, analyzing sentence by sentence.
+                 - Do not skip over large sections of text—ensure full coverage of all paragraphs and sections (e.g., abstract, methods, results).
+                 - If only a few entities are detected from a large block of text, reassess your extraction to avoid missing relevant entities.
+                 - Identify and extract all the named entities relevant to neuroscience.
+                 - A named entity is anything that can be referred to with a proper name.
+                 - Examples of neuroscience related named entities include the following:
+                     - Animal species (e.g., mouse, drosophila, zebrafish)
+                     - Brain or anatomical regions (e.g., neocortex, mushroom body, cerebellum)
+                     - Experimental conditions (e.g., control, tetrodotoxin treatment, Scn1a knockout)
+                     - Cell types (e.g., pyramidal neuron, direction-sensitive mechanoreceptor, oligodendrocyte)
+                 - Ensure each extracted entity is clearly labeled with its entity type (e.g., species, region, condition, cell type).
+                 - If you are unsure about a term, include it with a flag for review (e.g., "uncertain").
+                 - If there are multiple sentences that refer to the same entity extract all the sentences, the start end index and make it as a list in the output.
+          Important:
+              - Minimum numbers should be at least 100 entities or more for large text. Make sure about it.
        paper_metadata_consistency_check: 
           Ensure all entity entries in the output include consistent and correct metadata:
             - Each entity must have a valid `paper_title` and `doi` field.

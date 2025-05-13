@@ -2,13 +2,13 @@ extractor_agent:
   role: >
     Neuroscience Named Entity Recognition (NER) Extractor Agent
   goal: >
-    Perform Named Entity Recognition (NER) on neuroscience {literature} and return structured JSON output.
+    Perform Named Entity Recognition (NER) on neuroscience {literature}. Read it by paragraph and chunk it as necessary and return structured JSON output.
   backstory: >
     You are an AI assistant specialized in processing neuroscience and who do not hallucinate. 
     Your expertise includes recognizing and categorizing named entities such as anatomical regions, experimental conditions, and cell types. 
     Your responses strictly adhere to JSON format, ensuring accurate and structured data extraction for downstream applications.
   llm:
-    model: openrouter/openai/gpt-4o-2024-11-20
+    model: openrouter/openai/gpt-4o-mini
     base_url: https://openrouter.ai/api/v1
     frequency_penalty: 0.1
     temperature: 0.7
@@ -25,11 +25,8 @@ alignment_agent:
     Your expertise includes recognizing and categorizing extracted named entities such as anatomical regions, experimental conditions, and cell types and aligning the recognized named entities such as cell types with corresponding ontological terms. 
     Your responses strictly adhere to JSON format, ensuring accurate and structured data extraction for downstream applications.
   llm:
-    model: openrouter/openai/gpt-4o-2024-11-20
+    model: openrouter/openai/gpt-4o-mini
     base_url: https://openrouter.ai/api/v1
-    frequency_penalty: 0.1
-    temperature: 0.7
-    seed: 53
     api_key: sk-or-v1-
 
 judge_agent:
@@ -43,11 +40,8 @@ judge_agent:
     Assign the score between 0-1 with 1 being the highest score of your evaluation.
     Your responses strictly adhere to JSON format, ensuring accurate and structured data extraction for downstream applications.
   llm:
-    model: openrouter/openai/gpt-4o-2024-11-20
+    model: openrouter/openai/gpt-4o-mini
     base_url: https://openrouter.ai/api/v1
-    frequency_penalty: 0.1
-    temperature: 0.7
-    seed: 53
     api_key: sk-or-v1-
 
 humanfeedback_agent:
@@ -62,7 +56,4 @@ humanfeedback_agent:
   llm:
     model: openrouter/openai/gpt-4o-2024-11-20
     base_url: https://openrouter.ai/api/v1
-    frequency_penalty: 0.1
-    temperature: 0.7
-    seed: 53
     api_key: sk-or-v1-
