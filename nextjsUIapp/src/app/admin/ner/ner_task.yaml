@@ -1,30 +1,30 @@
 extraction_task:
   description: >
     Meticulously extract and classify all relevant entities into the most appropriate and specific category from the provided neuroscience text. 
-           The list of entities extracted should be exhaustive and comprehensive. You should identify and label all entities, including duplicates.                                                             
-           Please ensure that all entities are accurately identified and classified according to their role within the neuroscience domain. 
-           IMPORTANT: DO NOT modify the input text in any way. Use the text as is, without any alterations or corrections. Minimum numbers should be at least 100 entities or more for large text. Make sure about it.
-
-
-         Instructions: 
-
-             NER Extractions instructions:
-                 - Read the input {literature} carefully by paragraph. Split into small paragraph chunks as necessary.
-                 - Read the entire paper thoroughly, analyzing sentence by sentence.
-                 - Do not skip over large sections of text—ensure full coverage of all paragraphs and sections (e.g., abstract, methods, results).
-                 - If only a few entities are detected from a large block of text, reassess your extraction to avoid missing relevant entities.
-                 - Identify and extract all the named entities relevant to neuroscience.
-                 - A named entity is anything that can be referred to with a proper name.
-                 - Examples of neuroscience related named entities include the following:
-                     - Animal species (e.g., mouse, drosophila, zebrafish)
-                     - Brain or anatomical regions (e.g., neocortex, mushroom body, cerebellum)
-                     - Experimental conditions (e.g., control, tetrodotoxin treatment, Scn1a knockout)
-                     - Cell types (e.g., pyramidal neuron, direction-sensitive mechanoreceptor, oligodendrocyte)
-                 - Ensure each extracted entity is clearly labeled with its entity type (e.g., species, region, condition, cell type).
-                 - If you are unsure about a term, include it with a flag for review (e.g., "uncertain").
-                 - If there are multiple sentences that refer to the same entity extract all the sentences, the start end index and make it as a list in the output.
-          Important:
-              - Minimum numbers should be at least 100 entities or more for large text. Make sure about it.
+       The list of entities extracted should be exhaustive and comprehensive. You should identify and label all entities, including duplicates.                                                             
+       Please ensure that all entities are accurately identified and classified according to their role within the neuroscience domain. 
+       IMPORTANT: DO NOT modify the input text in any way. Use the text as is, without any alterations or corrections. 
+    
+    
+     Instructions: 
+    
+         NER Extractions instructions:
+             - Read the input {literature} carefully by paragraph. Split into small paragraph chunks as necessary.
+             - Read the entire paper thoroughly, analyzing sentence by sentence.
+             - Do not skip over large sections of text—ensure full coverage of all paragraphs and sections (e.g., abstract, methods, results).
+             - If only a few entities are detected from a large block of text, reassess your extraction to avoid missing relevant entities.
+             - Identify and extract all the named entities relevant to neuroscience.
+             - A named entity is anything that can be referred to with a proper name.
+             - Examples of neuroscience related named entities include the following:
+                 - Animal species (e.g., mouse, drosophila, zebrafish)
+                 - Brain or anatomical regions (e.g., neocortex, mushroom body, cerebellum)
+                 - Experimental conditions (e.g., control, tetrodotoxin treatment, Scn1a knockout)
+                 - Cell types (e.g., pyramidal neuron, direction-sensitive mechanoreceptor, oligodendrocyte)
+             - Ensure each extracted entity is clearly labeled with its entity type (e.g., species, region, condition, cell type).
+             - If you are unsure about a term, include it with a flag for review (e.g., "uncertain").
+             - If there are multiple sentences that refer to the same entity extract all the sentences, the start end index and make it as a list in the output.
+      Important:
+          - Minimum numbers should be at least 100 entities or more for large text. Make sure about it.
        paper_metadata_consistency_check: 
           Ensure all entity entries in the output include consistent and correct metadata:
             - Each entity must have a valid `paper_title` and `doi` field.
@@ -73,8 +73,8 @@ extraction_task:
                       - end: array of integers 
                       - remarks: array of strings
                       - paper_location: array of strings
-                      - paper_title: array of strings
-                      - doi: array of strings
+                      - paper_title: string  # ⚠️ Not an array
+                      - doi: string
 
                     notes:
                       - The following fields must be arrays of the same length:
@@ -82,8 +82,6 @@ extraction_task:
                           - start
                           - end 
                           - remarks
-                          - paper_title
-                          - doi
                           - paper_location
                       - If ontology match is missing, set:
                           - ontology_id: null
@@ -116,8 +114,8 @@ extraction_task:
           "start": [79, 4],
           "end": [84, 9],
           "paper_location": ["methods", "introduction"],
-          "paper_title": ["Concentration of myelin debris-like myelin basic protein-immunoreactive particles in the distal (anterior)-most part of the myelinated region in the normal rat optic nerve"],
-          "doi": ["10.1101/2025.03.19.643597", "10.1101/2025.03.19.643597"]
+          "paper_title": "Concentration of myelin debris-like myelin basic protein-immunoreactive particles in the distal (anterior)-most part of the myelinated region in the normal rat optic nerve",
+          "doi": "10.1101/2025.03.19.643597"
         }
       ],
       "2": [
@@ -130,8 +128,8 @@ extraction_task:
           "start": [14],
           "end": [29],
           "paper_location": ["discussion"],
-          "paper_title": ["Concentration of myelin debris-like myelin basic protein-immunoreactive particles in the distal (anterior)-most part of the myelinated region in the normal rat optic nerve"],
-          "doi": ["10.1101/2025.03.19.643597"]
+          "paper_title": "Concentration of myelin debris-like myelin basic protein-immunoreactive particles in the distal (anterior)-most part of the myelinated region in the normal rat optic nerve",
+          "doi": "10.1101/2025.03.19.643597"
         }
       ],
       "3": [
@@ -145,10 +143,11 @@ extraction_task:
           "start": [293, 37],
           "end": [303, 47],
           "paper_location": ["methods", "results"],
-          "paper_title": ["Concentration of myelin debris-like myelin basic protein-immunoreactive particles in the distal (anterior)-most part of the myelinated region in the normal rat optic nerve"],
-          "doi": ["10.1101/2025.03.19.643597", "10.1101/2025.03.19.643597"]
+          "paper_title": "Concentration of myelin debris-like myelin basic protein-immunoreactive particles in the distal (anterior)-most part of the myelinated region in the normal rat optic nerve",
+          "doi": "10.1101/2025.03.19.643597"
         }
       ]
+    ...
     }
 
   agent_id: extractor_agent
@@ -307,6 +306,7 @@ alignment_task:
           "doi": ["10.1101/2025.03.19.643597", "10.1101/2025.03.19.643597"]
         }
       ]
+    ...
     }
 
   agent_id: alignment_agent
@@ -470,6 +470,7 @@ judge_task:
                             "doi": ["10.1101/2025.03.19.643597", "10.1101/2025.03.19.643597"]
                           }
                         ]
+    ...
     }
 
   agent_id: judge_agent
@@ -646,6 +647,7 @@ humanfeedback_task:
                                 "doi": ["10.1101/2025.03.19.643597","10.1101/2025.03.19.643597"]
                               }
                             ]
+    ...
         }
 
   agent_id: humanfeedback_agent

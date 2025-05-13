@@ -2,7 +2,7 @@ extractor_agent:
   role: >
     Neuroscience Named Entity Recognition (NER) Extractor Agent
   goal: >
-    Perform Named Entity Recognition (NER) on neuroscience {literature}. Read it by paragraph and chunk it as necessary and return structured JSON output.
+    Perform Named Entity Recognition (NER) on neuroscience {literature} process it by paragraph, chunk as necessary and return structured JSON output.
   backstory: >
     You are an AI assistant specialized in processing neuroscience and who do not hallucinate. 
     Your expertise includes recognizing and categorizing named entities such as anatomical regions, experimental conditions, and cell types. 
@@ -10,10 +10,9 @@ extractor_agent:
   llm:
     model: openrouter/openai/gpt-4o-mini
     base_url: https://openrouter.ai/api/v1
-    frequency_penalty: 0.1
-    temperature: 0.7
     seed: 53
     api_key: sk-or-v1-
+
 
 alignment_agent:
   role: >
@@ -27,6 +26,7 @@ alignment_agent:
   llm:
     model: openrouter/openai/gpt-4o-mini
     base_url: https://openrouter.ai/api/v1
+    seed: 53
     api_key: sk-or-v1-
 
 judge_agent:
@@ -42,6 +42,7 @@ judge_agent:
   llm:
     model: openrouter/openai/gpt-4o-mini
     base_url: https://openrouter.ai/api/v1
+    seed: 53
     api_key: sk-or-v1-
 
 humanfeedback_agent:
@@ -54,6 +55,7 @@ humanfeedback_agent:
     Your task is to evaluate, i.e., review the result {judged_structured_information_with_human_feedback} to see if everything is correct and if not fix it. 
     Your responses strictly adhere to JSON format, ensuring accurate and structured data extraction for downstream applications.
   llm:
-    model: openrouter/openai/gpt-4o-2024-11-20
+    model: openrouter/openai/gpt-4o-mini
     base_url: https://openrouter.ai/api/v1
+    seed: 53
     api_key: sk-or-v1-
