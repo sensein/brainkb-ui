@@ -592,8 +592,8 @@ export default function NamedEntityRecognition() {
                     <h2 className="text-lg font-semibold mb-4">Extracted Entities</h2>
 
                     {/* Entity Type Tabs */}
-                    <div className="border-b border-gray-200 dark:border-gray-700 mb-4">
-                        <nav className="-mb-px flex space-x-8">
+                    <div className="border-b border-gray-200 dark:border-gray-700 mb-4 overflow-x-auto">
+                        <nav className="-mb-px flex space-x-8 min-w-max overflow-x-auto scrollbar-hide">
                             {Object.keys(results.entities).map((type) => (
                                 <button
                                     key={type}

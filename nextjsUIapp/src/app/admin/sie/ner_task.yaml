@@ -1,8 +1,8 @@
 extraction_task:
   description: >
-    Extract named entities from neuroscience literature. Make it exhaustive.
-        A named entity refers to any term that can be uniquely identified with a proper name. Please ensure that all entities are accurately identified and classified.
+    Extract all relevant entities from given neuroscience literature text, including duplicates.    
         Each entity entry may contain multiple matched sentences.
+        The list of entities extracted should be exhaustive and comprehensive.  
      Instructions: 
     
          NER Extractions instructions:
