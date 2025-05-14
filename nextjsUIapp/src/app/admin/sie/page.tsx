@@ -739,19 +739,34 @@ const EntityCard = ({
                     ) : (
                         <p className="text-sm text-gray-500">Type: {entity.entityType}</p>
                     )}
-                    <p className="text-sm text-gray-500">
-                        <span title="How well the extracted information aligns with the target ontology or schema.">
-                            Confidence: {(entity.judge_score[0] * 100).toFixed(1)}%
+                    <p className="text-sm text-gray-500 flex items-center gap-1">
+                        Confidence: {(entity.judge_score[0] * 100).toFixed(1)}%
+                        <span
+                            className="ml-1 cursor-pointer inline-block relative"
+                            title="How well the extracted information aligns with the target ontology or schema."
+                            style={{ display: 'inline-flex', alignItems: 'center' }}
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                fill="currentColor"
+                                viewBox="0 0 16 16"
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <circle cx="8" cy="8" r="8" fill="#e5e7eb"/>
+                                <text x="8" y="12" textAnchor="middle" fontSize="10" fill="#374151">?</text>
+                            </svg>
                         </span>
                     </p>
-                    {entity.contributed_by && (
-                        <p className="text-xs text-gray-400">Contributed by: {entity.contributed_by}</p>
-                    )}
-                    {entity.changed_by && entity.changed_by.length > 0 && (
-                        <p className="text-xs text-gray-400">
-                            Updated by: {entity.changed_by.join(', ')}
-                        </p>
-                    )}
+                    {/*{entity.contributed_by && (*/}
+                    {/*    <p className="text-xs text-gray-400">Contributed by: {entity.contributed_by}</p>*/}
+                    {/*)}*/}
+                    {/*{entity.changed_by && entity.changed_by.length > 0 && (*/}
+                    {/*    <p className="text-xs text-gray-400">*/}
+                    {/*        Updated by: {entity.changed_by.join(', ')}*/}
+                    {/*    </p>*/}
+                    {/*)}*/}
                 </div>
                 <div className="flex space-x-2">
                     <button
