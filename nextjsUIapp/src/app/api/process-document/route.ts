@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
                 }
                 console.log(`Retry attempt ${retryCount} after error:`, error);
                 // Wait before retrying (exponential backoff)
-                await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
+                await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 360000));
             }
         }
 

@@ -5,7 +5,6 @@ extraction_task:
        Please ensure that all entities are accurately identified and classified according to their role within the neuroscience domain. 
        IMPORTANT: DO NOT modify the input text in any way. Use the text as is, without any alterations or corrections. 
     
-    
      Instructions: 
     
          NER Extractions instructions:
@@ -23,8 +22,7 @@ extraction_task:
              - Ensure each extracted entity is clearly labeled with its entity type (e.g., species, region, condition, cell type).
              - If you are unsure about a term, include it with a flag for review (e.g., "uncertain").
              - If there are multiple sentences that refer to the same entity extract all the sentences, the start end index and make it as a list in the output.
-      Important:
-          - Minimum numbers should be at least 100 entities or more for large text. Make sure about it.
+     
        paper_metadata_consistency_check: 
           Ensure all entity entries in the output include consistent and correct metadata:
             - Each entity must have a valid `paper_title` and `doi` field.
