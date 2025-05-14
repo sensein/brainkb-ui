@@ -1,6 +1,6 @@
 "use client";
 
-import { Entity } from "@/src/app/ner/types";
+import { Entity } from "@/src/app/see/types";
 
 interface EntityDetailModalProps {
     selectedEntity: {

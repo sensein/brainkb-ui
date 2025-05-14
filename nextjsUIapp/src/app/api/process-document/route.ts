@@ -1,8 +1,9 @@
 import {NextRequest, NextResponse} from 'next/server';
 
 export async function POST(request: NextRequest) {
+    console.log('[process-document] POST handler invoked');
     try {
-        console.log('Starting document processing...');
+        console.log('[process-document] Starting document processing...');
 
         // Check if API key is configured
         if (!process.env.NER_API_KEY) {
@@ -21,6 +22,7 @@ export async function POST(request: NextRequest) {
 
         // Get the form data from the request
         const formData = await request.formData();
+        console.log('[process-document] Form data parsed');
         const file = formData.get('pdf_file') as File;
         const correctionsStr = formData.get('corrections') as string;
         const email = formData.get('email') as string;
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (!file) {
-            console.error('No file provided in request');
+            console.error('[process-document] No file provided in request');
             return NextResponse.json(
                 {error: 'No document provided'},
                 {status: 400}
@@ -48,7 +50,7 @@ export async function POST(request: NextRequest) {
         }
 
         if (!email || !password) {
-            console.error('Missing credentials:', {email: !!email, password: !!password});
+            console.error('[process-document] Missing credentials:', {email: !!email, password: !!password});
             return NextResponse.json(
                 {error: 'Email and password are required'},
                 {status: 400}
@@ -56,14 +58,14 @@ export async function POST(request: NextRequest) {
         }
 
         if (!api_key) {
-            console.error('Missing API key');
+            console.error('[process-document] Missing API key');
             return NextResponse.json(
                 {error: 'API key is required'},
                 {status: 400}
             );
         }
 
-        console.log("logged in user:", {current_loggedin_user});
+        console.log('[process-document] Credentials and API key present');
 
         // Check file type
         const fileType = file.type;
@@ -89,23 +91,23 @@ export async function POST(request: NextRequest) {
             // Add timeout
             signal: AbortSignal.timeout(30000) // 30 seconds timeout
         });
-        console.log(formData);
+        console.log('[process-document] Token endpoint response received');
 
         if (!tokenResponse.ok) {
-            console.error('Token request failed:', tokenResponse.status, await tokenResponse.text());
+            console.error('[process-document] Token request failed:', tokenResponse.status, await tokenResponse.text());
             throw new Error('Failed to get token');
         }
 
         const tokenData = await tokenResponse.json();
-        console.log('Token response:', tokenData);
+        console.log('[process-document] Token response:', tokenData);
 
         if (!tokenData.access_token) {
-            console.error('No access token in response:', tokenData);
+            console.error('[process-document] No access token in response:', tokenData);
             throw new Error('Invalid token response');
         }
 
         const token = tokenData.access_token;
-        console.log('Token received successfully:', token);
+        console.log('[process-document] Token received successfully:', token);
 
         // Create a new FormData without email and password
         const pdfFormData = new FormData();
@@ -163,6 +165,7 @@ export async function POST(request: NextRequest) {
                     // Add timeout
                     signal: AbortSignal.timeout(3600000) // 1hr minutes timeout
                 });
+                console.log('[process-document] External API response received');
 
                 if (externalResponse.ok) {
                     break;
@@ -173,21 +176,23 @@ export async function POST(request: NextRequest) {
             } catch (error) {
                 retryCount++;
                 if (retryCount === maxRetries) {
-                    console.error('All retry attempts failed:', error);
+                    console.error('[process-document] All retry attempts failed:', error);
                     throw error;
                 }
                 console.log(`Retry attempt ${retryCount} after error:`, error);
                 // Wait before retrying (exponential backoff)
-                await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 360000));
+                await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
             }
         }
 
         if (!externalResponse) {
+            console.error('[process-document] No response from external API after all retries');
             throw new Error('Failed to get response from external API after all retries');
         }
 
-        console.log('External API call successful');
+        console.log('[process-document] External API call successful');
         const data = await externalResponse.json();
+        console.log('[process-document] Data received from external API:', data);
 
         // Define the type for the transformed data
         interface TransformedData {
@@ -247,11 +252,11 @@ export async function POST(request: NextRequest) {
         transformedData.documentName = file.name;
         transformedData.processedAt = new Date().toISOString();
 
-        console.log('Processing complete, returning response');
+        console.log('[process-document] Processing complete, returning response');
         return NextResponse.json(transformedData);
 
     } catch (error) {
-        console.error('Error in document processing:', error);
+        console.error('[process-document] Error in document processing:', error);
         return NextResponse.json(
             {error: 'Failed to process document'},
             {status: 500}

@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Entity, ProcessingResult, StatusFilter } from "@/src/app/ner/types";
-import { fetchEntityData, saveEntityData } from "@/src/app/ner/services/dataService";
-import { calculateStats, downloadAsCSV, downloadAsJSON } from "@/src/app/ner/utils/entityUtils";
-import StatsSection from "@/src/app/ner/components/StatsSection";
-import EntityList from "@/src/app/ner/components/EntityList";
-import EntityDetailModal from "@/src/app/ner/components/EntityDetailModal";
+import { Entity, ProcessingResult, StatusFilter } from "@/src/app/see/types";
+import { fetchEntityData, saveEntityData } from "@/src/app/see/services/dataService";
+import { calculateStats, downloadAsCSV, downloadAsJSON } from "@/src/app/see/utils/entityUtils";
+import StatsSection from "@/src/app/see/components/StatsSection";
+import EntityList from "@/src/app/see/components/EntityList";
+import EntityDetailModal from "@/src/app/see/components/EntityDetailModal";
 import Link from "next/link";
-import EntityTypeDropdown from "@/src/app/ner/components/EntityTypeDropdown";
+import EntityTypeDropdown from "@/src/app/see/components/EntityTypeDropdown";
 
 export default function NamedEntityRecognitionViewerAll() {
     const [results, setResults] = useState<ProcessingResult | null>(null);

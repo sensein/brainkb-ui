@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Entity } from "@/src/app/ner/types";
-import { fetchEntityData } from "@/src/app/ner/services/dataService";
+import { Entity } from "@/src/app/see/types";
+import { fetchEntityData } from "@/src/app/see/services/dataService";
 import Link from "next/link";
 
 interface EntityDetailPageProps {

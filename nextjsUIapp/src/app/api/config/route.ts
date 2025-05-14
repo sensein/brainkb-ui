@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Construct the path to the config file
-        const configPath = path.join(process.cwd(), 'src', 'app', 'admin', 'ner', file);
+        const configPath = path.join(process.cwd(), 'src', 'app', 'admin', 'sie', file);
 
         // Read the config file
         const configContent = await fs.readFile(configPath, 'utf8');

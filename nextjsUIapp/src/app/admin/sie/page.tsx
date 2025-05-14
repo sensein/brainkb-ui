@@ -87,7 +87,7 @@ export default function NamedEntityRecognition() {
     const handleApiKeySubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!apiKey.trim()) {
-            setError("Please enter an API key");
+            setError("Please enter an OpenRouter API key");
             return;
         }
 
@@ -286,8 +286,8 @@ export default function NamedEntityRecognition() {
                 transformedData.entities[key] = transformedData.entities[key].map(entity => ({
                     ...entity,
                     feedback: entity.feedback || 'up',
-                    contributed_by: entity.contributed_by || session?.user?.email || 'unknown',
-                    changed_by: entity.changed_by || [session?.user?.email || 'unknown']
+                    // contributed_by: entity.contributed_by || session?.user?.email || 'unknown',
+                    // changed_by: entity.changed_by || [session?.user?.email || 'unknown']
                 }));
             });
 
@@ -468,11 +468,11 @@ export default function NamedEntityRecognition() {
 
     return (
         <div className="flex flex-col max-w-6xl mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-6">Named Entity Recognition</h1>
+            <h1 className="text-2xl font-bold mb-6">Structured Information Extraction (SIE)</h1>
 
             {/* API Key Section */}
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md mb-6">
-                <h2 className="text-lg font-semibold mb-4">API Key Configuration</h2>
+                <h2 className="text-lg font-semibold mb-4">OpenRouter API Key Configuration</h2>
                 <form onSubmit={handleApiKeySubmit} className="space-y-4">
                     <div className="flex gap-4">
                         <input
@@ -739,7 +739,11 @@ const EntityCard = ({
                     ) : (
                         <p className="text-sm text-gray-500">Type: {entity.entityType}</p>
                     )}
-                    <p className="text-sm text-gray-500">Confidence: {(entity.judge_score[0] * 100).toFixed(1)}%</p>
+                    <p className="text-sm text-gray-500">
+                        <span title="How well the extracted information aligns with the target ontology or schema.">
+                            Confidence: {(entity.judge_score[0] * 100).toFixed(1)}%
+                        </span>
+                    </p>
                     {entity.contributed_by && (
                         <p className="text-xs text-gray-400">Contributed by: {entity.contributed_by}</p>
                     )}

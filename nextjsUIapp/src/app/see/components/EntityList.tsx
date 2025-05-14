@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Entity, EntityResults, ProcessingResult, StatusFilter } from "@/src/app/ner/types";
+import { Entity, EntityResults, ProcessingResult, StatusFilter } from "@/src/app/see/types";
 import StatusFilterTabs from "./StatusFilterTabs";
 import EntityTypeTabs from "./EntityTypeTabs";
 import EntityItem from "./EntityItem";

@@ -5,7 +5,7 @@ import { fetchEntityData } from "./services/dataService";
 import { calculateStats } from "./utils/entityUtils";
 import StatsSection from "./components/StatsSection";
 import Link from "next/link";
-import EntityTypeDropdown from "@/src/app/ner/components/EntityTypeDropdown";
+import EntityTypeDropdown from "@/src/app/see/components/EntityTypeDropdown";
 
 export default function NamedEntityRecognitionViewer() {
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -38,7 +38,7 @@ export default function NamedEntityRecognitionViewer() {
 
     return (
         <div className="flex flex-col max-w-6xl mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-6">Named Entity Recognition (NER) <br/><span
+            <h1 className="text-2xl font-bold mb-6">Structured Entity Extraction (SEE) <br/><span
                 className="text-1xl font-bold mb-6 text-red-500 italic">
                 Note: The data you see in here is fake.
             </span></h1>
@@ -51,7 +51,7 @@ export default function NamedEntityRecognitionViewer() {
                     // Custom click handler for navigation
                     customClickHandler={(filter) => {
                         // Navigate to all/page.tsx with the selected filter
-                        window.location.href = `/ner/all?filter=${filter}`;
+                        window.location.href = `/see/all?filter=${filter}`;
                     }}
                 />
                 <div className="text-center text-sm text-gray-500 mt-2">
@@ -68,16 +68,16 @@ export default function NamedEntityRecognitionViewer() {
                 ) : entityTypes.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <Link
-                            href={`/ner/all`}
+                            href={`/see/all`}
                             className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                         >
                             <h3 className="text-lg font-medium mb-2">All</h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">View all NER entities</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">View all SEE entities</p>
                         </Link>
                         {entityTypes.map((type) => (
                             <Link
                                 key={type}
-                                href={`/ner/entity/${type}`}
+                                href={`/see/entity/${type}`}
                                 className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                             >
                                 <h3 className="text-lg font-medium mb-2">{type}</h3>
@@ -100,7 +100,7 @@ export default function NamedEntityRecognitionViewer() {
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
                 <h2 className="text-xl font-semibold mb-4">How to Contribute?</h2>
                 <div className="space-y-4">
-                    {["Review Entities", "Provide Feedback", "Correct Entities", "Contribute with new NER"].map((step, index) => (
+                    {["Review Entities", "Provide Feedback", "Correct Entities", "Contribute with new SEE"].map((step, index) => (
                         <div key={index} className="flex items-start">
                             <div className="bg-blue-100 dark:bg-blue-900 rounded-full w-8 h-8 flex items-center justify-center mr-3 mt-0.5">
                                 <span className="text-blue-800 dark:text-blue-200 font-medium">{index + 1}</span>
@@ -111,7 +111,7 @@ export default function NamedEntityRecognitionViewer() {
                                     {step === "Review Entities" && "Browse through the extracted entities and review their accuracy. You can filter by entity type or status."}
                                     {step === "Provide Feedback" && "Use the thumbs up/down buttons to indicate whether an entity is correctly identified."}
                                     {step === "Correct Entities" && "If an entity is incorrectly identified, you can provide the correct text to improve future recognition."}
-                                    {step === "Contribute with new NER" && "If you want to contribute new NER data, log in to the BrainKB portal and upload a PDF for automated NER extraction."}
+                                    {step === "Contribute with new SEE" && "If you want to contribute new SEE data, log in to the BrainKB portal and upload a PDF for automated SEE extraction."}
                                 </p>
                             </div>
                         </div>

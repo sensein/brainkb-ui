@@ -1,6 +1,6 @@
 "use client";
 
-import { EntityResults } from "@/src/app/ner/types";
+import { EntityResults } from "@/src/app/see/types";
 
 interface EntityTypeTabsProps {
     entities: EntityResults;

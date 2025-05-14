@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { fetchEntityData } from "@/src/app/ner/services/dataService";
+import { fetchEntityData } from "@/src/app/see/services/dataService";
 
 export default function EntityTypeDropdown() {
     const [entityTypes, setEntityTypes] = useState<string[]>([]);

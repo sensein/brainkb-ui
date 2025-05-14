@@ -15,8 +15,8 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Construct the path to the config file in the admin/ner directory
-        const configPath = path.join(process.cwd(), 'src', 'app', 'admin', 'ner', configFile);
+        // Construct the path to the config file in the admin/see directory
+        const configPath = path.join(process.cwd(), 'src', 'app', 'admin', 'see', configFile);
 
         // Read the current config file
         const configContent = await fs.readFile(configPath, 'utf8');

@@ -1,6 +1,6 @@
 "use client";
 
-import { ContributionStats, StatusFilter } from "@/src/app/ner/types";
+import { ContributionStats, StatusFilter } from "@/src/app/see/types";
 
 interface StatusFilterTabsProps {
     stats: ContributionStats;

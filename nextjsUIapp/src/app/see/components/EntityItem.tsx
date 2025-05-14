@@ -1,6 +1,6 @@
 "use client";
 
-import { Entity } from "@/src/app/ner/types";
+import { Entity } from "@/src/app/see/types";
 import Link from "next/link";
 import EntityTypeClassificationDropdown from "./EntityTypeClassificationDropdown";
 

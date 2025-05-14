@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Entity, ProcessingResult, StatusFilter } from "@/src/app/ner/types";
-import { fetchEntityData, saveEntityData } from "@/src/app/ner/services/dataService";
+import { Entity, ProcessingResult, StatusFilter } from "@/src/app/see/types";
+import { fetchEntityData, saveEntityData } from "@/src/app/see/services/dataService";
 import Link from "next/link";
-import { calculateStats, downloadAsCSV, downloadAsJSON } from "@/src/app/ner/utils/entityUtils";
+import { calculateStats, downloadAsCSV, downloadAsJSON } from "@/src/app/see/utils/entityUtils";
 import EntityDetailModal from "../../components/EntityDetailModal";
 import StatsSection from "../../components/StatsSection";
 

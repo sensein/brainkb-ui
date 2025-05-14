@@ -12,10 +12,10 @@ export default function NERLayout({ children }: LayoutProps) {
 
     // Determine if a nav link is active
     const isActive = (path: string) => {
-        if (path === "/ner" && pathname === "/ner") {
+        if (path === "/see" && pathname === "/see") {
             return true;
         }
-        if (path === "/ner/entity" && pathname.startsWith("/ner/entity")) {
+        if (path === "/see/entity" && pathname.startsWith("/see/entity")) {
             return true;
         }
         return false;

@@ -1,4 +1,4 @@
-import { ProcessingResult } from "@/src/app/ner/types";
+import { ProcessingResult } from "@/src/app/see/types";
 
 // Fetch data from API (using dummy data for now)
 export const fetchEntityData = async (): Promise<ProcessingResult> => {
