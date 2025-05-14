@@ -368,6 +368,13 @@ export default function NamedEntityRecognition() {
                 });
             });
 
+            // Remove empty entity type arrays before saving
+            Object.keys(resultsToSave.entities).forEach(key => {
+                if (resultsToSave.entities[key].length === 0) {
+                    delete resultsToSave.entities[key];
+                }
+            });
+
             console.log('Starting form submission...');
             const formData = new FormData();
 
@@ -459,6 +466,13 @@ export default function NamedEntityRecognition() {
         setResults(updatedResults);
         setIsSaved(false);
         setEditingEntity(null); // Clear editing state after type change
+
+        // Remove empty entity type arrays
+        Object.keys(updatedResults.entities).forEach(key => {
+            if (updatedResults.entities[key].length === 0) {
+                delete updatedResults.entities[key];
+            }
+        });
     };
 
     // If not logged in, show loading
@@ -594,52 +608,48 @@ export default function NamedEntityRecognition() {
                     {/* Entity Type Tabs */}
                     <div className="border-b border-gray-200 dark:border-gray-700 mb-4 overflow-x-auto">
                         <nav className="-mb-px flex space-x-8 min-w-max overflow-x-auto scrollbar-hide">
-                            {Object.keys(results.entities).map((type) => (
-                                <button
-                                    key={type}
-                                    onClick={() => setActiveEntityType(type)}
-                                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                                        activeEntityType === type
-                                            ? "border-blue-500 text-blue-500"
-                                            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                                    }`}
-                                >
-                                    {type} ({results.entities[type].length})
-                                </button>
-                            ))}
+                            {Object.keys(results.entities)
+                                .filter(type => results.entities[type] && results.entities[type].length > 0)
+                                .map((type) => (
+                                    <button
+                                        key={type}
+                                        onClick={() => setActiveEntityType(type)}
+                                        className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                                            activeEntityType === type
+                                                ? "border-blue-500 text-blue-500"
+                                                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                                        }`}
+                                    >
+                                        {type} ({results.entities[type].length})
+                                    </button>
+                                ))}
                         </nav>
                     </div>
 
                     {/* Entity List */}
-                    {activeEntityType && (
+                    {activeEntityType && results.entities[activeEntityType] && results.entities[activeEntityType].length > 0 && (
                         <div className="space-y-4">
                             <h3 className="text-md font-semibold text-gray-700 dark:text-gray-300">
                                 {activeEntityType} Entities
                             </h3>
 
                             <div className="bg-gray-50 dark:bg-gray-700 rounded-md p-4">
-                                {results.entities[activeEntityType].length > 0 ? (
-                                    <ul className="space-y-4">
-                                        {results.entities[activeEntityType].map((entity, index) => (
-                                            <li key={index} className="border-b border-gray-200 dark:border-gray-600 pb-3">
-                                                <EntityCard
-                                                    entity={entity}
-                                                    onFeedbackChange={handleFeedback}
-                                                    onTypeChange={handleTypeChange}
-                                                    type={activeEntityType}
-                                                    index={index}
-                                                    isEditing={entity.feedback === 'down'}
-                                                    results={results}
-                                                    session={session}
-                                                />
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                                        No {activeEntityType} entities found in the document.
-                                    </p>
-                                )}
+                                <ul className="space-y-4">
+                                    {results.entities[activeEntityType].map((entity, index) => (
+                                        <li key={index} className="border-b border-gray-200 dark:border-gray-600 pb-3">
+                                            <EntityCard
+                                                entity={entity}
+                                                onFeedbackChange={handleFeedback}
+                                                onTypeChange={handleTypeChange}
+                                                type={activeEntityType}
+                                                index={index}
+                                                isEditing={entity.feedback === 'down'}
+                                                results={results}
+                                                session={session}
+                                            />
+                                        </li>
+                                    ))}
+                                </ul>
                             </div>
                         </div>
                     )}
@@ -676,8 +686,10 @@ export default function NamedEntityRecognition() {
 function getAllEntityTypes(results: Results): string[] {
     if (!results || !results.entities) return [];
     const types = Object.keys(results.entities);
-    // Add the special option
-    return [...types, 'Unknown / Unable to classify'];
+    if (!types.includes('Unknown / Unable to classify')) {
+        types.push('Unknown / Unable to classify');
+    }
+    return types;
 }
 
 const EntityCard = ({
