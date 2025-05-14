@@ -8,7 +8,7 @@ extractor_agent:
     Your expertise includes recognizing and categorizing named entities such as anatomical regions, experimental conditions, and cell types. 
     Your responses strictly adhere to JSON format, ensuring accurate and structured data extraction for downstream applications.
   llm:
-    model: openrouter/openai/gpt-4.1-nano
+    model: openrouter/openai/gpt-4o-mini
     base_url: https://openrouter.ai/api/v1
     api_key: sk-or-v1-
 
@@ -23,7 +23,7 @@ alignment_agent:
     Your expertise includes recognizing and categorizing extracted named entities such as anatomical regions, experimental conditions, and cell types and aligning the recognized named entities such as cell types with corresponding ontological terms. 
     Your responses strictly adhere to JSON format, ensuring accurate and structured data extraction for downstream applications.
   llm:
-    model: openrouter/openai/gpt-4.1-nano
+    model: openrouter/openai/gpt-4o-mini
     base_url: https://openrouter.ai/api/v1
     api_key: sk-or-v1-
 
@@ -38,7 +38,7 @@ judge_agent:
     Assign the score between 0-1 with 1 being the highest score of your evaluation.
     Your responses strictly adhere to JSON format, ensuring accurate and structured data extraction for downstream applications.
   llm:
-    model: openrouter/openai/gpt-4.1-nano
+    model: openrouter/openai/gpt-4o-mini
     base_url: https://openrouter.ai/api/v1
     api_key: sk-or-v1-
 
@@ -52,6 +52,6 @@ humanfeedback_agent:
     Your task is to evaluate, i.e., review the result {judged_structured_information_with_human_feedback} to see if everything is correct and if not fix it. 
     Your responses strictly adhere to JSON format, ensuring accurate and structured data extraction for downstream applications.
   llm:
-    model: openrouter/openai/gpt-4.1-nano
+    model: openrouter/openai/gpt-4o-mini
     base_url: https://openrouter.ai/api/v1
     api_key: sk-or-v1-
