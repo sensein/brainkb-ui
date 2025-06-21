@@ -1,4 +1,5 @@
 import {NextRequest, NextResponse} from 'next/server';
+import { Client } from 'undici';
 
 export async function POST(request: NextRequest) {
     console.log('[process-document] POST handler invoked');
@@ -149,7 +150,6 @@ export async function POST(request: NextRequest) {
         let retryCount = 0;
         let externalResponse;
 
-
         while (retryCount < maxRetries) {
             try {
                 const endpoint = process.env.NEXT_PUBLIC_STRUCTSENSE_ENDPOINT;
@@ -157,15 +157,60 @@ export async function POST(request: NextRequest) {
                     throw new Error("NEXT_PUBLIC_STRUCTSENSE_ENDPOINT is not defined in the environment variables.");
                 }
 
+                // undici Client expects only the origin, so extract it
+                const url = new URL(endpoint);
+                const origin = url.origin;
+                const path = url.pathname + url.search;
+
+                const client = new Client(origin, {
+                    headersTimeout: 3600000 //  in ms
+                });
+
+                // Convert FormData to a stream and headers
+                // Node.js FormData has .getHeaders() and .getBuffer()
+                // But the web FormData does not, so we use form-data package if needed
+                // For now, assume pdfFormData is a web FormData, so we use form-data package
+                const FormDataNode = (await import('form-data')).default;
+                const formDataNode = new FormDataNode();
+                for (const [key, value] of pdfFormData.entries()) {
+                    if (value instanceof File) {
+                        // Convert web File to Buffer
+                        const arrayBuffer = await value.arrayBuffer();
+                        const buffer = Buffer.from(arrayBuffer);
+                        formDataNode.append(key, buffer, { filename: value.name, contentType: value.type });
+                    } else {
+                        formDataNode.append(key, value);
+                    }
+                }
+                const formHeaders = formDataNode.getHeaders();
+
+                // Merge custom headers
+                const allHeaders = { ...headers, ...formHeaders };
+
                 console.log(`Calling external API with token (attempt ${retryCount + 1}/${maxRetries})...`);
-                externalResponse = await fetch(endpoint, {
+                const { statusCode, body } = await client.request({
+                    path: path,
                     method: 'POST',
-                    headers: headers,
-                    body: pdfFormData,
-                    // Add timeout
-                    signal: AbortSignal.timeout(3600000) // 1hr minutes timeout
+                    headers: allHeaders,
+                    body: formDataNode,
+                    signal: AbortSignal.timeout(3600000)
                 });
                 console.log('[process-document] External API response received');
+
+                // Mimic fetch API for compatibility
+                externalResponse = {
+                    ok: statusCode >= 200 && statusCode < 300,
+                    status: statusCode,
+                    async json() {
+                        let responseData = '';
+                        for await (const chunk of body) {
+                            responseData += chunk;
+                        }
+                        return JSON.parse(responseData);
+                    }
+                };
+
+                client.close();
 
                 if (externalResponse.ok) {
                     break;
@@ -181,7 +226,7 @@ export async function POST(request: NextRequest) {
                 }
                 console.log(`Retry attempt ${retryCount} after error:`, error);
                 // Wait before retrying (exponential backoff)
-                await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 8000)); // 8 seconds
+                await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 300000)); // 300 seconds
             }
         }
 

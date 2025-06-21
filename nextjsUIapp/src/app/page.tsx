@@ -70,18 +70,14 @@ export default function Home() {
     const fetchData = async (query_to_execute) => {
         const queryParameter = {sparql_query: query_to_execute};
 
-        const baseurl = process.env.NEXT_PUBLIC_API_ADMIN_HOST || "http://3.134.90.242:8010";
-        const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql"; //default is "query/sparql"
-
-        // console.log("Fetching data with parameters:", queryParameter, endpoint, baseurl);
+        // Read endpoint from environment variable for this specific page
+        const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql";
 
         try {
-            const response = await getData(queryParameter, endpoint, baseurl);
-            // console.log("Raw response:", response);
+            const response = await getData(queryParameter, endpoint);
 
             if (response.status === "success" && response.message?.results?.bindings) {
                 const bindings = response.message.results.bindings;
-                // console.log("Bindings:", bindings[0].count.value);
                 return response;
             } else {
                 console.error("Unexpected response format:", response);
