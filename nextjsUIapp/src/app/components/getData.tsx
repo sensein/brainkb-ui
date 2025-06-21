@@ -1,33 +1,25 @@
+import ApiService from '@/src/services/query_service/apiService';
 
-export async function getData(query_parameter = {}, endpoint: string, baseurl: string) {
+export async function getData(
+  query_parameter = {}, 
+  endpoint?: string, 
+  baseurl?: string,
+  useBearerToken?: boolean
+) {
   try {
-    const apiEndpointbase =  baseurl;
-    if (!apiEndpointbase) {
-      throw new Error('NEXT_PUBLIC_API_ADMIN_HOST is not defined in the environment variables');
+    const apiService = ApiService.getInstance();
+    
+    // Use the centralized API service with dynamic configuration
+    if (endpoint && baseurl) {
+      // If both custom endpoint and baseurl are provided, use the custom method
+      return await apiService.queryWithCustomBaseUrl(query_parameter, endpoint, baseurl, useBearerToken);
+    } else if (endpoint) {
+      // If only custom endpoint is provided, use default baseurl
+      return await apiService.query(query_parameter, endpoint, useBearerToken);
+    } else {
+      // Use default endpoint from environment
+      return await apiService.query(query_parameter, undefined, useBearerToken);
     }
-
-    const api_endpoint = `${apiEndpointbase}/${endpoint}`;
-
-
-    // Construct query string from query_parameter object if it is not empty
-    const queryString = new URLSearchParams(query_parameter).toString();
-    const urlWithQuery = queryString ? `${api_endpoint}?${queryString}` : api_endpoint;
-
-
-
-    const response = await fetch(urlWithQuery, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Network response was not ok. Status: '+ urlWithQuery+ ' - ' + response.status);
-    }
-
-    return await response.json();
   } catch (e) {
     const error = e as Error;
     throw new Error('Error: ' + error.message);
