@@ -1,8 +1,9 @@
 extraction_task:
   description: >
-    Extract all relevant entities from neuroscience literature, including duplicates.    
-        Each entity entry may contain multiple matched sentences.
-        The list of entities extracted should be exhaustive and comprehensive.  
+    Extract Meticulously  and classify all relevant entities into the most appropriate and specific category from the provided neuroscience text. 
+       The list of entities extracted should be exhaustive and comprehensive. You should identify and label all entities, including duplicates.                                                             
+       Please ensure that all entities are accurately identified and classified according to their role within the neuroscience domain. 
+       IMPORTANT: DO NOT modify the input text in any way. Use the text as is, without any alterations or corrections. Follow the below output structure.
      Instructions: 
     
          NER Extractions instructions:

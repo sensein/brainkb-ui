@@ -536,7 +536,7 @@ export default function NamedEntityRecognition() {
             }`}>
                 <h2 className="text-lg font-semibold mb-4">Upload Document</h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    Upload a PDF file to extract named entities such as people, organizations, locations, and more.
+                    Upload a PDF file to extract neuroscientific entities such as cell types, anatomical regions, and more.
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
