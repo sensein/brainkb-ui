@@ -59,7 +59,7 @@ pages:
       SELECT DISTINCT ?id ?label ?category
       WHERE {
       GRAPH <https://www.portal.brain-bican.org/grapidreleasev01> {
-          ?id biolink:category "bican:LibraryAliquot"^^<http://www.w3.org/2001/XMLSchema#anyURI>;
+          ?id biolink:category "bican:Library"^^<http://www.w3.org/2001/XMLSchema#anyURI>;
               rdfs:label ?label;
               biolink:category ?category;
         }

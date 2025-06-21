@@ -19,7 +19,7 @@ boxes:
                 
                 SELECT DISTINCT ?subject ?predicate ?object ?category_type
                 WHERE {
-                GRAPH <https://www.portal.brain-bican.org/grapidreleasev01> {
+                GRAPH <https://www.brainkb.org/version01> {
                   {  BIND(<{0}> AS ?id)
                       ?subject ?predicate ?id . }
                       UNION
