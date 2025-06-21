@@ -2,7 +2,9 @@
 "use client";
 import { useState } from 'react';
 import Link from "next/link";
+import Image from "next/image";
 import { signIn, signOut, useSession } from "next-auth/react";
+
 const Navbar: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const { data: session } = useSession();
@@ -12,9 +14,14 @@ const Navbar: React.FC = () => {
             className="bg-white dark:bg-gray-900 fixed w-full z-20 top-0 start-0 border-b border-gray-200 dark:border-gray-600">
             <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
                 <Link href="/" className="flex items-center space-x-3 rtl:space-x-reverse">
- 
-                    <img src="/brainkb_logo.png" className="h-8" alt="BrainKB Logo"/>
- 
+                    <Image 
+                        src="/brainkb_logo.png" 
+                        alt="BrainKB Logo"
+                        width={32}
+                        height={32}
+                        className="h-8 w-auto"
+                        priority
+                    />
                     <span
                         className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">BrainKB</span>
                 </Link>
