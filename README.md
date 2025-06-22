@@ -14,6 +14,7 @@ A user interface for interacting with the BrainKB knowledge graph infrastructure
 ## 🚀 Directory 
 - `nextjsUIapp` --> BrainKB UI and instructions.
 - `old_kept_for_reference/djangoUImanager` --> Obsolete and can be ignored. It's kept there just for reference.
+- `nextjsUIapp/ohbm-hackathon` --> Task for OHBM hackathon.
 
 ## 📄 License
 
