@@ -15,8 +15,8 @@ A user interface for interacting with the BrainKB knowledge graph infrastructure
 
 To deploy the BrainKB UI locally, follow these steps.
 
-> ⚠️ Important Notes: These API configuration requires deployment of the BrainKB backend service. For more see [http://docs.brainkb.org/deployment_userinterface.html](http://docs.brainkb.org/deployment_userinterface.html).  
-
+> ⚠️ Important Notes: These API configuration requires deployment of the BrainKB backend service. For more see [http://docs.brainkb.org/deployment_userinterface.html](http://docs.brainkb.org/deployment_userinterface.html).
+> The document is old and might refer to different branch than main, ignore that and use the main branch.
 ### 1. Clone the Repository & Set Up Environment
 
 ```shell
@@ -88,7 +88,27 @@ Once deployed, open your browser and visit:
 
 - Do **not** upgrade the Next.js version unless explicitly needed. Future versions may introduce breaking changes.
 - Admin panel access may not fully work on `localhost` due to OAuth restrictions by some providers (like ORCID).
+  - Just in case if you get following issue (check docker logs <container-id>) though it should not be the case as the code has been updated.
 
+      ```shell
+      2025-06-22 00:00:53 web-1  |   code: 'NO_SECRET'
+      2025-06-22 00:00:53 web-1  | }
+      2025-06-22 00:00:53 web-1  | Error: There is a problem with the server configuration. Check the server logs for more information.
+      2025-06-22 00:00:53 web-1  |     at s (/app/.next/server/chunks/5609.js:25:19829)
+      2025-06-22 00:00:53 web-1  |     at async x (/app/.next/server/chunks/8081.js:9:7184) {
+      2025-06-22 00:00:53 web-1  |   digest: '279538222'
+      2025-06-22 00:00:53 web-1  | }
+      2025-06-22 00:00:53 web-1  | Error: There is a problem with the server configuration. Check the server logs for more information.
+      2025-06-22 00:00:53 web-1  |     at s (/app/.next/server/chunks/5609.js:25:19829)
+      2025-06-22 00:00:53 web-1  |     at async x (/app/.next/server/chunks/8081.js:9:7184) {
+      2025-06-22 00:00:53 web-1  |   digest: '279538222'
+      2025-06-22 00:00:53 web-1  | }
+      ```
+    create a .env file and update the docker. 
+      ```shell
+      NEXTAUTH_SECRET=ANY_RANDOM_STRING_SECRET
+      NEXTAUTH_URL=http://localhost:3000 #FOR LOCAL DEPLOYMENT
+      ```
 ---
 
 ## 📄 License
