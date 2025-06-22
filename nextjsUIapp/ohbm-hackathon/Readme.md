@@ -200,3 +200,7 @@ boxes:
 ## ✅ Done!
 
 After successful configuration, navigating to the Resources page and clicking a resource ID should render the full entity card view.
+
+## Solution
+
+If you are having issue, please check the `solution` directory for complete configuration.
