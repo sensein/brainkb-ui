@@ -58,6 +58,14 @@ NEXT_PUBLIC_API_ADMIN_INSERT_KGS_JSONLD_TTL_ENDPOINT=insert/files/knowledge-grap
 NEXT_PUBLIC_API_ADMIN_INSERT_STRUCTURED_JSON_ENDPOINT=insert/files/structured-resource-json-to-kg
 ```
 
+> **Note:**  
+> To test with the deployed BrainKB instance, set `NEXT_PUBLIC_API_ADMIN_HOST` to `https://queryservice.brainkb.org`.  
+> 
+> You can register for a JWT-based API user at [https://ingest.brainkb.org/docs#/Security/register_api_register_post](https://ingest.brainkb.org/docs#/Security/register_api_register_post).  
+> 
+> **Important:** After registration, your account must be activated by an admin before you can start using the API.
+
+
 ### 2. Deploy with Docker
 
 Run the following command to clean existing Docker volumes and deploy:
