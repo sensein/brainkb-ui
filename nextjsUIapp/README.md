@@ -70,8 +70,11 @@ NEXT_PUBLIC_API_ADMIN_INSERT_STRUCTURED_JSON_ENDPOINT=insert/files/structured-re
 > 
 > **Important:** After registration, your account must be activated by an admin before you can start using the API.
 
-
-### 2. Deploy with Docker
+### 2. Deploy without Docker
+1. Install NodeJS
+2. Navigate to `nextjsUIapp` and run `npm install --legacy-peer-deps` (or --force)
+3. Run `npm run dev`
+### 3. Deploy with Docker
 
 Run the following command to clean existing Docker volumes and deploy:
 
