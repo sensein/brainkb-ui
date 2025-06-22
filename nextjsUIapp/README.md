@@ -19,6 +19,11 @@ To deploy the BrainKB UI locally, follow these steps.
 
 ### 1. Clone the Repository & Set Up Environment
 
+```shell
+git clone https://github.com/sensein/brainkb-ui.git
+cd nextjsUIapp
+```
+
 Before deployment, create and configure a `.env.local` file. Most required environment variables are documented [here](http://docs.brainkb.org/deployment_userinterface.html), but note that recent updates might not yet be reflected there.
 
 Below is a brief description of essential environment variables:
