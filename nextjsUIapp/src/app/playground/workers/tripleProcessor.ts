@@ -39,6 +39,7 @@ interface CompleteMessage {
       processedTriples: number;
       totalTriples: number;
       uniqueNodes: number;
+      visibleNodes?: number; // Add optional visibleNodes property
     };
   };
 }
@@ -55,10 +56,10 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
   // Process triples in chunks
   for (let i = 0; i < triples.length; i += CHUNK_SIZE) {
     const chunk = triples.slice(i, Math.min(i + CHUNK_SIZE, triples.length));
-    
+
     // Process chunk
     chunk.forEach((triple: Triple) => {
-      // Add subject node if not exists
+      // Add subject node if not exists - all nodes visible by default
       if (!nodes.has(triple.subject)) {
         const isRoot = triple.subject === rootNode;
         nodes.set(triple.subject, {
@@ -66,44 +67,37 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
           label: triple.subject,
           type: 'subject',
           expanded: isRoot,
-          visible: isRoot,
+          visible: true, // Make all subject nodes visible by default
           index: startIndex + nodes.size
         });
       }
 
-      // Add object node if not exists
+      // Add object node if not exists - all nodes visible by default
       if (!nodes.has(triple.object)) {
         nodes.set(triple.object, {
           id: triple.object,
           label: triple.object,
           type: 'object',
           expanded: false,
-          visible: false,
+          visible: true, // Make all object nodes visible by default
           index: startIndex + nodes.size
         });
       }
 
-      // Add link
+      // Add link - all links visible by default
       links.push({
         source: triple.subject,
         target: triple.object,
         label: triple.predicate,
-        visible: triple.subject === rootNode
+        visible: true // Make all links visible by default
       });
     });
 
-    // Make immediate connections from root visible (limited to MAX_VISIBLE_NODES)
+    // All nodes are already visible by default, so we don't need to make specific connections visible
+    // But we still want to track the root node's connections for metadata
     if (i === 0) {
-      const rootConnections = chunk
-        .filter(triple => triple.subject === rootNode)
-        .slice(0, MAX_VISIBLE_NODES);
-
-      rootConnections.forEach(triple => {
-        const node = nodes.get(triple.object);
-        if (node) {
-          node.visible = true;
-        }
-      });
+      // Just count the root connections for metadata purposes
+      const rootConnectionsCount = chunk.filter(triple => triple.subject === rootNode).length;
     }
 
     processedCount += chunk.length;
@@ -134,7 +128,8 @@ self.onmessage = async (e: MessageEvent<WorkerMessage>) => {
       metadata: {
         processedTriples: startIndex + processedCount,
         totalTriples,
-        uniqueNodes: nodes.size
+        uniqueNodes: nodes.size,
+        visibleNodes: nodes.size // All nodes are visible
       }
     }
   };

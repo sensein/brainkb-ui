@@ -22,7 +22,7 @@ cleanup() {
 # Function to redeploy the application
 redeploy() {
     echo "Redeploying $APP_NAME..."
-    docker-compose -f $DOCKER_COMPOSE_FILE up --build -d
+    docker compose -f $DOCKER_COMPOSE_FILE up --build -d
     if [ $? -eq 0 ]; then
         echo "$APP_NAME has been successfully redeployed."
     else

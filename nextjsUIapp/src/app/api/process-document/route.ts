@@ -1,161 +1,310 @@
-import { NextRequest, NextResponse } from 'next/server';
-
-
-// Function to extract text from a file (simplified for demo)
-async function extractTextFromFile(file: File): Promise<string> {
-  // In a real implementation, you would use libraries like pdf.js for PDFs or simply read text files directly
-
-  
-  // For this demo,  return the file name as placeholder text
-  //and some dummy content to demonstrate NER
-  return `This is the content extracted from ${file.name}. 
-  Brain-derived neurotrophic factor (BDNF) plays a crucial role in synaptic plasticity, especially within the hippocampus. Research suggests that pyramidal neurons in the prefrontal cortex are heavily influenced by BDNF signaling. Additionally, mutations in the APOE gene have been linked to neurodegenerative disorders, impacting astrocytes and microglia function. The amygdala also shows significant changes in connectivity due to alterations in dopaminergic neurons. Understanding the role of genes like GRIN2B in synaptic modulation provides deeper insight into cognitive functions and psychiatric conditions`;
-}
-
-// Function to perform named entity recognition (dummy implementation)
-async function performNER(text: string): Promise<any> {
-  // here we would call the backend service. For now we are using the dummy content.
-  
-  // Get API key from environment variable
-  const apiKey = process.env.NER_API_KEY || 'NER-API-ENDPOINT';
-  
-  console.log(`Using API key: ${apiKey} for NER processing`);
-  
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Create dummy entities
-const neuroscienceEntities = {
-    GENE: [
-        {
-            text: 'BDNF',
-            start: 46,
-            end: 50,
-            confidence: 0.98,
-            sentence: "Brain-derived neurotrophic factor (BDNF) plays a crucial role in synaptic plasticity, especially within the hippocampus."
-        },
-        {
-            text: 'APOE',
-            start: 206,
-            end: 210,
-            confidence: 0.97,
-            sentence: "Additionally, mutations in the APOE gene have been linked to neurodegenerative disorders, impacting astrocytes and microglia function."
-        },
-        {
-            text: 'GRIN2B',
-            start: 440,
-            end: 446,
-            confidence: 0.96,
-            sentence: "Understanding the role of genes like GRIN2B in synaptic modulation provides deeper insight into cognitive functions and psychiatric conditions."
-        }
-    ],
-    CELL_TYPE: [
-        {
-            text: 'astrocytes',
-            start: 247,
-            end: 257,
-            confidence: 0.95,
-            sentence: "Additionally, mutations in the APOE gene have been linked to neurodegenerative disorders, impacting astrocytes and microglia function."
-        },
-        {
-            text: 'microglia',
-            start: 262,
-            end: 270,
-            confidence: 0.96,
-            sentence: "Additionally, mutations in the APOE gene have been linked to neurodegenerative disorders, impacting astrocytes and microglia function."
-        }
-    ],
-    ANATOMICAL_REGION: [
-        {
-            text: 'hippocampus',
-            start: 82,
-            end: 93,
-            confidence: 0.97,
-            sentence: "Brain-derived neurotrophic factor (BDNF) plays a crucial role in synaptic plasticity, especially within the hippocampus."
-        },
-        {
-            text: 'prefrontal cortex',
-            start: 159,
-            end: 177,
-            confidence: 0.95,
-            sentence: "Research suggests that pyramidal neurons in the prefrontal cortex are heavily influenced by BDNF signaling."
-        },
-        {
-            text: 'amygdala',
-            start: 303,
-            end: 311,
-            confidence: 0.94,
-            sentence: "The amygdala also shows significant changes in connectivity due to alterations in dopaminergic neurons."
-        }
-    ],
-    NEURON_TYPE: [
-        {
-            text: 'pyramidal neurons',
-            start: 114,
-            end: 131,
-            confidence: 0.95,
-            sentence: "Research suggests that pyramidal neurons in the prefrontal cortex are heavily influenced by BDNF signaling."
-        },
-        {
-            text: 'dopaminergic neurons',
-            start: 326,
-            end: 346,
-            confidence: 0.96,
-            sentence: "The amygdala also shows significant changes in connectivity due to alterations in dopaminergic neurons."
-        }
-    ]
-};
-
-
-
-  return neuroscienceEntities;
-}
+import {NextRequest, NextResponse} from 'next/server';
+import { Client } from 'undici';
 
 export async function POST(request: NextRequest) {
-  try {
-    // Check if API key is configured
-    if (!process.env.NER_API_KEY) {
-      console.warn('NER_API_KEY environment variable is not set. Using default dummy key.');
+    console.log('[process-document] POST handler invoked');
+    try {
+        console.log('[process-document] Starting document processing...');
+
+        // Check if API key is configured
+        if (!process.env.NER_API_KEY) {
+            console.warn('NER_API_KEY environment variable is not set.');
+        }
+
+        // Check if NEXT_PUBLIC_TOKEN_ENDPOINT is defined
+        if (!process.env.NEXT_PUBLIC_TOKEN_ENDPOINT) {
+            console.error('NEXT_PUBLIC_TOKEN_ENDPOINT environment variable is not set.');
+            return NextResponse.json(
+                {error: 'NEXT_PUBLIC_TOKEN_ENDPOINT environment variable is not set.'},
+                {status: 500}
+            );
+        }
+        const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT!;
+
+        // Get the form data from the request
+        const formData = await request.formData();
+        console.log('[process-document] Form data parsed');
+        const file = formData.get('pdf_file') as File;
+        const correctionsStr = formData.get('corrections') as string;
+        const email = formData.get('email') as string;
+        const password = formData.get('password') as string;
+        const current_loggedin_user = formData.get("current_loggedin_user") as string;
+        const api_key = formData.get("api_key") as string;
+
+        console.log('Form data received:', {
+            hasFile: !!file,
+            fileName: file?.name,
+            fileSize: file?.size,
+            fileType: file?.type,
+            hasEmail: !!email,
+            hasPassword: !!password,
+            hasCorrections: !!correctionsStr,
+            hasApiKey: !!api_key
+        });
+
+        if (!file) {
+            console.error('[process-document] No file provided in request');
+            return NextResponse.json(
+                {error: 'No document provided'},
+                {status: 400}
+            );
+        }
+
+        if (!email || !password) {
+            console.error('[process-document] Missing credentials:', {email: !!email, password: !!password});
+            return NextResponse.json(
+                {error: 'Email and password are required'},
+                {status: 400}
+            );
+        }
+
+        if (!api_key) {
+            console.error('[process-document] Missing API key');
+            return NextResponse.json(
+                {error: 'API key is required'},
+                {status: 400}
+            );
+        }
+
+        console.log('[process-document] Credentials and API key present');
+
+        // Check file type
+        const fileType = file.type;
+        if (fileType !== 'application/pdf') {
+            console.error('Invalid file type:', fileType);
+            return NextResponse.json(
+                {error: 'Only PDF files are supported'},
+                {status: 400}
+            );
+        }
+
+        console.log('Getting token from /api/token...');
+        // Get token from /api/token with credentials
+        const tokenResponse = await fetch(tokenEndpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email,
+                password
+            }),
+            // Add timeout
+            signal: AbortSignal.timeout(30000) // 30 seconds timeout
+        });
+        console.log('[process-document] Token endpoint response received');
+
+        if (!tokenResponse.ok) {
+            console.error('[process-document] Token request failed:', tokenResponse.status, await tokenResponse.text());
+            throw new Error('Failed to get token');
+        }
+
+        const tokenData = await tokenResponse.json();
+        console.log('[process-document] Token response:', tokenData);
+
+        if (!tokenData.access_token) {
+            console.error('[process-document] No access token in response:', tokenData);
+            throw new Error('Invalid token response');
+        }
+
+        const token = tokenData.access_token;
+        console.log('[process-document] Token received successfully:', token);
+
+        // Create a new FormData without email and password
+        const pdfFormData = new FormData();
+
+        // Add the PDF file first
+        if (file) {
+            console.log('Adding PDF file to FormData:', {
+                name: file.name,
+                type: file.type,
+                size: file.size
+            });
+            pdfFormData.append("pdf_file", file);
+        }
+
+        // Add all other form fields except email and password
+        for (const [key, value] of formData.entries()) {
+            if (key !== 'email' && key !== 'password' && key !== 'pdf_file') {
+                console.log(`Adding form field: ${key}`);
+                pdfFormData.append(key, value);
+            }
+        }
+
+        console.log('FormData contents:', {
+            hasPdfFile: pdfFormData.has('pdf_file'),
+            hasAgentConfig: pdfFormData.has('agent_config_file'),
+            hasTaskConfig: pdfFormData.has('task_config_file'),
+            hasEmbedderConfig: pdfFormData.has('embedder_config_file'),
+            hasKnowledgeConfig: pdfFormData.has('knowledge_config_file')
+        });
+
+        // Add the API key to the request headers
+        const headers = {
+            'Authorization': `Bearer ${token}`,
+            'X-API-Key': api_key
+        };
+
+        // Add retry logic for the external API call
+        const maxRetries = 3;
+        let retryCount = 0;
+        let externalResponse;
+
+        while (retryCount < maxRetries) {
+            try {
+                const endpoint = process.env.NEXT_PUBLIC_STRUCTSENSE_ENDPOINT;
+                if (!endpoint) {
+                    throw new Error("NEXT_PUBLIC_STRUCTSENSE_ENDPOINT is not defined in the environment variables.");
+                }
+
+                // undici Client expects only the origin, so extract it
+                const url = new URL(endpoint);
+                const origin = url.origin;
+                const path = url.pathname + url.search;
+
+                const client = new Client(origin, {
+                    headersTimeout: 3600000 //  in ms
+                });
+
+                // Convert FormData to a stream and headers
+                // Node.js FormData has .getHeaders() and .getBuffer()
+                // But the web FormData does not, so we use form-data package if needed
+                // For now, assume pdfFormData is a web FormData, so we use form-data package
+                const FormDataNode = (await import('form-data')).default;
+                const formDataNode = new FormDataNode();
+                for (const [key, value] of pdfFormData.entries()) {
+                    if (value instanceof File) {
+                        // Convert web File to Buffer
+                        const arrayBuffer = await value.arrayBuffer();
+                        const buffer = Buffer.from(arrayBuffer);
+                        formDataNode.append(key, buffer, { filename: value.name, contentType: value.type });
+                    } else {
+                        formDataNode.append(key, value);
+                    }
+                }
+                const formHeaders = formDataNode.getHeaders();
+
+                // Merge custom headers
+                const allHeaders = { ...headers, ...formHeaders };
+
+                console.log(`Calling external API with token (attempt ${retryCount + 1}/${maxRetries})...`);
+                const { statusCode, body } = await client.request({
+                    path: path,
+                    method: 'POST',
+                    headers: allHeaders,
+                    body: formDataNode,
+                    signal: AbortSignal.timeout(3600000)
+                });
+                console.log('[process-document] External API response received');
+
+                // Mimic fetch API for compatibility
+                externalResponse = {
+                    ok: statusCode >= 200 && statusCode < 300,
+                    status: statusCode,
+                    async json() {
+                        let responseData = '';
+                        for await (const chunk of body) {
+                            responseData += chunk;
+                        }
+                        return JSON.parse(responseData);
+                    }
+                };
+
+                client.close();
+
+                if (externalResponse.ok) {
+                    break;
+                }
+
+                // If response is not ok, throw error to trigger retry
+                throw new Error(`API call failed with status ${externalResponse.status}`);
+            } catch (error) {
+                retryCount++;
+                if (retryCount === maxRetries) {
+                    console.error('[process-document] All retry attempts failed:', error);
+                    throw error;
+                }
+                console.log(`Retry attempt ${retryCount} after error:`, error);
+                // Wait before retrying (exponential backoff)
+                await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 300000)); // 300 seconds
+            }
+        }
+
+        if (!externalResponse) {
+            console.error('[process-document] No response from external API after all retries');
+            throw new Error('Failed to get response from external API after all retries');
+        }
+
+        console.log('[process-document] External API call successful');
+        const data = await externalResponse.json();
+        console.log('[process-document] Data received from external API:', data);
+
+        // Define the type for the transformed data
+        interface TransformedData {
+            entities: Record<string, any[]>;
+            documentName?: string;
+            processedAt?: string;
+            corrected?: boolean;
+        }
+
+        // Transform the response format to match what the frontend expects
+        const transformedData: TransformedData = {
+            entities: {}
+        };
+
+        if (data.judged_structured_information) {
+            // Process all sections and collect all entities
+            const allEntities: any[] = [];
+
+            // First, collect all entities from all sections
+            Object.values(data.judged_structured_information).forEach((section: any) => {
+                if (Array.isArray(section)) {
+                    allEntities.push(...section);
+                }
+            });
+
+            // Then group them by entity type
+            allEntities.forEach((entity: any) => {
+                const entityType = entity.label || 'UNKNOWN';
+
+                if (!transformedData.entities[entityType]) {
+                    transformedData.entities[entityType] = [];
+                }
+
+                transformedData.entities[entityType].push({
+                    entity: entity.entity,
+                    entityType: entity.label,
+                    originalEntityType: entity.label,
+                    start: entity.start,
+                    end: entity.end,
+                    sentence: entity.sentence,
+                    paper_location: entity.paper_location || '',
+                    paper_title: entity.paper_title || '',
+                    doi: entity.doi || '',
+                    ontology_id: entity.ontology_id || null,
+                    ontology_label: entity.ontology_label || null,
+                    judge_score: entity.judge_score || 0,
+                    feedback: 'up',
+                    contributed_by: current_loggedin_user,
+                    changed_by: [current_loggedin_user]
+                });
+            });
+        }
+
+        console.log("logged in user: " + current_loggedin_user);
+
+        // Add document metadata
+        transformedData.documentName = file.name;
+        transformedData.processedAt = new Date().toISOString();
+
+        console.log('[process-document] Processing complete, returning response');
+        return NextResponse.json(transformedData);
+
+    } catch (error) {
+        console.error('[process-document] Error in document processing:', error);
+        return NextResponse.json(
+            {error: 'Failed to process document'},
+            {status: 500}
+        );
     }
-    
-    // Get the form data from the request
-    const formData = await request.formData();
-    const file = formData.get('document') as File;
-    
-    if (!file) {
-      return NextResponse.json(
-        { error: 'No document provided' },
-        { status: 400 }
-      );
-    }
-    
-    // Check file type
-    const fileType = file.type;
-    if (fileType !== 'application/pdf' && fileType !== 'text/plain') {
-      return NextResponse.json(
-        { error: 'Only PDF and text files are supported' },
-        { status: 400 }
-      );
-    }
-    
-    // Extract text from the file
-    const text = await extractTextFromFile(file);
-    
-    // Perform named entity recognition
-    const entities = await performNER(text);
-    
-    // Return the results
-    return NextResponse.json({
-      entities,
-      documentName: file.name,
-      processedAt: new Date().toISOString(),
-    });
-    
-  } catch (error) {
-    console.error('Error processing document:', error);
-    return NextResponse.json(
-      { error: 'Failed to process document' },
-      { status: 500 }
-    );
-  }
 }

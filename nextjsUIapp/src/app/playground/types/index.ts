@@ -32,6 +32,7 @@ export interface GraphMetadata {
   maxVisibleNodes: number;
   hasMore: boolean;
   processedTriples: number;
+  filteredOutTriples?: number; // Number of triples filtered out (comments, descriptions, etc.)
 }
 
 export interface ProcessingProgress {

@@ -1,15 +1,22 @@
-# BrainKB UI
+# 🧠 BrainKB UI
 
-BrainKB UI is the user interface component of the BrainKB project, a large-scale knowledge graph infrastructure designed to facilitate neuroscience research by enabling intuitive exploration, search, analysis, and visualization of neuroscience knowledge. This repository contains the front-end code that powers the BrainKB user experience.
+A user interface for interacting with the BrainKB knowledge graph infrastructure.
 
-## Deployment Instructions
+---
 
-For deployment instructions, please visit the [BrainKB Deployment Documentation](https://sensein.group/brainkbdocs/deployment_userinterface.html).
+## 📸 Screenshots
+| Home | About | Admin |
+|------|-------|-----|
+| ![](nextjsUIapp/images/home.png) | ![](nextjsUIapp/images/about.png) | ![](nextjsUIapp/images/admin.png) |
 
+---
 
-## License
+## 🚀 Directory 
+- `nextjsUIapp` --> BrainKB UI and instructions.
+- `old_kept_for_reference/djangoUImanager` --> Obsolete and can be ignored. It's kept there just for reference.
+- `nextjsUIapp/ohbm-hackathon` --> Task for OHBM hackathon.
 
-This project is licensed under the [Apache License 2.0](https://opensource.org/license/apache-2-0).
+## 📄 License
 
-
-
+This project is licensed under the [MIT License](LICENSE).
+ 

@@ -1,10 +1,9 @@
 "use client";
-import SideBarKBFromConfig from "@/src/app/components/SideBarKBFromConfig";
+import SideBarKBFromConfig from "../../../components/SideBarKBFromConfig";
 import {useEffect, useState} from "react";
-import enititycardmapperconfig from '@/src/app/components/enititycardmapper.yaml';
-import {getData} from "@/src/app/components/getData";
-import {extractPredicateObjectPairs} from "@/src/app/components/helper";
-import {formatextractPredicateObjectPairs} from "@/src/app/components/helper";
+import enititycardmapperconfig from '../../../components/enititycardmapper.yaml';
+import {getData} from "../../../components/getData";
+import { processSparqlQueryResult } from "../../../components/helper";
 
 import { useParams } from "next/navigation";
 
@@ -46,14 +45,15 @@ const IndividualEntityPage = () => {
     const [error, setError] = useState<string | null>(null);
 
     const fetchData = async (queryParameter: QueryParameter) => {
-        const baseurl = process.env.NEXT_PUBLIC_API_ADMIN_HOST || "https://queryservice.brainkb.org";
-        const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql";
-
         try {
-            const response = await getData(queryParameter, endpoint, baseurl);
+            console.log("Fetching data with query:", queryParameter.sparql_query);
+            const response = await getData(queryParameter);
+            console.log("Raw response:", response);
             if (response.status === "success" && response.message?.results?.bindings) {
+                console.log("Bindings found:", response.message.results.bindings);
                 return response.message.results.bindings;
             }
+            console.log("No bindings found in response");
             return [];
         } catch (err) {
             console.error("Error fetching data:", err);
@@ -66,7 +66,7 @@ const IndividualEntityPage = () => {
             const page = enititycardmapperconfig.EntityViewCardsMaper.find((page: EntityViewCard) => page.slug === slug);
             const filename = page ? page.filename : "";
 
-            const model_data = await import(`@/src/app/components/${filename}`);
+            const model_data = await import(`../../../components/${filename}`);
             const extracted_data = model_data.default;
 
             setMainCardTitle(extracted_data?.name || "");
@@ -83,12 +83,38 @@ const IndividualEntityPage = () => {
 
     useEffect(() => {
         const fetchBoxData = async () => {
+            console.log("Fetching box data for extractedBoxes:", extractedBoxes);
+            console.log("Raw ID from params:", id);
+            console.log("Decoded ID:", decodeURIComponent(id));
+            
             for (const box of extractedBoxes) {
                 if (box.cardtype === "card" && box.sparql_query) {
-                    const query = box.sparql_query.replace(/\{0\}/g, decodeURIComponent(id));
+                    console.log("Processing box:", box);
+                    console.log("Original SPARQL query:", box.sparql_query);
+                    
+                    // Properly handle URI replacement for SPARQL
+                    let query = box.sparql_query;
+                    const decodedId = decodeURIComponent(id);
+                    
+                    // If the query uses VALUES with angle brackets, ensure proper URI formatting
+                    if (query.includes('VALUES') && query.includes('<{0}>')) {
+                        // Ensure the URI is properly formatted
+                        const uri = decodedId.startsWith('<') && decodedId.endsWith('>') 
+                            ? decodedId 
+                            : `<${decodedId}>`;
+                        query = query.replace(/<\{0\}>/g, uri);
+                        console.log("URI replacement - decodedId:", decodedId);
+                        console.log("URI replacement - final uri:", uri);
+                    } else {
+                        // For other cases, just do simple replacement
+                        query = query.replace(/\{0\}/g, decodedId);
+                    }
+                    
+                    console.log("Final processed query:", query);
                     const boxData = await fetchData({sparql_query: query});
-                    const cleanedData = await extractPredicateObjectPairs(boxData);
-                    const formattedData = await formatextractPredicateObjectPairs(cleanedData);
+                    console.log("Box data before processing:", boxData);
+                    const formattedData = await processSparqlQueryResult(boxData);
+                    console.log("Formatted data:", formattedData);
                     setData((prevData) => ({
                         ...prevData,
                         [box.slug || "unknown"]: formattedData,
