@@ -8,6 +8,7 @@ const generateFallbackSecret = () => {
 };
 
 export const authOptions = {
+  // https://github.com/nextauthjs/next-auth/pull/3143
   secret: process.env.NEXTAUTH_SECRET || generateFallbackSecret(),
   providers: [
     GithubProvider({
