@@ -1,5 +1,7 @@
 # 🧠 OHBM Hackathon: Configure an Entity Card View for Knowledge Bases
 
+> ⚠️ Before starting task first make sure you are able to deploy (see `nextjsUIapp` directory) and run the BrainKB UI. Use the below `Credentials and Configuration`. 
+
 In this task, you'll configure an **entity card view** to visualize structured resource data in the knowledge base.
 
 By the end, you should achieve the following:
