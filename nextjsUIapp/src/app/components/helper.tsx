@@ -248,12 +248,69 @@ export async function get_rapid_release_file(data) {
             function (err, data) {
                 if (err) {
                     console.error("Error fetching files:", err);
-                    reject(err); // Reject the Promise if there is an error
+                    reject(err);
                 } else {
-                    const releasedFiles = helper_format_s3_files_information(BUCKET_NAME, data);
-                    resolve(releasedFiles); // Resolve the Promise with the formatted file information
+                    const allfiles = helper_format_s3_files_information(BUCKET_NAME, data);
+                    resolve(allfiles);
                 }
             }
         );
     });
+}
+
+export async function processSparqlQueryResult(bindings) {
+    console.log("processSparqlQueryResult called with bindings:", bindings);
+    
+    if (!bindings || bindings.length === 0) {
+        console.log("No bindings found, returning empty object");
+        return {};
+    }
+
+    const firstRow = bindings[0];
+    console.log("First row:", firstRow);
+    
+    // Check if it's a predicate-object result
+    if (firstRow.predicate && firstRow.object) {
+        console.log("Processing as predicate-object result");
+        const predicateObjectPairs = bindings.map(item => ({
+            predicate: item.predicate?.value || 'N/A',
+            object: item.object?.value || 'N/A',
+        }));
+
+        const result = {};
+        predicateObjectPairs.forEach(({ predicate, object }) => {
+            let processedKey;
+            if (predicate.includes("#")) {
+                processedKey = predicate.split("#").pop();
+            } else {
+                processedKey = predicate.split("/").pop();
+            }
+
+            let processedValue = object;
+            if (typeof object === 'string' && object.includes("://")) {
+                 if (object.includes("#")) {
+                    processedValue = object.split("#").pop();
+                 } else {
+                    processedValue = object.split("/").pop();
+                 }
+            } else if (typeof object === 'string' && object.includes(":")) {
+                processedValue = object.split(":").pop();
+            }
+
+            result[processedKey] = processedValue;
+        });
+        console.log("Predicate-object result:", result);
+        return result;
+
+    } else {
+        console.log("Processing as flat result");
+        // Handle flat result. Just take the first row and extract values.
+        const result = {};
+        const row = bindings[0]; // Or aggregate later
+        for (const key in row) {
+            result[key] = row[key].value;
+        }
+        console.log("Flat result:", result);
+        return result;
+    }
 }
