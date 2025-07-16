@@ -1,0 +1,51 @@
+id: ui:1
+name: Resource_card
+slug: resource
+description: This page consists the extracted resources available in neuroscience publications, e.g., models, code and so on.
+boxes:
+  - box:
+    slug: summarybox
+    id: ui:2
+    name: Resource Card
+    cardtype: card
+    box_header:
+      key: id
+    sparql_query: |-
+        PREFIX res: <https://brainkb.org/ohbm-australia/structured-resource/>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        
+        SELECT ?name ?description ?category ?target ?score ?type ?url
+               ?specificTarget ?mappedTargetLabel ?mappedTargetId ?ontology
+               ?model ?dataset ?benchmark
+        WHERE {
+          GRAPH <https://brainkb.org/ohbm-australia/structured-resource/> {
+          
+            ?resource
+              res:name ?name ;
+              res:description ?description ;
+              res:category ?category ;
+              res:target ?target ;
+              res:judge_score ?score ;
+              res:type ?type ;
+              res:url ?url ;
+              res:specific_target ?specificTarget ;
+              res:mapped_specific_target_concept ?specificTargetURI ;
+              res:mapped_target_concept ?mappedGeneralTarget ;
+              res:mentions ?mentionURI .
+        
+            ?specificTargetURI
+              res:specific_target ?specificTarget ;
+              res:mapped_target_concept ?mappedTargetConcept .
+        
+            ?mappedTargetConcept
+              res:label ?mappedTargetLabel ;
+              res:id ?mappedTargetId ;
+              res:ontology ?ontology .
+        
+            OPTIONAL { ?mentionURI res:models ?model }
+            OPTIONAL { ?mentionURI res:datasets ?dataset }
+            OPTIONAL { ?mentionURI res:benchmarks ?benchmark }
+      
+          FILTER (?resource=<{0}>)
+          }
+        }
