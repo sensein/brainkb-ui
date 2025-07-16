@@ -6,4 +6,8 @@ EntityViewCardsMaper:
   - card: barcodedcellsample_card
     slug: "barcodedcellsample" #this should match the one from the config-knowledgebases.yaml
     filename: "barcodedcellsample_card.yaml"
+
+  - card: resource_card
+    slug: "resource" #this should match the one from the config-knowledgebases.yaml
+    filename: "resource.yaml"
      
