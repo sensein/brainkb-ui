@@ -6,11 +6,17 @@ import { getServerSession } from "next-auth";
 import SessionProvider from "./components/SessionProvider";
 import Footer from "./Footer";
 import dynamic from "next/dynamic"; // Required for Client Component import
+// Dynamically import the BrainKB Assistant client component
+// import BrainKBAssistantClient from "./components/BrainKBAssistantClient";
+import BrainKBAssistantWrapper from "./components/BrainKBAssistantClient";
+import AssistantInitializer from "./components/AssistantInitializer";
 
 // Dynamically import the CookieConsentBanner (client component)
-const CookieConsentBanner = dynamic(() => import("./components/CookieConsent"), { ssr: false });
+const CookieConsentBanner = dynamic(() => import("./components/CookieConsent"), { ssr: false
+});
 
 const inter = Inter({ subsets: ["latin"] });
+
 
 export const metadata: Metadata = {
   title: {
@@ -30,30 +36,39 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <meta httpEquiv="Content-Security-Policy" content="upgrade-insecure-requests" />
       </head>
       <body className={inter.className}>
-        {/* Google Tag Manager NoScript - Runs only if consent is given */}
-        <noscript>
+      {/* Google Tag Manager NoScript - Runs only if consent is given */}
+      <noscript>
           <iframe
-            src="https://www.googletagmanager.com/ns.html?id=GTM-W79DN38R"
-            height="0"
-            width="0"
-            style={{ display: "none", visibility: "hidden" }}
+              src="https://www.googletagmanager.com/ns.html?id=GTM-W79DN38R"
+              height="0"
+              width="0"
+              style={{display: "none", visibility: "hidden"}}
           ></iframe>
-        </noscript>
+      </noscript>
 
-        <SessionProvider session={session}>
+      <SessionProvider session={session}>
           <header>
-            <Navbar />
+              <Navbar/>
           </header>
 
-          <main className="flex min-h-screen flex-col">{children}</main>
+          <main className="flex min-h-screen flex-col">{children}
+
+          </main>
+
 
           <footer>
-            <Footer />
-          </footer>
-        </SessionProvider>
 
-        {/* Client-side Cookie Consent Banner */}
-        <CookieConsentBanner />
+              <Footer/>
+          </footer>
+      </SessionProvider>
+      <div className="assistant">
+          <BrainKBAssistantWrapper/>
+          <AssistantInitializer/>
+      </div>
+      {/* Client-side Cookie Consent Banner */}
+      <CookieConsentBanner/>
+
+
       </body>
     </html>
   );
