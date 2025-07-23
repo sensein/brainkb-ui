@@ -38,7 +38,7 @@ export default function CookieConsentBanner() {
         declineButtonText="Decline"
         enableDeclineButton
         cookieName="cookie_consent"
-        style={{ background: "#2B373B", color: "#ffffff", textAlign: "center" }}
+        style={{ background: "#2B373B", color: "#ffffff", textAlign: "center",zIndex: 9999999999999 }}
         buttonStyle={{ background: "#4CAF50", color: "#ffffff", fontSize: "14px" }}
         declineButtonStyle={{ background: "#f44336", color: "#ffffff", fontSize: "14px" }}
         expires={365}
