@@ -1,7 +1,6 @@
 version: '3'
-
 services:
-  web:
+  sandbox_web:
     build: .
     ports:
       - '4000:3000' # Maps host:container port
