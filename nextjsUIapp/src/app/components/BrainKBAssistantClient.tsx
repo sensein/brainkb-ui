@@ -142,10 +142,10 @@ const config = {
     primaryColor: 'from-purple-600 to-blue-600'
   },
   api: {
-    endpoint: 'http://localhost:8000/chat',
+    endpoint: 'http://127.0.0.1:8011/api/chat?stream=false',
     type: 'rest' as const,
     headers: { 
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     }
   },
   features: {
