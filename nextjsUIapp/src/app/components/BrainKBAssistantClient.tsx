@@ -142,7 +142,7 @@ const config = {
     primaryColor: 'from-purple-600 to-blue-600'
   },
   api: {
-    endpoint: 'http://127.0.0.1:8000/api/chat?stream=false',
+    endpoint: process.env.CHAT_SERVICE_API_ENDPOINT,
     type: 'rest' as const,
     headers: { 
       'Content-Type': 'application/json',
