@@ -817,10 +817,10 @@ braces@^3.0.3, braces@~3.0.2:
   dependencies:
     fill-range "^7.1.1"
 
-brainkb-assistant@^1.0.69:
-  version "1.0.69"
-  resolved "https://registry.npmjs.org/brainkb-assistant/-/brainkb-assistant-1.0.69.tgz"
-  integrity sha512-N8FbLHBt7/g+46XXdh1MCbx/XiMr5UuqDfidmKKz6g+iLvvJ/YuxWPZ1K4rTqbTfNQHUiYVJef+pS5DgCKKoqA==
+brainkb-assistant@^1.0.74:
+  version "1.0.74"
+  resolved "https://registry.npmjs.org/brainkb-assistant/-/brainkb-assistant-1.0.74.tgz"
+  integrity sha512-UEvPMmlZ5cM26eCL7qUjhyNXYxEkfV+6YL6npfVkGV80alXC7Sb3D9X5Yo3iLO40hb6pV9ftgBu2yEp8GhGuDA==
 
 browserslist@^4.23.3, "browserslist@>= 4.21.0":
   version "4.24.3"
