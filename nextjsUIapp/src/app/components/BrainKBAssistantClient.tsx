@@ -142,7 +142,7 @@ const config = {
     primaryColor: 'from-purple-600 to-blue-600'
   },
   api: {
-    endpoint: 'http://127.0.0.1:8011/api/chat?stream=false',
+    endpoint: 'http://127.0.0.1:8000/api/chat?stream=false',
     type: 'rest' as const,
     headers: { 
       'Content-Type': 'application/json',
@@ -163,32 +163,32 @@ const config = {
   // ✅ Custom Quick Actions
   quickActions: [
     {
-      id: 'find_connections',
-      label: '🔗 Find Connections',
+      id: 'find_connection',
+      label: 'Find Connections',
       icon: '🔗',
       action: 'find_connections',
       description: 'Find connections between entities'
     },
     {
       id: 'explore_entities',
-      label: '📊 Explore Entities',
+      label: 'Explore Concepts',
       icon: '📊',
       action: 'explore_entities',
       description: 'Explore entity data and relationships'
     },
     {
       id: 'search_knowledge',
-      label: '🔍 Search Knowledge',
+      label: 'Search Knowledge',
       icon: '🔍',
       action: 'search_knowledge',
       description: 'Search through knowledge base'
     },
     {
-      id: 'analyze_patterns',
-      label: '📈 Analyze Patterns',
+      id: 'rapid_release_data',
+      label: 'Rapid Release Data',
       icon: '📈',
-      action: 'analyze_patterns',
-      description: 'Analyze data patterns and trends'
+      action: 'Get 1000 rapid release data',
+      description: 'Get 1000 rapid release data.'
     },
     {
       id: 'explain_concepts',
@@ -199,7 +199,7 @@ const config = {
     },
     {
       id: 'show_evidence',
-      label: '📋 Show Evidence',
+      label: 'Show Evidence',
       icon: '📋',
       action: 'show_evidence',
       description: 'View supporting evidence'
