@@ -57,48 +57,48 @@ const config = {
   },
   // ✅ Custom Quick Actions
   quickActions: [
-    {
-      id: 'find_connection',
-      label: 'Find Connections',
-      icon: '🔗',
-      action: 'find_connections',
-      description: 'Find connections between entities'
-    },
-    {
-      id: 'explore_entities',
-      label: 'Explore Concepts',
-      icon: '📊',
-      action: 'explore_entities',
-      description: 'Explore entity data and relationships'
-    },
-    {
-      id: 'search_knowledge',
-      label: 'Search Knowledge',
-      icon: '🔍',
-      action: 'search_knowledge',
-      description: 'Search through knowledge base'
-    },
+    // {
+    //   id: 'find_connection',
+    //   label: 'Find Connections',
+    //   icon: '🔗',
+    //   action: 'find_connections',
+    //   description: 'Find connections between entities'
+    // },
+    // {
+    //   id: 'explore_entities',
+    //   label: 'Explore Concepts',
+    //   icon: '📊',
+    //   action: 'explore_entities',
+    //   description: 'Explore entity data and relationships'
+    // },
+    // {
+    //   id: 'search_knowledge',
+    //   label: 'Search Knowledge',
+    //   icon: '🔍',
+    //   action: 'search_knowledge',
+    //   description: 'Search through knowledge base'
+    // },
     {
       id: 'rapid_release_data',
       label: 'Rapid Release Data',
       icon: '📈',
-      action: 'Get 1000 rapid release data',
+      action: 'Get insights on rapid release data',
       description: 'Get 1000 rapid release data.'
     },
-    {
-      id: 'explain_concepts',
-      label: '💡 Explain Concepts',
-      icon: '💡',
-      action: 'explain_concepts',
-      description: 'Get detailed explanations'
-    },
-    {
-      id: 'show_evidence',
-      label: 'Show Evidence',
-      icon: '📋',
-      action: 'show_evidence',
-      description: 'View supporting evidence'
-    }
+    // {
+    //   id: 'explain_concepts',
+    //   label: '💡 Explain Concepts',
+    //   icon: '💡',
+    //   action: 'explain_concepts',
+    //   description: 'Get detailed explanations'
+    // },
+    // {
+    //   id: 'show_evidence',
+    //   label: 'Show Evidence',
+    //   icon: '📋',
+    //   action: 'show_evidence',
+    //   description: 'View supporting evidence'
+    // }
   ],
   ui: {
     position: 'bottom-right' as const,
