@@ -64,13 +64,13 @@ const config = {
     //   action: 'find_connections',
     //   description: 'Find connections between entities'
     // },
-    // {
-    //   id: 'explore_entities',
-    //   label: 'Explore Concepts',
-    //   icon: '📊',
-    //   action: 'explore_entities',
-    //   description: 'Explore entity data and relationships'
-    // },
+    {
+      id: 'explore_entities',
+      label: 'Explore Concepts',
+      icon: '📊',
+      action: 'Explore distinct entities',
+      description: 'Explore distinct entities'
+    },
     // {
     //   id: 'search_knowledge',
     //   label: 'Search Knowledge',
