@@ -41,56 +41,27 @@ async function getAuthToken(): Promise<string> {
 
 export async function POST(request: NextRequest) {
   try {
-    const formData = await request.formData();
-    const files = formData.getAll('files') as File[];
-    const namedGraphIri = formData.get('named_graph_iri') as string;
-    const host = formData.get('host') as string;
-    const endpoint = formData.get('endpoint') as string;
+    const body = await request.json();
+    const { data, endpoint } = body;
 
-    if (!files || files.length === 0) {
+    if (!data) {
       return NextResponse.json(
-        { error: 'No file provided' },
+        { error: 'No data provided' },
         { status: 400 }
       );
     }
 
-    if (!namedGraphIri) {
+    if (!endpoint) {
       return NextResponse.json(
-        { error: 'No named graph IRI provided' },
+        { error: 'Endpoint not provided' },
         { status: 400 }
       );
     }
-
-    if (!host || !endpoint) {
-      return NextResponse.json(
-        { error: 'Host or endpoint not provided' },
-        { status: 400 }
-      );
-    }
-
-    // Validate file type
-    for (const file of files) {
-      if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
-        return NextResponse.json(
-          { error: 'Invalid file type. Only .json files are allowed.' },
-          { status: 400 }
-        );
-      }
-    }
-
-    // Create FormData for the query service
-    const queryServiceFormData = new FormData();
-    
-    for (const file of files) {
-        queryServiceFormData.append('files', file);
-    }
-    
-    queryServiceFormData.append('named_graph_iri', namedGraphIri);
-
-    const queryServiceUrl = endpoint.startsWith('/') ? `${host}${endpoint}` : `${host}/${endpoint}`;
 
     // Get authentication token
-    let authHeaders: Record<string, string> = {};
+    let authHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
 
     try {
       const token = await getAuthToken();
@@ -100,17 +71,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Forward the request to the query service
-    const response = await fetch(queryServiceUrl, {
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: authHeaders,
-      body: queryServiceFormData,
+      body: JSON.stringify({ data }),
     });
 
     if (!response.ok) {
       const errorData = await response.text();
       console.error('Query service error:', errorData);
       return NextResponse.json(
-        { error: 'Failed to upload file to query service' },
+        { error: 'Failed to save data with query service' },
         { status: response.status }
       );
     }
@@ -119,12 +90,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'File uploaded successfully',
+      message: 'Data saved successfully',
       data: result
     });
 
   } catch (error) {
-    console.error('Error uploading file:', error);
+    console.error('Error saving data:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
