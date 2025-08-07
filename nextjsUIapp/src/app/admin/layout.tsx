@@ -16,9 +16,6 @@ export default async function AdminRootLayout({
               {children}
           </div>
       </div>
-      <footer>
-          <FooterAdmin/>
-      </footer>
     </>
   );
 }
