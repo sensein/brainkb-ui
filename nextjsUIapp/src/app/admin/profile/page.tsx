@@ -1,8 +1,58 @@
 "use client";
-import {useState, useEffect} from "react";
+import {useState, useEffect, useCallback} from "react";
 import {useRouter} from "next/navigation";
 import {useSession} from "next-auth/react";
 
+// Validation functions
+const validateEmail = (email: string): string => {
+    if (!email) return "Email is required";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) return "Please enter a valid email address";
+    return "";
+};
+
+const validateORCID = (orcid: string): string => {
+    if (!orcid) return "ORCID ID is required";
+    // ORCID format: XXXX-XXXX-XXXX-XXXX (16 digits with hyphens)
+    const orcidRegex = /^\d{4}-\d{4}-\d{4}-\d{3}[0-9X]$/;
+    if (!orcidRegex.test(orcid)) return "Please enter a valid ORCID ID (format: XXXX-XXXX-XXXX-XXXX)";
+    return "";
+};
+
+const validateWebsite = (url: string): string => {
+    if (!url) return ""; // Website is optional
+    try {
+        const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
+        if (!urlObj.protocol.startsWith('http')) return "Please enter a valid URL";
+        return "";
+    } catch {
+        return "Please enter a valid URL";
+    }
+};
+
+const validateLinkedIn = (linkedin: string): string => {
+    if (!linkedin) return ""; // LinkedIn is optional
+    // LinkedIn profile URL format
+    const linkedinRegex = /^https?:\/\/(www\.)?linkedin\.com\/(in|company)\/[a-zA-Z0-9-]+\/?$/;
+    if (!linkedinRegex.test(linkedin)) return "Please enter a valid LinkedIn profile URL";
+    return "";
+};
+
+const validateGitHub = (github: string): string => {
+    if (!github) return ""; // GitHub is optional
+    // GitHub username format (alphanumeric and hyphens)
+    const githubRegex = /^[a-zA-Z0-9-]+$/;
+    if (!githubRegex.test(github)) return "Please enter a valid GitHub username";
+    return "";
+};
+
+const validateGoogleScholar = (scholar: string): string => {
+    if (!scholar) return ""; // Google Scholar is optional
+    // Google Scholar ID format (alphanumeric)
+    const scholarRegex = /^[a-zA-Z0-9_-]+$/;
+    if (!scholarRegex.test(scholar)) return "Please enter a valid Google Scholar ID";
+    return "";
+};
 
 export default function Profile() {
     const {data: session} = useSession();
@@ -19,6 +69,8 @@ export default function Profile() {
     ];
     const [isEditing, setIsEditing] = useState(false);
     const [activeTab, setActiveTab] = useState("activity");
+    const [errors, setErrors] = useState<{[key: string]: string}>({});
+    const [validationTimeout, setValidationTimeout] = useState<NodeJS.Timeout | null>(null);
 
     const tabs = [
         { id: "activity", label: "Activity" },
@@ -43,13 +95,148 @@ export default function Profile() {
         conflict_of_interest:"I do not have any potential conflicts of interest."
     });
 
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (validationTimeout) {
+                clearTimeout(validationTimeout);
+            }
+        };
+    }, [validationTimeout]);
+
     const handleEditToggle = () => {
         setIsEditing(!isEditing);
+        setErrors({}); // Clear errors when toggling edit mode
     };
 
-    const handleInputChange = (e) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const {name, value} = e.target;
         setProfileData((prevData) => ({...prevData, [name]: value}));
+        
+        // Clear previous timeout
+        if (validationTimeout) {
+            clearTimeout(validationTimeout);
+        }
+        
+        // Set new timeout for debounced validation
+        const timeout = setTimeout(() => {
+            let errorMessage = "";
+            
+            switch (name) {
+                case "name":
+                    if (!value.trim()) {
+                        errorMessage = "Name is required";
+                    }
+                    break;
+                case "email":
+                    errorMessage = validateEmail(value);
+                    break;
+                case "orcidID":
+                    errorMessage = validateORCID(value);
+                    break;
+                case "websiteURL":
+                    errorMessage = validateWebsite(value);
+                    break;
+                case "linkedInID":
+                    errorMessage = validateLinkedIn(value);
+                    break;
+                case "githubID":
+                    errorMessage = validateGitHub(value);
+                    break;
+                case "googlescholarID":
+                    errorMessage = validateGoogleScholar(value);
+                    break;
+                case "role":
+                    if (!value.trim()) {
+                        errorMessage = "Role is required";
+                    }
+                    break;
+                case "areaOfExpertise":
+                    if (!value.trim()) {
+                        errorMessage = "Area of expertise is required";
+                    }
+                    break;
+                case "organization":
+                    if (!value.trim()) {
+                        errorMessage = "Organization is required";
+                    }
+                    break;
+                case "country":
+                    if (!value.trim() || value === "N/A") {
+                        errorMessage = "Please select a country";
+                    }
+                    break;
+                case "biography":
+                    if (!value.trim()) {
+                        errorMessage = "Biography is required";
+                    }
+                    break;
+                case "conflict_of_interest":
+                    if (!value.trim()) {
+                        errorMessage = "Conflict of interest statement is required";
+                    }
+                    break;
+            }
+            
+            setErrors(prev => ({...prev, [name]: errorMessage}));
+        }, 300); // 300ms delay for better performance
+        
+        setValidationTimeout(timeout);
+    };
+
+    const validateForm = (): boolean => {
+        const newErrors: {[key: string]: string} = {};
+        
+        // Validate required fields
+        if (!profileData.name.trim()) {
+            newErrors.name = "Name is required";
+        }
+        
+        const emailError = validateEmail(profileData.email);
+        if (emailError) newErrors.email = emailError;
+        
+        const orcidError = validateORCID(profileData.orcidID);
+        if (orcidError) newErrors.orcidID = orcidError;
+        
+        if (!profileData.role.trim()) {
+            newErrors.role = "Role is required";
+        }
+        
+        if (!profileData.areaOfExpertise.trim()) {
+            newErrors.areaOfExpertise = "Area of expertise is required";
+        }
+        
+        if (!profileData.organization.trim()) {
+            newErrors.organization = "Organization is required";
+        }
+        
+        if (!profileData.country.trim() || profileData.country === "N/A") {
+            newErrors.country = "Please select a country";
+        }
+        
+        if (!profileData.biography.trim()) {
+            newErrors.biography = "Biography is required";
+        }
+        
+        if (!profileData.conflict_of_interest.trim()) {
+            newErrors.conflict_of_interest = "Conflict of interest statement is required";
+        }
+        
+        // Validate optional fields
+        const websiteError = validateWebsite(profileData.websiteURL);
+        if (websiteError) newErrors.websiteURL = websiteError;
+        
+        const linkedinError = validateLinkedIn(profileData.linkedInID);
+        if (linkedinError) newErrors.linkedInID = linkedinError;
+        
+        const githubError = validateGitHub(profileData.githubID);
+        if (githubError) newErrors.githubID = githubError;
+        
+        const scholarError = validateGoogleScholar(profileData.googlescholarID);
+        if (scholarError) newErrors.googlescholarID = scholarError;
+        
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     if (!session) {
@@ -58,8 +245,11 @@ export default function Profile() {
     }
 
     const handleSave = () => {
-        // Add save logic here, e.g., an API call
-        setIsEditing(false);
+        if (validateForm()) {
+            // Add save logic here, e.g., an API call
+            setIsEditing(false);
+            setErrors({});
+        }
     };
 
     return (
@@ -255,7 +445,7 @@ export default function Profile() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
                         <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                            Area of Expertise
+                            Area of Expertise (E.g., Machine learning, Knowledge Graphs)
                         </h4>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                             {profileData.areaOfExpertise}
@@ -271,7 +461,7 @@ export default function Profile() {
                     </div>
                     <div>
                         <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                            Organization
+                            Organization (Provide in comma separated format if multiple.)
                         </h4>
                         <p className="text-sm text-blue-500 hover:underline">
                             {profileData.organization}
@@ -370,8 +560,24 @@ export default function Profile() {
                                     name="name"
                                     value={profileData.name}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none"
+                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${
+                                        errors.name ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
+                                    }`}
                                 />
+                                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-2">Email</label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={profileData.email}
+                                    onChange={handleInputChange}
+                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${
+                                        errors.email ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
+                                    }`}
+                                />
+                                {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                             </div>
                             <div className="mb-4">
                                 <label className="block text-sm font-medium mb-2">Role</label>
@@ -379,59 +585,83 @@ export default function Profile() {
                                     type="text"
                                     name="role"
                                     value={profileData.role}
+                                    readOnly={true}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none"
+                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${
+                                        errors.role ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
+                                    }`}
                                 />
+                                {errors.role && <p className="text-red-500 text-xs mt-1">{errors.role}</p>}
                             </div>
                             <div className="mb-4">
                                 <label className="block text-sm font-medium mb-2">Website</label>
                                 <input
-                                    type="text"
+                                    type="url"
                                     name="websiteURL"
+                                    placeholder="https://example.com"
                                     value={profileData.websiteURL}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none"
+                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${
+                                        errors.websiteURL ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
+                                    }`}
                                 />
+                                {errors.websiteURL && <p className="text-red-500 text-xs mt-1">{errors.websiteURL}</p>}
                             </div>
                             <div className="mb-4">
                                 <label className="block text-sm font-medium mb-2">ORCID ID</label>
                                 <input
                                     type="text"
                                     name="orcidID"
+                                    placeholder="0000-0000-0000-0000"
                                     value={profileData.orcidID}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none"
+                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${
+                                        errors.orcidID ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
+                                    }`}
                                 />
+                                {errors.orcidID && <p className="text-red-500 text-xs mt-1">{errors.orcidID}</p>}
                             </div>
                             <div className="mb-4">
                                 <label className="block text-sm font-medium mb-2">LinkedIn</label>
                                 <input
-                                    type="text"
+                                    type="url"
                                     name="linkedInID"
+                                    placeholder="https://linkedin.com/in/username"
                                     value={profileData.linkedInID}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none"
+                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${
+                                        errors.linkedInID ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
+                                    }`}
                                 />
+                                {errors.linkedInID && <p className="text-red-500 text-xs mt-1">{errors.linkedInID}</p>}
                             </div>
                             <div className="mb-4">
                                 <label className="block text-sm font-medium mb-2">GitHub</label>
                                 <input
                                     type="text"
                                     name="githubID"
+                                    placeholder="username"
                                     value={profileData.githubID}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none"
+                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${
+                                        errors.githubID ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
+                                    }`}
                                 />
+                                {errors.githubID && <p className="text-red-500 text-xs mt-1">{errors.githubID}</p>}
                             </div>
                             <div className="mb-4">
                                 <label className="block text-sm font-medium mb-2">Google Scholar</label>
                                 <input
                                     type="text"
                                     name="googlescholarID"
+                                    placeholder="Scholar ID"
                                     value={profileData.googlescholarID}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none"
+                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${
+                                        errors.googlescholarID ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
+                                    }`}
                                 />
+                                {errors.googlescholarID && <p className="text-red-500 text-xs mt-1">{errors.googlescholarID}</p>}
                             </div>
                             <div className="mb-4">
                                 <label className="block text-sm font-medium mb-2">Area of Expertise</label>
@@ -440,8 +670,11 @@ export default function Profile() {
                                     name="areaOfExpertise"
                                     value={profileData.areaOfExpertise}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none"
+                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${
+                                        errors.areaOfExpertise ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
+                                    }`}
                                 />
+                                {errors.areaOfExpertise && <p className="text-red-500 text-xs mt-1">{errors.areaOfExpertise}</p>}
                             </div>
                             <div className="mb-4">
                                 <label className="block text-sm font-medium mb-2">Organization</label>
@@ -450,8 +683,11 @@ export default function Profile() {
                                     name="organization"
                                     value={profileData.organization}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none"
+                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${
+                                        errors.organization ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
+                                    }`}
                                 />
+                                {errors.organization && <p className="text-red-500 text-xs mt-1">{errors.organization}</p>}
                             </div>
                             <div className="mb-4">
                                 <label className="block text-sm font-medium mb-2">Country</label>
@@ -459,7 +695,9 @@ export default function Profile() {
                                     name="country"
                                     value={profileData.country}
                                     onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none"
+                                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${
+                                        errors.country ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
+                                    }`}
                                 >
                                     {countries.map((country) => (
                                         <option key={country} value={country}>
@@ -467,6 +705,7 @@ export default function Profile() {
                                         </option>
                                     ))}
                                 </select>
+                                {errors.country && <p className="text-red-500 text-xs mt-1">{errors.country}</p>}
                             </div>
                         </div>
                         {/*conflict of interest*/}
@@ -476,9 +715,12 @@ export default function Profile() {
                                 name="conflict_of_interest"
                                 value={profileData.conflict_of_interest || "I do not have any potential conflicts of interest."}
                                 onChange={handleInputChange}
-                                className="w-full px-3 py-2 border rounded-lg focus:outline-none"
+                                className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${
+                                    errors.conflict_of_interest ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
+                                }`}
                                 rows={5}
                             ></textarea>
+                            {errors.conflict_of_interest && <p className="text-red-500 text-xs mt-1">{errors.conflict_of_interest}</p>}
                         </div>
                         {/* Biography section */}
                         <div className="mb-4">
@@ -487,9 +729,12 @@ export default function Profile() {
                                 name="biography"
                                 value={profileData.biography}
                                 onChange={handleInputChange}
-                                className="w-full px-3 py-2 border rounded-lg focus:outline-none"
+                                className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${
+                                    errors.biography ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
+                                }`}
                                 rows={5}
                             ></textarea>
+                            {errors.biography && <p className="text-red-500 text-xs mt-1">{errors.biography}</p>}
                         </div>
 
                         <div className="flex justify-end">
