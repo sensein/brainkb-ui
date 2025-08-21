@@ -64,15 +64,18 @@ export async function POST(request: NextRequest) {
     // Forward the request to the profile creation service
     const response = await fetch(create_endpoint, {
       method: 'POST',
-      headers: authHeaders,
-      body: user_profile_data,
+      headers: {
+        ...authHeaders,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(user_profile_data),
     });
 
     if (!response.ok) {
       const errorData = await response.text();
       console.error('Profile creation error:', errorData);
       return NextResponse.json(
-        { error: 'Failed to create profile' },
+        { error: 'Failed to create profile', details: errorData },
         { status: response.status }
       );
     }
@@ -81,8 +84,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'File uploaded successfully',
-      // data: result
+      message: 'Profile created successfully',
+      data: result
     });
 
   } catch (error) {
