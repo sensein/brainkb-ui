@@ -6,92 +6,145 @@ interface TokenResponse {
   expires_in: number;
 }
 
+interface UserProfile {
+  email: string;
+  orcid_id: string;
+  [key: string]: any;
+}
+
 async function getAuthToken(): Promise<string> {
-  const jwtUser = process.env.NEXT_PUBLIC_JWT_USER;
-  const jwtPassword = process.env.NEXT_PUBLIC_JWT_PASSWORD;
-  const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE;
+  const {
+    NEXT_PUBLIC_JWT_USER: jwtUser,
+    NEXT_PUBLIC_JWT_PASSWORD: jwtPassword,
+    NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE: tokenEndpoint,
+  } = process.env;
 
   if (!jwtUser || !jwtPassword || !tokenEndpoint) {
     throw new Error('JWT credentials not configured');
   }
 
+  const response = await fetch(tokenEndpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: jwtUser, password: jwtPassword }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Token request failed: ${response.status}`);
+  }
+
+  const tokenData: TokenResponse = await response.json();
+  return tokenData.access_token;
+}
+
+async function withAuthHeaders(): Promise<Record<string, string>> {
   try {
-    const response = await fetch(tokenEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: jwtUser,
-        password: jwtPassword
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Token request failed: ${response.status}`);
-    }
-
-    const tokenData: TokenResponse = await response.json();
-    return tokenData.access_token;
+    const token = await getAuthToken();
+    return { Authorization: `Bearer ${token}` };
   } catch (error) {
-    console.error('Failed to get JWT token:', error);
-    throw new Error('Authentication failed');
+    console.warn('Failed to get bearer token, proceeding without authentication');
+    return {};
   }
 }
 
+
+async function checkUserExists(
+  getEndpoint: string,
+  params: URLSearchParams,
+  headers: Record<string, string>
+): Promise<UserProfile | null> {
+  const response = await fetch(`${getEndpoint}?${params}`, {
+    method: 'GET',
+    headers,
+  });
+
+  if (!response.ok) return null;
+
+  return response.json();
+}
+
+async function updateUser(
+  updateEndpoint: string,
+  params: URLSearchParams,
+  userData: UserProfile,
+  headers: Record<string, string>
+): Promise<Response> {
+  return fetch(updateEndpoint, {
+    method: 'PUT',
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    body: JSON.stringify(userData),
+  });
+}
+
+async function createUser(
+  createEndpoint: string,
+  userData: UserProfile,
+  headers: Record<string, string>
+): Promise<Response> {
+  return fetch(createEndpoint, {
+    method: 'POST',
+    headers: { ...headers, 'Content-Type': 'application/json' },
+    body: JSON.stringify(userData),
+  });
+}
+
+
 export async function POST(request: NextRequest) {
   try {
-    const user_profile_data = await request.json();
+    const userData: UserProfile = await request.json();
+    const { email, orcid_id } = userData;
 
-    console.log(user_profile_data);
+    const {
+      NEXT_PUBLIC_CREATE_USER_PROFILE_ENDPOINT_USER_MANAGEMENT_SERVICE: createEndpoint,
+      NEXT_PUBLIC_GET_ENDPOINT_USER_PROFILE_USER_MANAGEMENT_SERVICE: getEndpoint,
+      NEXT_PUBLIC_UPDATE_ENDPOINT_USER_PROFILE_USER_MANAGEMENT_SERVICE: updateEndpoint,
+    } = process.env;
 
-    const create_endpoint = process.env.NEXT_PUBLIC_CREATE_ENDPOINT_USER_MANAGEMENT_SERVICE;
-
-
-    // Get authentication token
-    let authHeaders: Record<string, string> = {};
-
-    try {
-      const token = await getAuthToken();
-      authHeaders['Authorization'] = `Bearer ${token}`;
-    } catch (error) {
-      console.warn('Failed to get bearer token, proceeding without authentication');
-    }
-
-    console.log('Making request to:', create_endpoint);
-    console.log('Headers:', authHeaders);
-
-    // Forward the request to the profile creation service
-    const response = await fetch(create_endpoint, {
-      method: 'POST',
-      headers: {
-        ...authHeaders,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(user_profile_data),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error('Profile creation error:', errorData);
+    if (!createEndpoint || !getEndpoint || !updateEndpoint) {
       return NextResponse.json(
-        { error: 'Failed to create profile', details: errorData },
-        { status: response.status }
+        { error: 'Profile service endpoints not configured' },
+        { status: 500 }
       );
     }
 
-    const result = await response.json();
+    const params = new URLSearchParams({ email, orcid_id });
+    const headers = await withAuthHeaders();
 
-    return NextResponse.json({
-      success: true,
-      message: 'Profile created successfully',
-      data: result
-    });
+    // Step 1: Check if user exists
+    const existingProfile = await checkUserExists(getEndpoint, params, headers);
+    // safe check just in case
+    if (existingProfile?.email === email || existingProfile?.orcid_id === orcid_id) {
+      // Step 2: Update existing profile
+      const updateResponse = await updateUser(updateEndpoint, params, userData, await withAuthHeaders());
+
+      if (!updateResponse.ok) {
+        const errorData = await updateResponse.text();
+        return NextResponse.json(
+          { error: 'Failed to update profile', details: errorData },
+          { status: updateResponse.status }
+        );
+      }
+
+      return NextResponse.json({ success: true, message: 'Profile updated successfully' });
+    }
+
+    // Step 3: Create new profile
+    const createResponse = await createUser(createEndpoint, userData, await withAuthHeaders());
+
+    if (!createResponse.ok) {
+      const errorData = await createResponse.text();
+      return NextResponse.json(
+        { error: 'Failed to create profile', details: errorData },
+        { status: createResponse.status }
+      );
+    }
+
+    return NextResponse.json({ success: true, message: 'Profile created successfully' });
 
   } catch (error) {
-    console.error('Error uploading file:', error);
+    console.error('Error processing request:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: (error as Error).message },
       { status: 500 }
     );
   }
