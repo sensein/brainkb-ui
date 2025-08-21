@@ -48,7 +48,7 @@ async function withAuthHeaders(): Promise<Record<string, string>> {
 }
 
 
-async function checkUserExists(
+async function getUser(
   getEndpoint: string,
   params: URLSearchParams,
   headers: Record<string, string>
@@ -88,6 +88,50 @@ async function createUser(
   });
 }
 
+export async function GET(request: NextRequest) {
+  try {
+    const { NEXT_PUBLIC_GET_ENDPOINT_USER_PROFILE_USER_MANAGEMENT_SERVICE: getEndpoint } = process.env;
+
+    if (!getEndpoint) {
+      return NextResponse.json(
+        { error: 'Profile service endpoint not configured' },
+        { status: 500 }
+      );
+    }
+
+
+    const { searchParams } = new URL(request.url);
+    const email = searchParams.get('email') ?? '';
+    const orcid_id = searchParams.get('orcid_id') ?? '';
+
+    if (!email && !orcid_id) {
+      return NextResponse.json(
+        { error: 'Missing required query parameters: email or orcid_id' },
+        { status: 400 }
+      );
+    }
+
+    const params = new URLSearchParams({ email, orcid_id });
+    const headers = await withAuthHeaders();
+    const existingProfile = await getUser(getEndpoint, params, headers);
+
+    if (!existingProfile) {
+      return NextResponse.json(
+        { error: 'Profile not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ data: existingProfile });
+
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: (error as Error).message },
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -111,7 +155,7 @@ export async function POST(request: NextRequest) {
     const headers = await withAuthHeaders();
 
     // Step 1: Check if user exists
-    const existingProfile = await checkUserExists(getEndpoint, params, headers);
+    const existingProfile = await getUser(getEndpoint, params, headers);
     // safe check just in case
     if (existingProfile?.email === email || existingProfile?.orcid_id === orcid_id) {
       // Step 2: Update existing profile
