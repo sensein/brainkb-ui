@@ -469,17 +469,7 @@ export default function Profile() {
                         {profileData.roles.find(r => r.is_active)?.role || "No active role"}
                     </p>
                     {profileData.orcid_id && (
-                        <div className="mt-2 flex items-center justify-center">
-                            <span
-                                className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full flex items-center">
-                                <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd"
-                                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                          clipRule="evenodd"/>
-                                </svg>
-                                ORCID Verified
-                            </span>
-                        </div>
+                        ""
                     )}
                     <div className="flex justify-center mt-5 space-x-4">
                         <div className="relative group">
@@ -528,10 +518,7 @@ export default function Profile() {
                                 </svg>
                                 ORCID
                                 {profileData.orcid_id && (
-                                    <span
-                                        className="ml-1 text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded-full">
-                                        ✓
-                                    </span>
+                                    ""
                                 )}
                             </a>
                             <div
@@ -1049,10 +1036,16 @@ export default function Profile() {
                                     <button
                                         type="button"
                                         onClick={() => {
+                                            // Prevent removing the last country
+                                            if (profileData.countries.length <= 1) {
+                                                showNotification('error', 'At least one country is required');
+                                                return;
+                                            }
                                             const newCountries = profileData.countries.filter((_, i) => i !== index);
                                             setProfileData(prev => ({...prev, countries: newCountries}));
                                         }}
                                         className="text-red-500 text-sm hover:text-red-700"
+                                        disabled={profileData.countries.length <= 1}
                                     >
                                         Remove
                                     </button>
@@ -1163,10 +1156,16 @@ export default function Profile() {
                                         <button
                                             type="button"
                                             onClick={() => {
+                                                // Prevent removing the last organization
+                                                if (profileData.organizations.length <= 1) {
+                                                    showNotification('error', 'At least one organization is required');
+                                                    return;
+                                                }
                                                 const newOrgs = profileData.organizations.filter((_, i) => i !== index);
                                                 setProfileData(prev => ({...prev, organizations: newOrgs}));
                                             }}
                                             className="text-red-500 text-sm hover:text-red-700"
+                                            disabled={profileData.organizations.length <= 1}
                                         >
                                             Remove
                                         </button>
@@ -1268,10 +1267,16 @@ export default function Profile() {
                                         <button
                                             type="button"
                                             onClick={() => {
+                                                // Prevent removing the last education entry
+                                                if (profileData.education.length <= 1) {
+                                                    showNotification('error', 'At least one education entry is required');
+                                                    return;
+                                                }
                                                 const newEdu = profileData.education.filter((_, i) => i !== index);
                                                 setProfileData(prev => ({...prev, education: newEdu}));
                                             }}
                                             className="text-red-500 text-sm hover:text-red-700"
+                                            disabled={profileData.education.length <= 1}
                                         >
                                             Remove
                                         </button>
@@ -1344,10 +1349,16 @@ export default function Profile() {
                                         <button
                                             type="button"
                                             onClick={() => {
+                                                // Prevent removing the last expertise area
+                                                if (profileData.expertise_areas.length <= 1) {
+                                                    showNotification('error', 'At least one expertise area is required');
+                                                    return;
+                                                }
                                                 const newExpertise = profileData.expertise_areas.filter((_, i) => i !== index);
                                                 setProfileData(prev => ({...prev, expertise_areas: newExpertise}));
                                             }}
                                             className="text-red-500 text-sm hover:text-red-700"
+                                            disabled={profileData.expertise_areas.length <= 1}
                                         >
                                             Remove
                                         </button>
@@ -1440,10 +1451,16 @@ export default function Profile() {
                                         <button
                                             type="button"
                                             onClick={() => {
+                                                // Prevent removing the last role
+                                                if (profileData.roles.length <= 1) {
+                                                    showNotification('error', 'At least one role is required');
+                                                    return;
+                                                }
                                                 const newRoles = profileData.roles.filter((_, i) => i !== index);
                                                 setProfileData(prev => ({...prev, roles: newRoles}));
                                             }}
                                             className="text-red-500 text-sm hover:text-red-700"
+                                            disabled={profileData.roles.length <= 1}
                                         >
                                             Remove
                                         </button>
