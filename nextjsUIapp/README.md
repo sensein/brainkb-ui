@@ -26,41 +26,72 @@ cd nextjsUIapp
 
 Before deployment, create and configure a `.env.local` file. Most required environment variables are documented [here](http://docs.brainkb.org/deployment_userinterface.html), but note that recent updates might not yet be reflected there.
 
-Below is a brief description of essential environment variables:
-
-#### 🔐 Authentication - optional unless you want to access the admin panel.
-```env
-GITHUB_CLIENT_ID=            # GitHub OAuth App Client ID (for login)
-GITHUB_CLIENT_SECRET=        # GitHub OAuth App Client Secret
-NEXTAUTH_SECRET=             # Secret used by NextAuth.js to encrypt session tokens
-NEXTAUTH_URL=http://localhost:3000  # Public URL for the app (used in auth callbacks, set to localhost for local dev)
-```
-
-> **Note:** ORCID login will not work with localhost due to callback restrictions.
-
-#### 🔑 JWT & Token Authentication
-```env
-NEXT_PUBLIC_JWT_USER=            # Email/username for JWT-protected API access
-NEXT_PUBLIC_JWT_PASSWORD=        # Password for JWT authentication
-NEXT_PUBLIC_TOKEN_ENDPOINT=      # Endpoint to obtain JWT token (e.g., https://queryservice.brainkb.org/token)
-```
-
 #### 🧠 API Configuration
 ```env
-NEXT_PUBLIC_API_ADMIN_HOST=https://your hosturl  # Base API host
+########################################################################################################
+######### OAuth Credentials (Optional) ###############################################################
+# Required only if you want to enable login via GitHub or access the admin dashboard.
+# ORCID login is not supported in local development.
+########################################################################################################
+GITHUB_CLIENT_ID=XXXXX
+GITHUB_CLIENT_SECRET=XXXXX
 
-# The values of the endpoint below are not to be changed.
-# SPARQL query endpoint (used for querying knowledge graph)
-NEXT_PUBLIC_API_QUERY_ENDPOINT=query/sparql
+# Random string for securing NextAuth sessions
+NEXTAUTH_SECRET=ANY_RANDOM_STRING_SECRET
+# URL for local deployment (adjust for production)
+NEXTAUTH_URL=http://localhost:3000
 
-# Fetch available named graphs
-NEXT_PUBLIC_API_NAMED_GRAPH_QUERY_ENDPOINT=query/registered-named-graphs
 
-# Upload RDF/TTL/JSON-LD files representing KG triples
-NEXT_PUBLIC_API_ADMIN_INSERT_KGS_JSONLD_TTL_ENDPOINT=insert/files/knowledge-graph-triples
+########################################################################################################
+######### Structured Resource Extraction ##############################################################
+# Endpoints for uploading and saving structured resources.
+########################################################################################################
+NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT=http://127.0.0.1:8007/api/structured-resource-extraction
+NEXT_PUBLIC_API_ADMIN_SAVE_STRUCTURED_RESOURCE_ENDPOINT=http://127.0.0.1:8007/api/save/structured-resource
 
-# Upload structured JSON files (auto-converted to KG triples)
-NEXT_PUBLIC_API_ADMIN_INSERT_STRUCTURED_JSON_ENDPOINT=insert/files/structured-resource-json-to-kg
+
+########################################################################################################
+######### JWT Authentication ##########################################################################
+# Common JWT credentials for accessing backend services.
+########################################################################################################
+NEXT_PUBLIC_JWT_USER=XXXX
+NEXT_PUBLIC_JWT_PASSWORD=XXXX
+
+
+########################################################################################################
+######### User Profile Management #####################################################################
+# Endpoints for creating, fetching, and updating user profiles.
+########################################################################################################
+NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE=http://127.0.0.1:8007/api/token
+NEXT_PUBLIC_CREATE_USER_PROFILE_ENDPOINT_USER_MANAGEMENT_SERVICE=http://127.0.0.1:8007/api/users/profile
+NEXT_PUBLIC_GET_ENDPOINT_USER_PROFILE_USER_MANAGEMENT_SERVICE=http://127.0.0.1:8007/api/users/profile
+NEXT_PUBLIC_UPDATE_ENDPOINT_USER_PROFILE_USER_MANAGEMENT_SERVICE=http://127.0.0.1:8007/api/users/profile
+NEXT_PUBLIC_GET_ENDPOINT_USER_ACTIVITY_USER_MANAGEMENT_SERVICE=
+
+
+########################################################################################################
+######### Chat Service #################################################################################
+# Endpoints for chat-related token generation and message streaming.
+########################################################################################################
+NEXT_PUBLIC_TOKEN_ENDPOINT_CHAT_SERVICE=http://127.0.0.1:8007/api/token
+NEXT_PUBLIC_CHAT_SERVICE_API_ENDPOINT=http://127.0.0.1:8011/api/chat?stream=false
+
+
+########################################################################################################
+######### Query Service ################################################################################
+# Endpoints for querying the Knowledge Graph and uploading triples.
+########################################################################################################
+NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE=http://127.0.0.1:8010/token
+
+# Query registered named graphs
+NEXT_PUBLIC_API_NAMED_GRAPH_QUERY_ENDPOINT=http://127.0.0.1:8010/query/registered-named-graphs
+
+# SPARQL query endpoint (Knowledge Graph querying)
+NEXT_PUBLIC_API_QUERY_ENDPOINT=http://127.0.0.1:8010/query/sparql/
+
+# Upload RDF/TTL/JSON-LD files representing Knowledge Graph triples
+NEXT_PUBLIC_API_ADMIN_INSERT_KGS_JSONLD_TTL_ENDPOINT=http://127.0.0.1:8010/insert/files/knowledge-graph-triples
+
 ```
 
 > **Note:**  
