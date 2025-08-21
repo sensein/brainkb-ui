@@ -1,9 +1,9 @@
 interface ApiConfig {
-  baseUrl: string;
   jwtUser: string;
   jwtPassword: string;
   tokenEndpoint: string;
   useBearerToken: boolean;
+  queryEndpoint: string;
 }
 
 interface TokenResponse {
@@ -20,11 +20,13 @@ class ApiService {
 
   private constructor() {
     this.config = {
-      baseUrl: process.env.NEXT_PUBLIC_API_ADMIN_HOST || "https://queryservice.brainkb.org",
       jwtUser: process.env.NEXT_PUBLIC_JWT_USER || "",
       jwtPassword: process.env.NEXT_PUBLIC_JWT_PASSWORD || "",
-      tokenEndpoint: process.env.NEXT_PUBLIC_TOKEN_ENDPOINT || "",
-      useBearerToken: process.env.NEXT_PUBLIC_USE_BEARER_TOKEN !== "false" // Default to true unless explicitly set to false
+      tokenEndpoint: process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE || "",
+      useBearerToken: process.env.NEXT_PUBLIC_USE_BEARER_TOKEN !== "true", // Default true
+      queryEndpoint:
+        process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT ||
+        "https://queryservice.brainkb.org/query/sparql",
     };
   }
 
@@ -36,22 +38,20 @@ class ApiService {
   }
 
   private async getToken(): Promise<string> {
-    // Check if we have a valid token
     if (this.token && Date.now() < this.tokenExpiry) {
       return this.token;
     }
 
-    // Get new token
     try {
       const response = await fetch(this.config.tokenEndpoint, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           email: this.config.jwtUser,
-          password: this.config.jwtPassword
-        })
+          password: this.config.jwtPassword,
+        }),
       });
 
       if (!response.ok) {
@@ -60,28 +60,26 @@ class ApiService {
 
       const tokenData: TokenResponse = await response.json();
       this.token = tokenData.access_token;
-      // Set expiry to 5 minutes before actual expiry to be safe
-      this.tokenExpiry = Date.now() + (tokenData.expires_in - 300) * 1000;
+      this.tokenExpiry = Date.now() + (tokenData.expires_in - 300) * 1000; // refresh 5 min early
 
       return this.token;
     } catch (error) {
-      console.error('Failed to get JWT token:', error);
-      throw new Error('Authentication failed');
+      console.error("Failed to get JWT token:", error);
+      throw new Error("Authentication failed");
     }
   }
 
   private async getHeaders(): Promise<Record<string, string>> {
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
+      Accept: "application/json",
     };
 
     if (this.config.useBearerToken) {
       try {
         const token = await this.getToken();
-        headers['Authorization'] = `Bearer ${token}`;
+        headers["Authorization"] = `Bearer ${token}`;
       } catch (error) {
-        console.warn('Failed to get bearer token, proceeding without authentication');
+        console.warn("Failed to get bearer token, proceeding without authentication");
       }
     }
 
@@ -89,27 +87,27 @@ class ApiService {
   }
 
   public async query(
-    queryParameter: Record<string, string> = {}, 
-    endpoint?: string,
-    useBearerToken?: boolean
+    queryParameter: Record<string, string> = {},
+    endpoint?: string
   ): Promise<any> {
     try {
       const headers = await this.getHeaders();
-      const apiEndpoint = endpoint 
-        ? `${this.config.baseUrl}/${endpoint}`
-        : `${this.config.baseUrl}/${process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql"}`;
-      
-      // Construct query string from query_parameter object if it is not empty
+      const apiEndpoint = endpoint || this.config.queryEndpoint;
+
       const queryString = new URLSearchParams(queryParameter).toString();
-      const urlWithQuery = queryString ? `${apiEndpoint}?${queryString}` : apiEndpoint;
+      const urlWithQuery = queryString
+        ? `${apiEndpoint}?${queryString}`
+        : apiEndpoint;
 
       const response = await fetch(urlWithQuery, {
-        method: 'GET',
+        method: "GET",
         headers,
       });
 
       if (!response.ok) {
-        throw new Error(`Network response was not ok. Status: ${urlWithQuery} - ${response.status}`);
+        throw new Error(
+          `Network response was not ok. Status: ${urlWithQuery} - ${response.status}`
+        );
       }
 
       return await response.json();
@@ -119,29 +117,28 @@ class ApiService {
     }
   }
 
-  public async queryWithCustomBaseUrl(
-    queryParameter: Record<string, string> = {}, 
-    endpoint?: string,
-    baseUrl?: string,
-    useBearerToken?: boolean
+  public async queryWithCustomEndpoint(
+    queryParameter: Record<string, string> = {},
+    endpoint?: string
   ): Promise<any> {
     try {
       const headers = await this.getHeaders();
-      const finalBaseUrl = baseUrl || this.config.baseUrl;
-      const finalEndpoint = endpoint || process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql";
-      const apiEndpoint = `${finalBaseUrl}/${finalEndpoint}`;
-      
-      // Construct query string from query_parameter object if it is not empty
+      const apiEndpoint = endpoint || this.config.queryEndpoint;
+
       const queryString = new URLSearchParams(queryParameter).toString();
-      const urlWithQuery = queryString ? `${apiEndpoint}?${queryString}` : apiEndpoint;
+      const urlWithQuery = queryString
+        ? `${apiEndpoint}?${queryString}`
+        : apiEndpoint;
 
       const response = await fetch(urlWithQuery, {
-        method: 'GET',
+        method: "GET",
         headers,
       });
 
       if (!response.ok) {
-        throw new Error(`Network response was not ok. Status: ${urlWithQuery} - ${response.status}`);
+        throw new Error(
+          `Network response was not ok. Status: ${urlWithQuery} - ${response.status}`
+        );
       }
 
       return await response.json();
@@ -152,4 +149,4 @@ class ApiService {
   }
 }
 
-export default ApiService; 
+export default ApiService;

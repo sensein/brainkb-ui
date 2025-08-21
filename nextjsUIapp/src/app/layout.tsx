@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "./components/Navbar";
 import { getServerSession } from "next-auth";
 import SessionProvider from "./components/SessionProvider";
 import Footer from "./Footer";
@@ -11,6 +10,8 @@ import dynamic from "next/dynamic"; // Required for Client Component import
 import BrainKBAssistantWrapper from "./components/BrainKBAssistantClient";
 import AssistantInitializer from "./components/AssistantInitializer";
 
+// Dynamically import the ConditionalNavbar (client component)
+const ConditionalNavbar = dynamic(() => import("./components/ConditionalNavbar"), { ssr: false });
 // Dynamically import the CookieConsentBanner (client component)
 const CookieConsentBanner = dynamic(() => import("./components/CookieConsent"), { ssr: false
 });
@@ -48,16 +49,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
       <SessionProvider session={session}>
           <header>
-              <Navbar/>
+              <ConditionalNavbar/>
           </header>
-
-          <main className="flex min-h-screen flex-col">{children}
-
-          </main>
-
-
+          <main className="flex min-h-screen flex-col">{children}</main>
           <footer>
-
               <Footer/>
           </footer>
       </SessionProvider>

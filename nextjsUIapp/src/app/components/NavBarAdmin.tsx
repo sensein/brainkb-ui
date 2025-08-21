@@ -132,7 +132,7 @@ const NavbarAdmin: React.FC = () => {
                                     <path
                                         d="M12 3a1 1 0 0 1 1 1v6h1a1 1 0 0 1 0 2h-1v6a1 1 0 1 1-2 0v-6h-1a1 1 0 0 1 0-2h1V4a1 1 0 0 1 1-1z"/>
                                 </svg>
-                                <span className="ms-3">Ingest Structured Resource</span>
+                                <span className="ms-3">Resource Extraction</span>
                             </Link>
                         </li>
 
@@ -171,8 +171,6 @@ const NavbarAdmin: React.FC = () => {
                     </ul>
                 </div>
             </aside>
-
-
         </>
     );
 };
