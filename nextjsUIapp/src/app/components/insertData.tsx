@@ -1,12 +1,7 @@
 
 export async function insertData(formData, endpoint) {
   try {
-    const apiEndpointbase = process.env.NEXT_PUBLIC_API_ADMIN_HOST as string;
-    if (!apiEndpointbase) {
-      throw new Error('NEXT_PUBLIC_API_ADMIN_HOST is not defined in the environment variables');
-    }
-
-    const api_endpoint = `${apiEndpointbase}/${endpoint}`
+    const api_endpoint = endpoint;
     console.log(api_endpoint);
     const response = await fetch(`${api_endpoint}`, {
       method: 'POST',

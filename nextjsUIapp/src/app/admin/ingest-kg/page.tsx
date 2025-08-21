@@ -38,7 +38,7 @@ export default function IngestKnowledgeGraphPage() {
                     setError("Named graph endpoint is not configured.");
                     return;
                 }
-                const response = await getData({}, endpoint, process.env.NEXT_PUBLIC_API_ADMIN_HOST, true);
+                const response = await getData({}, endpoint, true);
                 
                 if (response && typeof response === 'object') {
                     const graphs: NamedGraph[] = Object.values(response);
