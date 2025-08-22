@@ -151,6 +151,8 @@ export default function Profile() {
         ]
     });
 
+    console.log("Initial profileData state:", profileData);
+
 
     useEffect(() => {
         const fetchUserProfile = async () => {
@@ -175,11 +177,26 @@ export default function Profile() {
                 }
 
                 const { data } = await response.json();
+                
+                // Debug logging for organizations data
+                console.log("Raw API response data:", data);
+                if (data.organizations) {
+                    console.log("Organizations data:", data.organizations);
+                    data.organizations.forEach((org: any, index: number) => {
+                        console.log(`Organization ${index}:`, {
+                            name: org.organization,
+                            start_date: org.start_date,
+                            end_date: org.end_date,
+                            start_date_type: typeof org.start_date,
+                            end_date_type: typeof org.end_date
+                        });
+                    });
+                }
+                
                 setProfileData((prev) => ({
                   ...prev,
                   ...data,
                 }));
-                console.log("Fetched user profile:", data);
             } catch (err) {
                 console.error("Error fetching profile:", err);
             }
@@ -187,6 +204,14 @@ export default function Profile() {
 
         fetchUserProfile();
     }, [session]);
+
+    // Debug logging for profileData changes
+    useEffect(() => {
+        console.log("profileData state updated:", profileData);
+        if (profileData.organizations) {
+            console.log("Current organizations in state:", profileData.organizations);
+        }
+    }, [profileData]);
 
 
     // Cleanup timeout on unmount
@@ -208,11 +233,77 @@ export default function Profile() {
         }
     }, [notification]);
 
+    // Helper function to format dates for input fields
+    const formatDateForInput = (dateValue: any): string => {
+        if (!dateValue) return "";
+        
+        // If it's already a string in YYYY-MM-DD format, return as is
+        if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+            return dateValue;
+        }
+        
+        // If it's a Date object or timestamp, convert to YYYY-MM-DD
+        try {
+            const date = new Date(dateValue);
+            if (isNaN(date.getTime())) return "";
+            return date.toISOString().split('T')[0];
+        } catch (error) {
+            console.error("Error formatting date:", dateValue, error);
+            return "";
+        }
+    };
+
     const showNotification = (type: 'success' | 'error', message: string) => {
         setNotification({type, message});
     };
 
+    // Helper function to ensure organizations data is properly initialized
+    const ensureOrganizationsData = () => {
+        if (!profileData.organizations || profileData.organizations.length === 0) {
+            console.log("No organizations found, initializing with default");
+            setProfileData(prev => ({
+                ...prev,
+                organizations: [{
+                    organization: "",
+                    position: "",
+                    department: "",
+                    is_primary: true,
+                    start_date: new Date().toISOString().split('T')[0],
+                    end_date: null
+                }]
+            }));
+        } else {
+            console.log("Organizations found, ensuring date formatting");
+            const updatedOrgs = profileData.organizations.map(org => ({
+                ...org,
+                start_date: org.start_date || new Date().toISOString().split('T')[0],
+                end_date: org.end_date || null
+            }));
+            setProfileData(prev => ({
+                ...prev,
+                organizations: updatedOrgs
+            }));
+        }
+    };
+
     const handleEditToggle = () => {
+        console.log("Opening edit modal with current profileData:", profileData);
+        if (profileData.organizations) {
+            console.log("Organizations data when opening modal:", profileData.organizations);
+            profileData.organizations.forEach((org: any, index: number) => {
+                console.log(`Modal Organization ${index}:`, {
+                    name: org.organization,
+                    start_date: org.start_date,
+                    end_date: org.end_date,
+                    start_date_type: typeof org.start_date,
+                    end_date_type: typeof org.end_date
+                });
+            });
+        }
+        
+        // Ensure organizations data is properly initialized
+        ensureOrganizationsData();
+        
         setIsEditing(!isEditing);
         setErrors({}); // Clear errors when toggling edit mode
     };
@@ -687,7 +778,7 @@ export default function Profile() {
                                     <div className="font-medium">{org.organization}</div>
                                     <div className="text-gray-500">{org.position} - {org.department}</div>
                                     <div className="text-xs text-gray-400">
-                                        {org.start_date} - {org.end_date || 'Present'}
+                                        {formatDateForInput(org.start_date)} - {org.end_date ? formatDateForInput(org.end_date) : 'Present'}
                                         {org.is_primary && <span className="text-blue-500 ml-2">(Primary)</span>}
                                     </div>
                                 </div>
@@ -807,7 +898,10 @@ export default function Profile() {
 
             {/* Modal */}
             {/* Modal */}
-            {isEditing && (
+            {isEditing && (() => {
+                console.log("Rendering modal with organizations:", profileData.organizations);
+                return true;
+            })() && (
                 <div
                     className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] overflow-auto">
                     <div
@@ -1076,7 +1170,15 @@ export default function Profile() {
                                     + Add Organization
                                 </button>
                             </div>
-                            {profileData.organizations.map((org, index) => (
+                            {profileData.organizations.map((org, index) => {
+                                console.log(`Rendering organization ${index}:`, {
+                                    name: org.organization,
+                                    start_date: org.start_date,
+                                    end_date: org.end_date,
+                                    formatted_start: formatDateForInput(org.start_date),
+                                    formatted_end: formatDateForInput(org.end_date)
+                                });
+                                return (
                                 <div key={index} className="border border-gray-200 rounded-lg p-4 mb-3">
                                     <div className="grid grid-cols-2 gap-4 mb-3">
                                         <input
@@ -1116,7 +1218,7 @@ export default function Profile() {
                                         />
                                         <input
                                             type="date"
-                                            value={org.start_date}
+                                            value={formatDateForInput(org.start_date)}
                                             onChange={(e) => {
                                                 const newOrgs = [...profileData.organizations];
                                                 newOrgs[index].start_date = e.target.value;
@@ -1126,7 +1228,7 @@ export default function Profile() {
                                         />
                                         <input
                                             type="date"
-                                            value={org.end_date || ""}
+                                            value={formatDateForInput(org.end_date)}
                                             onChange={(e) => {
                                                 const newOrgs = [...profileData.organizations];
                                                 newOrgs[index].end_date = e.target.value || null;
@@ -1171,7 +1273,8 @@ export default function Profile() {
                                         </button>
                                     </div>
                                 </div>
-                            ))}
+                            );
+                            })}
                             {errors.organizations &&
                                 <p className="text-red-500 text-xs mt-1">{errors.organizations}</p>}
                         </div>
