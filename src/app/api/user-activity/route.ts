@@ -91,19 +91,19 @@ export async function GET(request: NextRequest) {
 
     const params = new URLSearchParams({ email, orcid_id });
     const headers = await withAuthHeaders();
-    const existingProfile = await getUser(getEndpoint, params, headers);
+    const userActivities = await getUserActivity(getEndpoint, params, headers);
 
-    if (!existingProfile) {
+    if (!userActivities) {
       return NextResponse.json(
-        { error: 'Profile not found' },
+        { error: 'Activities not found' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ data: existingProfile });
+    return NextResponse.json({ data: userActivities });
 
   } catch (error) {
-    console.error('Error fetching profile:', error);
+    console.error('Error fetching activity:', error);
     return NextResponse.json(
       { error: 'Internal server error', details: (error as Error).message },
       { status: 500 }
