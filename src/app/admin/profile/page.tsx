@@ -3,7 +3,7 @@ import {useState, useEffect, useCallback} from "react";
 import {useRouter} from "next/navigation";
 import {useSession} from "next-auth/react";
 import { format } from "date-fns";
-import {Activity} from "@/src/app/components/types";
+import ActivityList from "../../components/userProfileActivity";
 // Role constants
 const ROLES = {
     SUBMITTER: "Submitter",
@@ -908,128 +908,37 @@ if (Array.isArray(data)) {
 
 
 {activeTab === "activity" && (
-  <div>
-    <p className="text-sm text-gray-600 dark:text-gray-400">Recent Activity</p>
+    <div>
 
-    {(() => {
-      const [showAll, setShowAll] = useState(false);
+        <div><p className="text-sm text-gray-600 dark:text-gray-400">Recent Activity</p>
+            <ActivityList userActivity={userActivity}/>
+        </div>
+    </div>
 
-      // sort by newest first
-      const sorted = [...userActivity].sort(
-        (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
+    )}
 
-      // either top 10 or full list
-      const visible = showAll ? sorted : sorted.slice(0, 10);
-
-      return (
-        <>
-          {visible.map((item) => (
-            <div
-              key={item.id}
-              className="mt-2 p-3 bg-gray-100 dark:bg-gray-800 rounded-md"
-            >
-              {/* Activity type + description */}
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                <span className="font-semibold text-blue-500">
-                  {item.activity_type}
-                </span>
-                : {item.description}
-              </p>
-
-              {/* Meta data */}
-              {item.meta_data && typeof item.meta_data === "object" && (
-                <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                  {Object.entries(item.meta_data).map(([key, value]) => (
-                    <p key={key}>
-                      <span className="font-semibold capitalize">{key}:</span>{" "}
-                      {Array.isArray(value) ? value.join(", ") : String(value)}
-                    </p>
-                  ))}
-                </div>
-              )}
-
-              {/* Location */}
-              {item.location && typeof item.location === "object" && (
-                <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                  {Object.entries(item.location).map(([key, value]) => (
-                    <p key={key}>
-                      <span className="font-semibold capitalize">{key}:</span>{" "}
-                      {String(value)}
-                    </p>
-                  ))}
-                </div>
-              )}
-
-              {/* AS info */}
-              {item.as_info && typeof item.as_info === "object" && (
-                <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                  {Object.entries(item.as_info).map(([key, value]) => (
-                    <p key={key}>
-                      <span className="font-semibold capitalize">{key}:</span>{" "}
-                      {String(value)}
-                    </p>
-                  ))}
-                </div>
-              )}
-
-              {/* IP + ISP + User agent */}
-              {(item.ip_address || item.isp || item.user_agent) && (
-                <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                  {item.ip_address && <p>IP: {item.ip_address}</p>}
-                  {item.isp && <p>ISP: {item.isp}</p>}
-                  {item.user_agent && <p>User Agent: {item.user_agent}</p>}
-                </div>
-              )}
-
-              {/* Created at */}
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
-                {format(new Date(item.created_at), "PPpp")}
-              </p>
+        {activeTab === "evidenceItems" && (
+            <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Evidence Items: No new items to display.
+                </p>
             </div>
-          ))}
-
-          {/* Toggle button */}
-          {sorted.length > 10 && (
-            <button
-              onClick={() => setShowAll((prev) => !prev)}
-              className="mt-3 text-sm text-blue-600 hover:underline"
-            >
-              {showAll ? "Show Less" : "Show More"}
-            </button>
-          )}
-        </>
-      );
-    })()}
-  </div>
-)}
-
-
-
-
-                    {activeTab === "evidenceItems" && (
-                        <div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Evidence Items: No new items to display.
-                            </p>
-                        </div>
-                    )}
-                    {activeTab === "assertions" && (
-                        <div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Assertions: Work in progress.
-                            </p>
-                        </div>
-                    )}
-                    {activeTab === "sourceSuggestions" && (
-                        <div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Source Suggestions: Submit your ideas!
-                            </p>
-                        </div>
-                    )}
-                </div>
+        )}
+        {activeTab === "assertions" && (
+            <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Assertions: Work in progress.
+                </p>
+            </div>
+        )}
+        {activeTab === "sourceSuggestions" && (
+            <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Source Suggestions: Submit your ideas!
+                </p>
+            </div>
+        )}
+    </div>
             </section>
 
             {/* Modal */}
