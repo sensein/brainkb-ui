@@ -1,16 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {Activity, TokenResponse, UserProfile} from "@/src/app/components/types";
 
-interface TokenResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-}
 
-interface UserProfile {
-  email: string;
-  orcid_id: string;
-  [key: string]: any;
-}
 
 async function getAuthToken(): Promise<string> {
   const {
@@ -52,7 +43,7 @@ async function getUserActivity(
   getEndpoint: string,
   params: URLSearchParams,
   headers: Record<string, string>
-): Promise<UserProfile | null> {
+): Promise<Activity | null> {
   const response = await fetch(`${getEndpoint}?${params}`, {
     method: 'GET',
     headers,
@@ -91,19 +82,19 @@ export async function GET(request: NextRequest) {
 
     const params = new URLSearchParams({ email, orcid_id });
     const headers = await withAuthHeaders();
-    const existingProfile = await getUser(getEndpoint, params, headers);
+    const userActivities = await getUserActivity(getEndpoint, params, headers);
 
-    if (!existingProfile) {
+    if (!userActivities) {
       return NextResponse.json(
-        { error: 'Profile not found' },
+        { error: 'Activities not found' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ data: existingProfile });
+    return NextResponse.json({ data: userActivities });
 
   } catch (error) {
-    console.error('Error fetching profile:', error);
+    console.error('Error fetching activity:', error);
     return NextResponse.json(
       { error: 'Internal server error', details: (error as Error).message },
       { status: 500 }

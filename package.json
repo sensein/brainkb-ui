@@ -18,6 +18,7 @@
     "brainkb-assistant": "^1.0.75",
     "cross-spawn": "^7.0.5",
     "d3": "^7.9.0",
+    "date-fns": "^4.1.0",
     "form-data": "^4.0.2",
     "js-yaml": "^4.1.0",
     "jsonld": "^8.3.3",
