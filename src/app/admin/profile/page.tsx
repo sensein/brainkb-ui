@@ -3,6 +3,7 @@ import {useState, useEffect, useCallback} from "react";
 import {useRouter} from "next/navigation";
 import {useSession} from "next-auth/react";
 import { format } from "date-fns";
+import {Activity} from "@/src/app/components/types";
 // Role constants
 const ROLES = {
     SUBMITTER: "Submitter",
@@ -69,19 +70,7 @@ const validateGoogleScholar = (scholar: string): string => {
     if (!scholarRegex.test(scholar)) return "Please enter a valid Google Scholar ID";
     return "";
 };
-interface Activity {
-  id: number;
-  profile_id: number;
-  activity_type: string;
-  description: string;
-  created_at: string;
-  meta_data?: Record<string, unknown> | null;
-  ip_address?: string | null;
-  user_agent?: string | null;
-  location?: string | null;
-  isp?: string | null;
-  as_info?: string | null;
-}
+
 
 export default function Profile() {
     const {data: session} = useSession();
