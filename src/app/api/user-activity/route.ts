@@ -12,6 +12,20 @@ interface UserProfile {
   [key: string]: any;
 }
 
+interface Activity {
+  id: number;
+  profile_id: number;
+  activity_type: string;
+  description: string;
+  created_at: string;
+  meta_data?: Record<string, unknown> | null;
+  ip_address?: string | null;
+  user_agent?: string | null;
+  location?: string | null;
+  isp?: string | null;
+  as_info?: string | null;
+}
+
 async function getAuthToken(): Promise<string> {
   const {
     NEXT_PUBLIC_JWT_USER: jwtUser,
@@ -52,7 +66,7 @@ async function getUserActivity(
   getEndpoint: string,
   params: URLSearchParams,
   headers: Record<string, string>
-): Promise<UserProfile | null> {
+): Promise<Activity | null> {
   const response = await fetch(`${getEndpoint}?${params}`, {
     method: 'GET',
     headers,
