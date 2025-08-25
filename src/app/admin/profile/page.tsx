@@ -2,8 +2,25 @@
 import {useState, useEffect, useCallback} from "react";
 import {useRouter} from "next/navigation";
 import {useSession} from "next-auth/react";
-import { format } from "date-fns";
+import {format} from "date-fns";
 import ActivityList from "../../components/userProfileActivity";
+import {extractApiData, isValidActivityData} from "../../utils/apiHelpers";
+import { Activity } from "../../types/types";
+
+// Extended session user interface to include custom properties
+interface ExtendedUser {
+    id?: string;
+    orcid_id?: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+}
+
+// Helper function to safely access session user properties
+const getSessionUserProperty = (session: any, property: keyof ExtendedUser): string => {
+    return (session?.user as ExtendedUser)?.[property] || "";
+};
+
 // Role constants
 const ROLES = {
     SUBMITTER: "Submitter",
@@ -107,7 +124,7 @@ export default function Profile() {
         name_suffix: "",
         email: session?.user?.email || "",
         image: session?.user?.image || "",
-        orcid_id: (session?.user as any)?.id || "", // ORCID ID is stored as user.id when authenticated via ORCID
+        orcid_id: getSessionUserProperty(session, 'orcid_id') || getSessionUserProperty(session, 'id'), // ORCID ID is stored as user.id when authenticated via ORCID
         github: "",
         linkedin: "",
         google_scholar: "",
@@ -153,9 +170,7 @@ export default function Profile() {
             }
         ]
     });
-
-    console.log("Initial profileData state:", profileData);
-
+ 
 
     useEffect(() => {
         const fetchUserProfile = async () => {
@@ -164,7 +179,7 @@ export default function Profile() {
             try {
                 const queryParams = new URLSearchParams({
                     email: session.user.email ?? "",
-                    orcid_id: (session.user as any)?.id ?? "",
+                    orcid_id: getSessionUserProperty(session, 'orcid_id') || getSessionUserProperty(session, 'id'),
                 });
 
                 const response = await fetch(`/api/user-profile?${queryParams.toString()}`, {
@@ -181,20 +196,6 @@ export default function Profile() {
 
                 const {data} = await response.json();
 
-                // Debug logging for organizations data
-                console.log("Raw API response data:", data);
-                if (data.organizations) {
-                    console.log("Organizations data:", data.organizations);
-                    data.organizations.forEach((org: any, index: number) => {
-                        console.log(`Organization ${index}:`, {
-                            name: org.organization,
-                            start_date: org.start_date,
-                            end_date: org.end_date,
-                            start_date_type: typeof org.start_date,
-                            end_date_type: typeof org.end_date
-                        });
-                    });
-                }
 
                 setProfileData((prev) => ({
                     ...prev,
@@ -208,21 +209,14 @@ export default function Profile() {
         fetchUserProfile();
     }, [session]);
 
-    // Debug logging for profileData changes
-    useEffect(() => {
-        console.log("profileData state updated:", profileData);
-        if (profileData.organizations) {
-            console.log("Current organizations in state:", profileData.organizations);
-        }
-    }, [profileData]);
+
 
     useEffect(() => {
         const email = session?.user?.email ?? "";
         // Adjust this if your session stores ORCID under a different key
         const orcidId =
-            (session?.user as any)?.orcid_id ??
-            (session?.user as any)?.id ??
-            "";
+            getSessionUserProperty(session, 'orcid_id') ||
+            getSessionUserProperty(session, 'id');
 
         if (!email && !orcidId) return;
 
@@ -244,15 +238,15 @@ export default function Profile() {
                     return;
                 }
 
-               const json = await res.json();
-const data = json?.data ?? json;
-console.log("User activity", data);
-
-if (Array.isArray(data)) {
-  setUserActivity(data); // replace the state with the new array
-} else {
-  console.warn("Unexpected response shape:", json);
-}
+                               const json = await res.json();
+               const activityData = extractApiData(json);
+               
+               if (isValidActivityData(activityData)) {
+                 setUserActivity(activityData);
+               } else {
+                 console.warn("Invalid activity data format:", json);
+                 setUserActivity([]);
+               }
             } catch (err: any) {
                 if (err?.name === "AbortError") return;
                 console.error("Error fetching user activity:", err);
@@ -309,7 +303,6 @@ if (Array.isArray(data)) {
     // Helper function to ensure organizations data is properly initialized
     const ensureOrganizationsData = () => {
         if (!profileData.organizations || profileData.organizations.length === 0) {
-            console.log("No organizations found, initializing with default");
             setProfileData(prev => ({
                 ...prev,
                 organizations: [{
@@ -322,7 +315,6 @@ if (Array.isArray(data)) {
                 }]
             }));
         } else {
-            console.log("Organizations found, ensuring date formatting");
             const updatedOrgs = profileData.organizations.map(org => ({
                 ...org,
                 start_date: org.start_date || new Date().toISOString().split('T')[0],
@@ -336,20 +328,6 @@ if (Array.isArray(data)) {
     };
 
     const handleEditToggle = () => {
-        console.log("Opening edit modal with current profileData:", profileData);
-        if (profileData.organizations) {
-            console.log("Organizations data when opening modal:", profileData.organizations);
-            profileData.organizations.forEach((org: any, index: number) => {
-                console.log(`Modal Organization ${index}:`, {
-                    name: org.organization,
-                    start_date: org.start_date,
-                    end_date: org.end_date,
-                    start_date_type: typeof org.start_date,
-                    end_date_type: typeof org.end_date
-                });
-            });
-        }
-
         // Ensure organizations data is properly initialized
         ensureOrganizationsData();
 
@@ -537,7 +515,6 @@ if (Array.isArray(data)) {
                 }
 
                 const result = await response.json();
-                console.log("Profile saved successfully:", result);
 
                 // Show success notification
                 showNotification('success', 'Profile saved successfully!');
@@ -907,44 +884,44 @@ if (Array.isArray(data)) {
                 <div className="mt-4">
 
 
-{activeTab === "activity" && (
-    <div>
+                    {activeTab === "activity" && (
+                        <div>
 
-        <div><p className="text-sm text-gray-600 dark:text-gray-400">Recent Activity</p>
-            <ActivityList userActivity={userActivity}/>
-        </div>
-    </div>
+                            <div><p className="text-sm text-gray-600 dark:text-gray-400">Recent Activity</p>
+                                <ActivityList userActivity={userActivity}/>
+                            </div>
+                        </div>
 
-    )}
+                    )}
 
-        {activeTab === "evidenceItems" && (
-            <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Evidence Items: No new items to display.
-                </p>
-            </div>
-        )}
-        {activeTab === "assertions" && (
-            <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Assertions: Work in progress.
-                </p>
-            </div>
-        )}
-        {activeTab === "sourceSuggestions" && (
-            <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Source Suggestions: Submit your ideas!
-                </p>
-            </div>
-        )}
-    </div>
+                    {activeTab === "evidenceItems" && (
+                        <div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Evidence Items: No new items to display.
+                            </p>
+                        </div>
+                    )}
+                    {activeTab === "assertions" && (
+                        <div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Assertions: Work in progress.
+                            </p>
+                        </div>
+                    )}
+                    {activeTab === "sourceSuggestions" && (
+                        <div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Source Suggestions: Submit your ideas!
+                            </p>
+                        </div>
+                    )}
+                </div>
             </section>
 
             {/* Modal */}
             {/* Modal */}
             {isEditing && (() => {
-                console.log("Rendering modal with organizations:", profileData.organizations);
+
                 return true;
             })() && (
                 <div
@@ -1216,13 +1193,7 @@ if (Array.isArray(data)) {
                                 </button>
                             </div>
                             {profileData.organizations.map((org, index) => {
-                                console.log(`Rendering organization ${index}:`, {
-                                    name: org.organization,
-                                    start_date: org.start_date,
-                                    end_date: org.end_date,
-                                    formatted_start: formatDateForInput(org.start_date),
-                                    formatted_end: formatDateForInput(org.end_date)
-                                });
+
                                 return (
                                     <div key={index} className="border border-gray-200 rounded-lg p-4 mb-3">
                                         <div className="grid grid-cols-2 gap-4 mb-3">

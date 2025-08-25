@@ -41,7 +41,7 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import {Activity} from "@/src/app/components/types";
+import {Activity} from "../../types/types";
 import KeyValueBlock from "@/src/app/components/KeyValueBlock";
 
 export default function ActivityList({ userActivity }: { userActivity: Activity[] }) {
