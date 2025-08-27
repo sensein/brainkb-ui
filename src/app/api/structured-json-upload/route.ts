@@ -9,7 +9,7 @@ interface TokenResponse {
 async function getAuthToken(): Promise<string> {
   const jwtUser = process.env.NEXT_PUBLIC_JWT_USER;
   const jwtPassword = process.env.NEXT_PUBLIC_JWT_PASSWORD;
-  const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE;
+  const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE;
 
   if (!jwtUser || !jwtPassword || !tokenEndpoint) {
     throw new Error('JWT credentials not configured');
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     // Check environment variables
     const jwtUser = process.env.NEXT_PUBLIC_JWT_USER;
     const jwtPassword = process.env.NEXT_PUBLIC_JWT_PASSWORD;
-    const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE;
+    const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE;
 
     console.log('Environment check:', {
       hasJwtUser: !!jwtUser,
