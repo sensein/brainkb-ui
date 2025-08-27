@@ -9,7 +9,7 @@ interface TokenResponse {
 async function getAuthToken(): Promise<string> {
   const jwtUser = process.env.NEXT_PUBLIC_JWT_USER;
   const jwtPassword = process.env.NEXT_PUBLIC_JWT_PASSWORD;
-  const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT;
+  const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE;
 
   if (!jwtUser || !jwtPassword || !tokenEndpoint) {
     throw new Error('JWT credentials not configured');
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       console.warn('Failed to get bearer token, proceeding without authentication');
     }
 
-    // Forward the request to the query service
+    // Forward the request to the ML service
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: authHeaders,
@@ -79,9 +79,9 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('Query service error:', errorData);
+      console.error('ML service error:', errorData);
       return NextResponse.json(
-        { error: 'Failed to save data with query service' },
+        { error: 'Failed to save data with ML service' },
         { status: response.status }
       );
     }
