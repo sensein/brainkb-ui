@@ -111,9 +111,9 @@ export default function Profile() {
     const [userActivity, setUserActivity] = useState<Activity[]>([]);
     const tabs = [
         {id: "activity", label: "Activity"},
-        {id: "evidenceItems", label: "Evidence Items"},
-        {id: "assertions", label: "Assertions"},
-        {id: "sourceSuggestions", label: "Source Suggestions"},
+        // {id: "evidenceItems", label: "Evidence Items"},
+        // {id: "assertions", label: "Assertions"},
+        // {id: "sourceSuggestions", label: "Source Suggestions"},
     ];
 
 
@@ -894,27 +894,27 @@ export default function Profile() {
 
                     )}
 
-                    {activeTab === "evidenceItems" && (
-                        <div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Evidence Items: No new items to display.
-                            </p>
-                        </div>
-                    )}
-                    {activeTab === "assertions" && (
-                        <div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Assertions: Work in progress.
-                            </p>
-                        </div>
-                    )}
-                    {activeTab === "sourceSuggestions" && (
-                        <div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Source Suggestions: Submit your ideas!
-                            </p>
-                        </div>
-                    )}
+                    {/*{activeTab === "evidenceItems" && (*/}
+                    {/*    <div>*/}
+                    {/*        <p className="text-sm text-gray-600 dark:text-gray-400">*/}
+                    {/*            Evidence Items: Work in progress.*/}
+                    {/*        </p>*/}
+                    {/*    </div>*/}
+                    {/*)}*/}
+                    {/*{activeTab === "assertions" && (*/}
+                    {/*    <div>*/}
+                    {/*        <p className="text-sm text-gray-600 dark:text-gray-400">*/}
+                    {/*            Assertions: Work in progress.*/}
+                    {/*        </p>*/}
+                    {/*    </div>*/}
+                    {/*)}*/}
+                    {/*{activeTab === "sourceSuggestions" && (*/}
+                    {/*    <div>*/}
+                    {/*        <p className="text-sm text-gray-600 dark:text-gray-400">*/}
+                    {/*            Source Suggestions: Submit your ideas!*/}
+                    {/*        </p>*/}
+                    {/*    </div>*/}
+                    {/*)}*/}
                 </div>
             </section>
 
