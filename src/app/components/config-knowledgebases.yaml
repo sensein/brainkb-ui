@@ -69,22 +69,22 @@ pages:
     display_column_second: "label"
     display_column_third: "category"
 
-  - page: "Resources"
-    title: "Resources"
-    description: "This page consists the extracted resources available in neuroscience publications, e.g., models, code and so on."
-    slug: "resource"
-    sparql_query: |-
-      PREFIX res: <https://brainkb.org/ohbm-australia/structured-resource/>
-
-      SELECT ?id ?target ?category
-      WHERE {
-        GRAPH <https://brainkb.org/ohbm-australia/structured-resource/> {
-          ?id res:target ?target ;
-              res:category ?category .
-        }
-      }
-
-    default_kb: false
-    display_column_first: "id"
-    display_column_second: "target"
-    display_column_third: "category"
+#  - page: "Resources"
+#    title: "Resources"
+#    description: "This page consists the extracted resources available in neuroscience publications, e.g., models, code and so on."
+#    slug: "resource"
+#    sparql_query: |-
+#      PREFIX res: <https://brainkb.org/ohbm-australia/structured-resource/>
+#
+#      SELECT ?id ?target ?category
+#      WHERE {
+#        GRAPH <https://brainkb.org/ohbm-australia/structured-resource/> {
+#          ?id res:target ?target ;
+#              res:category ?category .
+#        }
+#      }
+#
+#    default_kb: false
+#    display_column_first: "id"
+#    display_column_second: "target"
+#    display_column_third: "category"

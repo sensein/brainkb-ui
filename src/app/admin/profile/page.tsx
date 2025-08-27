@@ -2,6 +2,24 @@
 import {useState, useEffect, useCallback} from "react";
 import {useRouter} from "next/navigation";
 import {useSession} from "next-auth/react";
+import {format} from "date-fns";
+import ActivityList from "../../components/userProfileActivity";
+import {extractApiData, isValidActivityData} from "../../utils/apiHelpers";
+import { Activity } from "../../types/types";
+
+// Extended session user interface to include custom properties
+interface ExtendedUser {
+    id?: string;
+    orcid_id?: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+}
+
+// Helper function to safely access session user properties
+const getSessionUserProperty = (session: any, property: keyof ExtendedUser): string => {
+    return (session?.user as ExtendedUser)?.[property] || "";
+};
 
 // Role constants
 const ROLES = {
@@ -70,6 +88,7 @@ const validateGoogleScholar = (scholar: string): string => {
     return "";
 };
 
+
 export default function Profile() {
     const {data: session} = useSession();
     const router = useRouter();
@@ -89,11 +108,12 @@ export default function Profile() {
     const [validationTimeout, setValidationTimeout] = useState<NodeJS.Timeout | null>(null);
     const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
+    const [userActivity, setUserActivity] = useState<Activity[]>([]);
     const tabs = [
         {id: "activity", label: "Activity"},
-        {id: "evidenceItems", label: "Evidence Items"},
-        {id: "assertions", label: "Assertions"},
-        {id: "sourceSuggestions", label: "Source Suggestions"},
+        // {id: "evidenceItems", label: "Evidence Items"},
+        // {id: "assertions", label: "Assertions"},
+        // {id: "sourceSuggestions", label: "Source Suggestions"},
     ];
 
 
@@ -104,7 +124,7 @@ export default function Profile() {
         name_suffix: "",
         email: session?.user?.email || "",
         image: session?.user?.image || "",
-        orcid_id: (session?.user as any)?.id || "", // ORCID ID is stored as user.id when authenticated via ORCID
+        orcid_id: getSessionUserProperty(session, 'orcid_id') || getSessionUserProperty(session, 'id'), // ORCID ID is stored as user.id when authenticated via ORCID
         github: "",
         linkedin: "",
         google_scholar: "",
@@ -150,7 +170,7 @@ export default function Profile() {
             }
         ]
     });
-
+ 
 
     useEffect(() => {
         const fetchUserProfile = async () => {
@@ -159,7 +179,7 @@ export default function Profile() {
             try {
                 const queryParams = new URLSearchParams({
                     email: session.user.email ?? "",
-                    orcid_id: (session.user as any)?.id ?? "",
+                    orcid_id: getSessionUserProperty(session, 'orcid_id') || getSessionUserProperty(session, 'id'),
                 });
 
                 const response = await fetch(`/api/user-profile?${queryParams.toString()}`, {
@@ -174,12 +194,13 @@ export default function Profile() {
                     return;
                 }
 
-                const { data } = await response.json();
+                const {data} = await response.json();
+
+
                 setProfileData((prev) => ({
-                  ...prev,
-                  ...data,
+                    ...prev,
+                    ...data,
                 }));
-                console.log("Fetched user profile:", data);
             } catch (err) {
                 console.error("Error fetching profile:", err);
             }
@@ -188,6 +209,53 @@ export default function Profile() {
         fetchUserProfile();
     }, [session]);
 
+
+
+    useEffect(() => {
+        const email = session?.user?.email ?? "";
+        // Adjust this if your session stores ORCID under a different key
+        const orcidId =
+            getSessionUserProperty(session, 'orcid_id') ||
+            getSessionUserProperty(session, 'id');
+
+        if (!email && !orcidId) return;
+
+        const controller = new AbortController();
+
+        const fetchUserActivity = async () => {
+            try {
+                const params = new URLSearchParams();
+                if (email) params.set("email", email);
+                if (orcidId) params.set("orcid_id", String(orcidId));
+
+                const res = await fetch(`/api/user-activity?${params.toString()}`, {
+                    method: "GET",
+                    signal: controller.signal,
+                });
+
+                if (!res.ok) {
+                    console.error("Failed to fetch user activity:", await res.text());
+                    return;
+                }
+
+                               const json = await res.json();
+               const activityData = extractApiData(json);
+               
+               if (isValidActivityData(activityData)) {
+                 setUserActivity(activityData);
+               } else {
+                 console.warn("Invalid activity data format:", json);
+                 setUserActivity([]);
+               }
+            } catch (err: any) {
+                if (err?.name === "AbortError") return;
+                console.error("Error fetching user activity:", err);
+            }
+        };
+
+        fetchUserActivity();
+        return () => controller.abort();
+    }, [session]);
 
     // Cleanup timeout on unmount
     useEffect(() => {
@@ -208,11 +276,61 @@ export default function Profile() {
         }
     }, [notification]);
 
+    // Helper function to format dates for input fields
+    const formatDateForInput = (dateValue: any): string => {
+        if (!dateValue) return "";
+
+        // If it's already a string in YYYY-MM-DD format, return as is
+        if (typeof dateValue === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+            return dateValue;
+        }
+
+        // If it's a Date object or timestamp, convert to YYYY-MM-DD
+        try {
+            const date = new Date(dateValue);
+            if (isNaN(date.getTime())) return "";
+            return date.toISOString().split('T')[0];
+        } catch (error) {
+            console.error("Error formatting date:", dateValue, error);
+            return "";
+        }
+    };
+
     const showNotification = (type: 'success' | 'error', message: string) => {
         setNotification({type, message});
     };
 
+    // Helper function to ensure organizations data is properly initialized
+    const ensureOrganizationsData = () => {
+        if (!profileData.organizations || profileData.organizations.length === 0) {
+            setProfileData(prev => ({
+                ...prev,
+                organizations: [{
+                    organization: "",
+                    position: "",
+                    department: "",
+                    is_primary: true,
+                    start_date: new Date().toISOString().split('T')[0],
+                    end_date: null
+                }]
+            }));
+        } else {
+            const updatedOrgs = profileData.organizations.map(org => ({
+                ...org,
+                start_date: org.start_date || new Date().toISOString().split('T')[0],
+                end_date: org.end_date || null
+            }));
+            setProfileData(prev => ({
+                ...prev,
+                organizations: updatedOrgs
+            }));
+        }
+    };
+
     const handleEditToggle = () => {
+        // Ensure organizations data is properly initialized
+        ensureOrganizationsData();
+
         setIsEditing(!isEditing);
         setErrors({}); // Clear errors when toggling edit mode
     };
@@ -397,7 +515,6 @@ export default function Profile() {
                 }
 
                 const result = await response.json();
-                console.log("Profile saved successfully:", result);
 
                 // Show success notification
                 showNotification('success', 'Profile saved successfully!');
@@ -687,7 +804,7 @@ export default function Profile() {
                                     <div className="font-medium">{org.organization}</div>
                                     <div className="text-gray-500">{org.position} - {org.department}</div>
                                     <div className="text-xs text-gray-400">
-                                        {org.start_date} - {org.end_date || 'Present'}
+                                        {formatDateForInput(org.start_date)} - {org.end_date ? formatDateForInput(org.end_date) : 'Present'}
                                         {org.is_primary && <span className="text-blue-500 ml-2">(Primary)</span>}
                                     </div>
                                 </div>
@@ -765,49 +882,48 @@ export default function Profile() {
 
                 {/* Tabs Content */}
                 <div className="mt-4">
+
+
                     {activeTab === "activity" && (
                         <div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                some text
-                            </p>
-                            <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-md">
-                                <p className="text-sm text-gray-600 dark:text-gray-300">
-                                    <span className="font-semibold text-blue-500">Some Item:</span>{" "}
-                                    Description
-                                </p>
-                                <p className="text-xs text-gray-400 dark:text-gray-500">
-                                    11 days ago
-                                </p>
+
+                            <div><p className="text-sm text-gray-600 dark:text-gray-400">Recent Activity</p>
+                                <ActivityList userActivity={userActivity}/>
                             </div>
                         </div>
+
                     )}
-                    {activeTab === "evidenceItems" && (
-                        <div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Evidence Items: No new items to display.
-                            </p>
-                        </div>
-                    )}
-                    {activeTab === "assertions" && (
-                        <div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Assertions: Work in progress.
-                            </p>
-                        </div>
-                    )}
-                    {activeTab === "sourceSuggestions" && (
-                        <div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Source Suggestions: Submit your ideas!
-                            </p>
-                        </div>
-                    )}
+
+                    {/*{activeTab === "evidenceItems" && (*/}
+                    {/*    <div>*/}
+                    {/*        <p className="text-sm text-gray-600 dark:text-gray-400">*/}
+                    {/*            Evidence Items: Work in progress.*/}
+                    {/*        </p>*/}
+                    {/*    </div>*/}
+                    {/*)}*/}
+                    {/*{activeTab === "assertions" && (*/}
+                    {/*    <div>*/}
+                    {/*        <p className="text-sm text-gray-600 dark:text-gray-400">*/}
+                    {/*            Assertions: Work in progress.*/}
+                    {/*        </p>*/}
+                    {/*    </div>*/}
+                    {/*)}*/}
+                    {/*{activeTab === "sourceSuggestions" && (*/}
+                    {/*    <div>*/}
+                    {/*        <p className="text-sm text-gray-600 dark:text-gray-400">*/}
+                    {/*            Source Suggestions: Submit your ideas!*/}
+                    {/*        </p>*/}
+                    {/*    </div>*/}
+                    {/*)}*/}
                 </div>
             </section>
 
             {/* Modal */}
             {/* Modal */}
-            {isEditing && (
+            {isEditing && (() => {
+
+                return true;
+            })() && (
                 <div
                     className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] overflow-auto">
                     <div
@@ -1076,102 +1192,105 @@ export default function Profile() {
                                     + Add Organization
                                 </button>
                             </div>
-                            {profileData.organizations.map((org, index) => (
-                                <div key={index} className="border border-gray-200 rounded-lg p-4 mb-3">
-                                    <div className="grid grid-cols-2 gap-4 mb-3">
-                                        <input
-                                            type="text"
-                                            placeholder="Organization Name"
-                                            value={org.organization}
-                                            onChange={(e) => {
-                                                const newOrgs = [...profileData.organizations];
-                                                newOrgs[index].organization = e.target.value;
-                                                setProfileData(prev => ({...prev, organizations: newOrgs}));
-                                            }}
-                                            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                                        />
-                                        <input
-                                            type="text"
-                                            placeholder="Position"
-                                            value={org.position}
-                                            onChange={(e) => {
-                                                const newOrgs = [...profileData.organizations];
-                                                newOrgs[index].position = e.target.value;
-                                                setProfileData(prev => ({...prev, organizations: newOrgs}));
-                                            }}
-                                            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-3 gap-4 mb-3">
-                                        <input
-                                            type="text"
-                                            placeholder="Department"
-                                            value={org.department}
-                                            onChange={(e) => {
-                                                const newOrgs = [...profileData.organizations];
-                                                newOrgs[index].department = e.target.value;
-                                                setProfileData(prev => ({...prev, organizations: newOrgs}));
-                                            }}
-                                            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                                        />
-                                        <input
-                                            type="date"
-                                            value={org.start_date}
-                                            onChange={(e) => {
-                                                const newOrgs = [...profileData.organizations];
-                                                newOrgs[index].start_date = e.target.value;
-                                                setProfileData(prev => ({...prev, organizations: newOrgs}));
-                                            }}
-                                            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                                        />
-                                        <input
-                                            type="date"
-                                            value={org.end_date || ""}
-                                            onChange={(e) => {
-                                                const newOrgs = [...profileData.organizations];
-                                                newOrgs[index].end_date = e.target.value || null;
-                                                setProfileData(prev => ({...prev, organizations: newOrgs}));
-                                            }}
-                                            placeholder="End Date (optional)"
-                                            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                                        />
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <label className="flex items-center">
+                            {profileData.organizations.map((org, index) => {
+
+                                return (
+                                    <div key={index} className="border border-gray-200 rounded-lg p-4 mb-3">
+                                        <div className="grid grid-cols-2 gap-4 mb-3">
                                             <input
-                                                type="radio"
-                                                name="primary_org"
-                                                checked={org.is_primary}
-                                                onChange={() => {
-                                                    const newOrgs = profileData.organizations.map((o, i) => ({
-                                                        ...o,
-                                                        is_primary: i === index
-                                                    }));
+                                                type="text"
+                                                placeholder="Organization Name"
+                                                value={org.organization}
+                                                onChange={(e) => {
+                                                    const newOrgs = [...profileData.organizations];
+                                                    newOrgs[index].organization = e.target.value;
                                                     setProfileData(prev => ({...prev, organizations: newOrgs}));
                                                 }}
-                                                className="mr-2"
+                                                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                                             />
-                                            Primary Organization
-                                        </label>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                // Prevent removing the last organization
-                                                if (profileData.organizations.length <= 1) {
-                                                    showNotification('error', 'At least one organization is required');
-                                                    return;
-                                                }
-                                                const newOrgs = profileData.organizations.filter((_, i) => i !== index);
-                                                setProfileData(prev => ({...prev, organizations: newOrgs}));
-                                            }}
-                                            className="text-red-500 text-sm hover:text-red-700"
-                                            disabled={profileData.organizations.length <= 1}
-                                        >
-                                            Remove
-                                        </button>
+                                            <input
+                                                type="text"
+                                                placeholder="Position"
+                                                value={org.position}
+                                                onChange={(e) => {
+                                                    const newOrgs = [...profileData.organizations];
+                                                    newOrgs[index].position = e.target.value;
+                                                    setProfileData(prev => ({...prev, organizations: newOrgs}));
+                                                }}
+                                                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-4 mb-3">
+                                            <input
+                                                type="text"
+                                                placeholder="Department"
+                                                value={org.department}
+                                                onChange={(e) => {
+                                                    const newOrgs = [...profileData.organizations];
+                                                    newOrgs[index].department = e.target.value;
+                                                    setProfileData(prev => ({...prev, organizations: newOrgs}));
+                                                }}
+                                                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                                            />
+                                            <input
+                                                type="date"
+                                                value={formatDateForInput(org.start_date)}
+                                                onChange={(e) => {
+                                                    const newOrgs = [...profileData.organizations];
+                                                    newOrgs[index].start_date = e.target.value;
+                                                    setProfileData(prev => ({...prev, organizations: newOrgs}));
+                                                }}
+                                                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                                            />
+                                            <input
+                                                type="date"
+                                                value={formatDateForInput(org.end_date)}
+                                                onChange={(e) => {
+                                                    const newOrgs = [...profileData.organizations];
+                                                    newOrgs[index].end_date = e.target.value || null;
+                                                    setProfileData(prev => ({...prev, organizations: newOrgs}));
+                                                }}
+                                                placeholder="End Date (optional)"
+                                                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                                            />
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <label className="flex items-center">
+                                                <input
+                                                    type="radio"
+                                                    name="primary_org"
+                                                    checked={org.is_primary}
+                                                    onChange={() => {
+                                                        const newOrgs = profileData.organizations.map((o, i) => ({
+                                                            ...o,
+                                                            is_primary: i === index
+                                                        }));
+                                                        setProfileData(prev => ({...prev, organizations: newOrgs}));
+                                                    }}
+                                                    className="mr-2"
+                                                />
+                                                Primary Organization
+                                            </label>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    // Prevent removing the last organization
+                                                    if (profileData.organizations.length <= 1) {
+                                                        showNotification('error', 'At least one organization is required');
+                                                        return;
+                                                    }
+                                                    const newOrgs = profileData.organizations.filter((_, i) => i !== index);
+                                                    setProfileData(prev => ({...prev, organizations: newOrgs}));
+                                                }}
+                                                className="text-red-500 text-sm hover:text-red-700"
+                                                disabled={profileData.organizations.length <= 1}
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                             {errors.organizations &&
                                 <p className="text-red-500 text-xs mt-1">{errors.organizations}</p>}
                         </div>

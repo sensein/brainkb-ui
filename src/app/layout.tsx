@@ -56,10 +56,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <Footer/>
           </footer>
       </SessionProvider>
-      <div className="assistant">
-          <BrainKBAssistantWrapper/>
-          <AssistantInitializer/>
-      </div>
+      {/*<div className="assistant">*/}
+      {/*    <BrainKBAssistantWrapper/>*/}
+      {/*    <AssistantInitializer/>*/}
+      {/*</div>*/}
       {/* Client-side Cookie Consent Banner */}
       <CookieConsentBanner/>
 
