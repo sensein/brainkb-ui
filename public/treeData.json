@@ -1,0 +1,22 @@
+{
+  "name": "Root",
+  "children": [
+    {
+      "name": "Child A"
+    },
+    {
+      "name": "Child B",
+      "attributes": {
+        "Department": "Fabrication"
+      },
+      "children": [
+        {
+          "name": "Grandchild B1"
+        },
+        {
+          "name": "Grandchild B2"
+        }
+      ]
+    }
+  ]
+}

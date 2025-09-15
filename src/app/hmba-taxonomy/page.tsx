@@ -1,34 +1,38 @@
-"use client";
+'use client';
 
-import React from 'react';
-import Highcharts from 'highcharts';
-import HighchartsReact from 'highcharts-react-official';
+import dynamic from 'next/dynamic';
+import { useState, useEffect } from 'react';
 
-const HmbaTaxonomy = () => {
+// Load react-d3-tree only on the client (it touches window/document)
+const Tree = dynamic(() => import('react-d3-tree').then(m => m.Tree), { ssr: false });
+
+export default function TreeDemo() {
+  const [data, setData] = useState(null);
+
+  // Center the tree a bit
+  const [translate, setTranslate] = useState<{x:number;y:number}>({ x: 200, y: 200 });
+
+  // If your container width is known you can compute this; here we just set something reasonable.
+  useEffect(() => setTranslate({ x: 300, y: 100 }), []);
+
+  useEffect(() => {
+    fetch('/treeData.json')
+      .then(response => response.json())
+      .then(setData)
+      .catch(error => console.error('Error loading tree data:', error));
+  }, []);
+
+  if (!data) return <div>Loading...</div>;
+
   return (
-    <div className="kb-page-margin">
-      <div className="grid fix-left-margin grid-cols-1">
-        <div className="flex items-center justify-center rounded bg-gray-50 h-28 dark:bg-gray-800">
-          <div className="text-center">
-            <p className="text-2xl text-gray-400 dark:text-gray-500">
-              HMBA Taxonomy
-            </p>
-            <p className="text-gray-400 dark:text-gray-500">
-              Placeholder description for HMBA Taxonomy page.
-            </p>
-          </div>
-        </div>
-      </div>
-      <HighchartsReact
-        highcharts={Highcharts}
-        options={{
-          title: { text: 'Hello NextJS!' },
-          series: [{ type: 'line', data: [1, 2, 3, 4, 5] }],
-          accessibility: { enabled: true }
-        }}
+    <div style={{ width: '100%', height: 600, border: '1px solid #ddd' }}>
+      <Tree
+        data={data}
+        translate={translate}
+        orientation="horizontal"   // try "vertical" too
+        collapsible
+        zoom={0.8}
       />
     </div>
   );
-};
-
-export default HmbaTaxonomy;
+}
