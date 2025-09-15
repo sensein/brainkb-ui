@@ -1,22 +1,41 @@
 {
-  "name": "Root",
+  "name": "",
+  "nodeColor": "#ffffff",
   "children": [
     {
-      "name": "Child A"
-    },
-    {
-      "name": "Child B",
-      "attributes": {
-        "Department": "Fabrication"
-      },
+      "name": "Subpallium GABA",
+      "nodeColor": "#19613b",
       "children": [
         {
-          "name": "Grandchild B1"
+          "name": "CN LGE GABA",
+          "nodeColor": "#d0b83c"
         },
         {
-          "name": "Grandchild B2"
+          "name": "F M GABA",
+          "nodeColor": "#cd0f13"
+        },
+        {
+          "name": "Cx GABA",
+          "nodeColor": "#ebb3a7"
+        },
+        {
+          "name": "CN CGE GABA",
+          "nodeColor": "#ce4c27"
         }
       ]
+    },
+    {
+      "name": "Subpallium GABA-Glut",
+      "nodeColor": "#7e1d19"
+    },
+    {
+      "name": "Glut Sero Dopa",
+      "nodeColor": "#91f4bb"
+    },
+    {
+      "name": "Nonneuron",
+      "nodeColor": "#a8afa5"
     }
+
   ]
 }
