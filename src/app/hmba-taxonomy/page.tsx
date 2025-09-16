@@ -32,7 +32,7 @@ export default function TreeDemo() {
   );
 
   return (
-    <div style={{ width: '100%', height: 600, border: '1px solid #ddd' }}>
+    <div className="w-full h-[600px] border border-gray-300">
       <Tree
         data={data}
         translate={translate}
