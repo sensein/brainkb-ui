@@ -24,27 +24,53 @@ export default function HMBATaxonomyPage() {
   const [mousePos, setMousePos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   // Load data
-  useEffect(() => {
-    fetch('/treeData.json')
-      .then(r => r.json())
-      .then(setData)
-      .catch(e => console.error('Error loading tree data:', e));
-  }, []);
+  // useEffect(() => {
+  //   fetch('/treeData.json')
+  //     .then(r => r.json())
+  //     .then(setData)
+  //     .catch(e => console.error('Error loading tree data:', e));
+  // }, []);
 
-  // Observe viewport size
+  // // Observe viewport size
+  // useEffect(() => {
+  //   if (!containerRef.current) return;
+  //   const el = containerRef.current;
+  //   const ro = new ResizeObserver(entries => {
+  //     for (const entry of entries) {
+  //       const { width, height } = entry.contentRect;
+  //       setSize({ width, height });
+  //     }
+  //   });
+  //   ro.observe(el);
+  //   return () => ro.disconnect();
+  // }, []);
   useEffect(() => {
-    if (!containerRef.current) return;
-    const el = containerRef.current;
-    const ro = new ResizeObserver(entries => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        setSize({ width, height });
+    const controller = new AbortController();
+    
+    const fetchTreeData = async () => {
+      try {
+        const res = await fetch('/api/hmba-taxonomy-data', {
+          method: "GET",
+          signal: controller.signal,
+        });
+
+        if (!res.ok) {
+          console.error("Failed to fetch tree data:", await res.text());
+          return;
+        }
+
+        const data = await res.json();
+        setData(data);
+      } catch (err: any) {
+        if (err?.name === "AbortError") return;
+        console.error("Error loading tree data:", err);
       }
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+    };
 
+    fetchTreeData();
+    return () => controller.abort();
+  }, []);
+  
   // Tooltip helpers
   const getClampedPos = (rawX: number, rawY: number) => {
     const pad = 10;
