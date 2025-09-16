@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 
 const Tree = dynamic(() => import('react-d3-tree').then(m => m.Tree), { ssr: false });
 
-export default function TreeDemo() {
+export default function HMBATaxonomyPage() {
   const [data, setData] = useState<any>(null);
   const [translate, setTranslate] = useState<{ x: number; y: number }>({ x: 200, y: 200 });
 
