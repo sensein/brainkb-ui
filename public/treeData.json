@@ -1,41 +1,56 @@
 {
-  "name": "",
-  "nodeColor": "#ffffff",
-  "children": [
-    {
-      "name": "Subpallium GABA",
-      "nodeColor": "#19613b",
-      "children": [
+    "name": "",
+    "nodeColor": "#ffffff",
+    "meta": {
+        "level": "root",
+        "cells": 0
+    },
+    "children": [
         {
-          "name": "CN LGE GABA",
-          "nodeColor": "#d0b83c"
+            "name": "Subpallium GABA",
+            "nodeColor": "#19613b",
+            "meta": {
+                "accession id": "CS20250428_NEIGH_0002",
+                "tokens": "Subpallium, GABA",
+                "display order": 3
+            },
+            "children": [
+                {
+                    "name": "CN LGE GABA",
+                    "nodeColor": "#d0b83c",
+                    "meta": {}
+                },
+                {
+                    "name": "F M GABA",
+                    "nodeColor": "#cd0f13",
+                    "meta": {}
+                },
+                {
+                    "name": "Cx GABA",
+                    "nodeColor": "#ebb3a7",
+                    "meta": {}
+                },
+                {
+                    "name": "CN CGE GABA",
+                    "nodeColor": "#ce4c27",
+                    "meta": {}
+                }
+            ]
         },
         {
-          "name": "F M GABA",
-          "nodeColor": "#cd0f13"
+            "name": "Subpallium GABA-Glut",
+            "nodeColor": "#7e1d19",
+            "meta": {}
         },
         {
-          "name": "Cx GABA",
-          "nodeColor": "#ebb3a7"
+            "name": "Glut Sero Dopa",
+            "nodeColor": "#91f4bb",
+            "meta": {}
         },
         {
-          "name": "CN CGE GABA",
-          "nodeColor": "#ce4c27"
+            "name": "Nonneuron",
+            "nodeColor": "#a8afa5",
+            "meta": {}
         }
-      ]
-    },
-    {
-      "name": "Subpallium GABA-Glut",
-      "nodeColor": "#7e1d19"
-    },
-    {
-      "name": "Glut Sero Dopa",
-      "nodeColor": "#91f4bb"
-    },
-    {
-      "name": "Nonneuron",
-      "nodeColor": "#a8afa5"
-    }
-
-  ]
+    ]
 }
