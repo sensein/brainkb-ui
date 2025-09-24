@@ -24,53 +24,55 @@ export default function HMBATaxonomyPage() {
   const [mousePos, setMousePos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   // Load data
-  // useEffect(() => {
-  //   fetch('/treeData.json')
-  //     .then(r => r.json())
-  //     .then(setData)
-  //     .catch(e => console.error('Error loading tree data:', e));
-  // }, []);
-
-  // // Observe viewport size
-  // useEffect(() => {
-  //   if (!containerRef.current) return;
-  //   const el = containerRef.current;
-  //   const ro = new ResizeObserver(entries => {
-  //     for (const entry of entries) {
-  //       const { width, height } = entry.contentRect;
-  //       setSize({ width, height });
-  //     }
-  //   });
-  //   ro.observe(el);
-  //   return () => ro.disconnect();
-  // }, []);
   useEffect(() => {
-    const controller = new AbortController();
-    
-    const fetchTreeData = async () => {
-      try {
-        const res = await fetch('/api/hmba-taxonomy-data', {
-          method: "GET",
-          signal: controller.signal,
-        });
-
-        if (!res.ok) {
-          console.error("Failed to fetch tree data:", await res.text());
-          return;
-        }
-
-        const data = await res.json();
-        setData(data);
-      } catch (err: any) {
-        if (err?.name === "AbortError") return;
-        console.error("Error loading tree data:", err);
-      }
-    };
-
-    fetchTreeData();
-    return () => controller.abort();
+    fetch('/treeData.json')
+      .then(r => r.json())
+      .then(setData)
+      .catch(e => console.error('Error loading tree data:', e));
   }, []);
-  
+
+  // Observe viewport size
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const el = containerRef.current;
+    const ro = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        setSize({ width, height });
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Fetch tree data from API
+  // useEffect(() => {
+  //   const controller = new AbortController();
+    
+  //   const fetchTreeData = async () => {
+  //     try {
+  //       const res = await fetch('/api/hmba-taxonomy-data', {
+  //         method: "GET",
+  //         signal: controller.signal,
+  //       });
+
+  //       if (!res.ok) {
+  //         console.error("Failed to fetch tree data:", await res.text());
+  //         return;
+  //       }
+
+  //       const data = await res.json();
+  //       setData(data);
+  //     } catch (err: any) {
+  //       if (err?.name === "AbortError") return;
+  //       console.error("Error loading tree data:", err);
+  //     }
+  //   };
+
+  //   fetchTreeData();
+  //   return () => controller.abort();
+  // }, []);
+
   // Tooltip helpers
   const getClampedPos = (rawX: number, rawY: number) => {
     const pad = 10;
@@ -275,8 +277,8 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => (
         translate={translate}
         zoom={zoom}
         renderCustomNodeElement={renderCustomNode}
-        separation={{ siblings: 1, nonSiblings: 1.15 }}
-        pathFunc="elbow"
+        separation={{ siblings: 1.2, nonSiblings: 1.5 }}
+        pathFunc="curveStep"
       />
     </div>
   );
