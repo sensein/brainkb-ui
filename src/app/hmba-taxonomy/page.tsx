@@ -268,7 +268,7 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => (
 
       <Tree
         data={data}
-        orientation="horizontal"
+        orientation="vertical"
         collapsible
         dimensions={{
           width: size.width || (typeof window !== 'undefined' ? window.innerWidth : 1200),

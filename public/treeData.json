@@ -3,214 +3,20 @@
     "nodeColor": "#ffffff",
     "children": [
         {
-            "name": "Nonneuron",
-            "nodeColor": "#a8afa5",
+            "name": "Subpallium GABA-Glut",
+            "nodeColor": "#7e1d19",
             "children": [
                 {
-                    "name": "OPC-Oligo",
-                    "nodeColor": "#594a26",
+                    "name": "CN GABA-Glut",
+                    "nodeColor": "#1c8d83",
                     "children": [
                         {
-                            "name": "Oligodendrocyte",
-                            "nodeColor": "#594a26",
+                            "name": "CN GABA-Glut",
+                            "nodeColor": "#d2599a",
                             "children": [
                                 {
-                                    "name": "Oligo OPALIN",
-                                    "nodeColor": "#66391F",
-                                    "children": []
-                                },
-                                {
-                                    "name": "Oligo PLEKHG1",
-                                    "nodeColor": "#594a26",
-                                    "children": []
-                                },
-                                {
-                                    "name": "ImOligo",
-                                    "nodeColor": "#CC915C",
-                                    "children": []
-                                }
-                            ]
-                        },
-                        {
-                            "name": "COP",
-                            "nodeColor": "#CCA43D",
-                            "children": [
-                                {
-                                    "name": "COP",
-                                    "nodeColor": "#CCA43D",
-                                    "children": []
-                                }
-                            ]
-                        },
-                        {
-                            "name": "OPC",
-                            "nodeColor": "#f5e689",
-                            "children": [
-                                {
-                                    "name": "OPC",
-                                    "nodeColor": "#f5e689",
-                                    "children": []
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "name": "Astro-Epen",
-                    "nodeColor": "#401e66",
-                    "children": [
-                        {
-                            "name": "Astrocyte",
-                            "nodeColor": "#401e66",
-                            "children": [
-                                {
-                                    "name": "Astrocyte",
-                                    "nodeColor": "#195f8d",
-                                    "children": []
-                                }
-                            ]
-                        },
-                        {
-                            "name": "Ependymal",
-                            "nodeColor": "#564860",
-                            "children": [
-                                {
-                                    "name": "Ependymal",
-                                    "nodeColor": "#564860",
-                                    "children": []
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "name": "Immune",
-                    "nodeColor": "#995C60",
-                    "children": [
-                        {
-                            "name": "Microglia",
-                            "nodeColor": "#995C60",
-                            "children": [
-                                {
-                                    "name": "Microglia",
-                                    "nodeColor": "#995C60",
-                                    "children": []
-                                }
-                            ]
-                        },
-                        {
-                            "name": "Macrophage",
-                            "nodeColor": "#CC887A",
-                            "children": [
-                                {
-                                    "name": "BAM",
-                                    "nodeColor": "#CC887A",
-                                    "children": []
-                                }
-                            ]
-                        },
-                        {
-                            "name": "Monocyte",
-                            "nodeColor": "#C3CC7A",
-                            "children": [
-                                {
-                                    "name": "Monocyte",
-                                    "nodeColor": "#C3CC7A",
-                                    "children": []
-                                }
-                            ]
-                        },
-                        {
-                            "name": "Lymphocyte",
-                            "nodeColor": "#5A662E",
-                            "children": [
-                                {
-                                    "name": "T cells",
-                                    "nodeColor": "#5A662E",
-                                    "children": []
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "name": "Vascular",
-                    "nodeColor": "#a8afa5",
-                    "children": [
-                        {
-                            "name": "Endo",
-                            "nodeColor": "#66493D",
-                            "children": [
-                                {
-                                    "name": "Endo",
-                                    "nodeColor": "#66493D",
-                                    "children": []
-                                }
-                            ]
-                        },
-                        {
-                            "name": "Pericyte",
-                            "nodeColor": "#B97300",
-                            "children": [
-                                {
-                                    "name": "Pericyte",
-                                    "nodeColor": "#B97300",
-                                    "children": []
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "name": "Vascular",
-                    "nodeColor": "#a8afa5",
-                    "children": [
-                        {
-                            "name": "SMC",
-                            "nodeColor": "#858881",
-                            "children": [
-                                {
-                                    "name": "SMC",
-                                    "nodeColor": "#858881",
-                                    "children": []
-                                }
-                            ]
-                        },
-                        {
-                            "name": "VLMC",
-                            "nodeColor": "#a8afa5",
-                            "children": [
-                                {
-                                    "name": "VLMC",
-                                    "nodeColor": "#a8afa5",
-                                    "children": []
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "name": "Glut Sero Dopa",
-            "nodeColor": "#91f4bb",
-            "children": [
-                {
-                    "name": "M Dopa",
-                    "nodeColor": "#0433b4",
-                    "children": [
-                        {
-                            "name": "M Dopa",
-                            "nodeColor": "#77f0ca",
-                            "children": [
-                                {
-                                    "name": "SN SOX6 Dopa",
-                                    "nodeColor": "#D7AAE4",
-                                    "children": []
-                                },
-                                {
-                                    "name": "SN-VTR GAD2 Dopa",
-                                    "nodeColor": "#3EC918",
+                                    "name": "GPi Shell",
+                                    "nodeColor": "#642265",
                                     "children": []
                                 }
                             ]
@@ -223,6 +29,97 @@
             "name": "Subpallium GABA",
             "nodeColor": "#19613b",
             "children": [
+                {
+                    "name": "F M GABA",
+                    "nodeColor": "#cd0f13",
+                    "children": [
+                        {
+                            "name": "F M GATA3 GABA",
+                            "nodeColor": "#311a96",
+                            "children": [
+                                {
+                                    "name": "SN GATA3-PAX8 GABA",
+                                    "nodeColor": "#ff7266",
+                                    "children": []
+                                },
+                                {
+                                    "name": "SN-VTR-HTH GATA3-TCF7L2 GABA",
+                                    "nodeColor": "#1dbfcf",
+                                    "children": []
+                                },
+                                {
+                                    "name": "SN GATA3-PVALB GABA",
+                                    "nodeColor": "#017d7c",
+                                    "children": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "CN LHX8 GABA",
+                            "nodeColor": "#caf28b",
+                            "children": [
+                                {
+                                    "name": "GPe SOX6-CTXND1 GABA",
+                                    "nodeColor": "#e9dc4d",
+                                    "children": []
+                                },
+                                {
+                                    "name": "GPe-NDB-SI LHX6-LHX8-GBX1 GABA",
+                                    "nodeColor": "#B2520E",
+                                    "children": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "CN ONECUT1 GABA",
+                            "nodeColor": "#967be5",
+                            "children": [
+                                {
+                                    "name": "GPi Core",
+                                    "nodeColor": "#d3489a",
+                                    "children": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "SN PAX7 GABA",
+                            "nodeColor": "#720a7d",
+                            "children": [
+                                {
+                                    "name": "SN EBF2 GABA",
+                                    "nodeColor": "#c8df45",
+                                    "children": []
+                                },
+                                {
+                                    "name": "SN SEMA5A GABA",
+                                    "nodeColor": "#3604fb",
+                                    "children": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "F GABA",
+                            "nodeColor": "#7ba2df",
+                            "children": [
+                                {
+                                    "name": "AMY-SLEA-BNST D1 GABA",
+                                    "nodeColor": "#9e86de",
+                                    "children": []
+                                },
+                                {
+                                    "name": "AMY-SLEA-BNST GABA",
+                                    "nodeColor": "#b69e14",
+                                    "children": []
+                                },
+                                {
+                                    "name": "ZI-HTH GABA",
+                                    "nodeColor": "#c49c94",
+                                    "children": []
+                                }
+                            ]
+                        }
+                    ]
+                },
                 {
                     "name": "Cx GABA",
                     "nodeColor": "#ebb3a7",
@@ -246,62 +143,37 @@
                     ]
                 },
                 {
+                    "name": "CN CGE GABA",
+                    "nodeColor": "#26e8bb",
+                    "children": [
+                        {
+                            "name": "CN VIP GABA",
+                            "nodeColor": "#1bc06a",
+                            "children": [
+                                {
+                                    "name": "VIP GABA",
+                                    "nodeColor": "#fc2b80",
+                                    "children": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "CN LAMP5-CXCL14 GABA",
+                            "nodeColor": "#e5b672",
+                            "children": [
+                                {
+                                    "name": "LAMP5-CXCL14 GABA",
+                                    "nodeColor": "#f6b5d1",
+                                    "children": []
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
                     "name": "CN MGE GABA",
                     "nodeColor": "#ce4c27",
                     "children": [
-                        {
-                            "name": "CN ST18 GABA",
-                            "nodeColor": "#5fd989",
-                            "children": [
-                                {
-                                    "name": "STR-BF TAC3-PLPP4-LHX8 GABA",
-                                    "nodeColor": "#9d3b4f",
-                                    "children": []
-                                },
-                                {
-                                    "name": "STR FS PTHLH-PVALB GABA",
-                                    "nodeColor": "#e16c95",
-                                    "children": []
-                                },
-                                {
-                                    "name": "STR TAC3-PLPP4 GABA",
-                                    "nodeColor": "#21eef1",
-                                    "children": []
-                                }
-                            ]
-                        },
-                        {
-                            "name": "CN Cholinergic GABA",
-                            "nodeColor": "#b1f081",
-                            "children": [
-                                {
-                                    "name": "STR Cholinergic GABA",
-                                    "nodeColor": "#8f5ff5",
-                                    "children": []
-                                },
-                                {
-                                    "name": "STRd Cholinergic GABA",
-                                    "nodeColor": "#a9f266",
-                                    "children": []
-                                },
-                                {
-                                    "name": "GPin-BF Cholinergic GABA",
-                                    "nodeColor": "#6FC7B2",
-                                    "children": []
-                                }
-                            ]
-                        },
-                        {
-                            "name": "CN LAMP5-LHX6 GABA",
-                            "nodeColor": "#f48d44",
-                            "children": [
-                                {
-                                    "name": "LAMP5-LHX6 GABA",
-                                    "nodeColor": "#00af88",
-                                    "children": []
-                                }
-                            ]
-                        },
                         {
                             "name": "STR SST-CHODL GABA",
                             "nodeColor": "#eea495",
@@ -336,6 +208,59 @@
                                 {
                                     "name": "STR SST-ADARB2 GABA",
                                     "nodeColor": "#fde020",
+                                    "children": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "CN LAMP5-LHX6 GABA",
+                            "nodeColor": "#f48d44",
+                            "children": [
+                                {
+                                    "name": "LAMP5-LHX6 GABA",
+                                    "nodeColor": "#00af88",
+                                    "children": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "CN ST18 GABA",
+                            "nodeColor": "#5fd989",
+                            "children": [
+                                {
+                                    "name": "STR-BF TAC3-PLPP4-LHX8 GABA",
+                                    "nodeColor": "#9d3b4f",
+                                    "children": []
+                                },
+                                {
+                                    "name": "STR TAC3-PLPP4 GABA",
+                                    "nodeColor": "#21eef1",
+                                    "children": []
+                                },
+                                {
+                                    "name": "STR FS PTHLH-PVALB GABA",
+                                    "nodeColor": "#e16c95",
+                                    "children": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "CN Cholinergic GABA",
+                            "nodeColor": "#b1f081",
+                            "children": [
+                                {
+                                    "name": "STR Cholinergic GABA",
+                                    "nodeColor": "#8f5ff5",
+                                    "children": []
+                                },
+                                {
+                                    "name": "GPin-BF Cholinergic GABA",
+                                    "nodeColor": "#6FC7B2",
+                                    "children": []
+                                },
+                                {
+                                    "name": "STRd Cholinergic GABA",
+                                    "nodeColor": "#a9f266",
                                     "children": []
                                 }
                             ]
@@ -385,32 +310,6 @@
                             ]
                         },
                         {
-                            "name": "STR D2 MSN",
-                            "nodeColor": "#253c8c",
-                            "children": [
-                                {
-                                    "name": "STRd D2 StrioMat Hybrid MSN",
-                                    "nodeColor": "#5713c3",
-                                    "children": []
-                                },
-                                {
-                                    "name": "STRd D2 Striosome MSN",
-                                    "nodeColor": "#ff9896",
-                                    "children": []
-                                },
-                                {
-                                    "name": "STRd D2 Matrix MSN",
-                                    "nodeColor": "#aec7e8",
-                                    "children": []
-                                },
-                                {
-                                    "name": "STRv D2 MSN",
-                                    "nodeColor": "#98df8a",
-                                    "children": []
-                                }
-                            ]
-                        },
-                        {
                             "name": "STR D1 MSN",
                             "nodeColor": "#1655f2",
                             "children": [
@@ -430,122 +329,29 @@
                                     "children": []
                                 }
                             ]
-                        }
-                    ]
-                },
-                {
-                    "name": "F M GABA",
-                    "nodeColor": "#cd0f13",
-                    "children": [
-                        {
-                            "name": "F M GATA3 GABA",
-                            "nodeColor": "#311a96",
-                            "children": [
-                                {
-                                    "name": "SN-VTR-HTH GATA3-TCF7L2 GABA",
-                                    "nodeColor": "#1dbfcf",
-                                    "children": []
-                                },
-                                {
-                                    "name": "SN GATA3-PVALB GABA",
-                                    "nodeColor": "#017d7c",
-                                    "children": []
-                                },
-                                {
-                                    "name": "SN GATA3-PAX8 GABA",
-                                    "nodeColor": "#ff7266",
-                                    "children": []
-                                }
-                            ]
                         },
                         {
-                            "name": "CN ONECUT1 GABA",
-                            "nodeColor": "#967be5",
+                            "name": "STR D2 MSN",
+                            "nodeColor": "#253c8c",
                             "children": [
                                 {
-                                    "name": "GPi Core",
-                                    "nodeColor": "#d3489a",
-                                    "children": []
-                                }
-                            ]
-                        },
-                        {
-                            "name": "F GABA",
-                            "nodeColor": "#7ba2df",
-                            "children": [
-                                {
-                                    "name": "ZI-HTH GABA",
-                                    "nodeColor": "#c49c94",
+                                    "name": "STRd D2 StrioMat Hybrid MSN",
+                                    "nodeColor": "#5713c3",
                                     "children": []
                                 },
                                 {
-                                    "name": "AMY-SLEA-BNST D1 GABA",
-                                    "nodeColor": "#9e86de",
+                                    "name": "STRv D2 MSN",
+                                    "nodeColor": "#98df8a",
                                     "children": []
                                 },
                                 {
-                                    "name": "AMY-SLEA-BNST GABA",
-                                    "nodeColor": "#b69e14",
-                                    "children": []
-                                }
-                            ]
-                        },
-                        {
-                            "name": "CN LHX8 GABA",
-                            "nodeColor": "#caf28b",
-                            "children": [
-                                {
-                                    "name": "GPe-NDB-SI LHX6-LHX8-GBX1 GABA",
-                                    "nodeColor": "#B2520E",
+                                    "name": "STRd D2 Matrix MSN",
+                                    "nodeColor": "#aec7e8",
                                     "children": []
                                 },
                                 {
-                                    "name": "GPe SOX6-CTXND1 GABA",
-                                    "nodeColor": "#e9dc4d",
-                                    "children": []
-                                }
-                            ]
-                        },
-                        {
-                            "name": "SN PAX7 GABA",
-                            "nodeColor": "#720a7d",
-                            "children": [
-                                {
-                                    "name": "SN EBF2 GABA",
-                                    "nodeColor": "#c8df45",
-                                    "children": []
-                                },
-                                {
-                                    "name": "SN SEMA5A GABA",
-                                    "nodeColor": "#3604fb",
-                                    "children": []
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "name": "CN CGE GABA",
-                    "nodeColor": "#26e8bb",
-                    "children": [
-                        {
-                            "name": "CN LAMP5-CXCL14 GABA",
-                            "nodeColor": "#e5b672",
-                            "children": [
-                                {
-                                    "name": "LAMP5-CXCL14 GABA",
-                                    "nodeColor": "#f6b5d1",
-                                    "children": []
-                                }
-                            ]
-                        },
-                        {
-                            "name": "CN VIP GABA",
-                            "nodeColor": "#1bc06a",
-                            "children": [
-                                {
-                                    "name": "VIP GABA",
-                                    "nodeColor": "#fc2b80",
+                                    "name": "STRd D2 Striosome MSN",
+                                    "nodeColor": "#ff9896",
                                     "children": []
                                 }
                             ]
@@ -559,16 +365,153 @@
             "nodeColor": "#a8afa5",
             "children": [
                 {
+                    "name": "Vascular",
+                    "nodeColor": "#a8afa5",
+                    "children": [
+                        {
+                            "name": "VLMC",
+                            "nodeColor": "#a8afa5",
+                            "children": [
+                                {
+                                    "name": "VLMC",
+                                    "nodeColor": "#a8afa5",
+                                    "children": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Endo",
+                            "nodeColor": "#66493D",
+                            "children": [
+                                {
+                                    "name": "Endo",
+                                    "nodeColor": "#66493D",
+                                    "children": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Pericyte",
+                            "nodeColor": "#B97300",
+                            "children": [
+                                {
+                                    "name": "Pericyte",
+                                    "nodeColor": "#B97300",
+                                    "children": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "SMC",
+                            "nodeColor": "#858881",
+                            "children": [
+                                {
+                                    "name": "SMC",
+                                    "nodeColor": "#858881",
+                                    "children": []
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
                     "name": "Immune",
                     "nodeColor": "#995C60",
                     "children": [
+                        {
+                            "name": "Monocyte",
+                            "nodeColor": "#C3CC7A",
+                            "children": [
+                                {
+                                    "name": "Monocyte",
+                                    "nodeColor": "#C3CC7A",
+                                    "children": []
+                                }
+                            ]
+                        },
                         {
                             "name": "Lymphocyte",
                             "nodeColor": "#5A662E",
                             "children": [
                                 {
+                                    "name": "T cells",
+                                    "nodeColor": "#5A662E",
+                                    "children": []
+                                },
+                                {
                                     "name": "B cells",
                                     "nodeColor": "#999517",
+                                    "children": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Macrophage",
+                            "nodeColor": "#CC887A",
+                            "children": [
+                                {
+                                    "name": "BAM",
+                                    "nodeColor": "#CC887A",
+                                    "children": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Microglia",
+                            "nodeColor": "#995C60",
+                            "children": [
+                                {
+                                    "name": "Microglia",
+                                    "nodeColor": "#995C60",
+                                    "children": []
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "OPC-Oligo",
+                    "nodeColor": "#594a26",
+                    "children": [
+                        {
+                            "name": "COP",
+                            "nodeColor": "#CCA43D",
+                            "children": [
+                                {
+                                    "name": "COP",
+                                    "nodeColor": "#CCA43D",
+                                    "children": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "OPC",
+                            "nodeColor": "#f5e689",
+                            "children": [
+                                {
+                                    "name": "OPC",
+                                    "nodeColor": "#f5e689",
+                                    "children": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "Oligodendrocyte",
+                            "nodeColor": "#594a26",
+                            "children": [
+                                {
+                                    "name": "ImOligo",
+                                    "nodeColor": "#CC915C",
+                                    "children": []
+                                },
+                                {
+                                    "name": "Oligo OPALIN",
+                                    "nodeColor": "#66391F",
+                                    "children": []
+                                },
+                                {
+                                    "name": "Oligo PLEKHG1",
+                                    "nodeColor": "#594a26",
                                     "children": []
                                 }
                             ]
@@ -580,12 +523,28 @@
                     "nodeColor": "#401e66",
                     "children": [
                         {
+                            "name": "Ependymal",
+                            "nodeColor": "#564860",
+                            "children": [
+                                {
+                                    "name": "Ependymal",
+                                    "nodeColor": "#564860",
+                                    "children": []
+                                }
+                            ]
+                        },
+                        {
                             "name": "Astrocyte",
                             "nodeColor": "#401e66",
                             "children": [
                                 {
                                     "name": "ImAstro",
                                     "nodeColor": "#401e66",
+                                    "children": []
+                                },
+                                {
+                                    "name": "Astrocyte",
+                                    "nodeColor": "#195f8d",
                                     "children": []
                                 }
                             ]
@@ -599,26 +558,20 @@
             "nodeColor": "#91f4bb",
             "children": [
                 {
-                    "name": "M Dopa",
-                    "nodeColor": "#0433b4",
-                    "children": [
-                        {
-                            "name": "M Dopa",
-                            "nodeColor": "#77f0ca",
-                            "children": [
-                                {
-                                    "name": "SN-VTR CALB1 Dopa",
-                                    "nodeColor": "#854098",
-                                    "children": []
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
                     "name": "F M Glut",
                     "nodeColor": "#7d0f09",
                     "children": [
+                        {
+                            "name": "F M Glut",
+                            "nodeColor": "#66750b",
+                            "children": [
+                                {
+                                    "name": "VTR-HTH Glut",
+                                    "nodeColor": "#54621f",
+                                    "children": []
+                                }
+                            ]
+                        },
                         {
                             "name": "F Glut",
                             "nodeColor": "#39e1e2",
@@ -634,37 +587,30 @@
                                     "children": []
                                 }
                             ]
-                        },
-                        {
-                            "name": "F M Glut",
-                            "nodeColor": "#66750b",
-                            "children": [
-                                {
-                                    "name": "VTR-HTH Glut",
-                                    "nodeColor": "#54621f",
-                                    "children": []
-                                }
-                            ]
                         }
                     ]
-                }
-            ]
-        },
-        {
-            "name": "Subpallium GABA-Glut",
-            "nodeColor": "#7e1d19",
-            "children": [
+                },
                 {
-                    "name": "CN GABA-Glut",
-                    "nodeColor": "#1c8d83",
+                    "name": "M Dopa",
+                    "nodeColor": "#0433b4",
                     "children": [
                         {
-                            "name": "CN GABA-Glut",
-                            "nodeColor": "#d2599a",
+                            "name": "M Dopa",
+                            "nodeColor": "#77f0ca",
                             "children": [
                                 {
-                                    "name": "GPi Shell",
-                                    "nodeColor": "#642265",
+                                    "name": "SN-VTR GAD2 Dopa",
+                                    "nodeColor": "#3EC918",
+                                    "children": []
+                                },
+                                {
+                                    "name": "SN SOX6 Dopa",
+                                    "nodeColor": "#D7AAE4",
+                                    "children": []
+                                },
+                                {
+                                    "name": "SN-VTR CALB1 Dopa",
+                                    "nodeColor": "#854098",
                                     "children": []
                                 }
                             ]
