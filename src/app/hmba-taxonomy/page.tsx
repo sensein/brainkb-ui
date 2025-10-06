@@ -269,7 +269,7 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => (
               </text>
               <text
                 x={0}
-                dy={28 / zoom}
+                dy={32 / zoom}
                 textAnchor="middle"
                 style={{
                   pointerEvents: 'none',
