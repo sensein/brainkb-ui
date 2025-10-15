@@ -2,12 +2,14 @@
 
 import dynamic from 'next/dynamic';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 
 const Tree = dynamic(() => import('react-d3-tree').then(m => m.Tree), { ssr: false });
 
 type NodeMeta = Record<string, string | number | boolean | null | undefined>;
 
 export default function HMBATaxonomyPage() {
+  const router = useRouter();
   const [data, setData] = useState<any>(null);
 
   // Fullscreen container + size
@@ -177,14 +179,32 @@ export default function HMBATaxonomyPage() {
   );
 
 // Custom node renderer - HOVER INTERACTIONS
-const renderCustomNode = ({ nodeDatum, toggleNode }: any) => (
-  <g
-    onClick={toggleNode}
-    onMouseEnter={() => setHoverNode(nodeDatum)}  // HOVER: Show tooltip when mouse enters node
-    onMouseLeave={() => setHoverNode(null)}       // HOVER: Hide tooltip when mouse leaves node
-    onMouseMove={updateMouse}                     // HOVER: Track mouse position for tooltip placement
-    cursor="pointer"
-  >
+const renderCustomNode = ({ nodeDatum, toggleNode }: any) => {
+  const handleNameClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the node toggle
+    console.log('Name clicked:', nodeDatum.name);
+
+    // Encode the node data to pass it to the detail page
+    const nodeData = {
+      name: nodeDatum.name,
+      meta: nodeDatum.meta,
+      nodeColor: nodeDatum.nodeColor
+    };
+
+    // Navigate to the detail page with the node data as a URL parameter
+    const encodedData = encodeURIComponent(JSON.stringify(nodeData));
+    router.push(`/hmba-taxonomy/node/${encodedData}`);
+  };
+
+  return (
+    <g
+      onClick={toggleNode}
+      // COMMENTED OUT: Hover on node itself
+      // onMouseEnter={() => setHoverNode(nodeDatum)}  // HOVER: Show tooltip when mouse enters node
+      // onMouseLeave={() => setHoverNode(null)}       // HOVER: Hide tooltip when mouse leaves node
+      // onMouseMove={updateMouse}                     // HOVER: Track mouse position for tooltip placement
+      cursor="pointer"
+    >
     {/* Circle */}
     <circle
       r={15}
@@ -208,13 +228,17 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => (
               x={0}
               dy={25 / zoom}
               textAnchor="middle"
+              onClick={handleNameClick}
+              onMouseEnter={() => setHoverNode(nodeDatum)}  // HOVER: Show tooltip when mouse enters text
+              onMouseLeave={() => setHoverNode(null)}       // HOVER: Hide tooltip when mouse leaves text
+              onMouseMove={updateMouse}                     // HOVER: Track mouse position for tooltip placement
               style={{
-                pointerEvents: 'none',
                 fontSize: '60px',
                 fill: 'black',
                 paintOrder: 'stroke',
                 stroke: 'white',
                 strokeWidth: 3,
+                cursor: 'pointer',
               }}
             >
               {name}
@@ -256,13 +280,17 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => (
                 x={0}
                 dy={20 / zoom}
                 textAnchor="middle"
+                onClick={handleNameClick}
+                onMouseEnter={() => setHoverNode(nodeDatum)}  // HOVER: Show tooltip when mouse enters text
+                onMouseLeave={() => setHoverNode(null)}       // HOVER: Hide tooltip when mouse leaves text
+                onMouseMove={updateMouse}                     // HOVER: Track mouse position for tooltip placement
                 style={{
-                  pointerEvents: 'none',
                   fontSize: '60px',
                   fill: 'black',
                   paintOrder: 'stroke',
                   stroke: 'white',
                   strokeWidth: 3,
+                  cursor: 'pointer',
                 }}
               >
                 {line1}
@@ -271,13 +299,17 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => (
                 x={0}
                 dy={32 / zoom}
                 textAnchor="middle"
+                onClick={handleNameClick}
+                onMouseEnter={() => setHoverNode(nodeDatum)}  // HOVER: Show tooltip when mouse enters text
+                onMouseLeave={() => setHoverNode(null)}       // HOVER: Hide tooltip when mouse leaves text
+                onMouseMove={updateMouse}                     // HOVER: Track mouse position for tooltip placement
                 style={{
-                  pointerEvents: 'none',
                   fontSize: '60px',
                   fill: 'black',
                   paintOrder: 'stroke',
                   stroke: 'white',
                   strokeWidth: 3,
+                  cursor: 'pointer',
                 }}
               >
                 {line2}
@@ -297,7 +329,8 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => (
         : ''}
     </title>
   </g>
-);
+  );
+};
 
   const Tooltip = () => {  // HOVER: Tooltip component that appears on hover
     if (!hoverNode) return null;  // HOVER: Only show if a node is being hovered
