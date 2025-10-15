@@ -188,7 +188,11 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => {
     const nodeData = {
       name: nodeDatum.name,
       meta: nodeDatum.meta,
-      nodeColor: nodeDatum.nodeColor
+      nodeColor: nodeDatum.nodeColor,
+      accession_id: nodeDatum.accession_id,
+      abbreviations: nodeDatum.abbreviations,
+      parent: nodeDatum.parent,
+      belongs_to_set: nodeDatum.belongs_to_set
     };
 
     // Navigate to the detail page with the node data as a URL parameter

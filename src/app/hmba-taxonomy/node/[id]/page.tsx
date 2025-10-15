@@ -120,35 +120,118 @@ export default function NodeDetailPage() {
             </div>
           </div>
 
-          {/* Metadata Section */}
-          <div className="px-6 py-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Metadata</h3>
-            
-            {nodeData.meta && Object.keys(nodeData.meta).length > 0 ? (
-              <div className="grid gap-4">
-                {Object.entries(nodeData.meta).map(([key, value]) => (
-                  <div key={key} className="flex flex-col sm:flex-row sm:items-center py-3 border-b border-gray-100 last:border-b-0">
-                    <div className="w-full sm:w-1/3 mb-2 sm:mb-0">
-                      <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">
-                        {key}
-                      </span>
-                    </div>
-                    <div className="w-full sm:w-2/3">
-                      <span className="text-gray-900">
-                        {value !== null && value !== undefined ? String(value) : 'N/A'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+          {/* Node Information Section */}
+          <div className="px-6 py-8 space-y-8">
+            {/* Accession ID */}
+            {nodeData.accession_id && (
+              <div>
+                <p className="text-lg font-semibold text-gray-900">
+                  <a 
+                    href="https://brain-bican.github.io/models/accession_id/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="underline"
+                    style={{ color: '#00416a' }}
+                    onMouseEnter={(e) => e.target.style.color = '#005a8a'}
+                    onMouseLeave={(e) => e.target.style.color = '#00416a'}
+                  >
+                    Accession ID:
+                  </a> <span className="font-mono">{nodeData.accession_id}</span>
+                </p>
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="text-gray-400 mb-2">
-                  <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
+            )}
+
+            {/* Parent */}
+            {nodeData.parent && (
+              <div>
+                <p className="text-lg font-semibold text-gray-900">
+                  <span style={{ color: '#00416a' }}>Parent:</span> <span className="font-medium">{nodeData.parent}</span>
+                </p>
+              </div>
+            )}
+
+            {/* Abbreviations */}
+            {nodeData.abbreviations && Array.isArray(nodeData.abbreviations) && nodeData.abbreviations.length > 0 && (
+              <div>
+                <h4 className="text-lg font-semibold mb-3">
+                  <a 
+                    href="https://brain-bican.github.io/models/has_abbreviation/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="underline"
+                    style={{ color: '#00416a' }}
+                    onMouseEnter={(e) => e.target.style.color = '#005a8a'}
+                    onMouseLeave={(e) => e.target.style.color = '#00416a'}
+                  >
+                    Abbreviations:
+                  </a>
+                </h4>
+                <div className="space-y-4">
+                  {nodeData.abbreviations.map((abbr: any, index: number) => (
+                    <div key={index} className="space-y-1">
+                      <p className="font-bold text-gray-900">{abbr.term}</p>
+                      {abbr.denotes && abbr.denotes.length > 0 && (
+                        <p className="text-sm text-gray-600">
+                          <a 
+                            href="https://brain-bican.github.io/models/denotes_parcellation_term/" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="underline"
+                            style={{ color: '#00416a' }}
+                            onMouseEnter={(e) => e.target.style.color = '#005a8a'}
+                            onMouseLeave={(e) => e.target.style.color = '#00416a'}
+                          >
+                            Denotes:
+                          </a>{' '}
+                          {abbr.denotes.map((denote: string, idx: number) => {
+                            const isUrl = denote.startsWith('http');
+                            return (
+                              <span key={idx}>
+                                {isUrl ? (
+                                  <a 
+                                    href={denote} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-800 underline"
+                                  >
+                                    {denote.split('/').pop()}
+                                  </a>
+                                ) : (
+                                  denote
+                                )}
+                                {idx < abbr.denotes.length - 1 && ', '}
+                              </span>
+                            );
+                          })}
+                        </p>
+                      )}
+                      {abbr.meaning && (
+                        <p className="text-sm text-gray-600">
+                          <a 
+                            href="https://brain-bican.github.io/models/meaning/" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="underline"
+                            style={{ color: '#00416a' }}
+                            onMouseEnter={(e) => e.target.style.color = '#005a8a'}
+                            onMouseLeave={(e) => e.target.style.color = '#00416a'}
+                          >
+                            Meaning:
+                          </a> {abbr.meaning}
+                        </p>
+                      )}
+                    </div>
+                  ))}
                 </div>
-                <p className="text-gray-500">No metadata available for this node</p>
+              </div>
+            )}
+
+            {/* Belongs to Set */}
+            {nodeData.belongs_to_set && (
+              <div>
+                <p className="text-lg font-semibold text-gray-900">
+                  <span style={{ color: '#00416a' }}>Belongs to Set:</span> <span className="font-mono">{nodeData.belongs_to_set}</span>
+                </p>
               </div>
             )}
           </div>
