@@ -350,17 +350,27 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => {
         style={{ left, top }}  // HOVER: Apply calculated position to tooltip
       >
         <div className="mb-1 font-semibold">{hoverNode.name || '(root)'}</div>  {/* HOVER: Display hovered node's name */}
-        {meta ? (
-          <div className="space-y-0.5">
-            {Object.entries(meta).map(([k, v]) => (
-              <div key={k} className="flex gap-2">
-                <span className="opacity-70">{k}:</span>
-                <span className="font-medium">{String(v)}</span>
-              </div>
-            ))}
+        
+        {/* Display accession_id prominently if available */}
+        {hoverNode.accession_id && (
+          <div className="mb-2 p-2 bg-blue-50 rounded border-l-2 border-blue-400">
+            <div className="flex gap-2">
+              <span className="opacity-70 text-xs font-medium uppercase tracking-wide">Accession ID:</span>
+              <span className="font-mono text-xs font-semibold text-blue-700">{hoverNode.accession_id}</span>
+            </div>
           </div>
-        ) : (
-          <div className="opacity-70">No metadata</div>
+        )}
+        
+        {/* Display abbreviations if available */}
+        {hoverNode.abbreviations && Array.isArray(hoverNode.abbreviations) && hoverNode.abbreviations.length > 0 && (
+          <div className="mb-2 p-2 bg-green-50 rounded border-l-2 border-green-400">
+            <div className="flex gap-2">
+              <span className="opacity-70 text-xs font-medium uppercase tracking-wide">Abbreviations:</span>
+              <span className="text-xs font-semibold text-green-700">
+                {hoverNode.abbreviations.map((abbr: any) => abbr.term).join(', ')}
+              </span>
+            </div>
+          </div>
         )}
       </div>
     );
