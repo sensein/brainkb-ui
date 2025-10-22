@@ -184,20 +184,12 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => {
     e.stopPropagation(); // Prevent triggering the node toggle
     console.log('Name clicked:', nodeDatum.name);
 
-    // Encode the node data to pass it to the detail page
-    const nodeData = {
-      name: nodeDatum.name,
-      meta: nodeDatum.meta,
-      nodeColor: nodeDatum.nodeColor,
-      accession_id: nodeDatum.accession_id,
-      abbreviations: nodeDatum.abbreviations,
-      parent: nodeDatum.parent,
-      belongs_to_set: nodeDatum.belongs_to_set
-    };
+    // TODO: this has to be changed to bican id
+    // Use accession_id as the identifier, fallback to name if no accession_id
+    const identifier = nodeDatum.accession_id || nodeDatum.name;
 
-    // Navigate to the detail page with the node data as a URL parameter
-    const encodedData = encodeURIComponent(JSON.stringify(nodeData));
-    router.push(`/hmba-taxonomy/node/${encodedData}`);
+    // Navigate to the detail page using the knowledge base approach
+    router.push(`/knowledge-base/celltaxon/${encodeURIComponent(identifier)}`);
   };
 
   return (
