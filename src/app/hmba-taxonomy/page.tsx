@@ -184,11 +184,9 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => {
     e.stopPropagation(); // Prevent triggering the node toggle
     console.log('Name clicked:', nodeDatum.name);
 
-    // TODO: this has to be changed to bican id
-    // Use accession_id as the identifier, fallback to name if no accession_id
-    const identifier = nodeDatum.accession_id || nodeDatum.name;
+    const identifier = nodeDatum.id;
 
-    // Navigate to the detail page using the knowledge base approach
+    // Navigate to the detail page from the  knowledge-base section
     router.push(`/knowledge-base/celltaxon/${encodeURIComponent(identifier)}`);
   };
 
