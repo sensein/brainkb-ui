@@ -211,7 +211,7 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => {
     >
     {/* Circle */}
     <circle
-      r={15}
+      r={35}
       fill={nodeDatum.nodeColor || 'lightgray'}
       stroke="#1f2937"
       strokeWidth={1.25}
@@ -224,6 +224,11 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => {
       {(() => {
         const name = nodeDatum.name;
         const maxLength = 12; // Maximum characters per line
+
+        // Don't show text for root node
+        if (name === 'root') {
+          return null;
+        }
 
         if (name.length <= maxLength) {
           // Single line for short names
