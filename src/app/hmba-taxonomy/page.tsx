@@ -19,62 +19,47 @@ export default function HMBATaxonomyPage() {
   const [translate, setTranslate] = useState<{ x: number; y: number }>({ x: 160, y: 300 });
   const [zoom, setZoom] = useState<number>(1);
 
-  // Tooltip
-  const [hoverNode, setHoverNode] = useState<any | null>(null);
-  const [mousePos, setMousePos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  // Tooltip - HOVER STATE MANAGEMENT
+  const [hoverNode, setHoverNode] = useState<any | null>(null);  // Stores which node is currently being hovered
+  const [mousePos, setMousePos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });  // Tracks mouse position for tooltip placement
 
   // Load data
   useEffect(() => {
     fetch('/treeData.json')
       .then(r => r.json())
-      .then(setData)
+      .then(data => {
+        // Just set the data without modification - we'll use initialDepth instead
+        console.log('Loaded data:', data); // Debug: see what the data looks like
+        setData(data);
+      })
       .catch(e => console.error('Error loading tree data:', e));
   }, []);
 
   // Observe viewport size
   useEffect(() => {
-    if (!containerRef.current) return;
-    const el = containerRef.current;
-    const ro = new ResizeObserver(entries => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        setSize({ width, height });
-      }
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
+    console.log('Setting up viewport size detection');
+
+    // Function to update size
+    const updateSize = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      console.log('Viewport size updated:', { width, height });
+      setSize({ width, height });
+    };
+
+    // Set initial size
+    updateSize();
+
+    // Listen for window resize
+    window.addEventListener('resize', updateSize);
+
+    return () => {
+      window.removeEventListener('resize', updateSize);
+    };
   }, []);
 
-  // Fetch tree data from API
-  // useEffect(() => {
-  //   const controller = new AbortController();
-    
-  //   const fetchTreeData = async () => {
-  //     try {
-  //       const res = await fetch('/api/hmba-taxonomy-data', {
-  //         method: "GET",
-  //         signal: controller.signal,
-  //       });
-
-  //       if (!res.ok) {
-  //         console.error("Failed to fetch tree data:", await res.text());
-  //         return;
-  //       }
-
-  //       const data = await res.json();
-  //       setData(data);
-  //     } catch (err: any) {
-  //       if (err?.name === "AbortError") return;
-  //       console.error("Error loading tree data:", err);
-  //     }
-  //   };
-
-  //   fetchTreeData();
-  //   return () => controller.abort();
-  // }, []);
-
-  // Tooltip helpers
-  const getClampedPos = (rawX: number, rawY: number) => {
+  // Tooltip helpers - HOVER POSITIONING
+  const getClampedPos = (rawX: number, rawY: number) => {  // Calculates tooltip position based on mouse coordinates
     const pad = 10;
     const offset = 12;
     const cont = containerRef.current;
@@ -97,10 +82,10 @@ export default function HMBATaxonomyPage() {
     return { left, top };
   };
 
-  const updateMouse = (evt: React.MouseEvent<SVGGElement, MouseEvent>) => {
+  const updateMouse = (evt: React.MouseEvent<SVGGElement, MouseEvent>) => {  // HOVER: Updates mouse position for tooltip tracking
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
-    setMousePos({ x: evt.clientX - rect.left, y: evt.clientY - rect.top });
+    setMousePos({ x: evt.clientX - rect.left, y: evt.clientY - rect.top });  // Convert to relative coordinates
   };
 
   // --- Fit to content ---
@@ -115,12 +100,20 @@ export default function HMBATaxonomyPage() {
 
     const cw = cont.clientWidth;
     const ch = cont.clientHeight;
-    const pad = 60;
+    const pad = 80;
 
     const scaleX = cw / (bbox.width + pad * 2);
     const scaleY = ch / (bbox.height + pad * 2);
-    // ⭐ keep scale within a sane range (prevents super-tiny text)
-    const scale = Math.min(1.5, Math.max(0.3, Math.min(scaleX, scaleY)));
+
+    console.log('Fit debug:', {
+      bbox: { width: bbox.width, height: bbox.height },
+      container: { width: cw, height: ch },
+      scales: { scaleX, scaleY },
+      pad
+    });
+
+    // Use the actual calculated scale to fit the wide tree
+    const scale = Math.min(1.0, Math.min(scaleX, scaleY));
 
     const contentW = bbox.width * scale;
     const contentH = bbox.height * scale;
@@ -131,36 +124,65 @@ export default function HMBATaxonomyPage() {
     const tx = left - bbox.x * scale;
     const ty = top - bbox.y * scale;
 
+    console.log('Final fit:', { scale, translate: { x: tx, y: ty } });
+
     setTranslate({ x: tx, y: ty });
     setZoom(scale);
   }, []);
 
   useEffect(() => {
-    if (!data || size.width === 0 || size.height === 0) return;
-    const id = requestAnimationFrame(() => fitToContent());
-    return () => cancelAnimationFrame(id);
+    console.log('Auto-fit effect triggered:', {
+      data: !!data,
+      dataType: typeof data,
+      size,
+      width: size.width,
+      height: size.height,
+      containerRef: !!containerRef.current
+    });
+    if (!data || size.width === 0 || size.height === 0) {
+      console.log('Auto-fit skipped - missing data or size', {
+        hasData: !!data,
+        width: size.width,
+        height: size.height
+      });
+      return;
+    }
+    // Auto-fit when data loads and viewport is ready
+    const timeoutId = setTimeout(() => {
+      console.log('Auto-fit executing...');
+      fitToContent();
+    }, 500); // Increased delay to ensure tree is fully rendered
+    return () => clearTimeout(timeoutId);
   }, [data, size.width, size.height, fitToContent]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === 'f') {
-        e.preventDefault();
-        fitToContent();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [fitToContent]);
+  // Fitting to content is disabled for now, not sure if we need it
+  // But it's pretty annoying since the search doesn't work well with it
+  // useEffect(() => {
+  //   const onKey = (e: KeyboardEvent) => {
+  //     if (e.key.toLowerCase() === 'f') {
+  //       e.preventDefault();
+  //       fitToContent();
+  //     }
+  //   };
+  //   window.addEventListener('keydown', onKey);
+  //   return () => window.removeEventListener('keydown', onKey);
+  // }, [fitToContent]);
 
-  if (!data) return <div>Loading...</div>;
+  if (!data) return (
+    <div>
+      <div style={{ backgroundColor: 'red', color: 'white', padding: '20px', fontSize: '20px' }}>
+        LOADING - DATA NOT READY
+      </div>
+    </div>
+  );
 
-// Custom node renderer
+// Custom node renderer - HOVER INTERACTIONS
 const renderCustomNode = ({ nodeDatum, toggleNode }: any) => (
   <g
     onClick={toggleNode}
-    onMouseEnter={() => setHoverNode(nodeDatum)}
-    onMouseLeave={() => setHoverNode(null)}
-    onMouseMove={updateMouse}
+    onMouseEnter={() => setHoverNode(nodeDatum)}  // HOVER: Show tooltip when mouse enters node
+    onMouseLeave={() => setHoverNode(null)}       // HOVER: Hide tooltip when mouse leaves node
+    onMouseMove={updateMouse}                     // HOVER: Track mouse position for tooltip placement
     cursor="pointer"
   >
     {/* Circle */}
@@ -173,22 +195,97 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => (
       shapeRendering="geometricPrecision"
     />
 
-    {/* Non-scaling text with black fill */}
-    <g transform={`scale(${1 / zoom})`}>
-      <text
-        x={20}
-        dy={5}
-        style={{
-          pointerEvents: 'none',
-          fontSize: '14px',
-          fill: 'black',            // 👈 force text fill to black
-          paintOrder: 'stroke',
-          stroke: 'white',          // halo only
-          strokeWidth: 3,
-        }}
-      >
-        {nodeDatum.name}
-      </text>
+    {/* Non-scaling text with black fill - positioned below node */}
+    <g>
+      {(() => {
+        const name = nodeDatum.name;
+        const maxLength = 12; // Maximum characters per line
+
+        if (name.length <= maxLength) {
+          // Single line for short names
+          return (
+            <text
+              x={0}
+              dy={25 / zoom}
+              textAnchor="middle"
+              style={{
+                pointerEvents: 'none',
+                fontSize: '60px',
+                fill: 'black',
+                paintOrder: 'stroke',
+                stroke: 'white',
+                strokeWidth: 3,
+              }}
+            >
+              {name}
+            </text>
+          );
+        } else {
+          // Two lines for long names
+          const words = name.split(' ');
+          let line1 = '';
+          let line2 = '';
+
+          // Try to split at word boundaries
+          if (words.length > 1) {
+            let currentLine = '';
+            for (const word of words) {
+              if ((currentLine + ' ' + word).trim().length <= maxLength) {
+                currentLine = (currentLine + ' ' + word).trim();
+              } else {
+                if (line1 === '') {
+                  line1 = currentLine;
+                  currentLine = word;
+                } else {
+                  line2 = currentLine + ' ' + word;
+                  break;
+                }
+              }
+            }
+            if (line2 === '') line2 = currentLine;
+          } else {
+            // Single word - split in the middle
+            const mid = Math.ceil(name.length / 2);
+            line1 = name.substring(0, mid);
+            line2 = name.substring(mid);
+          }
+
+          return (
+            <>
+              <text
+                x={0}
+                dy={20 / zoom}
+                textAnchor="middle"
+                style={{
+                  pointerEvents: 'none',
+                  fontSize: '60px',
+                  fill: 'black',
+                  paintOrder: 'stroke',
+                  stroke: 'white',
+                  strokeWidth: 3,
+                }}
+              >
+                {line1}
+              </text>
+              <text
+                x={0}
+                dy={32 / zoom}
+                textAnchor="middle"
+                style={{
+                  pointerEvents: 'none',
+                  fontSize: '60px',
+                  fill: 'black',
+                  paintOrder: 'stroke',
+                  stroke: 'white',
+                  strokeWidth: 3,
+                }}
+              >
+                {line2}
+              </text>
+            </>
+          );
+        }
+      })()}
     </g>
 
     <title>
@@ -202,10 +299,9 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => (
   </g>
 );
 
-
-  const Tooltip = () => {
-    if (!hoverNode) return null;
-    const { left, top } = getClampedPos(mousePos.x, mousePos.y);
+  const Tooltip = () => {  // HOVER: Tooltip component that appears on hover
+    if (!hoverNode) return null;  // HOVER: Only show if a node is being hovered
+    const { left, top } = getClampedPos(mousePos.x, mousePos.y);  // HOVER: Position tooltip based on mouse position
     const meta: NodeMeta | undefined = hoverNode.meta;
 
     return (
@@ -218,9 +314,9 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => (
           whitespace-pre-wrap break-words break-all
           pointer-events-none
         "
-        style={{ left, top }}
+        style={{ left, top }}  // HOVER: Apply calculated position to tooltip
       >
-        <div className="mb-1 font-semibold">{hoverNode.name || '(root)'}</div>
+        <div className="mb-1 font-semibold">{hoverNode.name || '(root)'}</div>  {/* HOVER: Display hovered node's name */}
         {meta ? (
           <div className="space-y-0.5">
             {Object.entries(meta).map(([k, v]) => (
@@ -238,48 +334,79 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => (
   };
 
   return (
-    <div ref={containerRef} className="fixed inset-0 m-0 p-0 overflow-hidden">
-      {/* ⭐ global SVG crispness tweaks */}
-      <style jsx global>{`
-        .rd3t-svg {
-          shape-rendering: geometricPrecision;
-          text-rendering: optimizeLegibility;
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
-        }
-        .rd3t-link path {
-          vector-effect: non-scaling-stroke;      /* crisp links */
-          shape-rendering: geometricPrecision;
-          stroke-width: 1.25px;
-        }
-      `}</style>
+    <div>
+      <div ref={containerRef} className="fixed inset-0 m-0 p-0 overflow-hidden">
+        {/* ⭐ global SVG crispness tweaks */}
+        <style jsx global>{`
+          .rd3t-svg {
+            shape-rendering: geometricPrecision;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+          }
+          .rd3t-link path {
+            vector-effect: non-scaling-stroke;      /* crisp links */
+            shape-rendering: geometricPrecision;
+            stroke-width: 4.25px;
+          }
+        `}</style>
 
-      {/* Tooltip */}
-      <Tooltip />
+        {/* Tooltip - HOVER: Renders the tooltip component */}
+        <Tooltip />
 
-      {/* Fit button */}
-      <button
-        onClick={fitToContent}
-        className="absolute right-4 top-4 z-20 rounded-md border border-gray-300 bg-white/90 px-3 py-1 text-sm shadow hover:bg-white"
-        title="Fit to content (F)"
-      >
-        Fit to content
-      </button>
+        <Tree
+          data={data}
+          orientation="vertical"
+          collapsible
+          initialDepth={2}
+          dimensions={{
+            width: size.width || (typeof window !== 'undefined' ? window.innerWidth : 1200),
+            height: size.height || (typeof window !== 'undefined' ? window.innerHeight : 800),
+          }}
+          translate={translate}
+          zoom={zoom}
+          renderCustomNodeElement={renderCustomNode}
+          separation={{ siblings: 2.5, nonSiblings: 3.0 }}
+          nodeSize={{ x: 200, y: 500 }}
+          pathFunc={"curveStep" as any}
+        />
+      </div>
 
-      <Tree
-        data={data}
-        orientation="vertical"
-        collapsible
-        dimensions={{
-          width: size.width || (typeof window !== 'undefined' ? window.innerWidth : 1200),
-          height: size.height || (typeof window !== 'undefined' ? window.innerHeight : 800),
-        }}
-        translate={translate}
-        zoom={zoom}
-        renderCustomNodeElement={renderCustomNode}
-        separation={{ siblings: 1.2, nonSiblings: 1.5 }}
-        pathFunc="curveStep"
-      />
+      {/* FIT BUTTON - SEPARATE OVERLAY LAYER */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        pointerEvents: 'none',
+        zIndex: 10000
+      }}>
+        <button
+          onClick={() => {
+            console.log('Fit button clicked!');
+            fitToContent();
+          }}
+          style={{
+            position: 'absolute',
+            top: '120px',
+            right: '20px',
+            pointerEvents: 'auto',
+            backgroundColor: '#3b82f6',
+            color: 'white',
+            padding: '8px 16px',
+            border: '1px solid #1e40af',
+            borderRadius: '6px',
+            fontSize: '12px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+          }}
+          title="Fit to content"
+        >
+          Fit to Content
+        </button>
+      </div>
     </div>
   );
 }
