@@ -3,9 +3,11 @@
   "nodeColor": "#ffffff",
   "children": [
     {
+      "id": "urn:bkbit:a1180a6a5720377aa899b46f9cf72cf004acd8e63b080e17efdf709c115b8880",
       "name": "Subpallium GABA",
       "nodeColor": "#19613b",
       "accession_id": "CS20250428_NEIGH_0002",
+      "parent_id": "root",
       "abbreviations": [
         {
           "term": "GABA",
@@ -25,9 +27,11 @@
       "belongs_to_set": "CCN20250428_LEVEL_0",
       "children": [
         {
+          "id": "urn:bkbit:ed9f2f633da0407aea191d5660ba6c2fc248a0b01e0f5094cd2646c6f636fa0d",
           "name": "CN LGE GABA",
           "nodeColor": "#d0b83c",
           "accession_id": "CS20250428_CLASS_0003",
+          "parent_id": "urn:bkbit:a1180a6a5720377aa899b46f9cf72cf004acd8e63b080e17efdf709c115b8880",
           "abbreviations": [
             {
               "term": "CN",
@@ -56,130 +60,11 @@
           "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
-              "name": "STR D2 MSN",
-              "nodeColor": "#253c8c",
-              "accession_id": "CS20250428_SUBCL_0029",
-              "abbreviations": [
-                {
-                  "term": "D2 MSN",
-                  "meaning": "D2 medium spiny neuron",
-                  "denotes": [
-                    "CL:4030052"
-                  ]
-                },
-                {
-                  "term": "STR",
-                  "meaning": "striatum",
-                  "denotes": [
-                    "DHBA:10333",
-                    "http://purl.obolibrary.org/obo/UBERON_0002435"
-                  ]
-                }
-              ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
-              "children": [
-                {
-                  "name": "STRd D2 Matrix MSN",
-                  "nodeColor": "#aec7e8",
-                  "accession_id": "CS20250428_GROUP_0052",
-                  "abbreviations": [
-                    {
-                      "term": "D2 Matrix MSN",
-                      "meaning": "D2 medium spiny neuron, matrix",
-                      "denotes": [
-                        "CL:4030047"
-                      ]
-                    },
-                    {
-                      "term": "STRd",
-                      "meaning": "dorsal striatum (caudoputamen complex-CP, STRd)",
-                      "denotes": [
-                        "DHBA:AA30192",
-                        "http://purl.obolibrary.org/obo/UBERON_0005382"
-                      ]
-                    }
-                  ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
-                  "children": []
-                },
-                {
-                  "name": "STRd D2 Striosome MSN",
-                  "nodeColor": "#ff9896",
-                  "accession_id": "CS20250428_GROUP_0054",
-                  "abbreviations": [
-                    {
-                      "term": "D2 Striosome MSN",
-                      "meaning": "D2 medium spiny neuron, striosomal",
-                      "denotes": [
-                        "CL:4030049"
-                      ]
-                    },
-                    {
-                      "term": "STRd",
-                      "meaning": "dorsal striatum (caudoputamen complex-CP, STRd)",
-                      "denotes": [
-                        "DHBA:AA30192",
-                        "http://purl.obolibrary.org/obo/UBERON_0005382"
-                      ]
-                    }
-                  ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
-                  "children": []
-                },
-                {
-                  "name": "STRv D2 MSN",
-                  "nodeColor": "#98df8a",
-                  "accession_id": "CS20250428_GROUP_0058",
-                  "abbreviations": [
-                    {
-                      "term": "D2 MSN",
-                      "meaning": "D2 medium spiny neuron",
-                      "denotes": [
-                        "CL:4030052"
-                      ]
-                    },
-                    {
-                      "term": "STRv",
-                      "meaning": "ventral striatum (STRv)",
-                      "denotes": [
-                        "DHBA:AA30195",
-                        "http://purl.obolibrary.org/obo/UBERON_0005403"
-                      ]
-                    }
-                  ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
-                  "children": []
-                },
-                {
-                  "name": "STRd D2 StrioMat Hybrid MSN",
-                  "nodeColor": "#5713c3",
-                  "accession_id": "CS20250428_GROUP_0053",
-                  "abbreviations": [
-                    {
-                      "term": "D2 StrioMat Hybrid MSN",
-                      "meaning": "D2 medium spiny neuron, matrix/striosomal hybrid",
-                      "denotes": [
-                        null
-                      ]
-                    },
-                    {
-                      "term": "STRd",
-                      "meaning": "dorsal striatum (caudoputamen complex-CP, STRd)",
-                      "denotes": [
-                        "DHBA:AA30192",
-                        "http://purl.obolibrary.org/obo/UBERON_0005382"
-                      ]
-                    }
-                  ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
-                  "children": []
-                }
-              ]
-            },
-            {
+              "id": "urn:bkbit:9c8af7ea404453959ee438a5a6726c211fcbc48f73c12dc59fa41f4b08e063fc",
               "name": "STR D1 MSN",
               "nodeColor": "#1655f2",
               "accession_id": "CS20250428_SUBCL_0028",
+              "parent_id": "urn:bkbit:ed9f2f633da0407aea191d5660ba6c2fc248a0b01e0f5094cd2646c6f636fa0d",
               "abbreviations": [
                 {
                   "term": "D1 MSN",
@@ -200,9 +85,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:ac3d1723dd20c868f6d6cfb88efb8e8ff7206c8306e4f564eb7d2400332732ff",
                   "name": "STRd D1 Matrix MSN",
                   "nodeColor": "#1f77b4",
                   "accession_id": "CS20250428_GROUP_0049",
+                  "parent_id": "urn:bkbit:9c8af7ea404453959ee438a5a6726c211fcbc48f73c12dc59fa41f4b08e063fc",
                   "abbreviations": [
                     {
                       "term": "D1 Matrix MSN",
@@ -215,7 +102,7 @@
                       "term": "STRd",
                       "meaning": "dorsal striatum (caudoputamen complex-CP, STRd)",
                       "denotes": [
-                        "DHBA:AA30192",
+                        "file:///Users/pujatrivedi/Desktop/MIT/test_bkbit_20241127/bkbit/bkbit/data/20251015_HMBA_BG.jsonld",
                         "http://purl.obolibrary.org/obo/UBERON_0005382"
                       ]
                     }
@@ -224,9 +111,11 @@
                   "children": []
                 },
                 {
+                  "id": "urn:bkbit:448e8dabfccebaff72cfa7d5ebf6d5e6ff0a004168c1451f5334b315ce29cfb7",
                   "name": "STRd D1 Striosome MSN",
                   "nodeColor": "#d62728",
                   "accession_id": "CS20250428_GROUP_0050",
+                  "parent_id": "urn:bkbit:9c8af7ea404453959ee438a5a6726c211fcbc48f73c12dc59fa41f4b08e063fc",
                   "abbreviations": [
                     {
                       "term": "D1 Striosome MSN",
@@ -239,7 +128,7 @@
                       "term": "STRd",
                       "meaning": "dorsal striatum (caudoputamen complex-CP, STRd)",
                       "denotes": [
-                        "DHBA:AA30192",
+                        "file:///Users/pujatrivedi/Desktop/MIT/test_bkbit_20241127/bkbit/bkbit/data/20251015_HMBA_BG.jsonld",
                         "http://purl.obolibrary.org/obo/UBERON_0005382"
                       ]
                     }
@@ -248,9 +137,11 @@
                   "children": []
                 },
                 {
+                  "id": "urn:bkbit:66a34ea93b8f03c16ca105c94927a7105c447d525fc2ac32f179361751e34c87",
                   "name": "STRv D1 MSN",
                   "nodeColor": "#339933",
                   "accession_id": "CS20250428_GROUP_0056",
+                  "parent_id": "urn:bkbit:9c8af7ea404453959ee438a5a6726c211fcbc48f73c12dc59fa41f4b08e063fc",
                   "abbreviations": [
                     {
                       "term": "D1 MSN",
@@ -274,9 +165,142 @@
               ]
             },
             {
+              "id": "urn:bkbit:9532ccdd32a34c840c75e19e08efade74297473f0a2b15a4fbe5bcd58d46c6a7",
+              "name": "STR D2 MSN",
+              "nodeColor": "#253c8c",
+              "accession_id": "CS20250428_SUBCL_0029",
+              "parent_id": "urn:bkbit:ed9f2f633da0407aea191d5660ba6c2fc248a0b01e0f5094cd2646c6f636fa0d",
+              "abbreviations": [
+                {
+                  "term": "D2 MSN",
+                  "meaning": "D2 medium spiny neuron",
+                  "denotes": [
+                    "CL:4030052"
+                  ]
+                },
+                {
+                  "term": "STR",
+                  "meaning": "striatum",
+                  "denotes": [
+                    "DHBA:10333",
+                    "http://purl.obolibrary.org/obo/UBERON_0002435"
+                  ]
+                }
+              ],
+              "belongs_to_set": "CCN20250428_LEVEL_2",
+              "children": [
+                {
+                  "id": "urn:bkbit:893e3b54e23cf2d1432423334bf07b527770bc8a7f6d626d337a33e2eef9725a",
+                  "name": "STRd D2 Matrix MSN",
+                  "nodeColor": "#aec7e8",
+                  "accession_id": "CS20250428_GROUP_0052",
+                  "parent_id": "urn:bkbit:9532ccdd32a34c840c75e19e08efade74297473f0a2b15a4fbe5bcd58d46c6a7",
+                  "abbreviations": [
+                    {
+                      "term": "D2 Matrix MSN",
+                      "meaning": "D2 medium spiny neuron, matrix",
+                      "denotes": [
+                        "CL:4030047"
+                      ]
+                    },
+                    {
+                      "term": "STRd",
+                      "meaning": "dorsal striatum (caudoputamen complex-CP, STRd)",
+                      "denotes": [
+                        "file:///Users/pujatrivedi/Desktop/MIT/test_bkbit_20241127/bkbit/bkbit/data/20251015_HMBA_BG.jsonld",
+                        "http://purl.obolibrary.org/obo/UBERON_0005382"
+                      ]
+                    }
+                  ],
+                  "belongs_to_set": "CCN20250428_LEVEL_3",
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:65d8a80088181a3102a72eef1de7a1fe8af71094c9b8ba65e03dd06007aded20",
+                  "name": "STRd D2 Striosome MSN",
+                  "nodeColor": "#ff9896",
+                  "accession_id": "CS20250428_GROUP_0054",
+                  "parent_id": "urn:bkbit:9532ccdd32a34c840c75e19e08efade74297473f0a2b15a4fbe5bcd58d46c6a7",
+                  "abbreviations": [
+                    {
+                      "term": "D2 Striosome MSN",
+                      "meaning": "D2 medium spiny neuron, striosomal",
+                      "denotes": [
+                        "CL:4030049"
+                      ]
+                    },
+                    {
+                      "term": "STRd",
+                      "meaning": "dorsal striatum (caudoputamen complex-CP, STRd)",
+                      "denotes": [
+                        "file:///Users/pujatrivedi/Desktop/MIT/test_bkbit_20241127/bkbit/bkbit/data/20251015_HMBA_BG.jsonld",
+                        "http://purl.obolibrary.org/obo/UBERON_0005382"
+                      ]
+                    }
+                  ],
+                  "belongs_to_set": "CCN20250428_LEVEL_3",
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:d948a4e3b6214e2f8bad73f4567f43789a7d17b73886766f61522f52128a73ed",
+                  "name": "STRv D2 MSN",
+                  "nodeColor": "#98df8a",
+                  "accession_id": "CS20250428_GROUP_0058",
+                  "parent_id": "urn:bkbit:9532ccdd32a34c840c75e19e08efade74297473f0a2b15a4fbe5bcd58d46c6a7",
+                  "abbreviations": [
+                    {
+                      "term": "D2 MSN",
+                      "meaning": "D2 medium spiny neuron",
+                      "denotes": [
+                        "CL:4030052"
+                      ]
+                    },
+                    {
+                      "term": "STRv",
+                      "meaning": "ventral striatum (STRv)",
+                      "denotes": [
+                        "DHBA:AA30195",
+                        "http://purl.obolibrary.org/obo/UBERON_0005403"
+                      ]
+                    }
+                  ],
+                  "belongs_to_set": "CCN20250428_LEVEL_3",
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:71a1862b604b7958a2a9f985ac3b40fe6e12ace6801b41e0acdbba147071cb3e",
+                  "name": "STRd D2 StrioMat Hybrid MSN",
+                  "nodeColor": "#5713c3",
+                  "accession_id": "CS20250428_GROUP_0053",
+                  "parent_id": "urn:bkbit:9532ccdd32a34c840c75e19e08efade74297473f0a2b15a4fbe5bcd58d46c6a7",
+                  "abbreviations": [
+                    {
+                      "term": "D2 StrioMat Hybrid MSN",
+                      "meaning": "D2 medium spiny neuron, matrix/striosomal hybrid",
+                      "denotes": [
+                        null
+                      ]
+                    },
+                    {
+                      "term": "STRd",
+                      "meaning": "dorsal striatum (caudoputamen complex-CP, STRd)",
+                      "denotes": [
+                        "file:///Users/pujatrivedi/Desktop/MIT/test_bkbit_20241127/bkbit/bkbit/data/20251015_HMBA_BG.jsonld",
+                        "http://purl.obolibrary.org/obo/UBERON_0005382"
+                      ]
+                    }
+                  ],
+                  "belongs_to_set": "CCN20250428_LEVEL_3",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:951736c22d57001487ae94c3f7180cb47329edc6d1eb5c32aec523c5d07f0180",
               "name": "STR Hybrid MSN",
               "nodeColor": "#79bdf4",
               "accession_id": "CS20250428_SUBCL_0030",
+              "parent_id": "urn:bkbit:ed9f2f633da0407aea191d5660ba6c2fc248a0b01e0f5094cd2646c6f636fa0d",
               "abbreviations": [
                 {
                   "term": "Hybrid MSN",
@@ -297,9 +321,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:0529409737a766fb803b2f4712af45d4a704aeb617cae92f37b20fb02c606972",
                   "name": "STR D1D2 Hybrid MSN",
                   "nodeColor": "#9467bd",
                   "accession_id": "CS20250428_GROUP_0051",
+                  "parent_id": "urn:bkbit:951736c22d57001487ae94c3f7180cb47329edc6d1eb5c32aec523c5d07f0180",
                   "abbreviations": [
                     {
                       "term": "D1D2 Hybrid MSN",
@@ -321,9 +347,11 @@
                   "children": []
                 },
                 {
+                  "id": "urn:bkbit:37e9789102d9a1684f741c91545ddeeea6cc21c54ad02eabf14fdad2edc8a856",
                   "name": "STRv D1 NUDAP MSN",
                   "nodeColor": "#e377c2",
                   "accession_id": "CS20250428_GROUP_0057",
+                  "parent_id": "urn:bkbit:951736c22d57001487ae94c3f7180cb47329edc6d1eb5c32aec523c5d07f0180",
                   "abbreviations": [
                     {
                       "term": "D1 NUDAP MSN",
@@ -347,9 +375,11 @@
               ]
             },
             {
+              "id": "urn:bkbit:75f095ef8982bc6fedd920645c9caf49f1f4316afea7b2e7c04d9d953bf070e9",
               "name": "OT Granular GABA",
               "nodeColor": "#9160cb",
               "accession_id": "CS20250428_SUBCL_0021",
+              "parent_id": "urn:bkbit:ed9f2f633da0407aea191d5660ba6c2fc248a0b01e0f5094cd2646c6f636fa0d",
               "abbreviations": [
                 {
                   "term": "GABA",
@@ -377,9 +407,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:cd1cbb79eea856c78c5ed976a6ba663d58245444500959de28e58d176cc82080",
                   "name": "OT D1 ICj",
                   "nodeColor": "#ff7f0e",
                   "accession_id": "CS20250428_GROUP_0024",
+                  "parent_id": "urn:bkbit:75f095ef8982bc6fedd920645c9caf49f1f4316afea7b2e7c04d9d953bf070e9",
                   "abbreviations": [
                     {
                       "term": "D1 ICj",
@@ -403,9 +435,11 @@
               ]
             },
             {
+              "id": "urn:bkbit:a6804e1c95107ea31667d8f6f3fad5968be055bb518f9d5daa9af642c9691a72",
               "name": "CN MEIS2 GABA",
               "nodeColor": "#d8f378",
               "accession_id": "CS20250428_SUBCL_0006",
+              "parent_id": "urn:bkbit:ed9f2f633da0407aea191d5660ba6c2fc248a0b01e0f5094cd2646c6f636fa0d",
               "abbreviations": [
                 {
                   "term": "CN",
@@ -433,9 +467,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:1c7d4ecda25bbc2d4bc2dfb5f8021384ee6ec152b38129b3948c40454c7e59fc",
                   "name": "GPe MEIS2-SOX6 GABA",
                   "nodeColor": "#937a2e",
                   "accession_id": "CS20250428_GROUP_0013",
+                  "parent_id": "urn:bkbit:a6804e1c95107ea31667d8f6f3fad5968be055bb518f9d5daa9af642c9691a72",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -474,9 +510,11 @@
           ]
         },
         {
+          "id": "urn:bkbit:b1867d88ecf1c12c0772a6c1fda8b4e47f2cc76c77f9f17fc3d1b6ee64d06e6b",
           "name": "F M GABA",
           "nodeColor": "#cd0f13",
           "accession_id": "CS20250428_CLASS_0006",
+          "parent_id": "urn:bkbit:a1180a6a5720377aa899b46f9cf72cf004acd8e63b080e17efdf709c115b8880",
           "abbreviations": [
             {
               "term": "F",
@@ -505,9 +543,11 @@
           "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
+              "id": "urn:bkbit:d06363d89933bb23271e60c510fe734e66c29b198fd70e2c85bce20bdd7de33a",
               "name": "F GABA",
               "nodeColor": "#7ba2df",
               "accession_id": "CS20250428_SUBCL_0037",
+              "parent_id": "urn:bkbit:b1867d88ecf1c12c0772a6c1fda8b4e47f2cc76c77f9f17fc3d1b6ee64d06e6b",
               "abbreviations": [
                 {
                   "term": "F",
@@ -528,9 +568,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:568b4ba6ed952a199c5dcc949aba726be8ea6d400360dcc29c82473699cabd92",
                   "name": "AMY-SLEA-BNST GABA",
                   "nodeColor": "#b69e14",
                   "accession_id": "CS20250428_GROUP_0066",
+                  "parent_id": "urn:bkbit:d06363d89933bb23271e60c510fe734e66c29b198fd70e2c85bce20bdd7de33a",
                   "abbreviations": [
                     {
                       "term": "AMY",
@@ -565,9 +607,11 @@
                   "children": []
                 },
                 {
+                  "id": "urn:bkbit:7acc79df9909a3a292b8a9d67df0e9709aee3fac5146bd6979a9f000b7a57645",
                   "name": "AMY-SLEA-BNST D1 GABA",
                   "nodeColor": "#9e86de",
                   "accession_id": "CS20250428_GROUP_0065",
+                  "parent_id": "urn:bkbit:d06363d89933bb23271e60c510fe734e66c29b198fd70e2c85bce20bdd7de33a",
                   "abbreviations": [
                     {
                       "term": "AMY",
@@ -609,9 +653,11 @@
                   "children": []
                 },
                 {
+                  "id": "urn:bkbit:946de7483b1469850a834c2e3ae136d68097ee3879b8efb29dee9583f1888e6d",
                   "name": "ZI-HTH GABA",
                   "nodeColor": "#c49c94",
                   "accession_id": "CS20250428_GROUP_0063",
+                  "parent_id": "urn:bkbit:d06363d89933bb23271e60c510fe734e66c29b198fd70e2c85bce20bdd7de33a",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -641,9 +687,11 @@
               ]
             },
             {
+              "id": "urn:bkbit:bad3ec5f57eea4900b7108d816a0dff31134b5cf83d4174ad7c50c2b4907226f",
               "name": "SN PAX7 GABA",
               "nodeColor": "#720a7d",
               "accession_id": "CS20250428_SUBCL_0026",
+              "parent_id": "urn:bkbit:b1867d88ecf1c12c0772a6c1fda8b4e47f2cc76c77f9f17fc3d1b6ee64d06e6b",
               "abbreviations": [
                 {
                   "term": "GABA",
@@ -671,9 +719,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:ebacd72983a25a31d6afb34016673095258228bf94cf017679d70f7213aaca88",
                   "name": "SN SEMA5A GABA",
                   "nodeColor": "#3604fb",
                   "accession_id": "CS20250428_GROUP_0034",
+                  "parent_id": "urn:bkbit:bad3ec5f57eea4900b7108d816a0dff31134b5cf83d4174ad7c50c2b4907226f",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -702,9 +752,11 @@
                   "children": []
                 },
                 {
+                  "id": "urn:bkbit:87d4257a2aad9c4335e303f5e1792e64fe0b8ab8d70b6ae628a1ef92fcb6f2ff",
                   "name": "SN EBF2 GABA",
                   "nodeColor": "#c8df45",
                   "accession_id": "CS20250428_GROUP_0030",
+                  "parent_id": "urn:bkbit:bad3ec5f57eea4900b7108d816a0dff31134b5cf83d4174ad7c50c2b4907226f",
                   "abbreviations": [
                     {
                       "term": "EBF2",
@@ -735,9 +787,11 @@
               ]
             },
             {
+              "id": "urn:bkbit:9d35cbc3c7cd2fe2d21498a6b49ab764bbc5f9b6d86cb44db27e3dfdb255105c",
               "name": "CN ONECUT1 GABA",
               "nodeColor": "#967be5",
               "accession_id": "CS20250428_SUBCL_0007",
+              "parent_id": "urn:bkbit:b1867d88ecf1c12c0772a6c1fda8b4e47f2cc76c77f9f17fc3d1b6ee64d06e6b",
               "abbreviations": [
                 {
                   "term": "CN",
@@ -765,9 +819,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:9798af24175c838af7fb1d9ee30521c005d4e138fe7c3f106b784711ba525b72",
                   "name": "GPi Core",
                   "nodeColor": "#d3489a",
                   "accession_id": "CS20250428_GROUP_0015",
+                  "parent_id": "urn:bkbit:9d35cbc3c7cd2fe2d21498a6b49ab764bbc5f9b6d86cb44db27e3dfdb255105c",
                   "abbreviations": [
                     {
                       "term": "GPi Core",
@@ -783,9 +839,11 @@
               ]
             },
             {
+              "id": "urn:bkbit:c40b41739016992fedc815f2e02d396f392d41a712dac2537b1f45333389dcdf",
               "name": "F M GATA3 GABA",
               "nodeColor": "#311a96",
               "accession_id": "CS20250428_SUBCL_0016",
+              "parent_id": "urn:bkbit:b1867d88ecf1c12c0772a6c1fda8b4e47f2cc76c77f9f17fc3d1b6ee64d06e6b",
               "abbreviations": [
                 {
                   "term": "F",
@@ -821,9 +879,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:1258d537e8e07226565dbd53af4d63756f8f0dbe59eeb4ab5911197b90f28d7d",
                   "name": "SN GATA3-PVALB GABA",
                   "nodeColor": "#017d7c",
                   "accession_id": "CS20250428_GROUP_0033",
+                  "parent_id": "urn:bkbit:c40b41739016992fedc815f2e02d396f392d41a712dac2537b1f45333389dcdf",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -859,9 +919,11 @@
                   "children": []
                 },
                 {
+                  "id": "urn:bkbit:fdad254081636e6dc707c852bbcf497bdc879e76906855a07df1b6fec30cb5f6",
                   "name": "SN-VTR-HTH GATA3-TCF7L2 GABA",
                   "nodeColor": "#1dbfcf",
                   "accession_id": "CS20250428_GROUP_0037",
+                  "parent_id": "urn:bkbit:c40b41739016992fedc815f2e02d396f392d41a712dac2537b1f45333389dcdf",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -911,9 +973,11 @@
                   "children": []
                 },
                 {
+                  "id": "urn:bkbit:08b9626fdc7481a1e89a362d7dffffb9a76e4d1d74f963d9dc3242cb69caae32",
                   "name": "SN GATA3-PAX8 GABA",
                   "nodeColor": "#ff7266",
                   "accession_id": "CS20250428_GROUP_0032",
+                  "parent_id": "urn:bkbit:c40b41739016992fedc815f2e02d396f392d41a712dac2537b1f45333389dcdf",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -951,9 +1015,11 @@
               ]
             },
             {
+              "id": "urn:bkbit:1bc9db2e718c4faeef3fa96dcd6e84d0497e3a2dce309d976f6fe60e8127f6ac",
               "name": "CN LHX8 GABA",
               "nodeColor": "#caf28b",
               "accession_id": "CS20250428_SUBCL_0005",
+              "parent_id": "urn:bkbit:b1867d88ecf1c12c0772a6c1fda8b4e47f2cc76c77f9f17fc3d1b6ee64d06e6b",
               "abbreviations": [
                 {
                   "term": "CN",
@@ -981,9 +1047,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:711533fa8dc696f785b6f801d1b0447b4bfd1de3106d82560faf9b184d4fc97d",
                   "name": "GPe SOX6-CTXND1 GABA",
                   "nodeColor": "#e9dc4d",
                   "accession_id": "CS20250428_GROUP_0014",
+                  "parent_id": "urn:bkbit:1bc9db2e718c4faeef3fa96dcd6e84d0497e3a2dce309d976f6fe60e8127f6ac",
                   "abbreviations": [
                     {
                       "term": "CTXND1",
@@ -1018,9 +1086,11 @@
                   "children": []
                 },
                 {
+                  "id": "urn:bkbit:8c10a836c5ec3f90545b0a420c272e0ab8cec7c931f2e652da876efeacd28bf0",
                   "name": "GPe-NDB-SI LHX6-LHX8-GBX1 GABA",
                   "nodeColor": "#B2520E",
                   "accession_id": "CS20250428_GROUP_0020",
+                  "parent_id": "urn:bkbit:1bc9db2e718c4faeef3fa96dcd6e84d0497e3a2dce309d976f6fe60e8127f6ac",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -1082,9 +1152,11 @@
           ]
         },
         {
+          "id": "urn:bkbit:50f8317daa38f60c302168e1a78e673a5bc93246bb4a25575d907f1d004854b6",
           "name": "Cx GABA",
           "nodeColor": "#ebb3a7",
           "accession_id": "CS20250428_CLASS_0012",
+          "parent_id": "urn:bkbit:a1180a6a5720377aa899b46f9cf72cf004acd8e63b080e17efdf709c115b8880",
           "abbreviations": [
             {
               "term": "Cx",
@@ -1104,9 +1176,11 @@
           "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
+              "id": "urn:bkbit:24af5cc72a5701b8b68079d061ffeb9bf90f603839edd8736a7bdcdfe2a5a520",
               "name": "ACx MEIS2 GABA",
               "nodeColor": "#3636ed",
               "accession_id": "CS20250428_SUBCL_0036",
+              "parent_id": "urn:bkbit:50f8317daa38f60c302168e1a78e673a5bc93246bb4a25575d907f1d004854b6",
               "abbreviations": [
                 {
                   "term": "ACx",
@@ -1133,9 +1207,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:3950ffe1569181e43044e619fc98a4222b29261470d5ee26bed6edb4cf9e0d79",
                   "name": "OB FRMD7 GABA",
                   "nodeColor": "#cd0753",
                   "accession_id": "CS20250428_GROUP_0068",
+                  "parent_id": "urn:bkbit:24af5cc72a5701b8b68079d061ffeb9bf90f603839edd8736a7bdcdfe2a5a520",
                   "abbreviations": [
                     {
                       "term": "FRMD7",
@@ -1163,9 +1239,11 @@
                   "children": []
                 },
                 {
+                  "id": "urn:bkbit:ec4d3b07a42a383f7ee507e618a9fcf10d65b3ac6a40129ac4762adbfff0b1e3",
                   "name": "OB Dopa-GABA",
                   "nodeColor": "#902f6b",
                   "accession_id": "CS20250428_GROUP_0067",
+                  "parent_id": "urn:bkbit:24af5cc72a5701b8b68079d061ffeb9bf90f603839edd8736a7bdcdfe2a5a520",
                   "abbreviations": [
                     {
                       "term": "Dopa",
@@ -1197,9 +1275,11 @@
           ]
         },
         {
+          "id": "urn:bkbit:c4d14ec37e63cd1a1b99610cbc0e1b0152b0782858168e125569815c69e9fc91",
           "name": "CN CGE GABA",
           "nodeColor": "#26e8bb",
           "accession_id": "CS20250428_CLASS_0001",
+          "parent_id": "urn:bkbit:a1180a6a5720377aa899b46f9cf72cf004acd8e63b080e17efdf709c115b8880",
           "abbreviations": [
             {
               "term": "CGE",
@@ -1228,9 +1308,11 @@
           "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
+              "id": "urn:bkbit:516d7ccdfee11d47df1facc5d8e698572e87425f126cec62af807717147d8370",
               "name": "CN VIP GABA",
               "nodeColor": "#1bc06a",
               "accession_id": "CS20250428_SUBCL_0009",
+              "parent_id": "urn:bkbit:c4d14ec37e63cd1a1b99610cbc0e1b0152b0782858168e125569815c69e9fc91",
               "abbreviations": [
                 {
                   "term": "CN",
@@ -1258,9 +1340,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:2f2e396b210c913b6b58252d061df66476b2ce36f3b7f37b5530c450f748e32f",
                   "name": "VIP GABA",
                   "nodeColor": "#fc2b80",
                   "accession_id": "CS20250428_GROUP_0047",
+                  "parent_id": "urn:bkbit:516d7ccdfee11d47df1facc5d8e698572e87425f126cec62af807717147d8370",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -1283,9 +1367,11 @@
               ]
             },
             {
+              "id": "urn:bkbit:30866284635dbcda69c7cdbee1f6737c8d9a9fc8896ac21fc0ff64ad685247dc",
               "name": "CN LAMP5-CXCL14 GABA",
               "nodeColor": "#e5b672",
               "accession_id": "CS20250428_SUBCL_0002",
+              "parent_id": "urn:bkbit:c4d14ec37e63cd1a1b99610cbc0e1b0152b0782858168e125569815c69e9fc91",
               "abbreviations": [
                 {
                   "term": "CN",
@@ -1320,9 +1406,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:4f54a1cea6c0d4085906278d7541f9f163e60fa19e55e485e81319b78e9c4177",
                   "name": "LAMP5-CXCL14 GABA",
                   "nodeColor": "#f6b5d1",
                   "accession_id": "CS20250428_GROUP_0004",
+                  "parent_id": "urn:bkbit:30866284635dbcda69c7cdbee1f6737c8d9a9fc8896ac21fc0ff64ad685247dc",
                   "abbreviations": [
                     {
                       "term": "CXCL14",
@@ -1354,9 +1442,11 @@
           ]
         },
         {
+          "id": "urn:bkbit:6f4e21caafa62cd6dc1a17a98a6eacd3b34b29803678ad09ffc86adb8783b216",
           "name": "CN MGE GABA",
           "nodeColor": "#ce4c27",
           "accession_id": "CS20250428_CLASS_0005",
+          "parent_id": "urn:bkbit:a1180a6a5720377aa899b46f9cf72cf004acd8e63b080e17efdf709c115b8880",
           "abbreviations": [
             {
               "term": "CN",
@@ -1385,9 +1475,11 @@
           "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
+              "id": "urn:bkbit:1c5b3aaaf65bab2369a457d6f3ee4f5679830cd1a8fd401180c2ac7f7a2c7901",
               "name": "STR SST-CHODL GABA",
               "nodeColor": "#eea495",
               "accession_id": "CS20250428_SUBCL_0033",
+              "parent_id": "urn:bkbit:6f4e21caafa62cd6dc1a17a98a6eacd3b34b29803678ad09ffc86adb8783b216",
               "abbreviations": [
                 {
                   "term": "CHODL",
@@ -1422,9 +1514,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:64910bce3ccd0b4bb1ecdc545a9b5ccd1d8c45d5b232dae391ee756755f7cd06",
                   "name": "STR SST-CHODL GABA",
                   "nodeColor": "#708297",
                   "accession_id": "CS20250428_GROUP_0043",
+                  "parent_id": "urn:bkbit:1c5b3aaaf65bab2369a457d6f3ee4f5679830cd1a8fd401180c2ac7f7a2c7901",
                   "abbreviations": [
                     {
                       "term": "CHODL",
@@ -1462,9 +1556,11 @@
               ]
             },
             {
+              "id": "urn:bkbit:699753aa477e79829c051093bcb31764dd30ebd15d2bacde6b0f57837e406727",
               "name": "STR RSPO2 GABA",
               "nodeColor": "#5b0e63",
               "accession_id": "CS20250428_SUBCL_0031",
+              "parent_id": "urn:bkbit:6f4e21caafa62cd6dc1a17a98a6eacd3b34b29803678ad09ffc86adb8783b216",
               "abbreviations": [
                 {
                   "term": "GABA",
@@ -1492,9 +1588,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:5aa591c81c8cc90e8780d70c599b558d0c05bd97beeb13db3f2ae594d410b708",
                   "name": "STR SST-RSPO2 GABA",
                   "nodeColor": "#f3b79b",
                   "accession_id": "CS20250428_GROUP_0044",
+                  "parent_id": "urn:bkbit:699753aa477e79829c051093bcb31764dd30ebd15d2bacde6b0f57837e406727",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -1530,9 +1628,11 @@
                   "children": []
                 },
                 {
+                  "id": "urn:bkbit:2a4038578eaf962690dc397418398edde17c1f9c307f63ee6da07bf6dbbde9d0",
                   "name": "STR LYPD6-RSPO2 GABA",
                   "nodeColor": "#488edc",
                   "accession_id": "CS20250428_GROUP_0041",
+                  "parent_id": "urn:bkbit:699753aa477e79829c051093bcb31764dd30ebd15d2bacde6b0f57837e406727",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -1570,9 +1670,11 @@
               ]
             },
             {
+              "id": "urn:bkbit:4157705de54075788dec8b423c4a831ccbf38cb02f2e539b202122a8146062a6",
               "name": "STR SST GABA",
               "nodeColor": "#ed8d40",
               "accession_id": "CS20250428_SUBCL_0032",
+              "parent_id": "urn:bkbit:6f4e21caafa62cd6dc1a17a98a6eacd3b34b29803678ad09ffc86adb8783b216",
               "abbreviations": [
                 {
                   "term": "GABA",
@@ -1600,9 +1702,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:77855d2b05e2d88cc120e1ad9a7174eabceb15fb96cde3ce8201ce77013d10dc",
                   "name": "STR SST-ADARB2 GABA",
                   "nodeColor": "#fde020",
                   "accession_id": "CS20250428_GROUP_0042",
+                  "parent_id": "urn:bkbit:4157705de54075788dec8b423c4a831ccbf38cb02f2e539b202122a8146062a6",
                   "abbreviations": [
                     {
                       "term": "ADARB2",
@@ -1640,9 +1744,11 @@
               ]
             },
             {
+              "id": "urn:bkbit:98c91a321d11b3dfb45f2ebc7b3e9b504f5d1dff9f86dd3889918377f6cb55ee",
               "name": "CN LAMP5-LHX6 GABA",
               "nodeColor": "#f48d44",
               "accession_id": "CS20250428_SUBCL_0003",
+              "parent_id": "urn:bkbit:6f4e21caafa62cd6dc1a17a98a6eacd3b34b29803678ad09ffc86adb8783b216",
               "abbreviations": [
                 {
                   "term": "CN",
@@ -1677,9 +1783,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:bbf0b7a817de65405e62e381a85532290e375765865f86c9de4d380ec1b937ad",
                   "name": "LAMP5-LHX6 GABA",
                   "nodeColor": "#00af88",
                   "accession_id": "CS20250428_GROUP_0005",
+                  "parent_id": "urn:bkbit:98c91a321d11b3dfb45f2ebc7b3e9b504f5d1dff9f86dd3889918377f6cb55ee",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -1709,9 +1817,11 @@
               ]
             },
             {
+              "id": "urn:bkbit:cbd5d3bd68abd73e930de297bead7b1c231d733dbd9c6ce17aeeab3d3d98428f",
               "name": "CN ST18 GABA",
               "nodeColor": "#5fd989",
               "accession_id": "CS20250428_SUBCL_0008",
+              "parent_id": "urn:bkbit:6f4e21caafa62cd6dc1a17a98a6eacd3b34b29803678ad09ffc86adb8783b216",
               "abbreviations": [
                 {
                   "term": "CN",
@@ -1739,9 +1849,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:cc13fc7b0603ecd9ada81e2de40557fe5a629094d56165c88a2cffddf16d2a2a",
                   "name": "STR FS PTHLH-PVALB GABA",
                   "nodeColor": "#e16c95",
                   "accession_id": "CS20250428_GROUP_0040",
+                  "parent_id": "urn:bkbit:cbd5d3bd68abd73e930de297bead7b1c231d733dbd9c6ce17aeeab3d3d98428f",
                   "abbreviations": [
                     {
                       "term": "FS",
@@ -1784,9 +1896,11 @@
                   "children": []
                 },
                 {
+                  "id": "urn:bkbit:dcac11b26dad5965dedcb6eab1e6e37153c70833de78274d290a87ce6597299d",
                   "name": "STR TAC3-PLPP4 GABA",
                   "nodeColor": "#21eef1",
                   "accession_id": "CS20250428_GROUP_0045",
+                  "parent_id": "urn:bkbit:cbd5d3bd68abd73e930de297bead7b1c231d733dbd9c6ce17aeeab3d3d98428f",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -1822,9 +1936,11 @@
                   "children": []
                 },
                 {
+                  "id": "urn:bkbit:340f36abbd75a9c560332828675399607280cb4026ec72eb0e6d5c81ded9fc0e",
                   "name": "STR-BF TAC3-PLPP4-LHX8 GABA",
                   "nodeColor": "#9d3b4f",
                   "accession_id": "CS20250428_GROUP_0046",
+                  "parent_id": "urn:bkbit:cbd5d3bd68abd73e930de297bead7b1c231d733dbd9c6ce17aeeab3d3d98428f",
                   "abbreviations": [
                     {
                       "term": "BF",
@@ -1876,9 +1992,11 @@
               ]
             },
             {
+              "id": "urn:bkbit:1e34e1803fd720303610a45682b7cf70da3a33f8c09649ee1e5ee3e8783f49f0",
               "name": "CN Cholinergic GABA",
               "nodeColor": "#b1f081",
               "accession_id": "CS20250428_SUBCL_0001",
+              "parent_id": "urn:bkbit:6f4e21caafa62cd6dc1a17a98a6eacd3b34b29803678ad09ffc86adb8783b216",
               "abbreviations": [
                 {
                   "term": "Cholinergic",
@@ -1906,9 +2024,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:1f67d5ce72079d9f5ef54f40d9281869de0f345e2f2144c05f252aa3f9d3cef4",
                   "name": "GPin-BF Cholinergic GABA",
                   "nodeColor": "#6FC7B2",
                   "accession_id": "CS20250428_GROUP_0003",
+                  "parent_id": "urn:bkbit:1e34e1803fd720303610a45682b7cf70da3a33f8c09649ee1e5ee3e8783f49f0",
                   "abbreviations": [
                     {
                       "term": "BF",
@@ -1943,9 +2063,11 @@
                   "children": []
                 },
                 {
+                  "id": "urn:bkbit:2b7d88ba77dda0252a55c01aed6655484408411086abd3788e89f8b743a3894b",
                   "name": "STR Cholinergic GABA",
                   "nodeColor": "#8f5ff5",
                   "accession_id": "CS20250428_GROUP_0055",
+                  "parent_id": "urn:bkbit:1e34e1803fd720303610a45682b7cf70da3a33f8c09649ee1e5ee3e8783f49f0",
                   "abbreviations": [
                     {
                       "term": "Cholinergic",
@@ -1974,9 +2096,11 @@
                   "children": []
                 },
                 {
+                  "id": "urn:bkbit:21ec59c591af199dc61b05de920f66b1bb630636468bfd10c79c7d896e7a32c7",
                   "name": "STRd Cholinergic GABA",
                   "nodeColor": "#a9f266",
                   "accession_id": "CS20250428_GROUP_0048",
+                  "parent_id": "urn:bkbit:1e34e1803fd720303610a45682b7cf70da3a33f8c09649ee1e5ee3e8783f49f0",
                   "abbreviations": [
                     {
                       "term": "Cholinergic",
@@ -1996,7 +2120,7 @@
                       "term": "STRd",
                       "meaning": "dorsal striatum (caudoputamen complex-CP, STRd)",
                       "denotes": [
-                        "DHBA:AA30192",
+                        "file:///Users/pujatrivedi/Desktop/MIT/test_bkbit_20241127/bkbit/bkbit/data/20251015_HMBA_BG.jsonld",
                         "http://purl.obolibrary.org/obo/UBERON_0005382"
                       ]
                     }
@@ -2011,9 +2135,11 @@
       ]
     },
     {
+      "id": "urn:bkbit:c97577956e7304c9b3b412cc0fc263e932425bf956003a5f50d164bd1a465611",
       "name": "Subpallium GABA-Glut",
       "nodeColor": "#7e1d19",
       "accession_id": "CS20250428_NEIGH_0003",
+      "parent_id": "root",
       "abbreviations": [
         {
           "term": "GABA",
@@ -2040,9 +2166,11 @@
       "belongs_to_set": "CCN20250428_LEVEL_0",
       "children": [
         {
+          "id": "urn:bkbit:7e16c11e2845843a50bd48cc1ded952dd6bb59c56971c3d876ade9d3d9eda970",
           "name": "CN GABA-Glut",
           "nodeColor": "#1c8d83",
           "accession_id": "CS20250428_CLASS_0002",
+          "parent_id": "urn:bkbit:c97577956e7304c9b3b412cc0fc263e932425bf956003a5f50d164bd1a465611",
           "abbreviations": [
             {
               "term": "CN",
@@ -2070,9 +2198,11 @@
           "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
+              "id": "urn:bkbit:283663ae3c8c227f8417b92f20ed93f4f7eb68f9ec06122277cd5d7881608ef4",
               "name": "CN GABA-Glut",
               "nodeColor": "#d2599a",
               "accession_id": "CS20250428_SUBCL_0014",
+              "parent_id": "urn:bkbit:7e16c11e2845843a50bd48cc1ded952dd6bb59c56971c3d876ade9d3d9eda970",
               "abbreviations": [
                 {
                   "term": "CN",
@@ -2100,9 +2230,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:5ba08d1de95782f00328fd6e103f3aec04dc66190ebb5409dce7274539b7be42",
                   "name": "GPi Shell",
                   "nodeColor": "#642265",
                   "accession_id": "CS20250428_GROUP_0016",
+                  "parent_id": "urn:bkbit:283663ae3c8c227f8417b92f20ed93f4f7eb68f9ec06122277cd5d7881608ef4",
                   "abbreviations": [
                     {
                       "term": "GPi Shell",
@@ -2122,9 +2254,11 @@
       ]
     },
     {
+      "id": "urn:bkbit:875a9b142a8487f9c426e0e732a5a1b8dc2ba4fedb8f13a0fe2b32385aef8969",
       "name": "Glut Sero Dopa",
       "nodeColor": "#91f4bb",
       "accession_id": "CS20250428_NEIGH_0000",
+      "parent_id": "root",
       "abbreviations": [
         {
           "term": "Dopa",
@@ -2151,9 +2285,11 @@
       "belongs_to_set": "CCN20250428_LEVEL_0",
       "children": [
         {
+          "id": "urn:bkbit:c36e122b525c9e9f9b444ba04ce700bd36d9bbd5769214fe1f805010b219b608",
           "name": "M Dopa",
           "nodeColor": "#0433b4",
           "accession_id": "CS20250428_CLASS_0009",
+          "parent_id": "urn:bkbit:875a9b142a8487f9c426e0e732a5a1b8dc2ba4fedb8f13a0fe2b32385aef8969",
           "abbreviations": [
             {
               "term": "Dopa",
@@ -2174,9 +2310,11 @@
           "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
+              "id": "urn:bkbit:c4691851cd8152d6a7041d92947d91654e26d063bb20da3eacc88fa9664244ad",
               "name": "M Dopa",
               "nodeColor": "#77f0ca",
               "accession_id": "CS20250428_SUBCL_0025",
+              "parent_id": "urn:bkbit:c36e122b525c9e9f9b444ba04ce700bd36d9bbd5769214fe1f805010b219b608",
               "abbreviations": [
                 {
                   "term": "Dopa",
@@ -2197,9 +2335,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:18858fd83f8744b5741c831616706483115048dae02eff87855ef834f6429bd5",
                   "name": "SN-VTR GAD2 Dopa",
                   "nodeColor": "#3EC918",
                   "accession_id": "CS20250428_GROUP_0031",
+                  "parent_id": "urn:bkbit:c4691851cd8152d6a7041d92947d91654e26d063bb20da3eacc88fa9664244ad",
                   "abbreviations": [
                     {
                       "term": "Dopa",
@@ -2235,9 +2375,11 @@
                   "children": []
                 },
                 {
+                  "id": "urn:bkbit:d47548ad3d3ffdabc42174e226f5f63c3c2bdc01c9bcf761a468fb54d0970dbc",
                   "name": "SN SOX6 Dopa",
                   "nodeColor": "#D7AAE4",
                   "accession_id": "CS20250428_GROUP_0035",
+                  "parent_id": "urn:bkbit:c4691851cd8152d6a7041d92947d91654e26d063bb20da3eacc88fa9664244ad",
                   "abbreviations": [
                     {
                       "term": "Dopa",
@@ -2264,92 +2406,13 @@
                   ],
                   "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Glut Sero Dopa",
-      "nodeColor": "#91f4bb",
-      "accession_id": "CS20250428_NEIGH_0000",
-      "abbreviations": [
-        {
-          "term": "Dopa",
-          "meaning": "dopaminergic neuron",
-          "denotes": [
-            "CL:0000700"
-          ]
-        },
-        {
-          "term": "Glut",
-          "meaning": "glutamatergic neuron",
-          "denotes": [
-            "CL:0000679"
-          ]
-        },
-        {
-          "term": "Sero",
-          "meaning": "serotonergic neuron",
-          "denotes": [
-            "CL:0000850"
-          ]
-        }
-      ],
-      "belongs_to_set": "CCN20250428_LEVEL_0",
-      "children": [
-        {
-          "name": "M Dopa",
-          "nodeColor": "#0433b4",
-          "accession_id": "CS20250428_CLASS_0009",
-          "abbreviations": [
-            {
-              "term": "Dopa",
-              "meaning": "dopaminergic neuron",
-              "denotes": [
-                "CL:0000700"
-              ]
-            },
-            {
-              "term": "M",
-              "meaning": "midbrain (mesencephalon)",
-              "denotes": [
-                "DHBA:10648",
-                "http://purl.obolibrary.org/obo/UBERON_0001891"
-              ]
-            }
-          ],
-          "belongs_to_set": "CCN20250428_LEVEL_1",
-          "children": [
-            {
-              "name": "M Dopa",
-              "nodeColor": "#77f0ca",
-              "accession_id": "CS20250428_SUBCL_0025",
-              "abbreviations": [
-                {
-                  "term": "Dopa",
-                  "meaning": "dopaminergic neuron",
-                  "denotes": [
-                    "CL:0000700"
-                  ]
                 },
                 {
-                  "term": "M",
-                  "meaning": "midbrain (mesencephalon)",
-                  "denotes": [
-                    "DHBA:10648",
-                    "http://purl.obolibrary.org/obo/UBERON_0001891"
-                  ]
-                }
-              ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
-              "children": [
-                {
+                  "id": "urn:bkbit:f262a9b45d76abd3748070dd059381c3848d459808dab80508b64e813e8e846d",
                   "name": "SN-VTR CALB1 Dopa",
                   "nodeColor": "#854098",
                   "accession_id": "CS20250428_GROUP_0029",
+                  "parent_id": "urn:bkbit:c4691851cd8152d6a7041d92947d91654e26d063bb20da3eacc88fa9664244ad",
                   "abbreviations": [
                     {
                       "term": "CALB1",
@@ -2389,9 +2452,11 @@
           ]
         },
         {
+          "id": "urn:bkbit:4b785af460431ec151fb643a85ec8bfd6c326a1243b14014093a6efa34ffbaf9",
           "name": "F M Glut",
           "nodeColor": "#7d0f09",
           "accession_id": "CS20250428_CLASS_0007",
+          "parent_id": "urn:bkbit:875a9b142a8487f9c426e0e732a5a1b8dc2ba4fedb8f13a0fe2b32385aef8969",
           "abbreviations": [
             {
               "term": "F",
@@ -2420,9 +2485,11 @@
           "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
+              "id": "urn:bkbit:11da82f83c4baf0d1ac415f81f37347d39c6e79c659e6436bc5e9e865c662aa4",
               "name": "F Glut",
               "nodeColor": "#39e1e2",
               "accession_id": "CS20250428_SUBCL_0013",
+              "parent_id": "urn:bkbit:4b785af460431ec151fb643a85ec8bfd6c326a1243b14014093a6efa34ffbaf9",
               "abbreviations": [
                 {
                   "term": "F",
@@ -2443,9 +2510,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:d6a8cd31bc1f9ae6f733b6ff4da24fc6a8ab72a454fdf4cd3d5278f8b21c0701",
                   "name": "BF SKOR1 Glut",
                   "nodeColor": "#eb0077",
                   "accession_id": "CS20250428_GROUP_0008",
+                  "parent_id": "urn:bkbit:11da82f83c4baf0d1ac415f81f37347d39c6e79c659e6436bc5e9e865c662aa4",
                   "abbreviations": [
                     {
                       "term": "BF",
@@ -2473,9 +2542,11 @@
                   "children": []
                 },
                 {
+                  "id": "urn:bkbit:674277249f0252ad8e1d0073b12bcb4e7be7dbfce0b2ed5ce4cc40eb4abb6a8d",
                   "name": "STH PVALB-PITX2 Glut",
                   "nodeColor": "#f57e20",
                   "accession_id": "CS20250428_GROUP_0038",
+                  "parent_id": "urn:bkbit:11da82f83c4baf0d1ac415f81f37347d39c6e79c659e6436bc5e9e865c662aa4",
                   "abbreviations": [
                     {
                       "term": "Glut",
@@ -2513,9 +2584,11 @@
               ]
             },
             {
+              "id": "urn:bkbit:c338740aa9661988187862043d1e6c5843e520885bf2f4fbe7296bea303a5bc9",
               "name": "F M Glut",
               "nodeColor": "#66750b",
               "accession_id": "CS20250428_SUBCL_0017",
+              "parent_id": "urn:bkbit:4b785af460431ec151fb643a85ec8bfd6c326a1243b14014093a6efa34ffbaf9",
               "abbreviations": [
                 {
                   "term": "F",
@@ -2544,9 +2617,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:04e14a21c3c42678579ed166130ba53a5a7b766e8841aac81160b10af5817771",
                   "name": "VTR-HTH Glut",
                   "nodeColor": "#54621f",
                   "accession_id": "CS20250428_GROUP_0064",
+                  "parent_id": "urn:bkbit:c338740aa9661988187862043d1e6c5843e520885bf2f4fbe7296bea303a5bc9",
                   "abbreviations": [
                     {
                       "term": "Glut",
@@ -2580,9 +2655,11 @@
       ]
     },
     {
+      "id": "urn:bkbit:f4e8c248a6d70c214cd49d0dfd373b9408b0c3c76701df089f8832b2a5eeace0",
       "name": "Nonneuron",
       "nodeColor": "#a8afa5",
       "accession_id": "CS20250428_NEIGH_0001",
+      "parent_id": "root",
       "abbreviations": [
         {
           "term": "Nonneuron",
@@ -2595,9 +2672,11 @@
       "belongs_to_set": "CCN20250428_LEVEL_0",
       "children": [
         {
+          "id": "urn:bkbit:d1266901c905aeda4170a568c60b4e16b3fdb262f70ac528ff692dfe85a08d80",
           "name": "OPC-Oligo",
           "nodeColor": "#594a26",
           "accession_id": "CS20250428_CLASS_0010",
+          "parent_id": "urn:bkbit:f4e8c248a6d70c214cd49d0dfd373b9408b0c3c76701df089f8832b2a5eeace0",
           "abbreviations": [
             {
               "term": "Oligo",
@@ -2617,9 +2696,11 @@
           "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
+              "id": "urn:bkbit:3c3d6506ac22a1186dbf2dd869e7025b18f6c80972cae71cfd04604194e0ed6d",
               "name": "OPC",
               "nodeColor": "#f5e689",
               "accession_id": "CS20250428_SUBCL_0020",
+              "parent_id": "urn:bkbit:d1266901c905aeda4170a568c60b4e16b3fdb262f70ac528ff692dfe85a08d80",
               "abbreviations": [
                 {
                   "term": "OPC",
@@ -2632,9 +2713,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:817ae7da1388f387baca549829330582c35598b6c2aea84c5a252967e9a759e1",
                   "name": "OPC",
                   "nodeColor": "#f5e689",
                   "accession_id": "CS20250428_GROUP_0023",
+                  "parent_id": "urn:bkbit:3c3d6506ac22a1186dbf2dd869e7025b18f6c80972cae71cfd04604194e0ed6d",
                   "abbreviations": [
                     {
                       "term": "OPC",
@@ -2650,9 +2733,11 @@
               ]
             },
             {
+              "id": "urn:bkbit:ed47638d71077379f2e3dc73f8e404b4315e59d47716e4b556b4e453259a0714",
               "name": "COP",
               "nodeColor": "#CCA43D",
               "accession_id": "CS20250428_SUBCL_0010",
+              "parent_id": "urn:bkbit:d1266901c905aeda4170a568c60b4e16b3fdb262f70ac528ff692dfe85a08d80",
               "abbreviations": [
                 {
                   "term": "COP",
@@ -2665,9 +2750,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:28ed3848f9affd1071c56a1c715b861ae9ab0f8fc9603fbca9f541be40fdc1bc",
                   "name": "COP",
                   "nodeColor": "#CCA43D",
                   "accession_id": "CS20250428_GROUP_0009",
+                  "parent_id": "urn:bkbit:ed47638d71077379f2e3dc73f8e404b4315e59d47716e4b556b4e453259a0714",
                   "abbreviations": [
                     {
                       "term": "COP",
@@ -2683,9 +2770,11 @@
               ]
             },
             {
+              "id": "urn:bkbit:6c2e7c63f5b210859041a359c3a937f7f6fcbe59e20327c9ceb4a6a15349c67a",
               "name": "Oligodendrocyte",
               "nodeColor": "#594a26",
               "accession_id": "CS20250428_SUBCL_0022",
+              "parent_id": "urn:bkbit:d1266901c905aeda4170a568c60b4e16b3fdb262f70ac528ff692dfe85a08d80",
               "abbreviations": [
                 {
                   "term": "Oligodendrocyte",
@@ -2698,9 +2787,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:5c08de43e381decad99b91658e310c24340f1945eb32bdc52739bd8917b67edd",
                   "name": "ImOligo",
                   "nodeColor": "#CC915C",
                   "accession_id": "CS20250428_GROUP_0018",
+                  "parent_id": "urn:bkbit:6c2e7c63f5b210859041a359c3a937f7f6fcbe59e20327c9ceb4a6a15349c67a",
                   "abbreviations": [
                     {
                       "term": "ImOligo",
@@ -2714,9 +2805,11 @@
                   "children": []
                 },
                 {
+                  "id": "urn:bkbit:0580d6a5586963c9748e080fd1945df6dce4b0be9c95d630a9f19a7aa960305a",
                   "name": "Oligo PLEKHG1",
                   "nodeColor": "#594a26",
                   "accession_id": "CS20250428_GROUP_0026",
+                  "parent_id": "urn:bkbit:6c2e7c63f5b210859041a359c3a937f7f6fcbe59e20327c9ceb4a6a15349c67a",
                   "abbreviations": [
                     {
                       "term": "Oligo",
@@ -2737,9 +2830,11 @@
                   "children": []
                 },
                 {
+                  "id": "urn:bkbit:d08ff33797c206c185e9259d4a37d7feab7d04753488a01021ebf59ea883eb95",
                   "name": "Oligo OPALIN",
                   "nodeColor": "#66391F",
                   "accession_id": "CS20250428_GROUP_0025",
+                  "parent_id": "urn:bkbit:6c2e7c63f5b210859041a359c3a937f7f6fcbe59e20327c9ceb4a6a15349c67a",
                   "abbreviations": [
                     {
                       "term": "Oligo",
@@ -2764,9 +2859,11 @@
           ]
         },
         {
+          "id": "urn:bkbit:a7843a7e2060daaabee5ae3c54d02a1677f1c7a8b855aec083ffc16e4209ebbe",
           "name": "Astro-Epen",
           "nodeColor": "#401e66",
           "accession_id": "CS20250428_CLASS_0000",
+          "parent_id": "urn:bkbit:f4e8c248a6d70c214cd49d0dfd373b9408b0c3c76701df089f8832b2a5eeace0",
           "abbreviations": [
             {
               "term": "Astro",
@@ -2786,9 +2883,11 @@
           "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
+              "id": "urn:bkbit:78d61681c5401a4f30f48d41a8e016485c1742ef19d920e50f2e562861121d2d",
               "name": "Astrocyte",
               "nodeColor": "#401e66",
               "accession_id": "CS20250428_SUBCL_0000",
+              "parent_id": "urn:bkbit:a7843a7e2060daaabee5ae3c54d02a1677f1c7a8b855aec083ffc16e4209ebbe",
               "abbreviations": [
                 {
                   "term": "Astrocyte",
@@ -2801,9 +2900,29 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:48523cac55586d25aba142085e80e2fe5bbcfbcd3bb4b7d43719ffc500adc51f",
+                  "name": "ImAstro",
+                  "nodeColor": "#401e66",
+                  "accession_id": "CS20250428_GROUP_0017",
+                  "parent_id": "urn:bkbit:78d61681c5401a4f30f48d41a8e016485c1742ef19d920e50f2e562861121d2d",
+                  "abbreviations": [
+                    {
+                      "term": "ImAstro",
+                      "meaning": "immune astrocyte",
+                      "denotes": [
+                        null
+                      ]
+                    }
+                  ],
+                  "belongs_to_set": "CCN20250428_LEVEL_3",
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:48f04063dc851a18c9ea726ed048ef9b263fcec474abe42152ce32fc19475e30",
                   "name": "Astrocyte",
                   "nodeColor": "#195f8d",
                   "accession_id": "CS20250428_GROUP_0039",
+                  "parent_id": "urn:bkbit:78d61681c5401a4f30f48d41a8e016485c1742ef19d920e50f2e562861121d2d",
                   "abbreviations": [
                     {
                       "term": "Astrocyte",
@@ -2819,9 +2938,11 @@
               ]
             },
             {
+              "id": "urn:bkbit:e323320d1265505b013c829b3ebc166e7c6225e76e07dcc2d4f80d78ef4dd585",
               "name": "Ependymal",
               "nodeColor": "#564860",
               "accession_id": "CS20250428_SUBCL_0012",
+              "parent_id": "urn:bkbit:a7843a7e2060daaabee5ae3c54d02a1677f1c7a8b855aec083ffc16e4209ebbe",
               "abbreviations": [
                 {
                   "term": "Ependymal",
@@ -2834,9 +2955,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:753f8df66b9d7e655e913ee7fe48f02a54c7fcf95a06a7baaa53874e43f8b9ff",
                   "name": "Ependymal",
                   "nodeColor": "#564860",
                   "accession_id": "CS20250428_GROUP_0012",
+                  "parent_id": "urn:bkbit:e323320d1265505b013c829b3ebc166e7c6225e76e07dcc2d4f80d78ef4dd585",
                   "abbreviations": [
                     {
                       "term": "Ependymal",
@@ -2854,9 +2977,11 @@
           ]
         },
         {
+          "id": "urn:bkbit:4bc50b0e7e41fe227c8c1a2deb12ba9c164668c52d322bb00bff51cccccdfd37",
           "name": "Immune",
           "nodeColor": "#995C60",
           "accession_id": "CS20250428_CLASS_0008",
+          "parent_id": "urn:bkbit:f4e8c248a6d70c214cd49d0dfd373b9408b0c3c76701df089f8832b2a5eeace0",
           "abbreviations": [
             {
               "term": "Immune",
@@ -2869,9 +2994,11 @@
           "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
+              "id": "urn:bkbit:87af6672d365e7f14dd575e252483522bd783056442c7dea699b8696742b8dd0",
               "name": "Microglia",
               "nodeColor": "#995C60",
               "accession_id": "CS20250428_SUBCL_0019",
+              "parent_id": "urn:bkbit:4bc50b0e7e41fe227c8c1a2deb12ba9c164668c52d322bb00bff51cccccdfd37",
               "abbreviations": [
                 {
                   "term": "Microglia",
@@ -2884,9 +3011,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:c7ce73a824ddb2f6f476d57b820cf01b1406f227ca39fc6936725231e09682cb",
                   "name": "Microglia",
                   "nodeColor": "#995C60",
                   "accession_id": "CS20250428_GROUP_0019",
+                  "parent_id": "urn:bkbit:87af6672d365e7f14dd575e252483522bd783056442c7dea699b8696742b8dd0",
                   "abbreviations": [
                     {
                       "term": "Microglia",
@@ -2902,9 +3031,11 @@
               ]
             },
             {
+              "id": "urn:bkbit:3ae584696c22a48588d1443a139fdd5a47fb0e2312d09adbcff7ec09dbdcd306",
               "name": "Macrophage",
               "nodeColor": "#CC887A",
               "accession_id": "CS20250428_SUBCL_0018",
+              "parent_id": "urn:bkbit:4bc50b0e7e41fe227c8c1a2deb12ba9c164668c52d322bb00bff51cccccdfd37",
               "abbreviations": [
                 {
                   "term": "Macrophage",
@@ -2917,9 +3048,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:e1b0a59b79dd15b01e89a9455fe2ca0dcbfd3c2d39494b4415aa6226d879e559",
                   "name": "BAM",
                   "nodeColor": "#CC887A",
                   "accession_id": "CS20250428_GROUP_0001",
+                  "parent_id": "urn:bkbit:3ae584696c22a48588d1443a139fdd5a47fb0e2312d09adbcff7ec09dbdcd306",
                   "abbreviations": [
                     {
                       "term": "BAM",
@@ -2935,9 +3068,11 @@
               ]
             },
             {
+              "id": "urn:bkbit:39424d397bfd13041e46a3086ec956f4f09b08019faa9495ae4f7eb3af379bdf",
               "name": "Monocyte",
               "nodeColor": "#C3CC7A",
               "accession_id": "CS20250428_SUBCL_0038",
+              "parent_id": "urn:bkbit:4bc50b0e7e41fe227c8c1a2deb12ba9c164668c52d322bb00bff51cccccdfd37",
               "abbreviations": [
                 {
                   "term": "Monocyte",
@@ -2950,9 +3085,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:c94a04d0a7cd02e9e6b1b67aac82a5dae17b30310efc0f08eadd976442e94530",
                   "name": "Monocyte",
                   "nodeColor": "#C3CC7A",
                   "accession_id": "CS20250428_GROUP_0022",
+                  "parent_id": "urn:bkbit:39424d397bfd13041e46a3086ec956f4f09b08019faa9495ae4f7eb3af379bdf",
                   "abbreviations": [
                     {
                       "term": "Monocyte",
@@ -2968,9 +3105,11 @@
               ]
             },
             {
+              "id": "urn:bkbit:f899478a8e7c13c28f036dbdcac3c32a09dd43e50e7139ab97c088b74f541b10",
               "name": "Lymphocyte",
               "nodeColor": "#5A662E",
               "accession_id": "CS20250428_SUBCL_0015",
+              "parent_id": "urn:bkbit:4bc50b0e7e41fe227c8c1a2deb12ba9c164668c52d322bb00bff51cccccdfd37",
               "abbreviations": [
                 {
                   "term": "Lymphocyte",
@@ -2983,9 +3122,29 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:32444a383ec3bf6a0086be9c798c8dc5cc10d68b43db8fe6d9aeb4fe3d18308d",
+                  "name": "B cells",
+                  "nodeColor": "#999517",
+                  "accession_id": "CS20250428_GROUP_0000",
+                  "parent_id": "urn:bkbit:f899478a8e7c13c28f036dbdcac3c32a09dd43e50e7139ab97c088b74f541b10",
+                  "abbreviations": [
+                    {
+                      "term": "B cells",
+                      "meaning": "B cell",
+                      "denotes": [
+                        "CL:0000236"
+                      ]
+                    }
+                  ],
+                  "belongs_to_set": "CCN20250428_LEVEL_3",
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:dcb7ac0fd8cea39b57cf66f33a58895e52183ce3f082503aab916e39b1ca7e85",
                   "name": "T cells",
                   "nodeColor": "#5A662E",
                   "accession_id": "CS20250428_GROUP_0059",
+                  "parent_id": "urn:bkbit:f899478a8e7c13c28f036dbdcac3c32a09dd43e50e7139ab97c088b74f541b10",
                   "abbreviations": [
                     {
                       "term": "T cells",
@@ -3003,9 +3162,11 @@
           ]
         },
         {
+          "id": "urn:bkbit:8469b4f7d1327fe125a19abe162217402596869c07c91bd724abe52ccb510ba8",
           "name": "Vascular",
           "nodeColor": "#a8afa5",
           "accession_id": "CS20250428_CLASS_0011",
+          "parent_id": "urn:bkbit:f4e8c248a6d70c214cd49d0dfd373b9408b0c3c76701df089f8832b2a5eeace0",
           "abbreviations": [
             {
               "term": "Vascular",
@@ -3018,9 +3179,11 @@
           "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
+              "id": "urn:bkbit:c3c2dd4548dd2832661fa1754ae9060d0d0eb9691da484b572811b389c420954",
               "name": "VLMC",
               "nodeColor": "#a8afa5",
               "accession_id": "CS20250428_SUBCL_0035",
+              "parent_id": "urn:bkbit:8469b4f7d1327fe125a19abe162217402596869c07c91bd724abe52ccb510ba8",
               "abbreviations": [
                 {
                   "term": "VLMC",
@@ -3033,9 +3196,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:85bd81cbdaa23b56e0c14a66409df93792dafa7d5d887b2bc846eab22f285e1a",
                   "name": "VLMC",
                   "nodeColor": "#a8afa5",
                   "accession_id": "CS20250428_GROUP_0062",
+                  "parent_id": "urn:bkbit:c3c2dd4548dd2832661fa1754ae9060d0d0eb9691da484b572811b389c420954",
                   "abbreviations": [
                     {
                       "term": "VLMC",
@@ -3051,9 +3216,11 @@
               ]
             },
             {
+              "id": "urn:bkbit:6361c921ba1f10b394277745bce16e3dd6014479bc915e31550d91e3029338d1",
               "name": "SMC",
               "nodeColor": "#858881",
               "accession_id": "CS20250428_SUBCL_0024",
+              "parent_id": "urn:bkbit:8469b4f7d1327fe125a19abe162217402596869c07c91bd724abe52ccb510ba8",
               "abbreviations": [
                 {
                   "term": "SMC",
@@ -3066,9 +3233,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:5a1e3e6ca564a0dde395682dc105ae19241983a937912b5b3bdc67d260ad3461",
                   "name": "SMC",
                   "nodeColor": "#858881",
                   "accession_id": "CS20250428_GROUP_0028",
+                  "parent_id": "urn:bkbit:6361c921ba1f10b394277745bce16e3dd6014479bc915e31550d91e3029338d1",
                   "abbreviations": [
                     {
                       "term": "SMC",
@@ -3082,28 +3251,13 @@
                   "children": []
                 }
               ]
-            }
-          ]
-        },
-        {
-          "name": "Vascular",
-          "nodeColor": "#a8afa5",
-          "accession_id": "CS20250428_CLASS_0011",
-          "abbreviations": [
+            },
             {
-              "term": "Vascular",
-              "meaning": "vascular system",
-              "denotes": [
-                "http://purl.obolibrary.org/obo/UBERON_0007798"
-              ]
-            }
-          ],
-          "belongs_to_set": "CCN20250428_LEVEL_1",
-          "children": [
-            {
+              "id": "urn:bkbit:af59fb9cb6acb2a6cc7c679622fbedf0e3478484ff285ca828a09e573c58f662",
               "name": "Pericyte",
               "nodeColor": "#B97300",
               "accession_id": "CS20250428_SUBCL_0023",
+              "parent_id": "urn:bkbit:8469b4f7d1327fe125a19abe162217402596869c07c91bd724abe52ccb510ba8",
               "abbreviations": [
                 {
                   "term": "Pericyte",
@@ -3116,9 +3270,11 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:93441bc3e09418a733b69b80a58196609f56676a8b736f21506f96d27511eed8",
                   "name": "Pericyte",
                   "nodeColor": "#B97300",
                   "accession_id": "CS20250428_GROUP_0027",
+                  "parent_id": "urn:bkbit:af59fb9cb6acb2a6cc7c679622fbedf0e3478484ff285ca828a09e573c58f662",
                   "abbreviations": [
                     {
                       "term": "Pericyte",
@@ -3134,9 +3290,11 @@
               ]
             },
             {
+              "id": "urn:bkbit:fcbf453252cb98875bd3569c6c5254317c470ad5d7d6a6f441413ce1416c02b3",
               "name": "Endo",
               "nodeColor": "#66493D",
               "accession_id": "CS20250428_SUBCL_0011",
+              "parent_id": "urn:bkbit:8469b4f7d1327fe125a19abe162217402596869c07c91bd724abe52ccb510ba8",
               "abbreviations": [
                 {
                   "term": "Endo",
@@ -3149,139 +3307,17 @@
               "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
+                  "id": "urn:bkbit:4d7a3d950334e4d33b48549478a213743455a24a10266f657b0e4a07719fa0a4",
                   "name": "Endo",
                   "nodeColor": "#66493D",
                   "accession_id": "CS20250428_GROUP_0011",
+                  "parent_id": "urn:bkbit:fcbf453252cb98875bd3569c6c5254317c470ad5d7d6a6f441413ce1416c02b3",
                   "abbreviations": [
                     {
                       "term": "Endo",
                       "meaning": "endothelial cell",
                       "denotes": [
                         "CL:0000115"
-                      ]
-                    }
-                  ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
-                  "children": []
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Nonneuron",
-      "nodeColor": "#a8afa5",
-      "accession_id": "CS20250428_NEIGH_0001",
-      "abbreviations": [
-        {
-          "term": "Nonneuron",
-          "meaning": "non-neuronal cell",
-          "denotes": [
-            null
-          ]
-        }
-      ],
-      "belongs_to_set": "CCN20250428_LEVEL_0",
-      "children": [
-        {
-          "name": "Astro-Epen",
-          "nodeColor": "#401e66",
-          "accession_id": "CS20250428_CLASS_0000",
-          "abbreviations": [
-            {
-              "term": "Astro",
-              "meaning": "astrocyte",
-              "denotes": [
-                "CL:0000127"
-              ]
-            },
-            {
-              "term": "Epen",
-              "meaning": "ependymal cell",
-              "denotes": [
-                "CL:0000065"
-              ]
-            }
-          ],
-          "belongs_to_set": "CCN20250428_LEVEL_1",
-          "children": [
-            {
-              "name": "Astrocyte",
-              "nodeColor": "#401e66",
-              "accession_id": "CS20250428_SUBCL_0000",
-              "abbreviations": [
-                {
-                  "term": "Astrocyte",
-                  "meaning": "astrocyte",
-                  "denotes": [
-                    "CL:0000127"
-                  ]
-                }
-              ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
-              "children": [
-                {
-                  "name": "ImAstro",
-                  "nodeColor": "#401e66",
-                  "accession_id": "CS20250428_GROUP_0017",
-                  "abbreviations": [
-                    {
-                      "term": "ImAstro",
-                      "meaning": "immune astrocyte",
-                      "denotes": [
-                        null
-                      ]
-                    }
-                  ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
-                  "children": []
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Immune",
-          "nodeColor": "#995C60",
-          "accession_id": "CS20250428_CLASS_0008",
-          "abbreviations": [
-            {
-              "term": "Immune",
-              "meaning": "leukocyte",
-              "denotes": [
-                "CL:0000738"
-              ]
-            }
-          ],
-          "belongs_to_set": "CCN20250428_LEVEL_1",
-          "children": [
-            {
-              "name": "Lymphocyte",
-              "nodeColor": "#5A662E",
-              "accession_id": "CS20250428_SUBCL_0015",
-              "abbreviations": [
-                {
-                  "term": "Lymphocyte",
-                  "meaning": "lymphocyte",
-                  "denotes": [
-                    "CL:0000542"
-                  ]
-                }
-              ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
-              "children": [
-                {
-                  "name": "B cells",
-                  "nodeColor": "#999517",
-                  "accession_id": "CS20250428_GROUP_0000",
-                  "abbreviations": [
-                    {
-                      "term": "B cells",
-                      "meaning": "B cell",
-                      "denotes": [
-                        "CL:0000236"
                       ]
                     }
                   ],
