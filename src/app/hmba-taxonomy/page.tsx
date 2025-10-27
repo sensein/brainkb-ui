@@ -349,13 +349,13 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => {
         style={{ left, top }}  // HOVER: Apply calculated position to tooltip
       >
         <div className="mb-1 font-semibold">{hoverNode.name || '(root)'}</div>  {/* HOVER: Display hovered node's name */}
-        
-        {/* Display accession_id prominently if available */}
-        {hoverNode.accession_id && (
+
+        {/* Display taxonomic level prominently if available */}
+        {hoverNode.level && (
           <div className="mb-2 p-2 bg-blue-50 rounded border-l-2 border-blue-400">
             <div className="flex gap-2">
-              <span className="opacity-70 text-xs font-medium uppercase tracking-wide">Accession ID:</span>
-              <span className="font-mono text-xs font-semibold text-blue-700">{hoverNode.accession_id}</span>
+              <span className="opacity-70 text-xs font-medium uppercase tracking-wide">Taxonomic Level:</span>
+              <span className="font-mono text-xs font-semibold text-blue-700">{hoverNode.level}</span>
             </div>
           </div>
         )}
