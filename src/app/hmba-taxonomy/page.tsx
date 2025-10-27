@@ -348,7 +348,7 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => {
         "
         style={{ left, top }}  // HOVER: Apply calculated position to tooltip
       >
-        <div className="mb-1 font-semibold">{hoverNode.name || '(root)'}</div>  {/* HOVER: Display hovered node's name */}
+      <div className="mb-1 font-semibold">{hoverNode.name || '(root)'}</div>  {/* HOVER: Display hovered node's name */}
 
         {/* Display taxonomic level prominently if available */}
         {hoverNode.level && (
@@ -359,7 +359,16 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => {
             </div>
           </div>
         )}
-        
+        {hoverNode.cell_ontology_id && Array.isArray(hoverNode.cell_ontology_id) && hoverNode.cell_ontology_id.length > 0 && (
+          <div className="mb-2 p-2 bg-orange-50 rounded border-l-2 border-orange-400">
+            <div className="flex gap-2">
+              <span className="opacity-70 text-xs font-medium uppercase tracking-wide">Cell Ontology ID:</span>
+              <span className="text-xs font-semibold text-orange-700">
+                {hoverNode.cell_ontology_id.join(', ')}
+              </span>
+            </div>
+          </div>
+        )}        
         {/* Display abbreviations if available */}
         {hoverNode.abbreviations && Array.isArray(hoverNode.abbreviations) && hoverNode.abbreviations.length > 0 && (
           <div className="mb-2 p-2 bg-green-50 rounded border-l-2 border-green-400">
