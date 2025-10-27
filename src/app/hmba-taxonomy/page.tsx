@@ -2,12 +2,14 @@
 
 import dynamic from 'next/dynamic';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 
 const Tree = dynamic(() => import('react-d3-tree').then(m => m.Tree), { ssr: false });
 
 type NodeMeta = Record<string, string | number | boolean | null | undefined>;
 
 export default function HMBATaxonomyPage() {
+  const router = useRouter();
   const [data, setData] = useState<any>(null);
 
   // Fullscreen container + size
@@ -177,17 +179,29 @@ export default function HMBATaxonomyPage() {
   );
 
 // Custom node renderer - HOVER INTERACTIONS
-const renderCustomNode = ({ nodeDatum, toggleNode }: any) => (
-  <g
-    onClick={toggleNode}
-    onMouseEnter={() => setHoverNode(nodeDatum)}  // HOVER: Show tooltip when mouse enters node
-    onMouseLeave={() => setHoverNode(null)}       // HOVER: Hide tooltip when mouse leaves node
-    onMouseMove={updateMouse}                     // HOVER: Track mouse position for tooltip placement
-    cursor="pointer"
-  >
+const renderCustomNode = ({ nodeDatum, toggleNode }: any) => {
+  const handleNameClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the node toggle
+    console.log('Name clicked:', nodeDatum.name);
+
+    const identifier = nodeDatum.id;
+
+    // Navigate to the detail page from the  knowledge-base section
+    router.push(`/knowledge-base/celltaxon/${encodeURIComponent(identifier)}`);
+  };
+
+  return (
+    <g
+      onClick={toggleNode}
+      // COMMENTED OUT: Hover on node itself
+      // onMouseEnter={() => setHoverNode(nodeDatum)}  // HOVER: Show tooltip when mouse enters node
+      // onMouseLeave={() => setHoverNode(null)}       // HOVER: Hide tooltip when mouse leaves node
+      // onMouseMove={updateMouse}                     // HOVER: Track mouse position for tooltip placement
+      cursor="pointer"
+    >
     {/* Circle */}
     <circle
-      r={15}
+      r={35}
       fill={nodeDatum.nodeColor || 'lightgray'}
       stroke="#1f2937"
       strokeWidth={1.25}
@@ -201,6 +215,11 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => (
         const name = nodeDatum.name;
         const maxLength = 12; // Maximum characters per line
 
+        // Don't show text for root node
+        if (name === 'root') {
+          return null;
+        }
+
         if (name.length <= maxLength) {
           // Single line for short names
           return (
@@ -208,13 +227,17 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => (
               x={0}
               dy={25 / zoom}
               textAnchor="middle"
+              onClick={handleNameClick}
+              onMouseEnter={() => setHoverNode(nodeDatum)}  // HOVER: Show tooltip when mouse enters text
+              onMouseLeave={() => setHoverNode(null)}       // HOVER: Hide tooltip when mouse leaves text
+              onMouseMove={updateMouse}                     // HOVER: Track mouse position for tooltip placement
               style={{
-                pointerEvents: 'none',
                 fontSize: '60px',
                 fill: 'black',
                 paintOrder: 'stroke',
                 stroke: 'white',
                 strokeWidth: 3,
+                cursor: 'pointer',
               }}
             >
               {name}
@@ -256,13 +279,17 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => (
                 x={0}
                 dy={20 / zoom}
                 textAnchor="middle"
+                onClick={handleNameClick}
+                onMouseEnter={() => setHoverNode(nodeDatum)}  // HOVER: Show tooltip when mouse enters text
+                onMouseLeave={() => setHoverNode(null)}       // HOVER: Hide tooltip when mouse leaves text
+                onMouseMove={updateMouse}                     // HOVER: Track mouse position for tooltip placement
                 style={{
-                  pointerEvents: 'none',
                   fontSize: '60px',
                   fill: 'black',
                   paintOrder: 'stroke',
                   stroke: 'white',
                   strokeWidth: 3,
+                  cursor: 'pointer',
                 }}
               >
                 {line1}
@@ -271,13 +298,17 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => (
                 x={0}
                 dy={32 / zoom}
                 textAnchor="middle"
+                onClick={handleNameClick}
+                onMouseEnter={() => setHoverNode(nodeDatum)}  // HOVER: Show tooltip when mouse enters text
+                onMouseLeave={() => setHoverNode(null)}       // HOVER: Hide tooltip when mouse leaves text
+                onMouseMove={updateMouse}                     // HOVER: Track mouse position for tooltip placement
                 style={{
-                  pointerEvents: 'none',
                   fontSize: '60px',
                   fill: 'black',
                   paintOrder: 'stroke',
                   stroke: 'white',
                   strokeWidth: 3,
+                  cursor: 'pointer',
                 }}
               >
                 {line2}
@@ -297,7 +328,8 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => (
         : ''}
     </title>
   </g>
-);
+  );
+};
 
   const Tooltip = () => {  // HOVER: Tooltip component that appears on hover
     if (!hoverNode) return null;  // HOVER: Only show if a node is being hovered
@@ -317,17 +349,27 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => (
         style={{ left, top }}  // HOVER: Apply calculated position to tooltip
       >
         <div className="mb-1 font-semibold">{hoverNode.name || '(root)'}</div>  {/* HOVER: Display hovered node's name */}
-        {meta ? (
-          <div className="space-y-0.5">
-            {Object.entries(meta).map(([k, v]) => (
-              <div key={k} className="flex gap-2">
-                <span className="opacity-70">{k}:</span>
-                <span className="font-medium">{String(v)}</span>
-              </div>
-            ))}
+        
+        {/* Display accession_id prominently if available */}
+        {hoverNode.accession_id && (
+          <div className="mb-2 p-2 bg-blue-50 rounded border-l-2 border-blue-400">
+            <div className="flex gap-2">
+              <span className="opacity-70 text-xs font-medium uppercase tracking-wide">Accession ID:</span>
+              <span className="font-mono text-xs font-semibold text-blue-700">{hoverNode.accession_id}</span>
+            </div>
           </div>
-        ) : (
-          <div className="opacity-70">No metadata</div>
+        )}
+        
+        {/* Display abbreviations if available */}
+        {hoverNode.abbreviations && Array.isArray(hoverNode.abbreviations) && hoverNode.abbreviations.length > 0 && (
+          <div className="mb-2 p-2 bg-green-50 rounded border-l-2 border-green-400">
+            <div className="flex gap-2">
+              <span className="opacity-70 text-xs font-medium uppercase tracking-wide">Abbreviations:</span>
+              <span className="text-xs font-semibold text-green-700">
+                {hoverNode.abbreviations.map((abbr: any) => abbr.term).join(', ')}
+              </span>
+            </div>
+          </div>
         )}
       </div>
     );
