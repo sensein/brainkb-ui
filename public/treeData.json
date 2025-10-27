@@ -3,10 +3,12 @@
   "nodeColor": "#ffffff",
   "children": [
     {
-      "id": "urn:bkbit:a1180a6a5720377aa899b46f9cf72cf004acd8e63b080e17efdf709c115b8880",
+      "id": "urn:bkbit:9ab863210b090e990a4835dbe55b37934d48419aef03611af3da286a4008d5fc",
       "name": "Subpallium GABA",
       "nodeColor": "#19613b",
-      "accession_id": "CS20250428_NEIGH_0002",
+      "cell_ontology_id": [],
+      "display_order": 3,
+      "level": "Neighborhood",
       "parent_id": "root",
       "abbreviations": [
         {
@@ -24,20 +26,21 @@
           ]
         }
       ],
-      "belongs_to_set": "CCN20250428_LEVEL_0",
       "children": [
         {
-          "id": "urn:bkbit:ed9f2f633da0407aea191d5660ba6c2fc248a0b01e0f5094cd2646c6f636fa0d",
+          "id": "urn:bkbit:32b6802327e722003e48610d6c78603e2860c062bf79f1ebd5cfb61c48b97d41",
           "name": "CN LGE GABA",
           "nodeColor": "#d0b83c",
-          "accession_id": "CS20250428_CLASS_0003",
-          "parent_id": "urn:bkbit:a1180a6a5720377aa899b46f9cf72cf004acd8e63b080e17efdf709c115b8880",
+          "cell_ontology_id": [],
+          "display_order": 10,
+          "level": "Class",
+          "parent_id": "urn:bkbit:9ab863210b090e990a4835dbe55b37934d48419aef03611af3da286a4008d5fc",
           "abbreviations": [
             {
               "term": "CN",
               "meaning": "cerebral nuclei",
               "denotes": [
-                "DHBA:10331",
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
                 "http://purl.obolibrary.org/obo/UBERON_0004025"
               ]
             },
@@ -52,19 +55,22 @@
               "term": "LGE",
               "meaning": "lateral ganglionic eminence",
               "denotes": [
-                "DHBA:10551",
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10551",
                 "http://purl.obolibrary.org/obo/UBERON_0004025"
               ]
             }
           ],
-          "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
-              "id": "urn:bkbit:9c8af7ea404453959ee438a5a6726c211fcbc48f73c12dc59fa41f4b08e063fc",
+              "id": "urn:bkbit:341d48498cc35030c804a23c7593ffb6ddf48692a7c91bdf14fb6a191107f49c",
               "name": "STR D1 MSN",
               "nodeColor": "#1655f2",
-              "accession_id": "CS20250428_SUBCL_0028",
-              "parent_id": "urn:bkbit:ed9f2f633da0407aea191d5660ba6c2fc248a0b01e0f5094cd2646c6f636fa0d",
+              "cell_ontology_id": [
+                "CL:4023026"
+              ],
+              "display_order": 31,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:32b6802327e722003e48610d6c78603e2860c062bf79f1ebd5cfb61c48b97d41",
               "abbreviations": [
                 {
                   "term": "D1 MSN",
@@ -77,19 +83,22 @@
                   "term": "STR",
                   "meaning": "striatum",
                   "denotes": [
-                    "DHBA:10333",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
                     "http://purl.obolibrary.org/obo/UBERON_0002435"
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:ac3d1723dd20c868f6d6cfb88efb8e8ff7206c8306e4f564eb7d2400332732ff",
+                  "id": "urn:bkbit:14c4234f851972f449797f1d822cf15b93bf9e7ada37fbff75c948d4b2d514ac",
                   "name": "STRd D1 Matrix MSN",
                   "nodeColor": "#1f77b4",
-                  "accession_id": "CS20250428_GROUP_0049",
-                  "parent_id": "urn:bkbit:9c8af7ea404453959ee438a5a6726c211fcbc48f73c12dc59fa41f4b08e063fc",
+                  "cell_ontology_id": [
+                    "CL:4030043"
+                  ],
+                  "display_order": 1,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:341d48498cc35030c804a23c7593ffb6ddf48692a7c91bdf14fb6a191107f49c",
                   "abbreviations": [
                     {
                       "term": "D1 Matrix MSN",
@@ -102,20 +111,23 @@
                       "term": "STRd",
                       "meaning": "dorsal striatum (caudoputamen complex-CP, STRd)",
                       "denotes": [
-                        "file:///Users/pujatrivedi/Desktop/MIT/test_bkbit_20241127/bkbit/bkbit/data/20251015_HMBA_BG.jsonld",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_AA30192",
                         "http://purl.obolibrary.org/obo/UBERON_0005382"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:448e8dabfccebaff72cfa7d5ebf6d5e6ff0a004168c1451f5334b315ce29cfb7",
+                  "id": "urn:bkbit:395bec7285d03bd5a5a02a48e77f97aa569612b80217b344c12bed915c9cc90d",
                   "name": "STRd D1 Striosome MSN",
                   "nodeColor": "#d62728",
-                  "accession_id": "CS20250428_GROUP_0050",
-                  "parent_id": "urn:bkbit:9c8af7ea404453959ee438a5a6726c211fcbc48f73c12dc59fa41f4b08e063fc",
+                  "cell_ontology_id": [
+                    "CL:4030048"
+                  ],
+                  "display_order": 2,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:341d48498cc35030c804a23c7593ffb6ddf48692a7c91bdf14fb6a191107f49c",
                   "abbreviations": [
                     {
                       "term": "D1 Striosome MSN",
@@ -128,20 +140,23 @@
                       "term": "STRd",
                       "meaning": "dorsal striatum (caudoputamen complex-CP, STRd)",
                       "denotes": [
-                        "file:///Users/pujatrivedi/Desktop/MIT/test_bkbit_20241127/bkbit/bkbit/data/20251015_HMBA_BG.jsonld",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_AA30192",
                         "http://purl.obolibrary.org/obo/UBERON_0005382"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:66a34ea93b8f03c16ca105c94927a7105c447d525fc2ac32f179361751e34c87",
+                  "id": "urn:bkbit:b5357140a76855e030fcc14f87984f9ab9e6708103d05ab422fafeb470d6f832",
                   "name": "STRv D1 MSN",
                   "nodeColor": "#339933",
-                  "accession_id": "CS20250428_GROUP_0056",
-                  "parent_id": "urn:bkbit:9c8af7ea404453959ee438a5a6726c211fcbc48f73c12dc59fa41f4b08e063fc",
+                  "cell_ontology_id": [
+                    "CL:4030051"
+                  ],
+                  "display_order": 5,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:341d48498cc35030c804a23c7593ffb6ddf48692a7c91bdf14fb6a191107f49c",
                   "abbreviations": [
                     {
                       "term": "D1 MSN",
@@ -154,22 +169,25 @@
                       "term": "STRv",
                       "meaning": "ventral striatum (STRv)",
                       "denotes": [
-                        "DHBA:AA30195",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_AA30195",
                         "http://purl.obolibrary.org/obo/UBERON_0005403"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:9532ccdd32a34c840c75e19e08efade74297473f0a2b15a4fbe5bcd58d46c6a7",
+              "id": "urn:bkbit:d1451e001a1c9aa2678edce610fc8610555ecf4525368fce418b193ccd016f2c",
               "name": "STR D2 MSN",
               "nodeColor": "#253c8c",
-              "accession_id": "CS20250428_SUBCL_0029",
-              "parent_id": "urn:bkbit:ed9f2f633da0407aea191d5660ba6c2fc248a0b01e0f5094cd2646c6f636fa0d",
+              "cell_ontology_id": [
+                "CL:4023029"
+              ],
+              "display_order": 32,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:32b6802327e722003e48610d6c78603e2860c062bf79f1ebd5cfb61c48b97d41",
               "abbreviations": [
                 {
                   "term": "D2 MSN",
@@ -182,19 +200,22 @@
                   "term": "STR",
                   "meaning": "striatum",
                   "denotes": [
-                    "DHBA:10333",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
                     "http://purl.obolibrary.org/obo/UBERON_0002435"
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:893e3b54e23cf2d1432423334bf07b527770bc8a7f6d626d337a33e2eef9725a",
+                  "id": "urn:bkbit:de8b98bfaeb22822d9fe5598123700e7feba85c544ab9db6addf741cb5f9a625",
                   "name": "STRd D2 Matrix MSN",
                   "nodeColor": "#aec7e8",
-                  "accession_id": "CS20250428_GROUP_0052",
-                  "parent_id": "urn:bkbit:9532ccdd32a34c840c75e19e08efade74297473f0a2b15a4fbe5bcd58d46c6a7",
+                  "cell_ontology_id": [
+                    "CL:4030047"
+                  ],
+                  "display_order": 3,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:d1451e001a1c9aa2678edce610fc8610555ecf4525368fce418b193ccd016f2c",
                   "abbreviations": [
                     {
                       "term": "D2 Matrix MSN",
@@ -207,20 +228,23 @@
                       "term": "STRd",
                       "meaning": "dorsal striatum (caudoputamen complex-CP, STRd)",
                       "denotes": [
-                        "file:///Users/pujatrivedi/Desktop/MIT/test_bkbit_20241127/bkbit/bkbit/data/20251015_HMBA_BG.jsonld",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_AA30192",
                         "http://purl.obolibrary.org/obo/UBERON_0005382"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:65d8a80088181a3102a72eef1de7a1fe8af71094c9b8ba65e03dd06007aded20",
+                  "id": "urn:bkbit:45f1ea3d8a92253594da34f5f3df480edf66474c89cb51bc064f2b730c8a94d8",
                   "name": "STRd D2 Striosome MSN",
                   "nodeColor": "#ff9896",
-                  "accession_id": "CS20250428_GROUP_0054",
-                  "parent_id": "urn:bkbit:9532ccdd32a34c840c75e19e08efade74297473f0a2b15a4fbe5bcd58d46c6a7",
+                  "cell_ontology_id": [
+                    "CL:4030049"
+                  ],
+                  "display_order": 4,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:d1451e001a1c9aa2678edce610fc8610555ecf4525368fce418b193ccd016f2c",
                   "abbreviations": [
                     {
                       "term": "D2 Striosome MSN",
@@ -233,20 +257,23 @@
                       "term": "STRd",
                       "meaning": "dorsal striatum (caudoputamen complex-CP, STRd)",
                       "denotes": [
-                        "file:///Users/pujatrivedi/Desktop/MIT/test_bkbit_20241127/bkbit/bkbit/data/20251015_HMBA_BG.jsonld",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_AA30192",
                         "http://purl.obolibrary.org/obo/UBERON_0005382"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:d948a4e3b6214e2f8bad73f4567f43789a7d17b73886766f61522f52128a73ed",
+                  "id": "urn:bkbit:eed4e695b0c225b3857325b9c49ccc846f3e6177a8f4558482a46c101fc62b36",
                   "name": "STRv D2 MSN",
                   "nodeColor": "#98df8a",
-                  "accession_id": "CS20250428_GROUP_0058",
-                  "parent_id": "urn:bkbit:9532ccdd32a34c840c75e19e08efade74297473f0a2b15a4fbe5bcd58d46c6a7",
+                  "cell_ontology_id": [
+                    "CL:4030052"
+                  ],
+                  "display_order": 6,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:d1451e001a1c9aa2678edce610fc8610555ecf4525368fce418b193ccd016f2c",
                   "abbreviations": [
                     {
                       "term": "D2 MSN",
@@ -259,20 +286,23 @@
                       "term": "STRv",
                       "meaning": "ventral striatum (STRv)",
                       "denotes": [
-                        "DHBA:AA30195",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_AA30195",
                         "http://purl.obolibrary.org/obo/UBERON_0005403"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:71a1862b604b7958a2a9f985ac3b40fe6e12ace6801b41e0acdbba147071cb3e",
+                  "id": "urn:bkbit:26e748ed97e83db82c2a78deea0a898044bc52a10b19b9beb00518cc825790c3",
                   "name": "STRd D2 StrioMat Hybrid MSN",
                   "nodeColor": "#5713c3",
-                  "accession_id": "CS20250428_GROUP_0053",
-                  "parent_id": "urn:bkbit:9532ccdd32a34c840c75e19e08efade74297473f0a2b15a4fbe5bcd58d46c6a7",
+                  "cell_ontology_id": [
+                    "CL:4023035"
+                  ],
+                  "display_order": 7,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:d1451e001a1c9aa2678edce610fc8610555ecf4525368fce418b193ccd016f2c",
                   "abbreviations": [
                     {
                       "term": "D2 StrioMat Hybrid MSN",
@@ -285,22 +315,25 @@
                       "term": "STRd",
                       "meaning": "dorsal striatum (caudoputamen complex-CP, STRd)",
                       "denotes": [
-                        "file:///Users/pujatrivedi/Desktop/MIT/test_bkbit_20241127/bkbit/bkbit/data/20251015_HMBA_BG.jsonld",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_AA30192",
                         "http://purl.obolibrary.org/obo/UBERON_0005382"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:951736c22d57001487ae94c3f7180cb47329edc6d1eb5c32aec523c5d07f0180",
+              "id": "urn:bkbit:4b98429f80846bd5c654b08ec69dcf77cbdd74e99569bad5e640d9549358a536",
               "name": "STR Hybrid MSN",
               "nodeColor": "#79bdf4",
-              "accession_id": "CS20250428_SUBCL_0030",
-              "parent_id": "urn:bkbit:ed9f2f633da0407aea191d5660ba6c2fc248a0b01e0f5094cd2646c6f636fa0d",
+              "cell_ontology_id": [
+                "CL:4030050"
+              ],
+              "display_order": 33,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:32b6802327e722003e48610d6c78603e2860c062bf79f1ebd5cfb61c48b97d41",
               "abbreviations": [
                 {
                   "term": "Hybrid MSN",
@@ -313,19 +346,22 @@
                   "term": "STR",
                   "meaning": "striatum",
                   "denotes": [
-                    "DHBA:10333",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
                     "http://purl.obolibrary.org/obo/UBERON_0002435"
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:0529409737a766fb803b2f4712af45d4a704aeb617cae92f37b20fb02c606972",
+                  "id": "urn:bkbit:8e6af77ac7c095572e39fd10116a9c0543cbbbdd8ca81317b7ed50eec978c12d",
                   "name": "STR D1D2 Hybrid MSN",
                   "nodeColor": "#9467bd",
-                  "accession_id": "CS20250428_GROUP_0051",
-                  "parent_id": "urn:bkbit:951736c22d57001487ae94c3f7180cb47329edc6d1eb5c32aec523c5d07f0180",
+                  "cell_ontology_id": [
+                    "CL:4030050"
+                  ],
+                  "display_order": 8,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:4b98429f80846bd5c654b08ec69dcf77cbdd74e99569bad5e640d9549358a536",
                   "abbreviations": [
                     {
                       "term": "D1D2 Hybrid MSN",
@@ -338,20 +374,23 @@
                       "term": "STR",
                       "meaning": "striatum",
                       "denotes": [
-                        "DHBA:10333",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
                         "http://purl.obolibrary.org/obo/UBERON_0002435"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:37e9789102d9a1684f741c91545ddeeea6cc21c54ad02eabf14fdad2edc8a856",
+                  "id": "urn:bkbit:5929d3dd24f15ba46182a2643760e4a8fb0f89d22e011d860ac55fda03f2e6ae",
                   "name": "STRv D1 NUDAP MSN",
                   "nodeColor": "#e377c2",
-                  "accession_id": "CS20250428_GROUP_0057",
-                  "parent_id": "urn:bkbit:951736c22d57001487ae94c3f7180cb47329edc6d1eb5c32aec523c5d07f0180",
+                  "cell_ontology_id": [
+                    "CL:4030054"
+                  ],
+                  "display_order": 9,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:4b98429f80846bd5c654b08ec69dcf77cbdd74e99569bad5e640d9549358a536",
                   "abbreviations": [
                     {
                       "term": "D1 NUDAP MSN",
@@ -364,22 +403,25 @@
                       "term": "STRv",
                       "meaning": "ventral striatum (STRv)",
                       "denotes": [
-                        "DHBA:AA30195",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_AA30195",
                         "http://purl.obolibrary.org/obo/UBERON_0005403"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:75f095ef8982bc6fedd920645c9caf49f1f4316afea7b2e7c04d9d953bf070e9",
+              "id": "urn:bkbit:ea6ad4eef8905085995991a9f7da8e2451ea6530b31681b29c9c119fc127f711",
               "name": "OT Granular GABA",
               "nodeColor": "#9160cb",
-              "accession_id": "CS20250428_SUBCL_0021",
-              "parent_id": "urn:bkbit:ed9f2f633da0407aea191d5660ba6c2fc248a0b01e0f5094cd2646c6f636fa0d",
+              "cell_ontology_id": [
+                "CL:4030053"
+              ],
+              "display_order": 34,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:32b6802327e722003e48610d6c78603e2860c062bf79f1ebd5cfb61c48b97d41",
               "abbreviations": [
                 {
                   "term": "GABA",
@@ -399,19 +441,22 @@
                   "term": "OT",
                   "meaning": "olfactory tubercle",
                   "denotes": [
-                    "DHBA:10310",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10310",
                     "http://purl.obolibrary.org/obo/UBERON_0001883"
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:cd1cbb79eea856c78c5ed976a6ba663d58245444500959de28e58d176cc82080",
+                  "id": "urn:bkbit:253e5924286862c769454fca32a8439364cc1784ec77e7dfdd3194a1995b67fa",
                   "name": "OT D1 ICj",
                   "nodeColor": "#ff7f0e",
-                  "accession_id": "CS20250428_GROUP_0024",
-                  "parent_id": "urn:bkbit:75f095ef8982bc6fedd920645c9caf49f1f4316afea7b2e7c04d9d953bf070e9",
+                  "cell_ontology_id": [
+                    "CL:4030053"
+                  ],
+                  "display_order": 10,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:ea6ad4eef8905085995991a9f7da8e2451ea6530b31681b29c9c119fc127f711",
                   "abbreviations": [
                     {
                       "term": "D1 ICj",
@@ -424,28 +469,29 @@
                       "term": "OT",
                       "meaning": "olfactory tubercle",
                       "denotes": [
-                        "DHBA:10310",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10310",
                         "http://purl.obolibrary.org/obo/UBERON_0001883"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:a6804e1c95107ea31667d8f6f3fad5968be055bb518f9d5daa9af642c9691a72",
+              "id": "urn:bkbit:ee6262f24776f7a22cfeaa0d544973ccfebd78b0152b499f44c98467dae096b9",
               "name": "CN MEIS2 GABA",
               "nodeColor": "#d8f378",
-              "accession_id": "CS20250428_SUBCL_0006",
-              "parent_id": "urn:bkbit:ed9f2f633da0407aea191d5660ba6c2fc248a0b01e0f5094cd2646c6f636fa0d",
+              "cell_ontology_id": [],
+              "display_order": 30,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:32b6802327e722003e48610d6c78603e2860c062bf79f1ebd5cfb61c48b97d41",
               "abbreviations": [
                 {
                   "term": "CN",
                   "meaning": "cerebral nuclei",
                   "denotes": [
-                    "DHBA:10331",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
                     "http://purl.obolibrary.org/obo/UBERON_0004025"
                   ]
                 },
@@ -464,14 +510,17 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:1c7d4ecda25bbc2d4bc2dfb5f8021384ee6ec152b38129b3948c40454c7e59fc",
+                  "id": "urn:bkbit:8209e27456abc60e607ae783510666b94de55e91f1c97598090dd2a042e5a1a9",
                   "name": "GPe MEIS2-SOX6 GABA",
                   "nodeColor": "#937a2e",
-                  "accession_id": "CS20250428_GROUP_0013",
-                  "parent_id": "urn:bkbit:a6804e1c95107ea31667d8f6f3fad5968be055bb518f9d5daa9af642c9691a72",
+                  "cell_ontology_id": [
+                    "CL:4023035"
+                  ],
+                  "display_order": 11,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:ee6262f24776f7a22cfeaa0d544973ccfebd78b0152b499f44c98467dae096b9",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -498,11 +547,10 @@
                       "term": "GPe",
                       "meaning": "external segment of globus pallidus",
                       "denotes": [
-                        "DHBA:10343"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10343"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
@@ -510,17 +558,19 @@
           ]
         },
         {
-          "id": "urn:bkbit:b1867d88ecf1c12c0772a6c1fda8b4e47f2cc76c77f9f17fc3d1b6ee64d06e6b",
+          "id": "urn:bkbit:86c87da3f58f7e4918f2886a74123c23d62818adc5c679649da4fb391092acc6",
           "name": "F M GABA",
           "nodeColor": "#cd0f13",
-          "accession_id": "CS20250428_CLASS_0006",
-          "parent_id": "urn:bkbit:a1180a6a5720377aa899b46f9cf72cf004acd8e63b080e17efdf709c115b8880",
+          "cell_ontology_id": [],
+          "display_order": 9,
+          "level": "Class",
+          "parent_id": "urn:bkbit:9ab863210b090e990a4835dbe55b37934d48419aef03611af3da286a4008d5fc",
           "abbreviations": [
             {
               "term": "F",
               "meaning": "forebrain (prosencephalon)",
               "denotes": [
-                "DHBA:10156",
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10156",
                 "http://purl.obolibrary.org/obo/UBERON_0004024"
               ]
             },
@@ -535,25 +585,26 @@
               "term": "M",
               "meaning": "midbrain (mesencephalon)",
               "denotes": [
-                "DHBA:10648",
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10648",
                 "http://purl.obolibrary.org/obo/UBERON_0001891"
               ]
             }
           ],
-          "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
-              "id": "urn:bkbit:d06363d89933bb23271e60c510fe734e66c29b198fd70e2c85bce20bdd7de33a",
+              "id": "urn:bkbit:69039affcc0ca3c5a8cd48bdf1fc6755ffcdbf1e6ff95205b6aeee3d6937ed9a",
               "name": "F GABA",
               "nodeColor": "#7ba2df",
-              "accession_id": "CS20250428_SUBCL_0037",
-              "parent_id": "urn:bkbit:b1867d88ecf1c12c0772a6c1fda8b4e47f2cc76c77f9f17fc3d1b6ee64d06e6b",
+              "cell_ontology_id": [],
+              "display_order": 29,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:86c87da3f58f7e4918f2886a74123c23d62818adc5c679649da4fb391092acc6",
               "abbreviations": [
                 {
                   "term": "F",
                   "meaning": "forebrain (prosencephalon)",
                   "denotes": [
-                    "DHBA:10156",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10156",
                     "http://purl.obolibrary.org/obo/UBERON_0004024"
                   ]
                 },
@@ -565,27 +616,30 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:568b4ba6ed952a199c5dcc949aba726be8ea6d400360dcc29c82473699cabd92",
+                  "id": "urn:bkbit:028fc21b2443ad98308fc4a0e17ac7f01aac9263c6a3c17dc9107d7ea355e160",
                   "name": "AMY-SLEA-BNST GABA",
                   "nodeColor": "#b69e14",
-                  "accession_id": "CS20250428_GROUP_0066",
-                  "parent_id": "urn:bkbit:d06363d89933bb23271e60c510fe734e66c29b198fd70e2c85bce20bdd7de33a",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 12,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:69039affcc0ca3c5a8cd48bdf1fc6755ffcdbf1e6ff95205b6aeee3d6937ed9a",
                   "abbreviations": [
                     {
                       "term": "AMY",
                       "meaning": "amygdaloid complex",
                       "denotes": [
-                        "DHBA:10361"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10361"
                       ]
                     },
                     {
                       "term": "BNST",
                       "meaning": "bed nucleus of stria terminalis",
                       "denotes": [
-                        "DHBA:10384"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10384"
                       ]
                     },
                     {
@@ -599,32 +653,35 @@
                       "term": "SLEA",
                       "meaning": "sublenticular extended amygdala",
                       "denotes": [
-                        "DHBA:10387"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10387"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:7acc79df9909a3a292b8a9d67df0e9709aee3fac5146bd6979a9f000b7a57645",
+                  "id": "urn:bkbit:82dcaf5c47e75c4d4e2dea2229d626c781f9aed1ae30f668df04cfa9c2575f57",
                   "name": "AMY-SLEA-BNST D1 GABA",
                   "nodeColor": "#9e86de",
-                  "accession_id": "CS20250428_GROUP_0065",
-                  "parent_id": "urn:bkbit:d06363d89933bb23271e60c510fe734e66c29b198fd70e2c85bce20bdd7de33a",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 13,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:69039affcc0ca3c5a8cd48bdf1fc6755ffcdbf1e6ff95205b6aeee3d6937ed9a",
                   "abbreviations": [
                     {
                       "term": "AMY",
                       "meaning": "amygdaloid complex",
                       "denotes": [
-                        "DHBA:10361"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10361"
                       ]
                     },
                     {
                       "term": "BNST",
                       "meaning": "bed nucleus of stria terminalis",
                       "denotes": [
-                        "DHBA:10384"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10384"
                       ]
                     },
                     {
@@ -638,7 +695,7 @@
                       "term": "SLEA",
                       "meaning": "sublenticular extended amygdala",
                       "denotes": [
-                        "DHBA:10387"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10387"
                       ]
                     },
                     {
@@ -649,15 +706,18 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:946de7483b1469850a834c2e3ae136d68097ee3879b8efb29dee9583f1888e6d",
+                  "id": "urn:bkbit:814d58907a7513a5911692721f0b8b16774835f4d451b78f25819286edfdc6d4",
                   "name": "ZI-HTH GABA",
                   "nodeColor": "#c49c94",
-                  "accession_id": "CS20250428_GROUP_0063",
-                  "parent_id": "urn:bkbit:d06363d89933bb23271e60c510fe734e66c29b198fd70e2c85bce20bdd7de33a",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 22,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:69039affcc0ca3c5a8cd48bdf1fc6755ffcdbf1e6ff95205b6aeee3d6937ed9a",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -670,28 +730,29 @@
                       "term": "HTH",
                       "meaning": "hypothalamus",
                       "denotes": [
-                        "DHBA:10467"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10467"
                       ]
                     },
                     {
                       "term": "ZI",
                       "meaning": "zona incerta",
                       "denotes": [
-                        "DHBA:10463"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10463"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:bad3ec5f57eea4900b7108d816a0dff31134b5cf83d4174ad7c50c2b4907226f",
+              "id": "urn:bkbit:eb440864f86144fc9c1e314991bf1a7f4100d1958d78ea2d0627754f52b337e3",
               "name": "SN PAX7 GABA",
               "nodeColor": "#720a7d",
-              "accession_id": "CS20250428_SUBCL_0026",
-              "parent_id": "urn:bkbit:b1867d88ecf1c12c0772a6c1fda8b4e47f2cc76c77f9f17fc3d1b6ee64d06e6b",
+              "cell_ontology_id": [],
+              "display_order": 28,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:86c87da3f58f7e4918f2886a74123c23d62818adc5c679649da4fb391092acc6",
               "abbreviations": [
                 {
                   "term": "GABA",
@@ -711,19 +772,22 @@
                   "term": "SN",
                   "meaning": "substantia nigra",
                   "denotes": [
-                    "DHBA:12251",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_12251",
                     "http://purl.obolibrary.org/obo/UBERON_0002038"
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:ebacd72983a25a31d6afb34016673095258228bf94cf017679d70f7213aaca88",
+                  "id": "urn:bkbit:39fd5b8210fd6b892b9fbc76715e9891d1f5a3afce705cc6d70a283efdc1192d",
                   "name": "SN SEMA5A GABA",
                   "nodeColor": "#3604fb",
-                  "accession_id": "CS20250428_GROUP_0034",
-                  "parent_id": "urn:bkbit:bad3ec5f57eea4900b7108d816a0dff31134b5cf83d4174ad7c50c2b4907226f",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 14,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:eb440864f86144fc9c1e314991bf1a7f4100d1958d78ea2d0627754f52b337e3",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -743,20 +807,23 @@
                       "term": "SN",
                       "meaning": "substantia nigra",
                       "denotes": [
-                        "DHBA:12251",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_12251",
                         "http://purl.obolibrary.org/obo/UBERON_0002038"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:87d4257a2aad9c4335e303f5e1792e64fe0b8ab8d70b6ae628a1ef92fcb6f2ff",
+                  "id": "urn:bkbit:4b2f527dd49bfdde853860f17410e6fcf82b51005c7cd50a8693ddc228247656",
                   "name": "SN EBF2 GABA",
                   "nodeColor": "#c8df45",
-                  "accession_id": "CS20250428_GROUP_0030",
-                  "parent_id": "urn:bkbit:bad3ec5f57eea4900b7108d816a0dff31134b5cf83d4174ad7c50c2b4907226f",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 15,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:eb440864f86144fc9c1e314991bf1a7f4100d1958d78ea2d0627754f52b337e3",
                   "abbreviations": [
                     {
                       "term": "EBF2",
@@ -776,28 +843,29 @@
                       "term": "SN",
                       "meaning": "substantia nigra",
                       "denotes": [
-                        "DHBA:12251",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_12251",
                         "http://purl.obolibrary.org/obo/UBERON_0002038"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:9d35cbc3c7cd2fe2d21498a6b49ab764bbc5f9b6d86cb44db27e3dfdb255105c",
+              "id": "urn:bkbit:99442e6d9c9a87c89dc2745becd0455da6d769b22d7767aa13ef7df8f2668600",
               "name": "CN ONECUT1 GABA",
               "nodeColor": "#967be5",
-              "accession_id": "CS20250428_SUBCL_0007",
-              "parent_id": "urn:bkbit:b1867d88ecf1c12c0772a6c1fda8b4e47f2cc76c77f9f17fc3d1b6ee64d06e6b",
+              "cell_ontology_id": [],
+              "display_order": 26,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:86c87da3f58f7e4918f2886a74123c23d62818adc5c679649da4fb391092acc6",
               "abbreviations": [
                 {
                   "term": "CN",
                   "meaning": "cerebral nuclei",
                   "denotes": [
-                    "DHBA:10331",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
                     "http://purl.obolibrary.org/obo/UBERON_0004025"
                   ]
                 },
@@ -816,40 +884,42 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:9798af24175c838af7fb1d9ee30521c005d4e138fe7c3f106b784711ba525b72",
+                  "id": "urn:bkbit:249f9e57d4e82d1fa950b13a27b936ac2ec925e80dd1a7b0543509217ae0c43a",
                   "name": "GPi Core",
                   "nodeColor": "#d3489a",
-                  "accession_id": "CS20250428_GROUP_0015",
-                  "parent_id": "urn:bkbit:9d35cbc3c7cd2fe2d21498a6b49ab764bbc5f9b6d86cb44db27e3dfdb255105c",
+                  "cell_ontology_id": [],
+                  "display_order": 19,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:99442e6d9c9a87c89dc2745becd0455da6d769b22d7767aa13ef7df8f2668600",
                   "abbreviations": [
                     {
                       "term": "GPi Core",
                       "meaning": "internal division of globus pallidus, medial (central) portion",
                       "denotes": [
-                        "DHBA:11548"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_11548"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:c40b41739016992fedc815f2e02d396f392d41a712dac2537b1f45333389dcdf",
+              "id": "urn:bkbit:b9e4df78d8d457e1ca2c7344315126d4c716adb495da45c4a3f6dccd67924480",
               "name": "F M GATA3 GABA",
               "nodeColor": "#311a96",
-              "accession_id": "CS20250428_SUBCL_0016",
-              "parent_id": "urn:bkbit:b1867d88ecf1c12c0772a6c1fda8b4e47f2cc76c77f9f17fc3d1b6ee64d06e6b",
+              "cell_ontology_id": [],
+              "display_order": 27,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:86c87da3f58f7e4918f2886a74123c23d62818adc5c679649da4fb391092acc6",
               "abbreviations": [
                 {
                   "term": "F",
                   "meaning": "forebrain (prosencephalon)",
                   "denotes": [
-                    "DHBA:10156",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10156",
                     "http://purl.obolibrary.org/obo/UBERON_0004024"
                   ]
                 },
@@ -871,19 +941,22 @@
                   "term": "M",
                   "meaning": "midbrain (mesencephalon)",
                   "denotes": [
-                    "DHBA:10648",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10648",
                     "http://purl.obolibrary.org/obo/UBERON_0001891"
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:1258d537e8e07226565dbd53af4d63756f8f0dbe59eeb4ab5911197b90f28d7d",
+                  "id": "urn:bkbit:c7d67c7c0a9e43b31f3308d9acbad50b4c27192225d82c8c3c59064ec6fdf75f",
                   "name": "SN GATA3-PVALB GABA",
                   "nodeColor": "#017d7c",
-                  "accession_id": "CS20250428_GROUP_0033",
-                  "parent_id": "urn:bkbit:c40b41739016992fedc815f2e02d396f392d41a712dac2537b1f45333389dcdf",
+                  "cell_ontology_id": [
+                    "CL:0000617"
+                  ],
+                  "display_order": 20,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:b9e4df78d8d457e1ca2c7344315126d4c716adb495da45c4a3f6dccd67924480",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -910,20 +983,23 @@
                       "term": "SN",
                       "meaning": "substantia nigra",
                       "denotes": [
-                        "DHBA:12251",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_12251",
                         "http://purl.obolibrary.org/obo/UBERON_0002038"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:fdad254081636e6dc707c852bbcf497bdc879e76906855a07df1b6fec30cb5f6",
+                  "id": "urn:bkbit:bc154956020a7be6d591b0c9bca6a07ee620b542fbd1972327da1509a2ade8ef",
                   "name": "SN-VTR-HTH GATA3-TCF7L2 GABA",
                   "nodeColor": "#1dbfcf",
-                  "accession_id": "CS20250428_GROUP_0037",
-                  "parent_id": "urn:bkbit:c40b41739016992fedc815f2e02d396f392d41a712dac2537b1f45333389dcdf",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 23,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:b9e4df78d8d457e1ca2c7344315126d4c716adb495da45c4a3f6dccd67924480",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -943,7 +1019,7 @@
                       "term": "SN",
                       "meaning": "substantia nigra",
                       "denotes": [
-                        "DHBA:12251",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_12251",
                         "http://purl.obolibrary.org/obo/UBERON_0002038"
                       ]
                     },
@@ -958,26 +1034,29 @@
                       "term": "HTH",
                       "meaning": "hypothalamus",
                       "denotes": [
-                        "DHBA:10467"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10467"
                       ]
                     },
                     {
                       "term": "VTR",
                       "meaning": "ventral tegmental region of midbrain",
                       "denotes": [
-                        "DHBA:146034938"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_146034938"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:08b9626fdc7481a1e89a362d7dffffb9a76e4d1d74f963d9dc3242cb69caae32",
+                  "id": "urn:bkbit:0e293061edd494bc78f557f002cc3b080ecba3ab629100a4616467d6314a3794",
                   "name": "SN GATA3-PAX8 GABA",
                   "nodeColor": "#ff7266",
-                  "accession_id": "CS20250428_GROUP_0032",
-                  "parent_id": "urn:bkbit:c40b41739016992fedc815f2e02d396f392d41a712dac2537b1f45333389dcdf",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 24,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:b9e4df78d8d457e1ca2c7344315126d4c716adb495da45c4a3f6dccd67924480",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -1004,28 +1083,29 @@
                       "term": "SN",
                       "meaning": "substantia nigra",
                       "denotes": [
-                        "DHBA:12251",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_12251",
                         "http://purl.obolibrary.org/obo/UBERON_0002038"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:1bc9db2e718c4faeef3fa96dcd6e84d0497e3a2dce309d976f6fe60e8127f6ac",
+              "id": "urn:bkbit:c1af3c4b2c5f318122648a00f337c74973c1d1807c98d8292d8f450aac580799",
               "name": "CN LHX8 GABA",
               "nodeColor": "#caf28b",
-              "accession_id": "CS20250428_SUBCL_0005",
-              "parent_id": "urn:bkbit:b1867d88ecf1c12c0772a6c1fda8b4e47f2cc76c77f9f17fc3d1b6ee64d06e6b",
+              "cell_ontology_id": [],
+              "display_order": 25,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:86c87da3f58f7e4918f2886a74123c23d62818adc5c679649da4fb391092acc6",
               "abbreviations": [
                 {
                   "term": "CN",
                   "meaning": "cerebral nuclei",
                   "denotes": [
-                    "DHBA:10331",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
                     "http://purl.obolibrary.org/obo/UBERON_0004025"
                   ]
                 },
@@ -1044,14 +1124,17 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:711533fa8dc696f785b6f801d1b0447b4bfd1de3106d82560faf9b184d4fc97d",
+                  "id": "urn:bkbit:a6c1fa94acc8f441f14847e858ba39df398847fe3b0efaec1ca2b53db3b78311",
                   "name": "GPe SOX6-CTXND1 GABA",
                   "nodeColor": "#e9dc4d",
-                  "accession_id": "CS20250428_GROUP_0014",
-                  "parent_id": "urn:bkbit:1bc9db2e718c4faeef3fa96dcd6e84d0497e3a2dce309d976f6fe60e8127f6ac",
+                  "cell_ontology_id": [
+                    "CL:0000617"
+                  ],
+                  "display_order": 21,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:c1af3c4b2c5f318122648a00f337c74973c1d1807c98d8292d8f450aac580799",
                   "abbreviations": [
                     {
                       "term": "CTXND1",
@@ -1078,19 +1161,22 @@
                       "term": "GPe",
                       "meaning": "external segment of globus pallidus",
                       "denotes": [
-                        "DHBA:10343"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10343"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:8c10a836c5ec3f90545b0a420c272e0ab8cec7c931f2e652da876efeacd28bf0",
+                  "id": "urn:bkbit:4658b224cd5932807ec85c341648ed559cb30fae642dd9d4e228f63ae563527e",
                   "name": "GPe-NDB-SI LHX6-LHX8-GBX1 GABA",
                   "nodeColor": "#B2520E",
-                  "accession_id": "CS20250428_GROUP_0020",
-                  "parent_id": "urn:bkbit:1bc9db2e718c4faeef3fa96dcd6e84d0497e3a2dce309d976f6fe60e8127f6ac",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 25,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:c1af3c4b2c5f318122648a00f337c74973c1d1807c98d8292d8f450aac580799",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -1124,7 +1210,7 @@
                       "term": "NDB",
                       "meaning": "nucleus of diagonal band",
                       "denotes": [
-                        "DHBA:10354",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10354",
                         "http://purl.obolibrary.org/obo/UBERON_0001879"
                       ]
                     },
@@ -1132,7 +1218,7 @@
                       "term": "SI",
                       "meaning": "substantia innominata",
                       "denotes": [
-                        "DHBA:13034",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_13034",
                         "http://purl.obolibrary.org/obo/UBERON_0003017"
                       ]
                     },
@@ -1140,11 +1226,10 @@
                       "term": "GPe",
                       "meaning": "external segment of globus pallidus",
                       "denotes": [
-                        "DHBA:10343"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10343"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
@@ -1152,17 +1237,19 @@
           ]
         },
         {
-          "id": "urn:bkbit:50f8317daa38f60c302168e1a78e673a5bc93246bb4a25575d907f1d004854b6",
+          "id": "urn:bkbit:417d714aff8f6ad7b96f3327da54cdc423b227446eebe848665569891adff781",
           "name": "Cx GABA",
           "nodeColor": "#ebb3a7",
-          "accession_id": "CS20250428_CLASS_0012",
-          "parent_id": "urn:bkbit:a1180a6a5720377aa899b46f9cf72cf004acd8e63b080e17efdf709c115b8880",
+          "cell_ontology_id": [],
+          "display_order": 11,
+          "level": "Class",
+          "parent_id": "urn:bkbit:9ab863210b090e990a4835dbe55b37934d48419aef03611af3da286a4008d5fc",
           "abbreviations": [
             {
               "term": "Cx",
               "meaning": "cerebral cortex",
               "denotes": [
-                "DHBA:10159"
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10159"
               ]
             },
             {
@@ -1173,20 +1260,21 @@
               ]
             }
           ],
-          "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
-              "id": "urn:bkbit:24af5cc72a5701b8b68079d061ffeb9bf90f603839edd8736a7bdcdfe2a5a520",
+              "id": "urn:bkbit:3eee526b584452b935540fc23c4efe013475f59602d1e741f316c1298feca917",
               "name": "ACx MEIS2 GABA",
               "nodeColor": "#3636ed",
-              "accession_id": "CS20250428_SUBCL_0036",
-              "parent_id": "urn:bkbit:50f8317daa38f60c302168e1a78e673a5bc93246bb4a25575d907f1d004854b6",
+              "cell_ontology_id": [],
+              "display_order": 35,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:417d714aff8f6ad7b96f3327da54cdc423b227446eebe848665569891adff781",
               "abbreviations": [
                 {
                   "term": "ACx",
                   "meaning": "allocortex",
                   "denotes": [
-                    "DHBA:10292"
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10292"
                   ]
                 },
                 {
@@ -1204,14 +1292,17 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:3950ffe1569181e43044e619fc98a4222b29261470d5ee26bed6edb4cf9e0d79",
+                  "id": "urn:bkbit:d5ff4f49204a7ca3160268c96c5b72ec91b944e3ef4d32ec69e5581b87f8cfec",
                   "name": "OB FRMD7 GABA",
                   "nodeColor": "#cd0753",
-                  "accession_id": "CS20250428_GROUP_0068",
-                  "parent_id": "urn:bkbit:24af5cc72a5701b8b68079d061ffeb9bf90f603839edd8736a7bdcdfe2a5a520",
+                  "cell_ontology_id": [
+                    "CL:0000617"
+                  ],
+                  "display_order": 16,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:3eee526b584452b935540fc23c4efe013475f59602d1e741f316c1298feca917",
                   "abbreviations": [
                     {
                       "term": "FRMD7",
@@ -1231,19 +1322,22 @@
                       "term": "OB",
                       "meaning": "olfactory bulb",
                       "denotes": [
-                        "DHBA:10307"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10307"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:ec4d3b07a42a383f7ee507e618a9fcf10d65b3ac6a40129ac4762adbfff0b1e3",
+                  "id": "urn:bkbit:09a5f7aeb79fa1483f4bc87f4153135cc776f107ba058cd5affa48293da60c33",
                   "name": "OB Dopa-GABA",
                   "nodeColor": "#902f6b",
-                  "accession_id": "CS20250428_GROUP_0067",
-                  "parent_id": "urn:bkbit:24af5cc72a5701b8b68079d061ffeb9bf90f603839edd8736a7bdcdfe2a5a520",
+                  "cell_ontology_id": [
+                    "CL:0000617"
+                  ],
+                  "display_order": 17,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:3eee526b584452b935540fc23c4efe013475f59602d1e741f316c1298feca917",
                   "abbreviations": [
                     {
                       "term": "Dopa",
@@ -1263,11 +1357,10 @@
                       "term": "OB",
                       "meaning": "olfactory bulb",
                       "denotes": [
-                        "DHBA:10307"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10307"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
@@ -1275,17 +1368,19 @@
           ]
         },
         {
-          "id": "urn:bkbit:c4d14ec37e63cd1a1b99610cbc0e1b0152b0782858168e125569815c69e9fc91",
+          "id": "urn:bkbit:b23f55855e4a69611cdcedd02e40abc5c0cc42c432e6b584c946212f24f50d75",
           "name": "CN CGE GABA",
           "nodeColor": "#26e8bb",
-          "accession_id": "CS20250428_CLASS_0001",
-          "parent_id": "urn:bkbit:a1180a6a5720377aa899b46f9cf72cf004acd8e63b080e17efdf709c115b8880",
+          "cell_ontology_id": [],
+          "display_order": 8,
+          "level": "Class",
+          "parent_id": "urn:bkbit:9ab863210b090e990a4835dbe55b37934d48419aef03611af3da286a4008d5fc",
           "abbreviations": [
             {
               "term": "CGE",
               "meaning": "caudal ganglionic eminence",
               "denotes": [
-                "DHBA:10552",
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10552",
                 "http://purl.obolibrary.org/obo/UBERON_0004026"
               ]
             },
@@ -1293,7 +1388,7 @@
               "term": "CN",
               "meaning": "cerebral nuclei",
               "denotes": [
-                "DHBA:10331",
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
                 "http://purl.obolibrary.org/obo/UBERON_0004025"
               ]
             },
@@ -1305,20 +1400,21 @@
               ]
             }
           ],
-          "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
-              "id": "urn:bkbit:516d7ccdfee11d47df1facc5d8e698572e87425f126cec62af807717147d8370",
+              "id": "urn:bkbit:93a96fc89ea6cb5b58460bc7b75ad349b4751bde638551493c6c1a49c72d0df8",
               "name": "CN VIP GABA",
               "nodeColor": "#1bc06a",
-              "accession_id": "CS20250428_SUBCL_0009",
-              "parent_id": "urn:bkbit:c4d14ec37e63cd1a1b99610cbc0e1b0152b0782858168e125569815c69e9fc91",
+              "cell_ontology_id": [],
+              "display_order": 24,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:b23f55855e4a69611cdcedd02e40abc5c0cc42c432e6b584c946212f24f50d75",
               "abbreviations": [
                 {
                   "term": "CN",
                   "meaning": "cerebral nuclei",
                   "denotes": [
-                    "DHBA:10331",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
                     "http://purl.obolibrary.org/obo/UBERON_0004025"
                   ]
                 },
@@ -1337,14 +1433,17 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:2f2e396b210c913b6b58252d061df66476b2ce36f3b7f37b5530c450f748e32f",
+                  "id": "urn:bkbit:6922d80ab0431bcd35489b74aee245c6f3139f6ee72db2925119828ae0d4fad3",
                   "name": "VIP GABA",
                   "nodeColor": "#fc2b80",
-                  "accession_id": "CS20250428_GROUP_0047",
-                  "parent_id": "urn:bkbit:516d7ccdfee11d47df1facc5d8e698572e87425f126cec62af807717147d8370",
+                  "cell_ontology_id": [
+                    "CL:4023016"
+                  ],
+                  "display_order": 26,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:93a96fc89ea6cb5b58460bc7b75ad349b4751bde638551493c6c1a49c72d0df8",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -1361,23 +1460,24 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:30866284635dbcda69c7cdbee1f6737c8d9a9fc8896ac21fc0ff64ad685247dc",
+              "id": "urn:bkbit:2dfc38bb4076fd5b6bc2b6d744b162fad980b2a2d671a04146ff8e9a0a438f21",
               "name": "CN LAMP5-CXCL14 GABA",
               "nodeColor": "#e5b672",
-              "accession_id": "CS20250428_SUBCL_0002",
-              "parent_id": "urn:bkbit:c4d14ec37e63cd1a1b99610cbc0e1b0152b0782858168e125569815c69e9fc91",
+              "cell_ontology_id": [],
+              "display_order": 23,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:b23f55855e4a69611cdcedd02e40abc5c0cc42c432e6b584c946212f24f50d75",
               "abbreviations": [
                 {
                   "term": "CN",
                   "meaning": "cerebral nuclei",
                   "denotes": [
-                    "DHBA:10331",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
                     "http://purl.obolibrary.org/obo/UBERON_0004025"
                   ]
                 },
@@ -1403,14 +1503,17 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:4f54a1cea6c0d4085906278d7541f9f163e60fa19e55e485e81319b78e9c4177",
+                  "id": "urn:bkbit:7a3e9d42dc30cda994c9d3a538dd8931e24602f9d934935f8630c65007acb5ac",
                   "name": "LAMP5-CXCL14 GABA",
                   "nodeColor": "#f6b5d1",
-                  "accession_id": "CS20250428_GROUP_0004",
-                  "parent_id": "urn:bkbit:30866284635dbcda69c7cdbee1f6737c8d9a9fc8896ac21fc0ff64ad685247dc",
+                  "cell_ontology_id": [
+                    "CL:4023011"
+                  ],
+                  "display_order": 27,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:2dfc38bb4076fd5b6bc2b6d744b162fad980b2a2d671a04146ff8e9a0a438f21",
                   "abbreviations": [
                     {
                       "term": "CXCL14",
@@ -1434,7 +1537,6 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
@@ -1442,17 +1544,19 @@
           ]
         },
         {
-          "id": "urn:bkbit:6f4e21caafa62cd6dc1a17a98a6eacd3b34b29803678ad09ffc86adb8783b216",
+          "id": "urn:bkbit:0f93285a34f9f823acd0cdec1ba80965d1268ecbc5496516f6a4569389f9bf76",
           "name": "CN MGE GABA",
           "nodeColor": "#ce4c27",
-          "accession_id": "CS20250428_CLASS_0005",
-          "parent_id": "urn:bkbit:a1180a6a5720377aa899b46f9cf72cf004acd8e63b080e17efdf709c115b8880",
+          "cell_ontology_id": [],
+          "display_order": 7,
+          "level": "Class",
+          "parent_id": "urn:bkbit:9ab863210b090e990a4835dbe55b37934d48419aef03611af3da286a4008d5fc",
           "abbreviations": [
             {
               "term": "CN",
               "meaning": "cerebral nuclei",
               "denotes": [
-                "DHBA:10331",
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
                 "http://purl.obolibrary.org/obo/UBERON_0004025"
               ]
             },
@@ -1467,19 +1571,20 @@
               "term": "MGE",
               "meaning": "medial ganglionic eminence",
               "denotes": [
-                "DHBA:10550",
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10550",
                 "http://purl.obolibrary.org/obo/UBERON_0004024"
               ]
             }
           ],
-          "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
-              "id": "urn:bkbit:1c5b3aaaf65bab2369a457d6f3ee4f5679830cd1a8fd401180c2ac7f7a2c7901",
+              "id": "urn:bkbit:d0d4e22f4858e1af1edfc5fffe76e7f8bcd3f047201cee46eab3864d874a07e7",
               "name": "STR SST-CHODL GABA",
               "nodeColor": "#eea495",
-              "accession_id": "CS20250428_SUBCL_0033",
-              "parent_id": "urn:bkbit:6f4e21caafa62cd6dc1a17a98a6eacd3b34b29803678ad09ffc86adb8783b216",
+              "cell_ontology_id": [],
+              "display_order": 19,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:0f93285a34f9f823acd0cdec1ba80965d1268ecbc5496516f6a4569389f9bf76",
               "abbreviations": [
                 {
                   "term": "CHODL",
@@ -1506,19 +1611,22 @@
                   "term": "STR",
                   "meaning": "striatum",
                   "denotes": [
-                    "DHBA:10333",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
                     "http://purl.obolibrary.org/obo/UBERON_0002435"
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:64910bce3ccd0b4bb1ecdc545a9b5ccd1d8c45d5b232dae391ee756755f7cd06",
+                  "id": "urn:bkbit:e026eff5681b929fd943e24efc50ba853b49d68df2883834315115607f956112",
                   "name": "STR SST-CHODL GABA",
                   "nodeColor": "#708297",
-                  "accession_id": "CS20250428_GROUP_0043",
-                  "parent_id": "urn:bkbit:1c5b3aaaf65bab2369a457d6f3ee4f5679830cd1a8fd401180c2ac7f7a2c7901",
+                  "cell_ontology_id": [
+                    "CL:4023121"
+                  ],
+                  "display_order": 28,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:d0d4e22f4858e1af1edfc5fffe76e7f8bcd3f047201cee46eab3864d874a07e7",
                   "abbreviations": [
                     {
                       "term": "CHODL",
@@ -1545,22 +1653,23 @@
                       "term": "STR",
                       "meaning": "striatum",
                       "denotes": [
-                        "DHBA:10333",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
                         "http://purl.obolibrary.org/obo/UBERON_0002435"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:699753aa477e79829c051093bcb31764dd30ebd15d2bacde6b0f57837e406727",
+              "id": "urn:bkbit:e66870c045fc544f8361b13e440e2c42b568d50dbf932785ed3d1ed4fdeb982b",
               "name": "STR RSPO2 GABA",
               "nodeColor": "#5b0e63",
-              "accession_id": "CS20250428_SUBCL_0031",
-              "parent_id": "urn:bkbit:6f4e21caafa62cd6dc1a17a98a6eacd3b34b29803678ad09ffc86adb8783b216",
+              "cell_ontology_id": [],
+              "display_order": 21,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:0f93285a34f9f823acd0cdec1ba80965d1268ecbc5496516f6a4569389f9bf76",
               "abbreviations": [
                 {
                   "term": "GABA",
@@ -1580,19 +1689,22 @@
                   "term": "STR",
                   "meaning": "striatum",
                   "denotes": [
-                    "DHBA:10333",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
                     "http://purl.obolibrary.org/obo/UBERON_0002435"
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:5aa591c81c8cc90e8780d70c599b558d0c05bd97beeb13db3f2ae594d410b708",
+                  "id": "urn:bkbit:b749c8ba04be5bff612437bc029eb315d48da8f1f25f287541d30d08df73157a",
                   "name": "STR SST-RSPO2 GABA",
                   "nodeColor": "#f3b79b",
-                  "accession_id": "CS20250428_GROUP_0044",
-                  "parent_id": "urn:bkbit:699753aa477e79829c051093bcb31764dd30ebd15d2bacde6b0f57837e406727",
+                  "cell_ontology_id": [
+                    "CL:4023017"
+                  ],
+                  "display_order": 29,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:e66870c045fc544f8361b13e440e2c42b568d50dbf932785ed3d1ed4fdeb982b",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -1619,20 +1731,23 @@
                       "term": "STR",
                       "meaning": "striatum",
                       "denotes": [
-                        "DHBA:10333",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
                         "http://purl.obolibrary.org/obo/UBERON_0002435"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:2a4038578eaf962690dc397418398edde17c1f9c307f63ee6da07bf6dbbde9d0",
+                  "id": "urn:bkbit:9998f860462a1de2ae0f99366b20234758855d88323be5e12e153da27cb682b0",
                   "name": "STR LYPD6-RSPO2 GABA",
                   "nodeColor": "#488edc",
-                  "accession_id": "CS20250428_GROUP_0041",
-                  "parent_id": "urn:bkbit:699753aa477e79829c051093bcb31764dd30ebd15d2bacde6b0f57837e406727",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 30,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:e66870c045fc544f8361b13e440e2c42b568d50dbf932785ed3d1ed4fdeb982b",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -1652,7 +1767,7 @@
                       "term": "STR",
                       "meaning": "striatum",
                       "denotes": [
-                        "DHBA:10333",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
                         "http://purl.obolibrary.org/obo/UBERON_0002435"
                       ]
                     },
@@ -1664,17 +1779,18 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:4157705de54075788dec8b423c4a831ccbf38cb02f2e539b202122a8146062a6",
+              "id": "urn:bkbit:5b782814d69477366e3195b10c37c3a840886f5e43030d7b3147bf6082194d8d",
               "name": "STR SST GABA",
               "nodeColor": "#ed8d40",
-              "accession_id": "CS20250428_SUBCL_0032",
-              "parent_id": "urn:bkbit:6f4e21caafa62cd6dc1a17a98a6eacd3b34b29803678ad09ffc86adb8783b216",
+              "cell_ontology_id": [],
+              "display_order": 20,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:0f93285a34f9f823acd0cdec1ba80965d1268ecbc5496516f6a4569389f9bf76",
               "abbreviations": [
                 {
                   "term": "GABA",
@@ -1694,19 +1810,22 @@
                   "term": "STR",
                   "meaning": "striatum",
                   "denotes": [
-                    "DHBA:10333",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
                     "http://purl.obolibrary.org/obo/UBERON_0002435"
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:77855d2b05e2d88cc120e1ad9a7174eabceb15fb96cde3ce8201ce77013d10dc",
+                  "id": "urn:bkbit:b68cebe1f3ee73200db75d08ef52e2930a3ebece166cc3b41479976eae1aa2ad",
                   "name": "STR SST-ADARB2 GABA",
                   "nodeColor": "#fde020",
-                  "accession_id": "CS20250428_GROUP_0042",
-                  "parent_id": "urn:bkbit:4157705de54075788dec8b423c4a831ccbf38cb02f2e539b202122a8146062a6",
+                  "cell_ontology_id": [
+                    "CL:4023017"
+                  ],
+                  "display_order": 31,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:5b782814d69477366e3195b10c37c3a840886f5e43030d7b3147bf6082194d8d",
                   "abbreviations": [
                     {
                       "term": "ADARB2",
@@ -1733,28 +1852,29 @@
                       "term": "STR",
                       "meaning": "striatum",
                       "denotes": [
-                        "DHBA:10333",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
                         "http://purl.obolibrary.org/obo/UBERON_0002435"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:98c91a321d11b3dfb45f2ebc7b3e9b504f5d1dff9f86dd3889918377f6cb55ee",
+              "id": "urn:bkbit:1b491a02d7811e5d4cf754326180f1c47261d5c31719825eea3bfe2039f586c3",
               "name": "CN LAMP5-LHX6 GABA",
               "nodeColor": "#f48d44",
-              "accession_id": "CS20250428_SUBCL_0003",
-              "parent_id": "urn:bkbit:6f4e21caafa62cd6dc1a17a98a6eacd3b34b29803678ad09ffc86adb8783b216",
+              "cell_ontology_id": [],
+              "display_order": 17,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:0f93285a34f9f823acd0cdec1ba80965d1268ecbc5496516f6a4569389f9bf76",
               "abbreviations": [
                 {
                   "term": "CN",
                   "meaning": "cerebral nuclei",
                   "denotes": [
-                    "DHBA:10331",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
                     "http://purl.obolibrary.org/obo/UBERON_0004025"
                   ]
                 },
@@ -1780,14 +1900,17 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:bbf0b7a817de65405e62e381a85532290e375765865f86c9de4d380ec1b937ad",
+                  "id": "urn:bkbit:e3b38dcad0500a9d780dfb05fa68caf7f8be7125bbda297f8af6063e6c61276e",
                   "name": "LAMP5-LHX6 GABA",
                   "nodeColor": "#00af88",
-                  "accession_id": "CS20250428_GROUP_0005",
-                  "parent_id": "urn:bkbit:98c91a321d11b3dfb45f2ebc7b3e9b504f5d1dff9f86dd3889918377f6cb55ee",
+                  "cell_ontology_id": [
+                    "CL:4042013"
+                  ],
+                  "display_order": 32,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:1b491a02d7811e5d4cf754326180f1c47261d5c31719825eea3bfe2039f586c3",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -1811,23 +1934,24 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:cbd5d3bd68abd73e930de297bead7b1c231d733dbd9c6ce17aeeab3d3d98428f",
+              "id": "urn:bkbit:55331191c3179211fd3901d40244b9436877ac7e0f8448ec018a4a170ddc6620",
               "name": "CN ST18 GABA",
               "nodeColor": "#5fd989",
-              "accession_id": "CS20250428_SUBCL_0008",
-              "parent_id": "urn:bkbit:6f4e21caafa62cd6dc1a17a98a6eacd3b34b29803678ad09ffc86adb8783b216",
+              "cell_ontology_id": [],
+              "display_order": 18,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:0f93285a34f9f823acd0cdec1ba80965d1268ecbc5496516f6a4569389f9bf76",
               "abbreviations": [
                 {
                   "term": "CN",
                   "meaning": "cerebral nuclei",
                   "denotes": [
-                    "DHBA:10331",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
                     "http://purl.obolibrary.org/obo/UBERON_0004025"
                   ]
                 },
@@ -1846,14 +1970,17 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:cc13fc7b0603ecd9ada81e2de40557fe5a629094d56165c88a2cffddf16d2a2a",
+                  "id": "urn:bkbit:e1cd029bf8635792c87b3a69ebb99568636268bfda500214fb67607b2b26ad24",
                   "name": "STR FS PTHLH-PVALB GABA",
                   "nodeColor": "#e16c95",
-                  "accession_id": "CS20250428_GROUP_0040",
-                  "parent_id": "urn:bkbit:cbd5d3bd68abd73e930de297bead7b1c231d733dbd9c6ce17aeeab3d3d98428f",
+                  "cell_ontology_id": [
+                    "CL:4042023"
+                  ],
+                  "display_order": 33,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:55331191c3179211fd3901d40244b9436877ac7e0f8448ec018a4a170ddc6620",
                   "abbreviations": [
                     {
                       "term": "FS",
@@ -1887,20 +2014,23 @@
                       "term": "STR",
                       "meaning": "striatum",
                       "denotes": [
-                        "DHBA:10333",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
                         "http://purl.obolibrary.org/obo/UBERON_0002435"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:dcac11b26dad5965dedcb6eab1e6e37153c70833de78274d290a87ce6597299d",
+                  "id": "urn:bkbit:2a8826fc0fc6644846d1e7c89428b69a59861fd8374f216d20176188aa5108d1",
                   "name": "STR TAC3-PLPP4 GABA",
                   "nodeColor": "#21eef1",
-                  "accession_id": "CS20250428_GROUP_0045",
-                  "parent_id": "urn:bkbit:cbd5d3bd68abd73e930de297bead7b1c231d733dbd9c6ce17aeeab3d3d98428f",
+                  "cell_ontology_id": [
+                    "CL:4042001"
+                  ],
+                  "display_order": 34,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:55331191c3179211fd3901d40244b9436877ac7e0f8448ec018a4a170ddc6620",
                   "abbreviations": [
                     {
                       "term": "GABA",
@@ -1920,7 +2050,7 @@
                       "term": "STR",
                       "meaning": "striatum",
                       "denotes": [
-                        "DHBA:10333",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
                         "http://purl.obolibrary.org/obo/UBERON_0002435"
                       ]
                     },
@@ -1932,21 +2062,24 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:340f36abbd75a9c560332828675399607280cb4026ec72eb0e6d5c81ded9fc0e",
+                  "id": "urn:bkbit:58c75c27f36807a1f280524f6873e9ca46baa80efb5c2d750c56e29957898fd9",
                   "name": "STR-BF TAC3-PLPP4-LHX8 GABA",
                   "nodeColor": "#9d3b4f",
-                  "accession_id": "CS20250428_GROUP_0046",
-                  "parent_id": "urn:bkbit:cbd5d3bd68abd73e930de297bead7b1c231d733dbd9c6ce17aeeab3d3d98428f",
+                  "cell_ontology_id": [
+                    "CL:4042001"
+                  ],
+                  "display_order": 35,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:55331191c3179211fd3901d40244b9436877ac7e0f8448ec018a4a170ddc6620",
                   "abbreviations": [
                     {
                       "term": "BF",
                       "meaning": "basal forebrain",
                       "denotes": [
-                        "DHBA:10349"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10349"
                       ]
                     },
                     {
@@ -1974,7 +2107,7 @@
                       "term": "STR",
                       "meaning": "striatum",
                       "denotes": [
-                        "DHBA:10333",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
                         "http://purl.obolibrary.org/obo/UBERON_0002435"
                       ]
                     },
@@ -1986,17 +2119,20 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:1e34e1803fd720303610a45682b7cf70da3a33f8c09649ee1e5ee3e8783f49f0",
+              "id": "urn:bkbit:6047eaa60362c0ba1900f3aae6be07a68c05bb0b2440b4106f978599d6c9bbf7",
               "name": "CN Cholinergic GABA",
               "nodeColor": "#b1f081",
-              "accession_id": "CS20250428_SUBCL_0001",
-              "parent_id": "urn:bkbit:6f4e21caafa62cd6dc1a17a98a6eacd3b34b29803678ad09ffc86adb8783b216",
+              "cell_ontology_id": [
+                "https://github.com/obophenotype/cell-ontology/issues/3093"
+              ],
+              "display_order": 22,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:0f93285a34f9f823acd0cdec1ba80965d1268ecbc5496516f6a4569389f9bf76",
               "abbreviations": [
                 {
                   "term": "Cholinergic",
@@ -2009,7 +2145,7 @@
                   "term": "CN",
                   "meaning": "cerebral nuclei",
                   "denotes": [
-                    "DHBA:10331",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
                     "http://purl.obolibrary.org/obo/UBERON_0004025"
                   ]
                 },
@@ -2021,20 +2157,23 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:1f67d5ce72079d9f5ef54f40d9281869de0f345e2f2144c05f252aa3f9d3cef4",
+                  "id": "urn:bkbit:1d141ce3518d3899b3953bdc6b797a6751ea00585150c79513ca21eb03b5934d",
                   "name": "GPin-BF Cholinergic GABA",
                   "nodeColor": "#6FC7B2",
-                  "accession_id": "CS20250428_GROUP_0003",
-                  "parent_id": "urn:bkbit:1e34e1803fd720303610a45682b7cf70da3a33f8c09649ee1e5ee3e8783f49f0",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 36,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:6047eaa60362c0ba1900f3aae6be07a68c05bb0b2440b4106f978599d6c9bbf7",
                   "abbreviations": [
                     {
                       "term": "BF",
                       "meaning": "basal forebrain",
                       "denotes": [
-                        "DHBA:10349"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10349"
                       ]
                     },
                     {
@@ -2055,19 +2194,22 @@
                       "term": "GPin",
                       "meaning": "interstitial cholinergic nucleus of globus pallidus",
                       "denotes": [
-                        "DHBA:AA30205"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_AA30205"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:2b7d88ba77dda0252a55c01aed6655484408411086abd3788e89f8b743a3894b",
+                  "id": "urn:bkbit:d35e405ac6be9e6d16aa69bd8b6d09d4c232514eb47140705112125882ad1a78",
                   "name": "STR Cholinergic GABA",
                   "nodeColor": "#8f5ff5",
-                  "accession_id": "CS20250428_GROUP_0055",
-                  "parent_id": "urn:bkbit:1e34e1803fd720303610a45682b7cf70da3a33f8c09649ee1e5ee3e8783f49f0",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 37,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:6047eaa60362c0ba1900f3aae6be07a68c05bb0b2440b4106f978599d6c9bbf7",
                   "abbreviations": [
                     {
                       "term": "Cholinergic",
@@ -2087,20 +2229,23 @@
                       "term": "STR",
                       "meaning": "striatum",
                       "denotes": [
-                        "DHBA:10333",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
                         "http://purl.obolibrary.org/obo/UBERON_0002435"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:21ec59c591af199dc61b05de920f66b1bb630636468bfd10c79c7d896e7a32c7",
+                  "id": "urn:bkbit:83fa0a94fedf8501cccf8e0d1387515c123348b33dc9a678b5d10370beae5596",
                   "name": "STRd Cholinergic GABA",
                   "nodeColor": "#a9f266",
-                  "accession_id": "CS20250428_GROUP_0048",
-                  "parent_id": "urn:bkbit:1e34e1803fd720303610a45682b7cf70da3a33f8c09649ee1e5ee3e8783f49f0",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 38,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:6047eaa60362c0ba1900f3aae6be07a68c05bb0b2440b4106f978599d6c9bbf7",
                   "abbreviations": [
                     {
                       "term": "Cholinergic",
@@ -2120,12 +2265,11 @@
                       "term": "STRd",
                       "meaning": "dorsal striatum (caudoputamen complex-CP, STRd)",
                       "denotes": [
-                        "file:///Users/pujatrivedi/Desktop/MIT/test_bkbit_20241127/bkbit/bkbit/data/20251015_HMBA_BG.jsonld",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_AA30192",
                         "http://purl.obolibrary.org/obo/UBERON_0005382"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
@@ -2135,10 +2279,12 @@
       ]
     },
     {
-      "id": "urn:bkbit:c97577956e7304c9b3b412cc0fc263e932425bf956003a5f50d164bd1a465611",
+      "id": "urn:bkbit:7a41329ad0db26413b56e74c6e60eed490a98234eb779cfaa0b22dd0eb3d8614",
       "name": "Subpallium GABA-Glut",
       "nodeColor": "#7e1d19",
-      "accession_id": "CS20250428_NEIGH_0003",
+      "cell_ontology_id": [],
+      "display_order": 4,
+      "level": "Neighborhood",
       "parent_id": "root",
       "abbreviations": [
         {
@@ -2163,20 +2309,21 @@
           ]
         }
       ],
-      "belongs_to_set": "CCN20250428_LEVEL_0",
       "children": [
         {
-          "id": "urn:bkbit:7e16c11e2845843a50bd48cc1ded952dd6bb59c56971c3d876ade9d3d9eda970",
+          "id": "urn:bkbit:1119f539fdd1d95c432a8d09d913b6368f730f57960121d2197b4766585998ea",
           "name": "CN GABA-Glut",
           "nodeColor": "#1c8d83",
-          "accession_id": "CS20250428_CLASS_0002",
-          "parent_id": "urn:bkbit:c97577956e7304c9b3b412cc0fc263e932425bf956003a5f50d164bd1a465611",
+          "cell_ontology_id": [],
+          "display_order": 12,
+          "level": "Class",
+          "parent_id": "urn:bkbit:7a41329ad0db26413b56e74c6e60eed490a98234eb779cfaa0b22dd0eb3d8614",
           "abbreviations": [
             {
               "term": "CN",
               "meaning": "cerebral nuclei",
               "denotes": [
-                "DHBA:10331",
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
                 "http://purl.obolibrary.org/obo/UBERON_0004025"
               ]
             },
@@ -2195,20 +2342,21 @@
               ]
             }
           ],
-          "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
-              "id": "urn:bkbit:283663ae3c8c227f8417b92f20ed93f4f7eb68f9ec06122277cd5d7881608ef4",
+              "id": "urn:bkbit:b506fd8e57d6344bd365c6557c0fe9405c5373b1e28ad46a49d08038878c6fc0",
               "name": "CN GABA-Glut",
               "nodeColor": "#d2599a",
-              "accession_id": "CS20250428_SUBCL_0014",
-              "parent_id": "urn:bkbit:7e16c11e2845843a50bd48cc1ded952dd6bb59c56971c3d876ade9d3d9eda970",
+              "cell_ontology_id": [],
+              "display_order": 36,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:1119f539fdd1d95c432a8d09d913b6368f730f57960121d2197b4766585998ea",
               "abbreviations": [
                 {
                   "term": "CN",
                   "meaning": "cerebral nuclei",
                   "denotes": [
-                    "DHBA:10331",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
                     "http://purl.obolibrary.org/obo/UBERON_0004025"
                   ]
                 },
@@ -2227,24 +2375,24 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:5ba08d1de95782f00328fd6e103f3aec04dc66190ebb5409dce7274539b7be42",
+                  "id": "urn:bkbit:1643f488d3e22b4399c0b469c02e2d7e859cd60a2ac2b951b275b5afd33b41bf",
                   "name": "GPi Shell",
                   "nodeColor": "#642265",
-                  "accession_id": "CS20250428_GROUP_0016",
-                  "parent_id": "urn:bkbit:283663ae3c8c227f8417b92f20ed93f4f7eb68f9ec06122277cd5d7881608ef4",
+                  "cell_ontology_id": [],
+                  "display_order": 18,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:b506fd8e57d6344bd365c6557c0fe9405c5373b1e28ad46a49d08038878c6fc0",
                   "abbreviations": [
                     {
                       "term": "GPi Shell",
                       "meaning": "internal division of globus pallidus, lateral (peripheral) portion",
                       "denotes": [
-                        "DHBA:11549"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_11549"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
@@ -2254,10 +2402,14 @@
       ]
     },
     {
-      "id": "urn:bkbit:875a9b142a8487f9c426e0e732a5a1b8dc2ba4fedb8f13a0fe2b32385aef8969",
+      "id": "urn:bkbit:20e2e98135602c6dbd5ec6e8d332742d1883bbb924e7db6c97f239b9c0629f14",
       "name": "Glut Sero Dopa",
       "nodeColor": "#91f4bb",
-      "accession_id": "CS20250428_NEIGH_0000",
+      "cell_ontology_id": [
+        "PR 2579"
+      ],
+      "display_order": 2,
+      "level": "Neighborhood",
       "parent_id": "root",
       "abbreviations": [
         {
@@ -2282,14 +2434,17 @@
           ]
         }
       ],
-      "belongs_to_set": "CCN20250428_LEVEL_0",
       "children": [
         {
-          "id": "urn:bkbit:c36e122b525c9e9f9b444ba04ce700bd36d9bbd5769214fe1f805010b219b608",
+          "id": "urn:bkbit:b01aa273618e12938be88d7012284cd151ce771dba290ea499c264e41b452ef2",
           "name": "M Dopa",
           "nodeColor": "#0433b4",
-          "accession_id": "CS20250428_CLASS_0009",
-          "parent_id": "urn:bkbit:875a9b142a8487f9c426e0e732a5a1b8dc2ba4fedb8f13a0fe2b32385aef8969",
+          "cell_ontology_id": [
+            "CL:2000097"
+          ],
+          "display_order": 6,
+          "level": "Class",
+          "parent_id": "urn:bkbit:20e2e98135602c6dbd5ec6e8d332742d1883bbb924e7db6c97f239b9c0629f14",
           "abbreviations": [
             {
               "term": "Dopa",
@@ -2302,19 +2457,22 @@
               "term": "M",
               "meaning": "midbrain (mesencephalon)",
               "denotes": [
-                "DHBA:10648",
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10648",
                 "http://purl.obolibrary.org/obo/UBERON_0001891"
               ]
             }
           ],
-          "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
-              "id": "urn:bkbit:c4691851cd8152d6a7041d92947d91654e26d063bb20da3eacc88fa9664244ad",
+              "id": "urn:bkbit:acf76f3bfe7dfce482444620b1fbc12371bd27ed53e79ea034e5429e100bd22a",
               "name": "M Dopa",
               "nodeColor": "#77f0ca",
-              "accession_id": "CS20250428_SUBCL_0025",
-              "parent_id": "urn:bkbit:c36e122b525c9e9f9b444ba04ce700bd36d9bbd5769214fe1f805010b219b608",
+              "cell_ontology_id": [
+                "CL:4042025"
+              ],
+              "display_order": 16,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:b01aa273618e12938be88d7012284cd151ce771dba290ea499c264e41b452ef2",
               "abbreviations": [
                 {
                   "term": "Dopa",
@@ -2327,19 +2485,22 @@
                   "term": "M",
                   "meaning": "midbrain (mesencephalon)",
                   "denotes": [
-                    "DHBA:10648",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10648",
                     "http://purl.obolibrary.org/obo/UBERON_0001891"
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:18858fd83f8744b5741c831616706483115048dae02eff87855ef834f6429bd5",
+                  "id": "urn:bkbit:e3e021937ad2ff8a1b01d99a5677cec646fb669e2d14e538204b7afb69370cbc",
                   "name": "SN-VTR GAD2 Dopa",
                   "nodeColor": "#3EC918",
-                  "accession_id": "CS20250428_GROUP_0031",
-                  "parent_id": "urn:bkbit:c4691851cd8152d6a7041d92947d91654e26d063bb20da3eacc88fa9664244ad",
+                  "cell_ontology_id": [
+                    "CL:0000700"
+                  ],
+                  "display_order": 39,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:acf76f3bfe7dfce482444620b1fbc12371bd27ed53e79ea034e5429e100bd22a",
                   "abbreviations": [
                     {
                       "term": "Dopa",
@@ -2359,7 +2520,7 @@
                       "term": "SN",
                       "meaning": "substantia nigra",
                       "denotes": [
-                        "DHBA:12251",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_12251",
                         "http://purl.obolibrary.org/obo/UBERON_0002038"
                       ]
                     },
@@ -2367,19 +2528,22 @@
                       "term": "VTR",
                       "meaning": "ventral tegmental region of midbrain",
                       "denotes": [
-                        "DHBA:146034938"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_146034938"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:d47548ad3d3ffdabc42174e226f5f63c3c2bdc01c9bcf761a468fb54d0970dbc",
+                  "id": "urn:bkbit:8d74fdb6b730edecbf55cb3223c26dcf02478d232f8c75e28c839aa8c55747c4",
                   "name": "SN SOX6 Dopa",
                   "nodeColor": "#D7AAE4",
-                  "accession_id": "CS20250428_GROUP_0035",
-                  "parent_id": "urn:bkbit:c4691851cd8152d6a7041d92947d91654e26d063bb20da3eacc88fa9664244ad",
+                  "cell_ontology_id": [
+                    "CL:4042025"
+                  ],
+                  "display_order": 40,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:acf76f3bfe7dfce482444620b1fbc12371bd27ed53e79ea034e5429e100bd22a",
                   "abbreviations": [
                     {
                       "term": "Dopa",
@@ -2392,7 +2556,7 @@
                       "term": "SN",
                       "meaning": "substantia nigra",
                       "denotes": [
-                        "DHBA:12251",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_12251",
                         "http://purl.obolibrary.org/obo/UBERON_0002038"
                       ]
                     },
@@ -2404,15 +2568,18 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:f262a9b45d76abd3748070dd059381c3848d459808dab80508b64e813e8e846d",
+                  "id": "urn:bkbit:7dd0cd87c1b0307413d9b367adea31eec10af6c741f782ce6efb295190dd533c",
                   "name": "SN-VTR CALB1 Dopa",
                   "nodeColor": "#854098",
-                  "accession_id": "CS20250428_GROUP_0029",
-                  "parent_id": "urn:bkbit:c4691851cd8152d6a7041d92947d91654e26d063bb20da3eacc88fa9664244ad",
+                  "cell_ontology_id": [
+                    "CL:0000700"
+                  ],
+                  "display_order": 41,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:acf76f3bfe7dfce482444620b1fbc12371bd27ed53e79ea034e5429e100bd22a",
                   "abbreviations": [
                     {
                       "term": "CALB1",
@@ -2432,7 +2599,7 @@
                       "term": "SN",
                       "meaning": "substantia nigra",
                       "denotes": [
-                        "DHBA:12251",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_12251",
                         "http://purl.obolibrary.org/obo/UBERON_0002038"
                       ]
                     },
@@ -2440,11 +2607,10 @@
                       "term": "VTR",
                       "meaning": "ventral tegmental region of midbrain",
                       "denotes": [
-                        "DHBA:146034938"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_146034938"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
@@ -2452,17 +2618,19 @@
           ]
         },
         {
-          "id": "urn:bkbit:4b785af460431ec151fb643a85ec8bfd6c326a1243b14014093a6efa34ffbaf9",
+          "id": "urn:bkbit:71e0a3dc10f0d41bcbba139f47a4921da20b78ef6cee9eccbdf465565249def4",
           "name": "F M Glut",
           "nodeColor": "#7d0f09",
-          "accession_id": "CS20250428_CLASS_0007",
-          "parent_id": "urn:bkbit:875a9b142a8487f9c426e0e732a5a1b8dc2ba4fedb8f13a0fe2b32385aef8969",
+          "cell_ontology_id": [],
+          "display_order": 5,
+          "level": "Class",
+          "parent_id": "urn:bkbit:20e2e98135602c6dbd5ec6e8d332742d1883bbb924e7db6c97f239b9c0629f14",
           "abbreviations": [
             {
               "term": "F",
               "meaning": "forebrain (prosencephalon)",
               "denotes": [
-                "DHBA:10156",
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10156",
                 "http://purl.obolibrary.org/obo/UBERON_0004024"
               ]
             },
@@ -2477,25 +2645,28 @@
               "term": "M",
               "meaning": "midbrain (mesencephalon)",
               "denotes": [
-                "DHBA:10648",
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10648",
                 "http://purl.obolibrary.org/obo/UBERON_0001891"
               ]
             }
           ],
-          "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
-              "id": "urn:bkbit:11da82f83c4baf0d1ac415f81f37347d39c6e79c659e6436bc5e9e865c662aa4",
+              "id": "urn:bkbit:fd8291f6d6564c151ca925aeaa09d1742b8e9a2792b64d4003ee61e11dfc309e",
               "name": "F Glut",
               "nodeColor": "#39e1e2",
-              "accession_id": "CS20250428_SUBCL_0013",
-              "parent_id": "urn:bkbit:4b785af460431ec151fb643a85ec8bfd6c326a1243b14014093a6efa34ffbaf9",
+              "cell_ontology_id": [
+                "PR 2771"
+              ],
+              "display_order": 14,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:71e0a3dc10f0d41bcbba139f47a4921da20b78ef6cee9eccbdf465565249def4",
               "abbreviations": [
                 {
                   "term": "F",
                   "meaning": "forebrain (prosencephalon)",
                   "denotes": [
-                    "DHBA:10156",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10156",
                     "http://purl.obolibrary.org/obo/UBERON_0004024"
                   ]
                 },
@@ -2507,20 +2678,23 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:d6a8cd31bc1f9ae6f733b6ff4da24fc6a8ab72a454fdf4cd3d5278f8b21c0701",
+                  "id": "urn:bkbit:e0a8c346c8c8852c623ac9f3ac1af4760d0945b5d8b35c2021ecbf7914c6c9e6",
                   "name": "BF SKOR1 Glut",
                   "nodeColor": "#eb0077",
-                  "accession_id": "CS20250428_GROUP_0008",
-                  "parent_id": "urn:bkbit:11da82f83c4baf0d1ac415f81f37347d39c6e79c659e6436bc5e9e865c662aa4",
+                  "cell_ontology_id": [
+                    "CL:4042040"
+                  ],
+                  "display_order": 42,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:fd8291f6d6564c151ca925aeaa09d1742b8e9a2792b64d4003ee61e11dfc309e",
                   "abbreviations": [
                     {
                       "term": "BF",
                       "meaning": "basal forebrain",
                       "denotes": [
-                        "DHBA:10349"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10349"
                       ]
                     },
                     {
@@ -2538,15 +2712,18 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:674277249f0252ad8e1d0073b12bcb4e7be7dbfce0b2ed5ce4cc40eb4abb6a8d",
+                  "id": "urn:bkbit:d014d96894e23318d4bf655ef7a15908f6bfa292aee4d8a060794cdccfd4d26e",
                   "name": "STH PVALB-PITX2 Glut",
                   "nodeColor": "#f57e20",
-                  "accession_id": "CS20250428_GROUP_0038",
-                  "parent_id": "urn:bkbit:11da82f83c4baf0d1ac415f81f37347d39c6e79c659e6436bc5e9e865c662aa4",
+                  "cell_ontology_id": [
+                    "CL:4042023"
+                  ],
+                  "display_order": 44,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:fd8291f6d6564c151ca925aeaa09d1742b8e9a2792b64d4003ee61e11dfc309e",
                   "abbreviations": [
                     {
                       "term": "Glut",
@@ -2573,28 +2750,31 @@
                       "term": "STH",
                       "meaning": "subthalamic nucleus",
                       "denotes": [
-                        "DHBA:10466",
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10466",
                         "http://purl.obolibrary.org/obo/UBERON_0001906"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:c338740aa9661988187862043d1e6c5843e520885bf2f4fbe7296bea303a5bc9",
+              "id": "urn:bkbit:8ef9806332a9b4e3c3aba1ca36bfe1803f015c98547a9c34897d3b266222051c",
               "name": "F M Glut",
               "nodeColor": "#66750b",
-              "accession_id": "CS20250428_SUBCL_0017",
-              "parent_id": "urn:bkbit:4b785af460431ec151fb643a85ec8bfd6c326a1243b14014093a6efa34ffbaf9",
+              "cell_ontology_id": [
+                "PR 2771"
+              ],
+              "display_order": 15,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:71e0a3dc10f0d41bcbba139f47a4921da20b78ef6cee9eccbdf465565249def4",
               "abbreviations": [
                 {
                   "term": "F",
                   "meaning": "forebrain (prosencephalon)",
                   "denotes": [
-                    "DHBA:10156",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10156",
                     "http://purl.obolibrary.org/obo/UBERON_0004024"
                   ]
                 },
@@ -2609,19 +2789,22 @@
                   "term": "M",
                   "meaning": "midbrain (mesencephalon)",
                   "denotes": [
-                    "DHBA:10648",
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10648",
                     "http://purl.obolibrary.org/obo/UBERON_0001891"
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:04e14a21c3c42678579ed166130ba53a5a7b766e8841aac81160b10af5817771",
+                  "id": "urn:bkbit:ff4bb8da69c9c77a43d74d76b5ceb8534901f700bb6107d39ecd0517808670e4",
                   "name": "VTR-HTH Glut",
                   "nodeColor": "#54621f",
-                  "accession_id": "CS20250428_GROUP_0064",
-                  "parent_id": "urn:bkbit:c338740aa9661988187862043d1e6c5843e520885bf2f4fbe7296bea303a5bc9",
+                  "cell_ontology_id": [
+                    "CL:4042040"
+                  ],
+                  "display_order": 43,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:8ef9806332a9b4e3c3aba1ca36bfe1803f015c98547a9c34897d3b266222051c",
                   "abbreviations": [
                     {
                       "term": "Glut",
@@ -2634,18 +2817,17 @@
                       "term": "HTH",
                       "meaning": "hypothalamus",
                       "denotes": [
-                        "DHBA:10467"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10467"
                       ]
                     },
                     {
                       "term": "VTR",
                       "meaning": "ventral tegmental region of midbrain",
                       "denotes": [
-                        "DHBA:146034938"
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_146034938"
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
@@ -2655,10 +2837,14 @@
       ]
     },
     {
-      "id": "urn:bkbit:f4e8c248a6d70c214cd49d0dfd373b9408b0c3c76701df089f8832b2a5eeace0",
+      "id": "urn:bkbit:087066b0d3b9a04f78d06557cac22f66f710473c4a2700894c6d2d10d46ef323",
       "name": "Nonneuron",
       "nodeColor": "#a8afa5",
-      "accession_id": "CS20250428_NEIGH_0001",
+      "cell_ontology_id": [
+        "CL:0000000"
+      ],
+      "display_order": 1,
+      "level": "Neighborhood",
       "parent_id": "root",
       "abbreviations": [
         {
@@ -2669,14 +2855,17 @@
           ]
         }
       ],
-      "belongs_to_set": "CCN20250428_LEVEL_0",
       "children": [
         {
-          "id": "urn:bkbit:d1266901c905aeda4170a568c60b4e16b3fdb262f70ac528ff692dfe85a08d80",
+          "id": "urn:bkbit:62dc05f0a369993ddf8517ad9e9298ef807c50559b377ea0aca16e3c75be83ff",
           "name": "OPC-Oligo",
           "nodeColor": "#594a26",
-          "accession_id": "CS20250428_CLASS_0010",
-          "parent_id": "urn:bkbit:f4e8c248a6d70c214cd49d0dfd373b9408b0c3c76701df089f8832b2a5eeace0",
+          "cell_ontology_id": [
+            "CL:0000095"
+          ],
+          "display_order": 3,
+          "level": "Class",
+          "parent_id": "urn:bkbit:087066b0d3b9a04f78d06557cac22f66f710473c4a2700894c6d2d10d46ef323",
           "abbreviations": [
             {
               "term": "Oligo",
@@ -2693,14 +2882,17 @@
               ]
             }
           ],
-          "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
-              "id": "urn:bkbit:3c3d6506ac22a1186dbf2dd869e7025b18f6c80972cae71cfd04604194e0ed6d",
+              "id": "urn:bkbit:a3a1648850e1587a2c1f5ae28dfb81d3e8f6b174e74c29d06d9de8b4a47d8c07",
               "name": "OPC",
               "nodeColor": "#f5e689",
-              "accession_id": "CS20250428_SUBCL_0020",
-              "parent_id": "urn:bkbit:d1266901c905aeda4170a568c60b4e16b3fdb262f70ac528ff692dfe85a08d80",
+              "cell_ontology_id": [
+                "CL:0002453"
+              ],
+              "display_order": 8,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:62dc05f0a369993ddf8517ad9e9298ef807c50559b377ea0aca16e3c75be83ff",
               "abbreviations": [
                 {
                   "term": "OPC",
@@ -2710,14 +2902,17 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:817ae7da1388f387baca549829330582c35598b6c2aea84c5a252967e9a759e1",
+                  "id": "urn:bkbit:0c9fe4b84c0814bfb177de91d517ee47d1f4ef6e5faa911703037e383ab8d247",
                   "name": "OPC",
                   "nodeColor": "#f5e689",
-                  "accession_id": "CS20250428_GROUP_0023",
-                  "parent_id": "urn:bkbit:3c3d6506ac22a1186dbf2dd869e7025b18f6c80972cae71cfd04604194e0ed6d",
+                  "cell_ontology_id": [
+                    "CL:0002453"
+                  ],
+                  "display_order": 45,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:a3a1648850e1587a2c1f5ae28dfb81d3e8f6b174e74c29d06d9de8b4a47d8c07",
                   "abbreviations": [
                     {
                       "term": "OPC",
@@ -2727,17 +2922,20 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:ed47638d71077379f2e3dc73f8e404b4315e59d47716e4b556b4e453259a0714",
+              "id": "urn:bkbit:4f616667536ab75aa3d05b3fe9a763b920be92cd9fe178847649048b5ea635b9",
               "name": "COP",
               "nodeColor": "#CCA43D",
-              "accession_id": "CS20250428_SUBCL_0010",
-              "parent_id": "urn:bkbit:d1266901c905aeda4170a568c60b4e16b3fdb262f70ac528ff692dfe85a08d80",
+              "cell_ontology_id": [
+                "CL:4023059"
+              ],
+              "display_order": 9,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:62dc05f0a369993ddf8517ad9e9298ef807c50559b377ea0aca16e3c75be83ff",
               "abbreviations": [
                 {
                   "term": "COP",
@@ -2747,14 +2945,17 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:28ed3848f9affd1071c56a1c715b861ae9ab0f8fc9603fbca9f541be40fdc1bc",
+                  "id": "urn:bkbit:6770308c21c54fa604caefbf7fd67461758af2d40e2416c721b229030bbee6e6",
                   "name": "COP",
                   "nodeColor": "#CCA43D",
-                  "accession_id": "CS20250428_GROUP_0009",
-                  "parent_id": "urn:bkbit:ed47638d71077379f2e3dc73f8e404b4315e59d47716e4b556b4e453259a0714",
+                  "cell_ontology_id": [
+                    "CL:4023059"
+                  ],
+                  "display_order": 46,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:4f616667536ab75aa3d05b3fe9a763b920be92cd9fe178847649048b5ea635b9",
                   "abbreviations": [
                     {
                       "term": "COP",
@@ -2764,17 +2965,20 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:6c2e7c63f5b210859041a359c3a937f7f6fcbe59e20327c9ceb4a6a15349c67a",
+              "id": "urn:bkbit:d358c8313f22ddcb60868f6caa8db379f15254d4935b7eed182889ed57caab10",
               "name": "Oligodendrocyte",
               "nodeColor": "#594a26",
-              "accession_id": "CS20250428_SUBCL_0022",
-              "parent_id": "urn:bkbit:d1266901c905aeda4170a568c60b4e16b3fdb262f70ac528ff692dfe85a08d80",
+              "cell_ontology_id": [
+                "CL:0000128"
+              ],
+              "display_order": 7,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:62dc05f0a369993ddf8517ad9e9298ef807c50559b377ea0aca16e3c75be83ff",
               "abbreviations": [
                 {
                   "term": "Oligodendrocyte",
@@ -2784,14 +2988,17 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:5c08de43e381decad99b91658e310c24340f1945eb32bdc52739bd8917b67edd",
+                  "id": "urn:bkbit:4e744515d99036d44d2e4cc7baf5930c9cfc45e8ace3473362a3b2855d1148b9",
                   "name": "ImOligo",
                   "nodeColor": "#CC915C",
-                  "accession_id": "CS20250428_GROUP_0018",
-                  "parent_id": "urn:bkbit:6c2e7c63f5b210859041a359c3a937f7f6fcbe59e20327c9ceb4a6a15349c67a",
+                  "cell_ontology_id": [
+                    "CL:4042031"
+                  ],
+                  "display_order": 47,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:d358c8313f22ddcb60868f6caa8db379f15254d4935b7eed182889ed57caab10",
                   "abbreviations": [
                     {
                       "term": "ImOligo",
@@ -2801,15 +3008,18 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:0580d6a5586963c9748e080fd1945df6dce4b0be9c95d630a9f19a7aa960305a",
+                  "id": "urn:bkbit:d55b92f9600de2d32143c8c5ad570e4a0abb1c88a14fa4bbaab193f910c4f610",
                   "name": "Oligo PLEKHG1",
                   "nodeColor": "#594a26",
-                  "accession_id": "CS20250428_GROUP_0026",
-                  "parent_id": "urn:bkbit:6c2e7c63f5b210859041a359c3a937f7f6fcbe59e20327c9ceb4a6a15349c67a",
+                  "cell_ontology_id": [
+                    "CL:0000128"
+                  ],
+                  "display_order": 48,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:d358c8313f22ddcb60868f6caa8db379f15254d4935b7eed182889ed57caab10",
                   "abbreviations": [
                     {
                       "term": "Oligo",
@@ -2826,15 +3036,18 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:d08ff33797c206c185e9259d4a37d7feab7d04753488a01021ebf59ea883eb95",
+                  "id": "urn:bkbit:4c0b7699e1eb7dca3363a9626e4dd385b4f16e15f6034c89f0e7df9a8e9e266c",
                   "name": "Oligo OPALIN",
                   "nodeColor": "#66391F",
-                  "accession_id": "CS20250428_GROUP_0025",
-                  "parent_id": "urn:bkbit:6c2e7c63f5b210859041a359c3a937f7f6fcbe59e20327c9ceb4a6a15349c67a",
+                  "cell_ontology_id": [
+                    "CL:0000128"
+                  ],
+                  "display_order": 49,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:d358c8313f22ddcb60868f6caa8db379f15254d4935b7eed182889ed57caab10",
                   "abbreviations": [
                     {
                       "term": "Oligo",
@@ -2851,7 +3064,6 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
@@ -2859,11 +3071,15 @@
           ]
         },
         {
-          "id": "urn:bkbit:a7843a7e2060daaabee5ae3c54d02a1677f1c7a8b855aec083ffc16e4209ebbe",
+          "id": "urn:bkbit:97300844a106ead0bbe4f85832419b1b5d6b07deb9da938ec169c6e0799f0aa0",
           "name": "Astro-Epen",
           "nodeColor": "#401e66",
-          "accession_id": "CS20250428_CLASS_0000",
-          "parent_id": "urn:bkbit:f4e8c248a6d70c214cd49d0dfd373b9408b0c3c76701df089f8832b2a5eeace0",
+          "cell_ontology_id": [
+            "CL:0000125"
+          ],
+          "display_order": 1,
+          "level": "Class",
+          "parent_id": "urn:bkbit:087066b0d3b9a04f78d06557cac22f66f710473c4a2700894c6d2d10d46ef323",
           "abbreviations": [
             {
               "term": "Astro",
@@ -2880,14 +3096,17 @@
               ]
             }
           ],
-          "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
-              "id": "urn:bkbit:78d61681c5401a4f30f48d41a8e016485c1742ef19d920e50f2e562861121d2d",
+              "id": "urn:bkbit:10176e59b5610ce876a7ce6e04cbf912315d807cbf83bab0d9417a199442ea2d",
               "name": "Astrocyte",
               "nodeColor": "#401e66",
-              "accession_id": "CS20250428_SUBCL_0000",
-              "parent_id": "urn:bkbit:a7843a7e2060daaabee5ae3c54d02a1677f1c7a8b855aec083ffc16e4209ebbe",
+              "cell_ontology_id": [
+                "CL:0000127"
+              ],
+              "display_order": 1,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:97300844a106ead0bbe4f85832419b1b5d6b07deb9da938ec169c6e0799f0aa0",
               "abbreviations": [
                 {
                   "term": "Astrocyte",
@@ -2897,14 +3116,15 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:48523cac55586d25aba142085e80e2fe5bbcfbcd3bb4b7d43719ffc500adc51f",
+                  "id": "urn:bkbit:1f448329713aadf8932cc3150411eeaabdf8611b7db1d530a458cce0fcae5471",
                   "name": "ImAstro",
                   "nodeColor": "#401e66",
-                  "accession_id": "CS20250428_GROUP_0017",
-                  "parent_id": "urn:bkbit:78d61681c5401a4f30f48d41a8e016485c1742ef19d920e50f2e562861121d2d",
+                  "cell_ontology_id": [],
+                  "display_order": 50,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:10176e59b5610ce876a7ce6e04cbf912315d807cbf83bab0d9417a199442ea2d",
                   "abbreviations": [
                     {
                       "term": "ImAstro",
@@ -2914,15 +3134,18 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:48f04063dc851a18c9ea726ed048ef9b263fcec474abe42152ce32fc19475e30",
+                  "id": "urn:bkbit:12f800ef3d2fb9ee26e98087b735f8cb689f5ef453a1a024336ee83560aa1e41",
                   "name": "Astrocyte",
                   "nodeColor": "#195f8d",
-                  "accession_id": "CS20250428_GROUP_0039",
-                  "parent_id": "urn:bkbit:78d61681c5401a4f30f48d41a8e016485c1742ef19d920e50f2e562861121d2d",
+                  "cell_ontology_id": [
+                    "CL:0000127"
+                  ],
+                  "display_order": 51,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:10176e59b5610ce876a7ce6e04cbf912315d807cbf83bab0d9417a199442ea2d",
                   "abbreviations": [
                     {
                       "term": "Astrocyte",
@@ -2932,17 +3155,20 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:e323320d1265505b013c829b3ebc166e7c6225e76e07dcc2d4f80d78ef4dd585",
+              "id": "urn:bkbit:d25daa872dd0c86fd0c107b230b3c6f322e6eb685f5bd19b99cbd60a03e9b9d3",
               "name": "Ependymal",
               "nodeColor": "#564860",
-              "accession_id": "CS20250428_SUBCL_0012",
-              "parent_id": "urn:bkbit:a7843a7e2060daaabee5ae3c54d02a1677f1c7a8b855aec083ffc16e4209ebbe",
+              "cell_ontology_id": [
+                "CL:0000065"
+              ],
+              "display_order": 2,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:97300844a106ead0bbe4f85832419b1b5d6b07deb9da938ec169c6e0799f0aa0",
               "abbreviations": [
                 {
                   "term": "Ependymal",
@@ -2952,14 +3178,17 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:753f8df66b9d7e655e913ee7fe48f02a54c7fcf95a06a7baaa53874e43f8b9ff",
+                  "id": "urn:bkbit:9c0cf77e6f0c29679baf235548e39f7fccae9b0fde63450c569d67b544891201",
                   "name": "Ependymal",
                   "nodeColor": "#564860",
-                  "accession_id": "CS20250428_GROUP_0012",
-                  "parent_id": "urn:bkbit:e323320d1265505b013c829b3ebc166e7c6225e76e07dcc2d4f80d78ef4dd585",
+                  "cell_ontology_id": [
+                    "CL:0000065"
+                  ],
+                  "display_order": 52,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:d25daa872dd0c86fd0c107b230b3c6f322e6eb685f5bd19b99cbd60a03e9b9d3",
                   "abbreviations": [
                     {
                       "term": "Ependymal",
@@ -2969,7 +3198,6 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
@@ -2977,11 +3205,15 @@
           ]
         },
         {
-          "id": "urn:bkbit:4bc50b0e7e41fe227c8c1a2deb12ba9c164668c52d322bb00bff51cccccdfd37",
+          "id": "urn:bkbit:63825e3f5959893bff128b1aefaffa71ef069e287c36664144ba7aacb9a1014e",
           "name": "Immune",
           "nodeColor": "#995C60",
-          "accession_id": "CS20250428_CLASS_0008",
-          "parent_id": "urn:bkbit:f4e8c248a6d70c214cd49d0dfd373b9408b0c3c76701df089f8832b2a5eeace0",
+          "cell_ontology_id": [
+            "CL:0000842"
+          ],
+          "display_order": 2,
+          "level": "Class",
+          "parent_id": "urn:bkbit:087066b0d3b9a04f78d06557cac22f66f710473c4a2700894c6d2d10d46ef323",
           "abbreviations": [
             {
               "term": "Immune",
@@ -2991,14 +3223,17 @@
               ]
             }
           ],
-          "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
-              "id": "urn:bkbit:87af6672d365e7f14dd575e252483522bd783056442c7dea699b8696742b8dd0",
+              "id": "urn:bkbit:4695af762bdc8338f8801f64f574f4a3a0e2235795b735c6ee3cb77391a07824",
               "name": "Microglia",
               "nodeColor": "#995C60",
-              "accession_id": "CS20250428_SUBCL_0019",
-              "parent_id": "urn:bkbit:4bc50b0e7e41fe227c8c1a2deb12ba9c164668c52d322bb00bff51cccccdfd37",
+              "cell_ontology_id": [
+                "CL:0000129"
+              ],
+              "display_order": 3,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:63825e3f5959893bff128b1aefaffa71ef069e287c36664144ba7aacb9a1014e",
               "abbreviations": [
                 {
                   "term": "Microglia",
@@ -3008,14 +3243,17 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:c7ce73a824ddb2f6f476d57b820cf01b1406f227ca39fc6936725231e09682cb",
+                  "id": "urn:bkbit:12bbd0e14689ef79931e2ad38eacc3a10840a274a78d5b7f395e007555cde884",
                   "name": "Microglia",
                   "nodeColor": "#995C60",
-                  "accession_id": "CS20250428_GROUP_0019",
-                  "parent_id": "urn:bkbit:87af6672d365e7f14dd575e252483522bd783056442c7dea699b8696742b8dd0",
+                  "cell_ontology_id": [
+                    "CL:0000129"
+                  ],
+                  "display_order": 53,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:4695af762bdc8338f8801f64f574f4a3a0e2235795b735c6ee3cb77391a07824",
                   "abbreviations": [
                     {
                       "term": "Microglia",
@@ -3025,17 +3263,20 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:3ae584696c22a48588d1443a139fdd5a47fb0e2312d09adbcff7ec09dbdcd306",
+              "id": "urn:bkbit:730a151a5bdd6ee5c243cad3685d29c1f2b3adb829d3e51eb106dd02e7387e08",
               "name": "Macrophage",
               "nodeColor": "#CC887A",
-              "accession_id": "CS20250428_SUBCL_0018",
-              "parent_id": "urn:bkbit:4bc50b0e7e41fe227c8c1a2deb12ba9c164668c52d322bb00bff51cccccdfd37",
+              "cell_ontology_id": [
+                "CL:0000235"
+              ],
+              "display_order": 4,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:63825e3f5959893bff128b1aefaffa71ef069e287c36664144ba7aacb9a1014e",
               "abbreviations": [
                 {
                   "term": "Macrophage",
@@ -3045,14 +3286,17 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:e1b0a59b79dd15b01e89a9455fe2ca0dcbfd3c2d39494b4415aa6226d879e559",
+                  "id": "urn:bkbit:d4937b79950f182def055f496b7dcc5cf71c37425f9258f56715d4d68fa40fca",
                   "name": "BAM",
                   "nodeColor": "#CC887A",
-                  "accession_id": "CS20250428_GROUP_0001",
-                  "parent_id": "urn:bkbit:3ae584696c22a48588d1443a139fdd5a47fb0e2312d09adbcff7ec09dbdcd306",
+                  "cell_ontology_id": [
+                    "CL:4042003"
+                  ],
+                  "display_order": 54,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:730a151a5bdd6ee5c243cad3685d29c1f2b3adb829d3e51eb106dd02e7387e08",
                   "abbreviations": [
                     {
                       "term": "BAM",
@@ -3062,17 +3306,20 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:39424d397bfd13041e46a3086ec956f4f09b08019faa9495ae4f7eb3af379bdf",
+              "id": "urn:bkbit:41ea1e11edb3ca303837108a7b9d85e88c9bacc220f65a37260f9dd14e768f2c",
               "name": "Monocyte",
               "nodeColor": "#C3CC7A",
-              "accession_id": "CS20250428_SUBCL_0038",
-              "parent_id": "urn:bkbit:4bc50b0e7e41fe227c8c1a2deb12ba9c164668c52d322bb00bff51cccccdfd37",
+              "cell_ontology_id": [
+                "CL:0000576"
+              ],
+              "display_order": 6,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:63825e3f5959893bff128b1aefaffa71ef069e287c36664144ba7aacb9a1014e",
               "abbreviations": [
                 {
                   "term": "Monocyte",
@@ -3082,14 +3329,15 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:c94a04d0a7cd02e9e6b1b67aac82a5dae17b30310efc0f08eadd976442e94530",
+                  "id": "urn:bkbit:1fa3905d9b4b44097a5917298c0dcd09e1efd20dc0acbb779d1dadccff44a297",
                   "name": "Monocyte",
                   "nodeColor": "#C3CC7A",
-                  "accession_id": "CS20250428_GROUP_0022",
-                  "parent_id": "urn:bkbit:39424d397bfd13041e46a3086ec956f4f09b08019faa9495ae4f7eb3af379bdf",
+                  "cell_ontology_id": [],
+                  "display_order": 55,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:41ea1e11edb3ca303837108a7b9d85e88c9bacc220f65a37260f9dd14e768f2c",
                   "abbreviations": [
                     {
                       "term": "Monocyte",
@@ -3099,17 +3347,20 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:f899478a8e7c13c28f036dbdcac3c32a09dd43e50e7139ab97c088b74f541b10",
+              "id": "urn:bkbit:4866dc63915b196cd67b357ddcdca6cfaa148150caf3519128adbc9e5de55ae1",
               "name": "Lymphocyte",
               "nodeColor": "#5A662E",
-              "accession_id": "CS20250428_SUBCL_0015",
-              "parent_id": "urn:bkbit:4bc50b0e7e41fe227c8c1a2deb12ba9c164668c52d322bb00bff51cccccdfd37",
+              "cell_ontology_id": [
+                "CL:0000542"
+              ],
+              "display_order": 5,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:63825e3f5959893bff128b1aefaffa71ef069e287c36664144ba7aacb9a1014e",
               "abbreviations": [
                 {
                   "term": "Lymphocyte",
@@ -3119,14 +3370,15 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:32444a383ec3bf6a0086be9c798c8dc5cc10d68b43db8fe6d9aeb4fe3d18308d",
+                  "id": "urn:bkbit:bb197dc4ad41c867c26ef14af5b3f68b3657519e99fb521a24fe9163c0ff51ec",
                   "name": "B cells",
                   "nodeColor": "#999517",
-                  "accession_id": "CS20250428_GROUP_0000",
-                  "parent_id": "urn:bkbit:f899478a8e7c13c28f036dbdcac3c32a09dd43e50e7139ab97c088b74f541b10",
+                  "cell_ontology_id": [],
+                  "display_order": 56,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:4866dc63915b196cd67b357ddcdca6cfaa148150caf3519128adbc9e5de55ae1",
                   "abbreviations": [
                     {
                       "term": "B cells",
@@ -3136,15 +3388,18 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 },
                 {
-                  "id": "urn:bkbit:dcb7ac0fd8cea39b57cf66f33a58895e52183ce3f082503aab916e39b1ca7e85",
+                  "id": "urn:bkbit:72c0b7a411a7f556b8126fce0cad7cf6dcf477587214b079e04df6044d285a8e",
                   "name": "T cells",
                   "nodeColor": "#5A662E",
-                  "accession_id": "CS20250428_GROUP_0059",
-                  "parent_id": "urn:bkbit:f899478a8e7c13c28f036dbdcac3c32a09dd43e50e7139ab97c088b74f541b10",
+                  "cell_ontology_id": [
+                    "CL:0000084"
+                  ],
+                  "display_order": 57,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:4866dc63915b196cd67b357ddcdca6cfaa148150caf3519128adbc9e5de55ae1",
                   "abbreviations": [
                     {
                       "term": "T cells",
@@ -3154,7 +3409,6 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
@@ -3162,11 +3416,15 @@
           ]
         },
         {
-          "id": "urn:bkbit:8469b4f7d1327fe125a19abe162217402596869c07c91bd724abe52ccb510ba8",
+          "id": "urn:bkbit:1a3edf129d4cd649e039f45c26b8e758efe955418917de5be9b01f03e7078e46",
           "name": "Vascular",
           "nodeColor": "#a8afa5",
-          "accession_id": "CS20250428_CLASS_0011",
-          "parent_id": "urn:bkbit:f4e8c248a6d70c214cd49d0dfd373b9408b0c3c76701df089f8832b2a5eeace0",
+          "cell_ontology_id": [
+            "CL:0000192"
+          ],
+          "display_order": 4,
+          "level": "Class",
+          "parent_id": "urn:bkbit:087066b0d3b9a04f78d06557cac22f66f710473c4a2700894c6d2d10d46ef323",
           "abbreviations": [
             {
               "term": "Vascular",
@@ -3176,14 +3434,17 @@
               ]
             }
           ],
-          "belongs_to_set": "CCN20250428_LEVEL_1",
           "children": [
             {
-              "id": "urn:bkbit:c3c2dd4548dd2832661fa1754ae9060d0d0eb9691da484b572811b389c420954",
+              "id": "urn:bkbit:528b9972150aabfa3a2054fefbfb772262e3f510c9ecf3a287b5c794b4c95d7b",
               "name": "VLMC",
               "nodeColor": "#a8afa5",
-              "accession_id": "CS20250428_SUBCL_0035",
-              "parent_id": "urn:bkbit:8469b4f7d1327fe125a19abe162217402596869c07c91bd724abe52ccb510ba8",
+              "cell_ontology_id": [
+                "CL:4023051"
+              ],
+              "display_order": 13,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:1a3edf129d4cd649e039f45c26b8e758efe955418917de5be9b01f03e7078e46",
               "abbreviations": [
                 {
                   "term": "VLMC",
@@ -3193,14 +3454,17 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:85bd81cbdaa23b56e0c14a66409df93792dafa7d5d887b2bc846eab22f285e1a",
+                  "id": "urn:bkbit:21862370affc315c3a415c99923b941efc30973a2d4cc7e23414fb475f1c28db",
                   "name": "VLMC",
                   "nodeColor": "#a8afa5",
-                  "accession_id": "CS20250428_GROUP_0062",
-                  "parent_id": "urn:bkbit:c3c2dd4548dd2832661fa1754ae9060d0d0eb9691da484b572811b389c420954",
+                  "cell_ontology_id": [
+                    "CL:4023051"
+                  ],
+                  "display_order": 58,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:528b9972150aabfa3a2054fefbfb772262e3f510c9ecf3a287b5c794b4c95d7b",
                   "abbreviations": [
                     {
                       "term": "VLMC",
@@ -3210,17 +3474,20 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:6361c921ba1f10b394277745bce16e3dd6014479bc915e31550d91e3029338d1",
+              "id": "urn:bkbit:df51e3faf4b107a1326a033471eb55b852e29f192488b4fc7a7e88359a62db94",
               "name": "SMC",
               "nodeColor": "#858881",
-              "accession_id": "CS20250428_SUBCL_0024",
-              "parent_id": "urn:bkbit:8469b4f7d1327fe125a19abe162217402596869c07c91bd724abe52ccb510ba8",
+              "cell_ontology_id": [
+                "CL:0000192"
+              ],
+              "display_order": 12,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:1a3edf129d4cd649e039f45c26b8e758efe955418917de5be9b01f03e7078e46",
               "abbreviations": [
                 {
                   "term": "SMC",
@@ -3230,14 +3497,17 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:5a1e3e6ca564a0dde395682dc105ae19241983a937912b5b3bdc67d260ad3461",
+                  "id": "urn:bkbit:d3d658d5758c8b05e06e711e69d2d7a5d495f50bd4aaa1473a1de47c2457b5ad",
                   "name": "SMC",
                   "nodeColor": "#858881",
-                  "accession_id": "CS20250428_GROUP_0028",
-                  "parent_id": "urn:bkbit:6361c921ba1f10b394277745bce16e3dd6014479bc915e31550d91e3029338d1",
+                  "cell_ontology_id": [
+                    "CL:0000192"
+                  ],
+                  "display_order": 59,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:df51e3faf4b107a1326a033471eb55b852e29f192488b4fc7a7e88359a62db94",
                   "abbreviations": [
                     {
                       "term": "SMC",
@@ -3247,17 +3517,42 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
-            },
+            }
+          ]
+        },
+        {
+          "id": "urn:bkbit:f261c30beaff465f90c10fc352ee0d3c5a04eff2e53f1ca811171c4f92a126a1",
+          "name": "Vascular",
+          "nodeColor": "#a8afa5",
+          "cell_ontology_id": [
+            "CL:0002320"
+          ],
+          "display_order": 4,
+          "level": "Class",
+          "parent_id": "urn:bkbit:087066b0d3b9a04f78d06557cac22f66f710473c4a2700894c6d2d10d46ef323",
+          "abbreviations": [
             {
-              "id": "urn:bkbit:af59fb9cb6acb2a6cc7c679622fbedf0e3478484ff285ca828a09e573c58f662",
+              "term": "Vascular",
+              "meaning": "vascular system",
+              "denotes": [
+                "http://purl.obolibrary.org/obo/UBERON_0007798"
+              ]
+            }
+          ],
+          "children": [
+            {
+              "id": "urn:bkbit:c08e67b3f8635b5861730f98cb9b65cdffd963bea34bfb16bb718ab6d5abde75",
               "name": "Pericyte",
               "nodeColor": "#B97300",
-              "accession_id": "CS20250428_SUBCL_0023",
-              "parent_id": "urn:bkbit:8469b4f7d1327fe125a19abe162217402596869c07c91bd724abe52ccb510ba8",
+              "cell_ontology_id": [
+                "CL:0000669"
+              ],
+              "display_order": 11,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:f261c30beaff465f90c10fc352ee0d3c5a04eff2e53f1ca811171c4f92a126a1",
               "abbreviations": [
                 {
                   "term": "Pericyte",
@@ -3267,14 +3562,17 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:93441bc3e09418a733b69b80a58196609f56676a8b736f21506f96d27511eed8",
+                  "id": "urn:bkbit:0c5f1713c849c33a0e3e0be9f9963971f7ea6833aa3d1d55c6462e59906caffc",
                   "name": "Pericyte",
                   "nodeColor": "#B97300",
-                  "accession_id": "CS20250428_GROUP_0027",
-                  "parent_id": "urn:bkbit:af59fb9cb6acb2a6cc7c679622fbedf0e3478484ff285ca828a09e573c58f662",
+                  "cell_ontology_id": [
+                    "CL:0000669"
+                  ],
+                  "display_order": 60,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:c08e67b3f8635b5861730f98cb9b65cdffd963bea34bfb16bb718ab6d5abde75",
                   "abbreviations": [
                     {
                       "term": "Pericyte",
@@ -3284,17 +3582,20 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
             },
             {
-              "id": "urn:bkbit:fcbf453252cb98875bd3569c6c5254317c470ad5d7d6a6f441413ce1416c02b3",
+              "id": "urn:bkbit:20a43da4c80f98ce00183fd054c9411bc5c33ea98533ed97d3b84fc1e8f08f11",
               "name": "Endo",
               "nodeColor": "#66493D",
-              "accession_id": "CS20250428_SUBCL_0011",
-              "parent_id": "urn:bkbit:8469b4f7d1327fe125a19abe162217402596869c07c91bd724abe52ccb510ba8",
+              "cell_ontology_id": [
+                "CL:0000115"
+              ],
+              "display_order": 10,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:f261c30beaff465f90c10fc352ee0d3c5a04eff2e53f1ca811171c4f92a126a1",
               "abbreviations": [
                 {
                   "term": "Endo",
@@ -3304,14 +3605,17 @@
                   ]
                 }
               ],
-              "belongs_to_set": "CCN20250428_LEVEL_2",
               "children": [
                 {
-                  "id": "urn:bkbit:4d7a3d950334e4d33b48549478a213743455a24a10266f657b0e4a07719fa0a4",
+                  "id": "urn:bkbit:4fdad3df80cd18394a5ead7d3de586296d9e82ba49d4161296c4e359d7e57b1a",
                   "name": "Endo",
                   "nodeColor": "#66493D",
-                  "accession_id": "CS20250428_GROUP_0011",
-                  "parent_id": "urn:bkbit:fcbf453252cb98875bd3569c6c5254317c470ad5d7d6a6f441413ce1416c02b3",
+                  "cell_ontology_id": [
+                    "CL:0000115"
+                  ],
+                  "display_order": 61,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:20a43da4c80f98ce00183fd054c9411bc5c33ea98533ed97d3b84fc1e8f08f11",
                   "abbreviations": [
                     {
                       "term": "Endo",
@@ -3321,7 +3625,6 @@
                       ]
                     }
                   ],
-                  "belongs_to_set": "CCN20250428_LEVEL_3",
                   "children": []
                 }
               ]
