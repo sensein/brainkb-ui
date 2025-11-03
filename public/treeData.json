@@ -1,0 +1,3637 @@
+{
+  "name": "root",
+  "nodeColor": "#ffffff",
+  "children": [
+    {
+      "id": "urn:bkbit:9ab863210b090e990a4835dbe55b37934d48419aef03611af3da286a4008d5fc",
+      "name": "Subpallium GABA",
+      "nodeColor": "#19613b",
+      "cell_ontology_id": [],
+      "display_order": 3,
+      "level": "Neighborhood",
+      "parent_id": "root",
+      "abbreviations": [
+        {
+          "term": "GABA",
+          "meaning": "GABAergic neuron",
+          "denotes": [
+            "CL:0000617"
+          ]
+        },
+        {
+          "term": "Subpallium",
+          "meaning": "subpallium",
+          "denotes": [
+            "http://purl.obolibrary.org/obo/UBERON_0000204"
+          ]
+        }
+      ],
+      "children": [
+        {
+          "id": "urn:bkbit:32b6802327e722003e48610d6c78603e2860c062bf79f1ebd5cfb61c48b97d41",
+          "name": "CN LGE GABA",
+          "nodeColor": "#d0b83c",
+          "cell_ontology_id": [],
+          "display_order": 10,
+          "level": "Class",
+          "parent_id": "urn:bkbit:9ab863210b090e990a4835dbe55b37934d48419aef03611af3da286a4008d5fc",
+          "abbreviations": [
+            {
+              "term": "CN",
+              "meaning": "cerebral nuclei",
+              "denotes": [
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
+                "http://purl.obolibrary.org/obo/UBERON_0004025"
+              ]
+            },
+            {
+              "term": "GABA",
+              "meaning": "GABAergic neuron",
+              "denotes": [
+                "CL:0000617"
+              ]
+            },
+            {
+              "term": "LGE",
+              "meaning": "lateral ganglionic eminence",
+              "denotes": [
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10551",
+                "http://purl.obolibrary.org/obo/UBERON_0004025"
+              ]
+            }
+          ],
+          "children": [
+            {
+              "id": "urn:bkbit:341d48498cc35030c804a23c7593ffb6ddf48692a7c91bdf14fb6a191107f49c",
+              "name": "STR D1 MSN",
+              "nodeColor": "#1655f2",
+              "cell_ontology_id": [
+                "CL:4023026"
+              ],
+              "display_order": 31,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:32b6802327e722003e48610d6c78603e2860c062bf79f1ebd5cfb61c48b97d41",
+              "abbreviations": [
+                {
+                  "term": "D1 MSN",
+                  "meaning": "D1 medium spiny neuron",
+                  "denotes": [
+                    "CL:4030051"
+                  ]
+                },
+                {
+                  "term": "STR",
+                  "meaning": "striatum",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
+                    "http://purl.obolibrary.org/obo/UBERON_0002435"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:14c4234f851972f449797f1d822cf15b93bf9e7ada37fbff75c948d4b2d514ac",
+                  "name": "STRd D1 Matrix MSN",
+                  "nodeColor": "#1f77b4",
+                  "cell_ontology_id": [
+                    "CL:4030043"
+                  ],
+                  "display_order": 1,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:341d48498cc35030c804a23c7593ffb6ddf48692a7c91bdf14fb6a191107f49c",
+                  "abbreviations": [
+                    {
+                      "term": "D1 Matrix MSN",
+                      "meaning": "D1 medium spiny neuron, matrix",
+                      "denotes": [
+                        "CL:4030043"
+                      ]
+                    },
+                    {
+                      "term": "STRd",
+                      "meaning": "dorsal striatum (caudoputamen complex-CP, STRd)",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_AA30192",
+                        "http://purl.obolibrary.org/obo/UBERON_0005382"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:395bec7285d03bd5a5a02a48e77f97aa569612b80217b344c12bed915c9cc90d",
+                  "name": "STRd D1 Striosome MSN",
+                  "nodeColor": "#d62728",
+                  "cell_ontology_id": [
+                    "CL:4030048"
+                  ],
+                  "display_order": 2,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:341d48498cc35030c804a23c7593ffb6ddf48692a7c91bdf14fb6a191107f49c",
+                  "abbreviations": [
+                    {
+                      "term": "D1 Striosome MSN",
+                      "meaning": "D1 medium spiny neuron, striosomal",
+                      "denotes": [
+                        "CL:4030048"
+                      ]
+                    },
+                    {
+                      "term": "STRd",
+                      "meaning": "dorsal striatum (caudoputamen complex-CP, STRd)",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_AA30192",
+                        "http://purl.obolibrary.org/obo/UBERON_0005382"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:b5357140a76855e030fcc14f87984f9ab9e6708103d05ab422fafeb470d6f832",
+                  "name": "STRv D1 MSN",
+                  "nodeColor": "#339933",
+                  "cell_ontology_id": [
+                    "CL:4030051"
+                  ],
+                  "display_order": 5,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:341d48498cc35030c804a23c7593ffb6ddf48692a7c91bdf14fb6a191107f49c",
+                  "abbreviations": [
+                    {
+                      "term": "D1 MSN",
+                      "meaning": "D1 medium spiny neuron",
+                      "denotes": [
+                        "CL:4030051"
+                      ]
+                    },
+                    {
+                      "term": "STRv",
+                      "meaning": "ventral striatum (STRv)",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_AA30195",
+                        "http://purl.obolibrary.org/obo/UBERON_0005403"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:d1451e001a1c9aa2678edce610fc8610555ecf4525368fce418b193ccd016f2c",
+              "name": "STR D2 MSN",
+              "nodeColor": "#253c8c",
+              "cell_ontology_id": [
+                "CL:4023029"
+              ],
+              "display_order": 32,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:32b6802327e722003e48610d6c78603e2860c062bf79f1ebd5cfb61c48b97d41",
+              "abbreviations": [
+                {
+                  "term": "D2 MSN",
+                  "meaning": "D2 medium spiny neuron",
+                  "denotes": [
+                    "CL:4030052"
+                  ]
+                },
+                {
+                  "term": "STR",
+                  "meaning": "striatum",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
+                    "http://purl.obolibrary.org/obo/UBERON_0002435"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:de8b98bfaeb22822d9fe5598123700e7feba85c544ab9db6addf741cb5f9a625",
+                  "name": "STRd D2 Matrix MSN",
+                  "nodeColor": "#aec7e8",
+                  "cell_ontology_id": [
+                    "CL:4030047"
+                  ],
+                  "display_order": 3,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:d1451e001a1c9aa2678edce610fc8610555ecf4525368fce418b193ccd016f2c",
+                  "abbreviations": [
+                    {
+                      "term": "D2 Matrix MSN",
+                      "meaning": "D2 medium spiny neuron, matrix",
+                      "denotes": [
+                        "CL:4030047"
+                      ]
+                    },
+                    {
+                      "term": "STRd",
+                      "meaning": "dorsal striatum (caudoputamen complex-CP, STRd)",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_AA30192",
+                        "http://purl.obolibrary.org/obo/UBERON_0005382"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:45f1ea3d8a92253594da34f5f3df480edf66474c89cb51bc064f2b730c8a94d8",
+                  "name": "STRd D2 Striosome MSN",
+                  "nodeColor": "#ff9896",
+                  "cell_ontology_id": [
+                    "CL:4030049"
+                  ],
+                  "display_order": 4,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:d1451e001a1c9aa2678edce610fc8610555ecf4525368fce418b193ccd016f2c",
+                  "abbreviations": [
+                    {
+                      "term": "D2 Striosome MSN",
+                      "meaning": "D2 medium spiny neuron, striosomal",
+                      "denotes": [
+                        "CL:4030049"
+                      ]
+                    },
+                    {
+                      "term": "STRd",
+                      "meaning": "dorsal striatum (caudoputamen complex-CP, STRd)",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_AA30192",
+                        "http://purl.obolibrary.org/obo/UBERON_0005382"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:eed4e695b0c225b3857325b9c49ccc846f3e6177a8f4558482a46c101fc62b36",
+                  "name": "STRv D2 MSN",
+                  "nodeColor": "#98df8a",
+                  "cell_ontology_id": [
+                    "CL:4030052"
+                  ],
+                  "display_order": 6,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:d1451e001a1c9aa2678edce610fc8610555ecf4525368fce418b193ccd016f2c",
+                  "abbreviations": [
+                    {
+                      "term": "D2 MSN",
+                      "meaning": "D2 medium spiny neuron",
+                      "denotes": [
+                        "CL:4030052"
+                      ]
+                    },
+                    {
+                      "term": "STRv",
+                      "meaning": "ventral striatum (STRv)",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_AA30195",
+                        "http://purl.obolibrary.org/obo/UBERON_0005403"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:26e748ed97e83db82c2a78deea0a898044bc52a10b19b9beb00518cc825790c3",
+                  "name": "STRd D2 StrioMat Hybrid MSN",
+                  "nodeColor": "#5713c3",
+                  "cell_ontology_id": [
+                    "CL:4023035"
+                  ],
+                  "display_order": 7,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:d1451e001a1c9aa2678edce610fc8610555ecf4525368fce418b193ccd016f2c",
+                  "abbreviations": [
+                    {
+                      "term": "D2 StrioMat Hybrid MSN",
+                      "meaning": "D2 medium spiny neuron, matrix/striosomal hybrid",
+                      "denotes": [
+                        null
+                      ]
+                    },
+                    {
+                      "term": "STRd",
+                      "meaning": "dorsal striatum (caudoputamen complex-CP, STRd)",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_AA30192",
+                        "http://purl.obolibrary.org/obo/UBERON_0005382"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:4b98429f80846bd5c654b08ec69dcf77cbdd74e99569bad5e640d9549358a536",
+              "name": "STR Hybrid MSN",
+              "nodeColor": "#79bdf4",
+              "cell_ontology_id": [
+                "CL:4030050"
+              ],
+              "display_order": 33,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:32b6802327e722003e48610d6c78603e2860c062bf79f1ebd5cfb61c48b97d41",
+              "abbreviations": [
+                {
+                  "term": "Hybrid MSN",
+                  "meaning": "D1/D2-hybrid medium spiny neuron",
+                  "denotes": [
+                    "CL:4030050"
+                  ]
+                },
+                {
+                  "term": "STR",
+                  "meaning": "striatum",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
+                    "http://purl.obolibrary.org/obo/UBERON_0002435"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:8e6af77ac7c095572e39fd10116a9c0543cbbbdd8ca81317b7ed50eec978c12d",
+                  "name": "STR D1D2 Hybrid MSN",
+                  "nodeColor": "#9467bd",
+                  "cell_ontology_id": [
+                    "CL:4030050"
+                  ],
+                  "display_order": 8,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:4b98429f80846bd5c654b08ec69dcf77cbdd74e99569bad5e640d9549358a536",
+                  "abbreviations": [
+                    {
+                      "term": "D1D2 Hybrid MSN",
+                      "meaning": "D1/D2-hybrid medium spiny neuron",
+                      "denotes": [
+                        "CL:4030050"
+                      ]
+                    },
+                    {
+                      "term": "STR",
+                      "meaning": "striatum",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
+                        "http://purl.obolibrary.org/obo/UBERON_0002435"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:5929d3dd24f15ba46182a2643760e4a8fb0f89d22e011d860ac55fda03f2e6ae",
+                  "name": "STRv D1 NUDAP MSN",
+                  "nodeColor": "#e377c2",
+                  "cell_ontology_id": [
+                    "CL:4030054"
+                  ],
+                  "display_order": 9,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:4b98429f80846bd5c654b08ec69dcf77cbdd74e99569bad5e640d9549358a536",
+                  "abbreviations": [
+                    {
+                      "term": "D1 NUDAP MSN",
+                      "meaning": "D1 medium spiny neuron, neurochemically unique domains in the accumbens and putamen",
+                      "denotes": [
+                        "CL:4030054"
+                      ]
+                    },
+                    {
+                      "term": "STRv",
+                      "meaning": "ventral striatum (STRv)",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_AA30195",
+                        "http://purl.obolibrary.org/obo/UBERON_0005403"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:ea6ad4eef8905085995991a9f7da8e2451ea6530b31681b29c9c119fc127f711",
+              "name": "OT Granular GABA",
+              "nodeColor": "#9160cb",
+              "cell_ontology_id": [
+                "CL:4030053"
+              ],
+              "display_order": 34,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:32b6802327e722003e48610d6c78603e2860c062bf79f1ebd5cfb61c48b97d41",
+              "abbreviations": [
+                {
+                  "term": "GABA",
+                  "meaning": "GABAergic neuron",
+                  "denotes": [
+                    "CL:0000617"
+                  ]
+                },
+                {
+                  "term": "Granular",
+                  "meaning": "granule cell",
+                  "denotes": [
+                    "CL:0000120"
+                  ]
+                },
+                {
+                  "term": "OT",
+                  "meaning": "olfactory tubercle",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10310",
+                    "http://purl.obolibrary.org/obo/UBERON_0001883"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:253e5924286862c769454fca32a8439364cc1784ec77e7dfdd3194a1995b67fa",
+                  "name": "OT D1 ICj",
+                  "nodeColor": "#ff7f0e",
+                  "cell_ontology_id": [
+                    "CL:4030053"
+                  ],
+                  "display_order": 10,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:ea6ad4eef8905085995991a9f7da8e2451ea6530b31681b29c9c119fc127f711",
+                  "abbreviations": [
+                    {
+                      "term": "D1 ICj",
+                      "meaning": "Island of Calleja granule cell",
+                      "denotes": [
+                        "CL:4030053"
+                      ]
+                    },
+                    {
+                      "term": "OT",
+                      "meaning": "olfactory tubercle",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10310",
+                        "http://purl.obolibrary.org/obo/UBERON_0001883"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:ee6262f24776f7a22cfeaa0d544973ccfebd78b0152b499f44c98467dae096b9",
+              "name": "CN MEIS2 GABA",
+              "nodeColor": "#d8f378",
+              "cell_ontology_id": [],
+              "display_order": 30,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:32b6802327e722003e48610d6c78603e2860c062bf79f1ebd5cfb61c48b97d41",
+              "abbreviations": [
+                {
+                  "term": "CN",
+                  "meaning": "cerebral nuclei",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
+                    "http://purl.obolibrary.org/obo/UBERON_0004025"
+                  ]
+                },
+                {
+                  "term": "GABA",
+                  "meaning": "GABAergic neuron",
+                  "denotes": [
+                    "CL:0000617"
+                  ]
+                },
+                {
+                  "term": "MEIS2",
+                  "meaning": "Meis homeobox 2",
+                  "denotes": [
+                    "http://identifiers.org/ensembl/ENSG00000134138"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:8209e27456abc60e607ae783510666b94de55e91f1c97598090dd2a042e5a1a9",
+                  "name": "GPe MEIS2-SOX6 GABA",
+                  "nodeColor": "#937a2e",
+                  "cell_ontology_id": [
+                    "CL:4023035"
+                  ],
+                  "display_order": 11,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:ee6262f24776f7a22cfeaa0d544973ccfebd78b0152b499f44c98467dae096b9",
+                  "abbreviations": [
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "MEIS2",
+                      "meaning": "Meis homeobox 2",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000134138"
+                      ]
+                    },
+                    {
+                      "term": "SOX6",
+                      "meaning": "SRY-box transcription factor 6",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000110693"
+                      ]
+                    },
+                    {
+                      "term": "GPe",
+                      "meaning": "external segment of globus pallidus",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10343"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "urn:bkbit:86c87da3f58f7e4918f2886a74123c23d62818adc5c679649da4fb391092acc6",
+          "name": "F M GABA",
+          "nodeColor": "#cd0f13",
+          "cell_ontology_id": [],
+          "display_order": 9,
+          "level": "Class",
+          "parent_id": "urn:bkbit:9ab863210b090e990a4835dbe55b37934d48419aef03611af3da286a4008d5fc",
+          "abbreviations": [
+            {
+              "term": "F",
+              "meaning": "forebrain (prosencephalon)",
+              "denotes": [
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10156",
+                "http://purl.obolibrary.org/obo/UBERON_0004024"
+              ]
+            },
+            {
+              "term": "GABA",
+              "meaning": "GABAergic neuron",
+              "denotes": [
+                "CL:0000617"
+              ]
+            },
+            {
+              "term": "M",
+              "meaning": "midbrain (mesencephalon)",
+              "denotes": [
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10648",
+                "http://purl.obolibrary.org/obo/UBERON_0001891"
+              ]
+            }
+          ],
+          "children": [
+            {
+              "id": "urn:bkbit:69039affcc0ca3c5a8cd48bdf1fc6755ffcdbf1e6ff95205b6aeee3d6937ed9a",
+              "name": "F GABA",
+              "nodeColor": "#7ba2df",
+              "cell_ontology_id": [],
+              "display_order": 29,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:86c87da3f58f7e4918f2886a74123c23d62818adc5c679649da4fb391092acc6",
+              "abbreviations": [
+                {
+                  "term": "F",
+                  "meaning": "forebrain (prosencephalon)",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10156",
+                    "http://purl.obolibrary.org/obo/UBERON_0004024"
+                  ]
+                },
+                {
+                  "term": "GABA",
+                  "meaning": "GABAergic neuron",
+                  "denotes": [
+                    "CL:0000617"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:028fc21b2443ad98308fc4a0e17ac7f01aac9263c6a3c17dc9107d7ea355e160",
+                  "name": "AMY-SLEA-BNST GABA",
+                  "nodeColor": "#b69e14",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 12,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:69039affcc0ca3c5a8cd48bdf1fc6755ffcdbf1e6ff95205b6aeee3d6937ed9a",
+                  "abbreviations": [
+                    {
+                      "term": "AMY",
+                      "meaning": "amygdaloid complex",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10361"
+                      ]
+                    },
+                    {
+                      "term": "BNST",
+                      "meaning": "bed nucleus of stria terminalis",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10384"
+                      ]
+                    },
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "SLEA",
+                      "meaning": "sublenticular extended amygdala",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10387"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:82dcaf5c47e75c4d4e2dea2229d626c781f9aed1ae30f668df04cfa9c2575f57",
+                  "name": "AMY-SLEA-BNST D1 GABA",
+                  "nodeColor": "#9e86de",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 13,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:69039affcc0ca3c5a8cd48bdf1fc6755ffcdbf1e6ff95205b6aeee3d6937ed9a",
+                  "abbreviations": [
+                    {
+                      "term": "AMY",
+                      "meaning": "amygdaloid complex",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10361"
+                      ]
+                    },
+                    {
+                      "term": "BNST",
+                      "meaning": "bed nucleus of stria terminalis",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10384"
+                      ]
+                    },
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "SLEA",
+                      "meaning": "sublenticular extended amygdala",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10387"
+                      ]
+                    },
+                    {
+                      "term": "D1",
+                      "meaning": "D1 medium spiny neuron",
+                      "denotes": [
+                        "CL:4030051"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:814d58907a7513a5911692721f0b8b16774835f4d451b78f25819286edfdc6d4",
+                  "name": "ZI-HTH GABA",
+                  "nodeColor": "#c49c94",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 22,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:69039affcc0ca3c5a8cd48bdf1fc6755ffcdbf1e6ff95205b6aeee3d6937ed9a",
+                  "abbreviations": [
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "HTH",
+                      "meaning": "hypothalamus",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10467"
+                      ]
+                    },
+                    {
+                      "term": "ZI",
+                      "meaning": "zona incerta",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10463"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:eb440864f86144fc9c1e314991bf1a7f4100d1958d78ea2d0627754f52b337e3",
+              "name": "SN PAX7 GABA",
+              "nodeColor": "#720a7d",
+              "cell_ontology_id": [],
+              "display_order": 28,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:86c87da3f58f7e4918f2886a74123c23d62818adc5c679649da4fb391092acc6",
+              "abbreviations": [
+                {
+                  "term": "GABA",
+                  "meaning": "GABAergic neuron",
+                  "denotes": [
+                    "CL:0000617"
+                  ]
+                },
+                {
+                  "term": "PAX7",
+                  "meaning": "paired box 7",
+                  "denotes": [
+                    "http://identifiers.org/ensembl/ENSG00000009709"
+                  ]
+                },
+                {
+                  "term": "SN",
+                  "meaning": "substantia nigra",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_12251",
+                    "http://purl.obolibrary.org/obo/UBERON_0002038"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:39fd5b8210fd6b892b9fbc76715e9891d1f5a3afce705cc6d70a283efdc1192d",
+                  "name": "SN SEMA5A GABA",
+                  "nodeColor": "#3604fb",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 14,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:eb440864f86144fc9c1e314991bf1a7f4100d1958d78ea2d0627754f52b337e3",
+                  "abbreviations": [
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "SEMA5A",
+                      "meaning": "semaphorin 5A",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000112902"
+                      ]
+                    },
+                    {
+                      "term": "SN",
+                      "meaning": "substantia nigra",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_12251",
+                        "http://purl.obolibrary.org/obo/UBERON_0002038"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:4b2f527dd49bfdde853860f17410e6fcf82b51005c7cd50a8693ddc228247656",
+                  "name": "SN EBF2 GABA",
+                  "nodeColor": "#c8df45",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 15,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:eb440864f86144fc9c1e314991bf1a7f4100d1958d78ea2d0627754f52b337e3",
+                  "abbreviations": [
+                    {
+                      "term": "EBF2",
+                      "meaning": "EBF transcription factor 2",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000221818"
+                      ]
+                    },
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "SN",
+                      "meaning": "substantia nigra",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_12251",
+                        "http://purl.obolibrary.org/obo/UBERON_0002038"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:99442e6d9c9a87c89dc2745becd0455da6d769b22d7767aa13ef7df8f2668600",
+              "name": "CN ONECUT1 GABA",
+              "nodeColor": "#967be5",
+              "cell_ontology_id": [],
+              "display_order": 26,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:86c87da3f58f7e4918f2886a74123c23d62818adc5c679649da4fb391092acc6",
+              "abbreviations": [
+                {
+                  "term": "CN",
+                  "meaning": "cerebral nuclei",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
+                    "http://purl.obolibrary.org/obo/UBERON_0004025"
+                  ]
+                },
+                {
+                  "term": "GABA",
+                  "meaning": "GABAergic neuron",
+                  "denotes": [
+                    "CL:0000617"
+                  ]
+                },
+                {
+                  "term": "ONECUT1",
+                  "meaning": "one cut homeobox 1",
+                  "denotes": [
+                    "http://identifiers.org/ensembl/ENSG00000169856"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:249f9e57d4e82d1fa950b13a27b936ac2ec925e80dd1a7b0543509217ae0c43a",
+                  "name": "GPi Core",
+                  "nodeColor": "#d3489a",
+                  "cell_ontology_id": [],
+                  "display_order": 19,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:99442e6d9c9a87c89dc2745becd0455da6d769b22d7767aa13ef7df8f2668600",
+                  "abbreviations": [
+                    {
+                      "term": "GPi Core",
+                      "meaning": "internal division of globus pallidus, medial (central) portion",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_11548"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:b9e4df78d8d457e1ca2c7344315126d4c716adb495da45c4a3f6dccd67924480",
+              "name": "F M GATA3 GABA",
+              "nodeColor": "#311a96",
+              "cell_ontology_id": [],
+              "display_order": 27,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:86c87da3f58f7e4918f2886a74123c23d62818adc5c679649da4fb391092acc6",
+              "abbreviations": [
+                {
+                  "term": "F",
+                  "meaning": "forebrain (prosencephalon)",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10156",
+                    "http://purl.obolibrary.org/obo/UBERON_0004024"
+                  ]
+                },
+                {
+                  "term": "GABA",
+                  "meaning": "GABAergic neuron",
+                  "denotes": [
+                    "CL:0000617"
+                  ]
+                },
+                {
+                  "term": "GATA3",
+                  "meaning": "GATA binding protein 3",
+                  "denotes": [
+                    "http://identifiers.org/ensembl/ENSG00000107485"
+                  ]
+                },
+                {
+                  "term": "M",
+                  "meaning": "midbrain (mesencephalon)",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10648",
+                    "http://purl.obolibrary.org/obo/UBERON_0001891"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:c7d67c7c0a9e43b31f3308d9acbad50b4c27192225d82c8c3c59064ec6fdf75f",
+                  "name": "SN GATA3-PVALB GABA",
+                  "nodeColor": "#017d7c",
+                  "cell_ontology_id": [
+                    "CL:0000617"
+                  ],
+                  "display_order": 20,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:b9e4df78d8d457e1ca2c7344315126d4c716adb495da45c4a3f6dccd67924480",
+                  "abbreviations": [
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "GATA3",
+                      "meaning": "GATA binding protein 3",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000107485"
+                      ]
+                    },
+                    {
+                      "term": "PVALB",
+                      "meaning": "parvalbumin",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000100362"
+                      ]
+                    },
+                    {
+                      "term": "SN",
+                      "meaning": "substantia nigra",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_12251",
+                        "http://purl.obolibrary.org/obo/UBERON_0002038"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:bc154956020a7be6d591b0c9bca6a07ee620b542fbd1972327da1509a2ade8ef",
+                  "name": "SN-VTR-HTH GATA3-TCF7L2 GABA",
+                  "nodeColor": "#1dbfcf",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 23,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:b9e4df78d8d457e1ca2c7344315126d4c716adb495da45c4a3f6dccd67924480",
+                  "abbreviations": [
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "GATA3",
+                      "meaning": "GATA binding protein 3",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000107485"
+                      ]
+                    },
+                    {
+                      "term": "SN",
+                      "meaning": "substantia nigra",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_12251",
+                        "http://purl.obolibrary.org/obo/UBERON_0002038"
+                      ]
+                    },
+                    {
+                      "term": "TCF7L2",
+                      "meaning": "transcription factor 7 like 2",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000148737"
+                      ]
+                    },
+                    {
+                      "term": "HTH",
+                      "meaning": "hypothalamus",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10467"
+                      ]
+                    },
+                    {
+                      "term": "VTR",
+                      "meaning": "ventral tegmental region of midbrain",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_146034938"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:0e293061edd494bc78f557f002cc3b080ecba3ab629100a4616467d6314a3794",
+                  "name": "SN GATA3-PAX8 GABA",
+                  "nodeColor": "#ff7266",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 24,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:b9e4df78d8d457e1ca2c7344315126d4c716adb495da45c4a3f6dccd67924480",
+                  "abbreviations": [
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "GATA3",
+                      "meaning": "GATA binding protein 3",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000107485"
+                      ]
+                    },
+                    {
+                      "term": "PAX8",
+                      "meaning": "paired box 8",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000125618"
+                      ]
+                    },
+                    {
+                      "term": "SN",
+                      "meaning": "substantia nigra",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_12251",
+                        "http://purl.obolibrary.org/obo/UBERON_0002038"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:c1af3c4b2c5f318122648a00f337c74973c1d1807c98d8292d8f450aac580799",
+              "name": "CN LHX8 GABA",
+              "nodeColor": "#caf28b",
+              "cell_ontology_id": [],
+              "display_order": 25,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:86c87da3f58f7e4918f2886a74123c23d62818adc5c679649da4fb391092acc6",
+              "abbreviations": [
+                {
+                  "term": "CN",
+                  "meaning": "cerebral nuclei",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
+                    "http://purl.obolibrary.org/obo/UBERON_0004025"
+                  ]
+                },
+                {
+                  "term": "GABA",
+                  "meaning": "GABAergic neuron",
+                  "denotes": [
+                    "CL:0000617"
+                  ]
+                },
+                {
+                  "term": "LHX8",
+                  "meaning": "LIM homeobox 8",
+                  "denotes": [
+                    "http://identifiers.org/ensembl/ENSG00000162624"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:a6c1fa94acc8f441f14847e858ba39df398847fe3b0efaec1ca2b53db3b78311",
+                  "name": "GPe SOX6-CTXND1 GABA",
+                  "nodeColor": "#e9dc4d",
+                  "cell_ontology_id": [
+                    "CL:0000617"
+                  ],
+                  "display_order": 21,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:c1af3c4b2c5f318122648a00f337c74973c1d1807c98d8292d8f450aac580799",
+                  "abbreviations": [
+                    {
+                      "term": "CTXND1",
+                      "meaning": "cortexin domain containing 1",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000259417"
+                      ]
+                    },
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "SOX6",
+                      "meaning": "SRY-box transcription factor 6",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000110693"
+                      ]
+                    },
+                    {
+                      "term": "GPe",
+                      "meaning": "external segment of globus pallidus",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10343"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:4658b224cd5932807ec85c341648ed559cb30fae642dd9d4e228f63ae563527e",
+                  "name": "GPe-NDB-SI LHX6-LHX8-GBX1 GABA",
+                  "nodeColor": "#B2520E",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 25,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:c1af3c4b2c5f318122648a00f337c74973c1d1807c98d8292d8f450aac580799",
+                  "abbreviations": [
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "GBX1",
+                      "meaning": "gastrulation brain homeobox 1",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000164900"
+                      ]
+                    },
+                    {
+                      "term": "LHX6",
+                      "meaning": "LIM homeobox 6",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000106852"
+                      ]
+                    },
+                    {
+                      "term": "LHX8",
+                      "meaning": "LIM homeobox 8",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000162624"
+                      ]
+                    },
+                    {
+                      "term": "NDB",
+                      "meaning": "nucleus of diagonal band",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10354",
+                        "http://purl.obolibrary.org/obo/UBERON_0001879"
+                      ]
+                    },
+                    {
+                      "term": "SI",
+                      "meaning": "substantia innominata",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_13034",
+                        "http://purl.obolibrary.org/obo/UBERON_0003017"
+                      ]
+                    },
+                    {
+                      "term": "GPe",
+                      "meaning": "external segment of globus pallidus",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10343"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "urn:bkbit:417d714aff8f6ad7b96f3327da54cdc423b227446eebe848665569891adff781",
+          "name": "Cx GABA",
+          "nodeColor": "#ebb3a7",
+          "cell_ontology_id": [],
+          "display_order": 11,
+          "level": "Class",
+          "parent_id": "urn:bkbit:9ab863210b090e990a4835dbe55b37934d48419aef03611af3da286a4008d5fc",
+          "abbreviations": [
+            {
+              "term": "Cx",
+              "meaning": "cerebral cortex",
+              "denotes": [
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10159"
+              ]
+            },
+            {
+              "term": "GABA",
+              "meaning": "GABAergic neuron",
+              "denotes": [
+                "CL:0000617"
+              ]
+            }
+          ],
+          "children": [
+            {
+              "id": "urn:bkbit:3eee526b584452b935540fc23c4efe013475f59602d1e741f316c1298feca917",
+              "name": "ACx MEIS2 GABA",
+              "nodeColor": "#3636ed",
+              "cell_ontology_id": [],
+              "display_order": 35,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:417d714aff8f6ad7b96f3327da54cdc423b227446eebe848665569891adff781",
+              "abbreviations": [
+                {
+                  "term": "ACx",
+                  "meaning": "allocortex",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10292"
+                  ]
+                },
+                {
+                  "term": "GABA",
+                  "meaning": "GABAergic neuron",
+                  "denotes": [
+                    "CL:0000617"
+                  ]
+                },
+                {
+                  "term": "MEIS2",
+                  "meaning": "Meis homeobox 2",
+                  "denotes": [
+                    "http://identifiers.org/ensembl/ENSG00000134138"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:d5ff4f49204a7ca3160268c96c5b72ec91b944e3ef4d32ec69e5581b87f8cfec",
+                  "name": "OB FRMD7 GABA",
+                  "nodeColor": "#cd0753",
+                  "cell_ontology_id": [
+                    "CL:0000617"
+                  ],
+                  "display_order": 16,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:3eee526b584452b935540fc23c4efe013475f59602d1e741f316c1298feca917",
+                  "abbreviations": [
+                    {
+                      "term": "FRMD7",
+                      "meaning": "FERM domain containing 7",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000165694"
+                      ]
+                    },
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "OB",
+                      "meaning": "olfactory bulb",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10307"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:09a5f7aeb79fa1483f4bc87f4153135cc776f107ba058cd5affa48293da60c33",
+                  "name": "OB Dopa-GABA",
+                  "nodeColor": "#902f6b",
+                  "cell_ontology_id": [
+                    "CL:0000617"
+                  ],
+                  "display_order": 17,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:3eee526b584452b935540fc23c4efe013475f59602d1e741f316c1298feca917",
+                  "abbreviations": [
+                    {
+                      "term": "Dopa",
+                      "meaning": "dopaminergic neuron",
+                      "denotes": [
+                        "CL:0000700"
+                      ]
+                    },
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "OB",
+                      "meaning": "olfactory bulb",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10307"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "urn:bkbit:b23f55855e4a69611cdcedd02e40abc5c0cc42c432e6b584c946212f24f50d75",
+          "name": "CN CGE GABA",
+          "nodeColor": "#26e8bb",
+          "cell_ontology_id": [],
+          "display_order": 8,
+          "level": "Class",
+          "parent_id": "urn:bkbit:9ab863210b090e990a4835dbe55b37934d48419aef03611af3da286a4008d5fc",
+          "abbreviations": [
+            {
+              "term": "CGE",
+              "meaning": "caudal ganglionic eminence",
+              "denotes": [
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10552",
+                "http://purl.obolibrary.org/obo/UBERON_0004026"
+              ]
+            },
+            {
+              "term": "CN",
+              "meaning": "cerebral nuclei",
+              "denotes": [
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
+                "http://purl.obolibrary.org/obo/UBERON_0004025"
+              ]
+            },
+            {
+              "term": "GABA",
+              "meaning": "GABAergic neuron",
+              "denotes": [
+                "CL:0000617"
+              ]
+            }
+          ],
+          "children": [
+            {
+              "id": "urn:bkbit:93a96fc89ea6cb5b58460bc7b75ad349b4751bde638551493c6c1a49c72d0df8",
+              "name": "CN VIP GABA",
+              "nodeColor": "#1bc06a",
+              "cell_ontology_id": [],
+              "display_order": 24,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:b23f55855e4a69611cdcedd02e40abc5c0cc42c432e6b584c946212f24f50d75",
+              "abbreviations": [
+                {
+                  "term": "CN",
+                  "meaning": "cerebral nuclei",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
+                    "http://purl.obolibrary.org/obo/UBERON_0004025"
+                  ]
+                },
+                {
+                  "term": "GABA",
+                  "meaning": "GABAergic neuron",
+                  "denotes": [
+                    "CL:0000617"
+                  ]
+                },
+                {
+                  "term": "VIP",
+                  "meaning": "vasoactive intestinal peptide",
+                  "denotes": [
+                    "http://identifiers.org/ensembl/ENSG00000146469"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:6922d80ab0431bcd35489b74aee245c6f3139f6ee72db2925119828ae0d4fad3",
+                  "name": "VIP GABA",
+                  "nodeColor": "#fc2b80",
+                  "cell_ontology_id": [
+                    "CL:4023016"
+                  ],
+                  "display_order": 26,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:93a96fc89ea6cb5b58460bc7b75ad349b4751bde638551493c6c1a49c72d0df8",
+                  "abbreviations": [
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "VIP",
+                      "meaning": "vasoactive intestinal peptide",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000146469"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:2dfc38bb4076fd5b6bc2b6d744b162fad980b2a2d671a04146ff8e9a0a438f21",
+              "name": "CN LAMP5-CXCL14 GABA",
+              "nodeColor": "#e5b672",
+              "cell_ontology_id": [],
+              "display_order": 23,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:b23f55855e4a69611cdcedd02e40abc5c0cc42c432e6b584c946212f24f50d75",
+              "abbreviations": [
+                {
+                  "term": "CN",
+                  "meaning": "cerebral nuclei",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
+                    "http://purl.obolibrary.org/obo/UBERON_0004025"
+                  ]
+                },
+                {
+                  "term": "CXCL14",
+                  "meaning": "C-X-C motif chemokine ligand 14",
+                  "denotes": [
+                    "http://identifiers.org/ensembl/ENSG00000145824"
+                  ]
+                },
+                {
+                  "term": "GABA",
+                  "meaning": "GABAergic neuron",
+                  "denotes": [
+                    "CL:0000617"
+                  ]
+                },
+                {
+                  "term": "LAMP5",
+                  "meaning": "lysosomal associated membrane protein family member 5",
+                  "denotes": [
+                    "http://identifiers.org/ensembl/ENSG00000125869"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:7a3e9d42dc30cda994c9d3a538dd8931e24602f9d934935f8630c65007acb5ac",
+                  "name": "LAMP5-CXCL14 GABA",
+                  "nodeColor": "#f6b5d1",
+                  "cell_ontology_id": [
+                    "CL:4023011"
+                  ],
+                  "display_order": 27,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:2dfc38bb4076fd5b6bc2b6d744b162fad980b2a2d671a04146ff8e9a0a438f21",
+                  "abbreviations": [
+                    {
+                      "term": "CXCL14",
+                      "meaning": "C-X-C motif chemokine ligand 14",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000145824"
+                      ]
+                    },
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "LAMP5",
+                      "meaning": "lysosomal associated membrane protein family member 5",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000125869"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "urn:bkbit:0f93285a34f9f823acd0cdec1ba80965d1268ecbc5496516f6a4569389f9bf76",
+          "name": "CN MGE GABA",
+          "nodeColor": "#ce4c27",
+          "cell_ontology_id": [],
+          "display_order": 7,
+          "level": "Class",
+          "parent_id": "urn:bkbit:9ab863210b090e990a4835dbe55b37934d48419aef03611af3da286a4008d5fc",
+          "abbreviations": [
+            {
+              "term": "CN",
+              "meaning": "cerebral nuclei",
+              "denotes": [
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
+                "http://purl.obolibrary.org/obo/UBERON_0004025"
+              ]
+            },
+            {
+              "term": "GABA",
+              "meaning": "GABAergic neuron",
+              "denotes": [
+                "CL:0000617"
+              ]
+            },
+            {
+              "term": "MGE",
+              "meaning": "medial ganglionic eminence",
+              "denotes": [
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10550",
+                "http://purl.obolibrary.org/obo/UBERON_0004024"
+              ]
+            }
+          ],
+          "children": [
+            {
+              "id": "urn:bkbit:d0d4e22f4858e1af1edfc5fffe76e7f8bcd3f047201cee46eab3864d874a07e7",
+              "name": "STR SST-CHODL GABA",
+              "nodeColor": "#eea495",
+              "cell_ontology_id": [],
+              "display_order": 19,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:0f93285a34f9f823acd0cdec1ba80965d1268ecbc5496516f6a4569389f9bf76",
+              "abbreviations": [
+                {
+                  "term": "CHODL",
+                  "meaning": "chondrolectin",
+                  "denotes": [
+                    "http://identifiers.org/ensembl/ENSG00000154645"
+                  ]
+                },
+                {
+                  "term": "GABA",
+                  "meaning": "GABAergic neuron",
+                  "denotes": [
+                    "CL:0000617"
+                  ]
+                },
+                {
+                  "term": "SST",
+                  "meaning": "somatostatin",
+                  "denotes": [
+                    "http://identifiers.org/ensembl/ENSG00000157005"
+                  ]
+                },
+                {
+                  "term": "STR",
+                  "meaning": "striatum",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
+                    "http://purl.obolibrary.org/obo/UBERON_0002435"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:e026eff5681b929fd943e24efc50ba853b49d68df2883834315115607f956112",
+                  "name": "STR SST-CHODL GABA",
+                  "nodeColor": "#708297",
+                  "cell_ontology_id": [
+                    "CL:4023121"
+                  ],
+                  "display_order": 28,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:d0d4e22f4858e1af1edfc5fffe76e7f8bcd3f047201cee46eab3864d874a07e7",
+                  "abbreviations": [
+                    {
+                      "term": "CHODL",
+                      "meaning": "chondrolectin",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000154645"
+                      ]
+                    },
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "SST",
+                      "meaning": "somatostatin",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000157005"
+                      ]
+                    },
+                    {
+                      "term": "STR",
+                      "meaning": "striatum",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
+                        "http://purl.obolibrary.org/obo/UBERON_0002435"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:e66870c045fc544f8361b13e440e2c42b568d50dbf932785ed3d1ed4fdeb982b",
+              "name": "STR RSPO2 GABA",
+              "nodeColor": "#5b0e63",
+              "cell_ontology_id": [],
+              "display_order": 21,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:0f93285a34f9f823acd0cdec1ba80965d1268ecbc5496516f6a4569389f9bf76",
+              "abbreviations": [
+                {
+                  "term": "GABA",
+                  "meaning": "GABAergic neuron",
+                  "denotes": [
+                    "CL:0000617"
+                  ]
+                },
+                {
+                  "term": "RSPO2",
+                  "meaning": "R-spondin 2",
+                  "denotes": [
+                    "http://identifiers.org/ensembl/ENSG00000147655"
+                  ]
+                },
+                {
+                  "term": "STR",
+                  "meaning": "striatum",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
+                    "http://purl.obolibrary.org/obo/UBERON_0002435"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:b749c8ba04be5bff612437bc029eb315d48da8f1f25f287541d30d08df73157a",
+                  "name": "STR SST-RSPO2 GABA",
+                  "nodeColor": "#f3b79b",
+                  "cell_ontology_id": [
+                    "CL:4023017"
+                  ],
+                  "display_order": 29,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:e66870c045fc544f8361b13e440e2c42b568d50dbf932785ed3d1ed4fdeb982b",
+                  "abbreviations": [
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "RSPO2",
+                      "meaning": "R-spondin 2",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000147655"
+                      ]
+                    },
+                    {
+                      "term": "SST",
+                      "meaning": "somatostatin",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000157005"
+                      ]
+                    },
+                    {
+                      "term": "STR",
+                      "meaning": "striatum",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
+                        "http://purl.obolibrary.org/obo/UBERON_0002435"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:9998f860462a1de2ae0f99366b20234758855d88323be5e12e153da27cb682b0",
+                  "name": "STR LYPD6-RSPO2 GABA",
+                  "nodeColor": "#488edc",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 30,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:e66870c045fc544f8361b13e440e2c42b568d50dbf932785ed3d1ed4fdeb982b",
+                  "abbreviations": [
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "RSPO2",
+                      "meaning": "R-spondin 2",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000147655"
+                      ]
+                    },
+                    {
+                      "term": "STR",
+                      "meaning": "striatum",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
+                        "http://purl.obolibrary.org/obo/UBERON_0002435"
+                      ]
+                    },
+                    {
+                      "term": "LYPD6",
+                      "meaning": "LY6/PLAUR domain containing 6",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000187123"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:5b782814d69477366e3195b10c37c3a840886f5e43030d7b3147bf6082194d8d",
+              "name": "STR SST GABA",
+              "nodeColor": "#ed8d40",
+              "cell_ontology_id": [],
+              "display_order": 20,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:0f93285a34f9f823acd0cdec1ba80965d1268ecbc5496516f6a4569389f9bf76",
+              "abbreviations": [
+                {
+                  "term": "GABA",
+                  "meaning": "GABAergic neuron",
+                  "denotes": [
+                    "CL:0000617"
+                  ]
+                },
+                {
+                  "term": "SST",
+                  "meaning": "somatostatin",
+                  "denotes": [
+                    "http://identifiers.org/ensembl/ENSG00000157005"
+                  ]
+                },
+                {
+                  "term": "STR",
+                  "meaning": "striatum",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
+                    "http://purl.obolibrary.org/obo/UBERON_0002435"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:b68cebe1f3ee73200db75d08ef52e2930a3ebece166cc3b41479976eae1aa2ad",
+                  "name": "STR SST-ADARB2 GABA",
+                  "nodeColor": "#fde020",
+                  "cell_ontology_id": [
+                    "CL:4023017"
+                  ],
+                  "display_order": 31,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:5b782814d69477366e3195b10c37c3a840886f5e43030d7b3147bf6082194d8d",
+                  "abbreviations": [
+                    {
+                      "term": "ADARB2",
+                      "meaning": "adenosine deaminase RNA specific B2 (inactive)",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000185736"
+                      ]
+                    },
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "SST",
+                      "meaning": "somatostatin",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000157005"
+                      ]
+                    },
+                    {
+                      "term": "STR",
+                      "meaning": "striatum",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
+                        "http://purl.obolibrary.org/obo/UBERON_0002435"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:1b491a02d7811e5d4cf754326180f1c47261d5c31719825eea3bfe2039f586c3",
+              "name": "CN LAMP5-LHX6 GABA",
+              "nodeColor": "#f48d44",
+              "cell_ontology_id": [],
+              "display_order": 17,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:0f93285a34f9f823acd0cdec1ba80965d1268ecbc5496516f6a4569389f9bf76",
+              "abbreviations": [
+                {
+                  "term": "CN",
+                  "meaning": "cerebral nuclei",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
+                    "http://purl.obolibrary.org/obo/UBERON_0004025"
+                  ]
+                },
+                {
+                  "term": "GABA",
+                  "meaning": "GABAergic neuron",
+                  "denotes": [
+                    "CL:0000617"
+                  ]
+                },
+                {
+                  "term": "LAMP5",
+                  "meaning": "lysosomal associated membrane protein family member 5",
+                  "denotes": [
+                    "http://identifiers.org/ensembl/ENSG00000125869"
+                  ]
+                },
+                {
+                  "term": "LHX6",
+                  "meaning": "LIM homeobox 6",
+                  "denotes": [
+                    "http://identifiers.org/ensembl/ENSG00000106852"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:e3b38dcad0500a9d780dfb05fa68caf7f8be7125bbda297f8af6063e6c61276e",
+                  "name": "LAMP5-LHX6 GABA",
+                  "nodeColor": "#00af88",
+                  "cell_ontology_id": [
+                    "CL:4042013"
+                  ],
+                  "display_order": 32,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:1b491a02d7811e5d4cf754326180f1c47261d5c31719825eea3bfe2039f586c3",
+                  "abbreviations": [
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "LAMP5",
+                      "meaning": "lysosomal associated membrane protein family member 5",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000125869"
+                      ]
+                    },
+                    {
+                      "term": "LHX6",
+                      "meaning": "LIM homeobox 6",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000106852"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:55331191c3179211fd3901d40244b9436877ac7e0f8448ec018a4a170ddc6620",
+              "name": "CN ST18 GABA",
+              "nodeColor": "#5fd989",
+              "cell_ontology_id": [],
+              "display_order": 18,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:0f93285a34f9f823acd0cdec1ba80965d1268ecbc5496516f6a4569389f9bf76",
+              "abbreviations": [
+                {
+                  "term": "CN",
+                  "meaning": "cerebral nuclei",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
+                    "http://purl.obolibrary.org/obo/UBERON_0004025"
+                  ]
+                },
+                {
+                  "term": "GABA",
+                  "meaning": "GABAergic neuron",
+                  "denotes": [
+                    "CL:0000617"
+                  ]
+                },
+                {
+                  "term": "ST18",
+                  "meaning": "ST18 C2H2C-type zinc finger transcription factor",
+                  "denotes": [
+                    "http://identifiers.org/ensembl/ENSG00000147488"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:e1cd029bf8635792c87b3a69ebb99568636268bfda500214fb67607b2b26ad24",
+                  "name": "STR FS PTHLH-PVALB GABA",
+                  "nodeColor": "#e16c95",
+                  "cell_ontology_id": [
+                    "CL:4042023"
+                  ],
+                  "display_order": 33,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:55331191c3179211fd3901d40244b9436877ac7e0f8448ec018a4a170ddc6620",
+                  "abbreviations": [
+                    {
+                      "term": "FS",
+                      "meaning": "fast spiking neuron",
+                      "denotes": [
+                        null
+                      ]
+                    },
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "PTHLH",
+                      "meaning": "parathyroid hormone like hormone",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000087494"
+                      ]
+                    },
+                    {
+                      "term": "PVALB",
+                      "meaning": "parvalbumin",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000100362"
+                      ]
+                    },
+                    {
+                      "term": "STR",
+                      "meaning": "striatum",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
+                        "http://purl.obolibrary.org/obo/UBERON_0002435"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:2a8826fc0fc6644846d1e7c89428b69a59861fd8374f216d20176188aa5108d1",
+                  "name": "STR TAC3-PLPP4 GABA",
+                  "nodeColor": "#21eef1",
+                  "cell_ontology_id": [
+                    "CL:4042001"
+                  ],
+                  "display_order": 34,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:55331191c3179211fd3901d40244b9436877ac7e0f8448ec018a4a170ddc6620",
+                  "abbreviations": [
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "PLPP4",
+                      "meaning": "phospholipid phosphatase 4",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000203805"
+                      ]
+                    },
+                    {
+                      "term": "STR",
+                      "meaning": "striatum",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
+                        "http://purl.obolibrary.org/obo/UBERON_0002435"
+                      ]
+                    },
+                    {
+                      "term": "TAC3",
+                      "meaning": "tachykinin precursor 3",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000166863"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:58c75c27f36807a1f280524f6873e9ca46baa80efb5c2d750c56e29957898fd9",
+                  "name": "STR-BF TAC3-PLPP4-LHX8 GABA",
+                  "nodeColor": "#9d3b4f",
+                  "cell_ontology_id": [
+                    "CL:4042001"
+                  ],
+                  "display_order": 35,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:55331191c3179211fd3901d40244b9436877ac7e0f8448ec018a4a170ddc6620",
+                  "abbreviations": [
+                    {
+                      "term": "BF",
+                      "meaning": "basal forebrain",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10349"
+                      ]
+                    },
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "LHX8",
+                      "meaning": "LIM homeobox 8",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000162624"
+                      ]
+                    },
+                    {
+                      "term": "PLPP4",
+                      "meaning": "phospholipid phosphatase 4",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000203805"
+                      ]
+                    },
+                    {
+                      "term": "STR",
+                      "meaning": "striatum",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
+                        "http://purl.obolibrary.org/obo/UBERON_0002435"
+                      ]
+                    },
+                    {
+                      "term": "TAC3",
+                      "meaning": "tachykinin precursor 3",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000166863"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:6047eaa60362c0ba1900f3aae6be07a68c05bb0b2440b4106f978599d6c9bbf7",
+              "name": "CN Cholinergic GABA",
+              "nodeColor": "#b1f081",
+              "cell_ontology_id": [
+                "https://github.com/obophenotype/cell-ontology/issues/3093"
+              ],
+              "display_order": 22,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:0f93285a34f9f823acd0cdec1ba80965d1268ecbc5496516f6a4569389f9bf76",
+              "abbreviations": [
+                {
+                  "term": "Cholinergic",
+                  "meaning": "cholinergic neuron",
+                  "denotes": [
+                    "CL:0000108"
+                  ]
+                },
+                {
+                  "term": "CN",
+                  "meaning": "cerebral nuclei",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
+                    "http://purl.obolibrary.org/obo/UBERON_0004025"
+                  ]
+                },
+                {
+                  "term": "GABA",
+                  "meaning": "GABAergic neuron",
+                  "denotes": [
+                    "CL:0000617"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:1d141ce3518d3899b3953bdc6b797a6751ea00585150c79513ca21eb03b5934d",
+                  "name": "GPin-BF Cholinergic GABA",
+                  "nodeColor": "#6FC7B2",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 36,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:6047eaa60362c0ba1900f3aae6be07a68c05bb0b2440b4106f978599d6c9bbf7",
+                  "abbreviations": [
+                    {
+                      "term": "BF",
+                      "meaning": "basal forebrain",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10349"
+                      ]
+                    },
+                    {
+                      "term": "Cholinergic",
+                      "meaning": "cholinergic neuron",
+                      "denotes": [
+                        "CL:0000108"
+                      ]
+                    },
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "GPin",
+                      "meaning": "interstitial cholinergic nucleus of globus pallidus",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_AA30205"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:d35e405ac6be9e6d16aa69bd8b6d09d4c232514eb47140705112125882ad1a78",
+                  "name": "STR Cholinergic GABA",
+                  "nodeColor": "#8f5ff5",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 37,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:6047eaa60362c0ba1900f3aae6be07a68c05bb0b2440b4106f978599d6c9bbf7",
+                  "abbreviations": [
+                    {
+                      "term": "Cholinergic",
+                      "meaning": "cholinergic neuron",
+                      "denotes": [
+                        "CL:0000108"
+                      ]
+                    },
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "STR",
+                      "meaning": "striatum",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10333",
+                        "http://purl.obolibrary.org/obo/UBERON_0002435"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:83fa0a94fedf8501cccf8e0d1387515c123348b33dc9a678b5d10370beae5596",
+                  "name": "STRd Cholinergic GABA",
+                  "nodeColor": "#a9f266",
+                  "cell_ontology_id": [
+                    "CL:0011005"
+                  ],
+                  "display_order": 38,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:6047eaa60362c0ba1900f3aae6be07a68c05bb0b2440b4106f978599d6c9bbf7",
+                  "abbreviations": [
+                    {
+                      "term": "Cholinergic",
+                      "meaning": "cholinergic neuron",
+                      "denotes": [
+                        "CL:0000108"
+                      ]
+                    },
+                    {
+                      "term": "GABA",
+                      "meaning": "GABAergic neuron",
+                      "denotes": [
+                        "CL:0000617"
+                      ]
+                    },
+                    {
+                      "term": "STRd",
+                      "meaning": "dorsal striatum (caudoputamen complex-CP, STRd)",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_AA30192",
+                        "http://purl.obolibrary.org/obo/UBERON_0005382"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "urn:bkbit:7a41329ad0db26413b56e74c6e60eed490a98234eb779cfaa0b22dd0eb3d8614",
+      "name": "Subpallium GABA-Glut",
+      "nodeColor": "#7e1d19",
+      "cell_ontology_id": [],
+      "display_order": 4,
+      "level": "Neighborhood",
+      "parent_id": "root",
+      "abbreviations": [
+        {
+          "term": "GABA",
+          "meaning": "GABAergic neuron",
+          "denotes": [
+            "CL:0000617"
+          ]
+        },
+        {
+          "term": "Glut",
+          "meaning": "glutamatergic neuron",
+          "denotes": [
+            "CL:0000679"
+          ]
+        },
+        {
+          "term": "Subpallium",
+          "meaning": "subpallium",
+          "denotes": [
+            "http://purl.obolibrary.org/obo/UBERON_0000204"
+          ]
+        }
+      ],
+      "children": [
+        {
+          "id": "urn:bkbit:1119f539fdd1d95c432a8d09d913b6368f730f57960121d2197b4766585998ea",
+          "name": "CN GABA-Glut",
+          "nodeColor": "#1c8d83",
+          "cell_ontology_id": [],
+          "display_order": 12,
+          "level": "Class",
+          "parent_id": "urn:bkbit:7a41329ad0db26413b56e74c6e60eed490a98234eb779cfaa0b22dd0eb3d8614",
+          "abbreviations": [
+            {
+              "term": "CN",
+              "meaning": "cerebral nuclei",
+              "denotes": [
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
+                "http://purl.obolibrary.org/obo/UBERON_0004025"
+              ]
+            },
+            {
+              "term": "GABA",
+              "meaning": "GABAergic neuron",
+              "denotes": [
+                "CL:0000617"
+              ]
+            },
+            {
+              "term": "Glut",
+              "meaning": "glutamatergic neuron",
+              "denotes": [
+                "CL:0000679"
+              ]
+            }
+          ],
+          "children": [
+            {
+              "id": "urn:bkbit:b506fd8e57d6344bd365c6557c0fe9405c5373b1e28ad46a49d08038878c6fc0",
+              "name": "CN GABA-Glut",
+              "nodeColor": "#d2599a",
+              "cell_ontology_id": [],
+              "display_order": 36,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:1119f539fdd1d95c432a8d09d913b6368f730f57960121d2197b4766585998ea",
+              "abbreviations": [
+                {
+                  "term": "CN",
+                  "meaning": "cerebral nuclei",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10331",
+                    "http://purl.obolibrary.org/obo/UBERON_0004025"
+                  ]
+                },
+                {
+                  "term": "GABA",
+                  "meaning": "GABAergic neuron",
+                  "denotes": [
+                    "CL:0000617"
+                  ]
+                },
+                {
+                  "term": "Glut",
+                  "meaning": "glutamatergic neuron",
+                  "denotes": [
+                    "CL:0000679"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:1643f488d3e22b4399c0b469c02e2d7e859cd60a2ac2b951b275b5afd33b41bf",
+                  "name": "GPi Shell",
+                  "nodeColor": "#642265",
+                  "cell_ontology_id": [],
+                  "display_order": 18,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:b506fd8e57d6344bd365c6557c0fe9405c5373b1e28ad46a49d08038878c6fc0",
+                  "abbreviations": [
+                    {
+                      "term": "GPi Shell",
+                      "meaning": "internal division of globus pallidus, lateral (peripheral) portion",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_11549"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "urn:bkbit:20e2e98135602c6dbd5ec6e8d332742d1883bbb924e7db6c97f239b9c0629f14",
+      "name": "Glut Sero Dopa",
+      "nodeColor": "#91f4bb",
+      "cell_ontology_id": [
+        "PR 2579"
+      ],
+      "display_order": 2,
+      "level": "Neighborhood",
+      "parent_id": "root",
+      "abbreviations": [
+        {
+          "term": "Dopa",
+          "meaning": "dopaminergic neuron",
+          "denotes": [
+            "CL:0000700"
+          ]
+        },
+        {
+          "term": "Glut",
+          "meaning": "glutamatergic neuron",
+          "denotes": [
+            "CL:0000679"
+          ]
+        },
+        {
+          "term": "Sero",
+          "meaning": "serotonergic neuron",
+          "denotes": [
+            "CL:0000850"
+          ]
+        }
+      ],
+      "children": [
+        {
+          "id": "urn:bkbit:b01aa273618e12938be88d7012284cd151ce771dba290ea499c264e41b452ef2",
+          "name": "M Dopa",
+          "nodeColor": "#0433b4",
+          "cell_ontology_id": [
+            "CL:2000097"
+          ],
+          "display_order": 6,
+          "level": "Class",
+          "parent_id": "urn:bkbit:20e2e98135602c6dbd5ec6e8d332742d1883bbb924e7db6c97f239b9c0629f14",
+          "abbreviations": [
+            {
+              "term": "Dopa",
+              "meaning": "dopaminergic neuron",
+              "denotes": [
+                "CL:0000700"
+              ]
+            },
+            {
+              "term": "M",
+              "meaning": "midbrain (mesencephalon)",
+              "denotes": [
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10648",
+                "http://purl.obolibrary.org/obo/UBERON_0001891"
+              ]
+            }
+          ],
+          "children": [
+            {
+              "id": "urn:bkbit:acf76f3bfe7dfce482444620b1fbc12371bd27ed53e79ea034e5429e100bd22a",
+              "name": "M Dopa",
+              "nodeColor": "#77f0ca",
+              "cell_ontology_id": [
+                "CL:4042025"
+              ],
+              "display_order": 16,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:b01aa273618e12938be88d7012284cd151ce771dba290ea499c264e41b452ef2",
+              "abbreviations": [
+                {
+                  "term": "Dopa",
+                  "meaning": "dopaminergic neuron",
+                  "denotes": [
+                    "CL:0000700"
+                  ]
+                },
+                {
+                  "term": "M",
+                  "meaning": "midbrain (mesencephalon)",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10648",
+                    "http://purl.obolibrary.org/obo/UBERON_0001891"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:e3e021937ad2ff8a1b01d99a5677cec646fb669e2d14e538204b7afb69370cbc",
+                  "name": "SN-VTR GAD2 Dopa",
+                  "nodeColor": "#3EC918",
+                  "cell_ontology_id": [
+                    "CL:0000700"
+                  ],
+                  "display_order": 39,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:acf76f3bfe7dfce482444620b1fbc12371bd27ed53e79ea034e5429e100bd22a",
+                  "abbreviations": [
+                    {
+                      "term": "Dopa",
+                      "meaning": "dopaminergic neuron",
+                      "denotes": [
+                        "CL:0000700"
+                      ]
+                    },
+                    {
+                      "term": "GAD2",
+                      "meaning": "glutamate decarboxylase 2",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000136750"
+                      ]
+                    },
+                    {
+                      "term": "SN",
+                      "meaning": "substantia nigra",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_12251",
+                        "http://purl.obolibrary.org/obo/UBERON_0002038"
+                      ]
+                    },
+                    {
+                      "term": "VTR",
+                      "meaning": "ventral tegmental region of midbrain",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_146034938"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:8d74fdb6b730edecbf55cb3223c26dcf02478d232f8c75e28c839aa8c55747c4",
+                  "name": "SN SOX6 Dopa",
+                  "nodeColor": "#D7AAE4",
+                  "cell_ontology_id": [
+                    "CL:4042025"
+                  ],
+                  "display_order": 40,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:acf76f3bfe7dfce482444620b1fbc12371bd27ed53e79ea034e5429e100bd22a",
+                  "abbreviations": [
+                    {
+                      "term": "Dopa",
+                      "meaning": "dopaminergic neuron",
+                      "denotes": [
+                        "CL:0000700"
+                      ]
+                    },
+                    {
+                      "term": "SN",
+                      "meaning": "substantia nigra",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_12251",
+                        "http://purl.obolibrary.org/obo/UBERON_0002038"
+                      ]
+                    },
+                    {
+                      "term": "SOX6",
+                      "meaning": "SRY-box transcription factor 6",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000110693"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:7dd0cd87c1b0307413d9b367adea31eec10af6c741f782ce6efb295190dd533c",
+                  "name": "SN-VTR CALB1 Dopa",
+                  "nodeColor": "#854098",
+                  "cell_ontology_id": [
+                    "CL:0000700"
+                  ],
+                  "display_order": 41,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:acf76f3bfe7dfce482444620b1fbc12371bd27ed53e79ea034e5429e100bd22a",
+                  "abbreviations": [
+                    {
+                      "term": "CALB1",
+                      "meaning": "calbindin 1",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000104327"
+                      ]
+                    },
+                    {
+                      "term": "Dopa",
+                      "meaning": "dopaminergic neuron",
+                      "denotes": [
+                        "CL:0000700"
+                      ]
+                    },
+                    {
+                      "term": "SN",
+                      "meaning": "substantia nigra",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_12251",
+                        "http://purl.obolibrary.org/obo/UBERON_0002038"
+                      ]
+                    },
+                    {
+                      "term": "VTR",
+                      "meaning": "ventral tegmental region of midbrain",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_146034938"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "urn:bkbit:71e0a3dc10f0d41bcbba139f47a4921da20b78ef6cee9eccbdf465565249def4",
+          "name": "F M Glut",
+          "nodeColor": "#7d0f09",
+          "cell_ontology_id": [],
+          "display_order": 5,
+          "level": "Class",
+          "parent_id": "urn:bkbit:20e2e98135602c6dbd5ec6e8d332742d1883bbb924e7db6c97f239b9c0629f14",
+          "abbreviations": [
+            {
+              "term": "F",
+              "meaning": "forebrain (prosencephalon)",
+              "denotes": [
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10156",
+                "http://purl.obolibrary.org/obo/UBERON_0004024"
+              ]
+            },
+            {
+              "term": "Glut",
+              "meaning": "glutamatergic neuron",
+              "denotes": [
+                "CL:0000679"
+              ]
+            },
+            {
+              "term": "M",
+              "meaning": "midbrain (mesencephalon)",
+              "denotes": [
+                "https://purl.brain-bican.org/ontology/dmbao/DMBA_10648",
+                "http://purl.obolibrary.org/obo/UBERON_0001891"
+              ]
+            }
+          ],
+          "children": [
+            {
+              "id": "urn:bkbit:fd8291f6d6564c151ca925aeaa09d1742b8e9a2792b64d4003ee61e11dfc309e",
+              "name": "F Glut",
+              "nodeColor": "#39e1e2",
+              "cell_ontology_id": [
+                "PR 2771"
+              ],
+              "display_order": 14,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:71e0a3dc10f0d41bcbba139f47a4921da20b78ef6cee9eccbdf465565249def4",
+              "abbreviations": [
+                {
+                  "term": "F",
+                  "meaning": "forebrain (prosencephalon)",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10156",
+                    "http://purl.obolibrary.org/obo/UBERON_0004024"
+                  ]
+                },
+                {
+                  "term": "Glut",
+                  "meaning": "glutamatergic neuron",
+                  "denotes": [
+                    "CL:0000679"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:e0a8c346c8c8852c623ac9f3ac1af4760d0945b5d8b35c2021ecbf7914c6c9e6",
+                  "name": "BF SKOR1 Glut",
+                  "nodeColor": "#eb0077",
+                  "cell_ontology_id": [
+                    "CL:4042040"
+                  ],
+                  "display_order": 42,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:fd8291f6d6564c151ca925aeaa09d1742b8e9a2792b64d4003ee61e11dfc309e",
+                  "abbreviations": [
+                    {
+                      "term": "BF",
+                      "meaning": "basal forebrain",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10349"
+                      ]
+                    },
+                    {
+                      "term": "Glut",
+                      "meaning": "glutamatergic neuron",
+                      "denotes": [
+                        "CL:0000679"
+                      ]
+                    },
+                    {
+                      "term": "SKOR1",
+                      "meaning": "SKI family transcriptional corepressor 1",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000188779"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:d014d96894e23318d4bf655ef7a15908f6bfa292aee4d8a060794cdccfd4d26e",
+                  "name": "STH PVALB-PITX2 Glut",
+                  "nodeColor": "#f57e20",
+                  "cell_ontology_id": [
+                    "CL:4042023"
+                  ],
+                  "display_order": 44,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:fd8291f6d6564c151ca925aeaa09d1742b8e9a2792b64d4003ee61e11dfc309e",
+                  "abbreviations": [
+                    {
+                      "term": "Glut",
+                      "meaning": "glutamatergic neuron",
+                      "denotes": [
+                        "CL:0000679"
+                      ]
+                    },
+                    {
+                      "term": "PITX2",
+                      "meaning": "paired like homeodomain 2",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000164093"
+                      ]
+                    },
+                    {
+                      "term": "PVALB",
+                      "meaning": "parvalbumin",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000100362"
+                      ]
+                    },
+                    {
+                      "term": "STH",
+                      "meaning": "subthalamic nucleus",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10466",
+                        "http://purl.obolibrary.org/obo/UBERON_0001906"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:8ef9806332a9b4e3c3aba1ca36bfe1803f015c98547a9c34897d3b266222051c",
+              "name": "F M Glut",
+              "nodeColor": "#66750b",
+              "cell_ontology_id": [
+                "PR 2771"
+              ],
+              "display_order": 15,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:71e0a3dc10f0d41bcbba139f47a4921da20b78ef6cee9eccbdf465565249def4",
+              "abbreviations": [
+                {
+                  "term": "F",
+                  "meaning": "forebrain (prosencephalon)",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10156",
+                    "http://purl.obolibrary.org/obo/UBERON_0004024"
+                  ]
+                },
+                {
+                  "term": "Glut",
+                  "meaning": "glutamatergic neuron",
+                  "denotes": [
+                    "CL:0000679"
+                  ]
+                },
+                {
+                  "term": "M",
+                  "meaning": "midbrain (mesencephalon)",
+                  "denotes": [
+                    "https://purl.brain-bican.org/ontology/dmbao/DMBA_10648",
+                    "http://purl.obolibrary.org/obo/UBERON_0001891"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:ff4bb8da69c9c77a43d74d76b5ceb8534901f700bb6107d39ecd0517808670e4",
+                  "name": "VTR-HTH Glut",
+                  "nodeColor": "#54621f",
+                  "cell_ontology_id": [
+                    "CL:4042040"
+                  ],
+                  "display_order": 43,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:8ef9806332a9b4e3c3aba1ca36bfe1803f015c98547a9c34897d3b266222051c",
+                  "abbreviations": [
+                    {
+                      "term": "Glut",
+                      "meaning": "glutamatergic neuron",
+                      "denotes": [
+                        "CL:0000679"
+                      ]
+                    },
+                    {
+                      "term": "HTH",
+                      "meaning": "hypothalamus",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_10467"
+                      ]
+                    },
+                    {
+                      "term": "VTR",
+                      "meaning": "ventral tegmental region of midbrain",
+                      "denotes": [
+                        "https://purl.brain-bican.org/ontology/dmbao/DMBA_146034938"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "urn:bkbit:087066b0d3b9a04f78d06557cac22f66f710473c4a2700894c6d2d10d46ef323",
+      "name": "Nonneuron",
+      "nodeColor": "#a8afa5",
+      "cell_ontology_id": [
+        "CL:0000000"
+      ],
+      "display_order": 1,
+      "level": "Neighborhood",
+      "parent_id": "root",
+      "abbreviations": [
+        {
+          "term": "Nonneuron",
+          "meaning": "non-neuronal cell",
+          "denotes": [
+            null
+          ]
+        }
+      ],
+      "children": [
+        {
+          "id": "urn:bkbit:62dc05f0a369993ddf8517ad9e9298ef807c50559b377ea0aca16e3c75be83ff",
+          "name": "OPC-Oligo",
+          "nodeColor": "#594a26",
+          "cell_ontology_id": [
+            "CL:0000095"
+          ],
+          "display_order": 3,
+          "level": "Class",
+          "parent_id": "urn:bkbit:087066b0d3b9a04f78d06557cac22f66f710473c4a2700894c6d2d10d46ef323",
+          "abbreviations": [
+            {
+              "term": "Oligo",
+              "meaning": "oligodendrocyte",
+              "denotes": [
+                "CL:0000128"
+              ]
+            },
+            {
+              "term": "OPC",
+              "meaning": "oligodendrocyte precursor cell",
+              "denotes": [
+                "CL:0002453"
+              ]
+            }
+          ],
+          "children": [
+            {
+              "id": "urn:bkbit:a3a1648850e1587a2c1f5ae28dfb81d3e8f6b174e74c29d06d9de8b4a47d8c07",
+              "name": "OPC",
+              "nodeColor": "#f5e689",
+              "cell_ontology_id": [
+                "CL:0002453"
+              ],
+              "display_order": 8,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:62dc05f0a369993ddf8517ad9e9298ef807c50559b377ea0aca16e3c75be83ff",
+              "abbreviations": [
+                {
+                  "term": "OPC",
+                  "meaning": "oligodendrocyte precursor cell",
+                  "denotes": [
+                    "CL:0002453"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:0c9fe4b84c0814bfb177de91d517ee47d1f4ef6e5faa911703037e383ab8d247",
+                  "name": "OPC",
+                  "nodeColor": "#f5e689",
+                  "cell_ontology_id": [
+                    "CL:0002453"
+                  ],
+                  "display_order": 45,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:a3a1648850e1587a2c1f5ae28dfb81d3e8f6b174e74c29d06d9de8b4a47d8c07",
+                  "abbreviations": [
+                    {
+                      "term": "OPC",
+                      "meaning": "oligodendrocyte precursor cell",
+                      "denotes": [
+                        "CL:0002453"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:4f616667536ab75aa3d05b3fe9a763b920be92cd9fe178847649048b5ea635b9",
+              "name": "COP",
+              "nodeColor": "#CCA43D",
+              "cell_ontology_id": [
+                "CL:4023059"
+              ],
+              "display_order": 9,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:62dc05f0a369993ddf8517ad9e9298ef807c50559b377ea0aca16e3c75be83ff",
+              "abbreviations": [
+                {
+                  "term": "COP",
+                  "meaning": "committed oligodendrocyte precursor",
+                  "denotes": [
+                    "CL:4023059"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:6770308c21c54fa604caefbf7fd67461758af2d40e2416c721b229030bbee6e6",
+                  "name": "COP",
+                  "nodeColor": "#CCA43D",
+                  "cell_ontology_id": [
+                    "CL:4023059"
+                  ],
+                  "display_order": 46,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:4f616667536ab75aa3d05b3fe9a763b920be92cd9fe178847649048b5ea635b9",
+                  "abbreviations": [
+                    {
+                      "term": "COP",
+                      "meaning": "committed oligodendrocyte precursor",
+                      "denotes": [
+                        "CL:4023059"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:d358c8313f22ddcb60868f6caa8db379f15254d4935b7eed182889ed57caab10",
+              "name": "Oligodendrocyte",
+              "nodeColor": "#594a26",
+              "cell_ontology_id": [
+                "CL:0000128"
+              ],
+              "display_order": 7,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:62dc05f0a369993ddf8517ad9e9298ef807c50559b377ea0aca16e3c75be83ff",
+              "abbreviations": [
+                {
+                  "term": "Oligodendrocyte",
+                  "meaning": "oligodendrocyte",
+                  "denotes": [
+                    "CL:0000128"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:4e744515d99036d44d2e4cc7baf5930c9cfc45e8ace3473362a3b2855d1148b9",
+                  "name": "ImOligo",
+                  "nodeColor": "#CC915C",
+                  "cell_ontology_id": [
+                    "CL:4042031"
+                  ],
+                  "display_order": 47,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:d358c8313f22ddcb60868f6caa8db379f15254d4935b7eed182889ed57caab10",
+                  "abbreviations": [
+                    {
+                      "term": "ImOligo",
+                      "meaning": "immune oligodendrocyte",
+                      "denotes": [
+                        null
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:d55b92f9600de2d32143c8c5ad570e4a0abb1c88a14fa4bbaab193f910c4f610",
+                  "name": "Oligo PLEKHG1",
+                  "nodeColor": "#594a26",
+                  "cell_ontology_id": [
+                    "CL:0000128"
+                  ],
+                  "display_order": 48,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:d358c8313f22ddcb60868f6caa8db379f15254d4935b7eed182889ed57caab10",
+                  "abbreviations": [
+                    {
+                      "term": "Oligo",
+                      "meaning": "oligodendrocyte",
+                      "denotes": [
+                        "CL:0000128"
+                      ]
+                    },
+                    {
+                      "term": "PLEKHG1",
+                      "meaning": "pleckstrin homology and RhoGEF domain containing G1",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000120278"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:4c0b7699e1eb7dca3363a9626e4dd385b4f16e15f6034c89f0e7df9a8e9e266c",
+                  "name": "Oligo OPALIN",
+                  "nodeColor": "#66391F",
+                  "cell_ontology_id": [
+                    "CL:0000128"
+                  ],
+                  "display_order": 49,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:d358c8313f22ddcb60868f6caa8db379f15254d4935b7eed182889ed57caab10",
+                  "abbreviations": [
+                    {
+                      "term": "Oligo",
+                      "meaning": "oligodendrocyte",
+                      "denotes": [
+                        "CL:0000128"
+                      ]
+                    },
+                    {
+                      "term": "OPALIN",
+                      "meaning": "oligodendrocytic myelin paranodal and inner loop protein",
+                      "denotes": [
+                        "http://identifiers.org/ensembl/ENSG00000197430"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "urn:bkbit:97300844a106ead0bbe4f85832419b1b5d6b07deb9da938ec169c6e0799f0aa0",
+          "name": "Astro-Epen",
+          "nodeColor": "#401e66",
+          "cell_ontology_id": [
+            "CL:0000125"
+          ],
+          "display_order": 1,
+          "level": "Class",
+          "parent_id": "urn:bkbit:087066b0d3b9a04f78d06557cac22f66f710473c4a2700894c6d2d10d46ef323",
+          "abbreviations": [
+            {
+              "term": "Astro",
+              "meaning": "astrocyte",
+              "denotes": [
+                "CL:0000127"
+              ]
+            },
+            {
+              "term": "Epen",
+              "meaning": "ependymal cell",
+              "denotes": [
+                "CL:0000065"
+              ]
+            }
+          ],
+          "children": [
+            {
+              "id": "urn:bkbit:10176e59b5610ce876a7ce6e04cbf912315d807cbf83bab0d9417a199442ea2d",
+              "name": "Astrocyte",
+              "nodeColor": "#401e66",
+              "cell_ontology_id": [
+                "CL:0000127"
+              ],
+              "display_order": 1,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:97300844a106ead0bbe4f85832419b1b5d6b07deb9da938ec169c6e0799f0aa0",
+              "abbreviations": [
+                {
+                  "term": "Astrocyte",
+                  "meaning": "astrocyte",
+                  "denotes": [
+                    "CL:0000127"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:1f448329713aadf8932cc3150411eeaabdf8611b7db1d530a458cce0fcae5471",
+                  "name": "ImAstro",
+                  "nodeColor": "#401e66",
+                  "cell_ontology_id": [],
+                  "display_order": 50,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:10176e59b5610ce876a7ce6e04cbf912315d807cbf83bab0d9417a199442ea2d",
+                  "abbreviations": [
+                    {
+                      "term": "ImAstro",
+                      "meaning": "immune astrocyte",
+                      "denotes": [
+                        null
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:12f800ef3d2fb9ee26e98087b735f8cb689f5ef453a1a024336ee83560aa1e41",
+                  "name": "Astrocyte",
+                  "nodeColor": "#195f8d",
+                  "cell_ontology_id": [
+                    "CL:0000127"
+                  ],
+                  "display_order": 51,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:10176e59b5610ce876a7ce6e04cbf912315d807cbf83bab0d9417a199442ea2d",
+                  "abbreviations": [
+                    {
+                      "term": "Astrocyte",
+                      "meaning": "astrocyte",
+                      "denotes": [
+                        "CL:0000127"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:d25daa872dd0c86fd0c107b230b3c6f322e6eb685f5bd19b99cbd60a03e9b9d3",
+              "name": "Ependymal",
+              "nodeColor": "#564860",
+              "cell_ontology_id": [
+                "CL:0000065"
+              ],
+              "display_order": 2,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:97300844a106ead0bbe4f85832419b1b5d6b07deb9da938ec169c6e0799f0aa0",
+              "abbreviations": [
+                {
+                  "term": "Ependymal",
+                  "meaning": "ependymal cell",
+                  "denotes": [
+                    "CL:0000065"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:9c0cf77e6f0c29679baf235548e39f7fccae9b0fde63450c569d67b544891201",
+                  "name": "Ependymal",
+                  "nodeColor": "#564860",
+                  "cell_ontology_id": [
+                    "CL:0000065"
+                  ],
+                  "display_order": 52,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:d25daa872dd0c86fd0c107b230b3c6f322e6eb685f5bd19b99cbd60a03e9b9d3",
+                  "abbreviations": [
+                    {
+                      "term": "Ependymal",
+                      "meaning": "ependymal cell",
+                      "denotes": [
+                        "CL:0000065"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "urn:bkbit:63825e3f5959893bff128b1aefaffa71ef069e287c36664144ba7aacb9a1014e",
+          "name": "Immune",
+          "nodeColor": "#995C60",
+          "cell_ontology_id": [
+            "CL:0000842"
+          ],
+          "display_order": 2,
+          "level": "Class",
+          "parent_id": "urn:bkbit:087066b0d3b9a04f78d06557cac22f66f710473c4a2700894c6d2d10d46ef323",
+          "abbreviations": [
+            {
+              "term": "Immune",
+              "meaning": "leukocyte",
+              "denotes": [
+                "CL:0000738"
+              ]
+            }
+          ],
+          "children": [
+            {
+              "id": "urn:bkbit:4695af762bdc8338f8801f64f574f4a3a0e2235795b735c6ee3cb77391a07824",
+              "name": "Microglia",
+              "nodeColor": "#995C60",
+              "cell_ontology_id": [
+                "CL:0000129"
+              ],
+              "display_order": 3,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:63825e3f5959893bff128b1aefaffa71ef069e287c36664144ba7aacb9a1014e",
+              "abbreviations": [
+                {
+                  "term": "Microglia",
+                  "meaning": "microglial cell",
+                  "denotes": [
+                    "CL:0000129"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:12bbd0e14689ef79931e2ad38eacc3a10840a274a78d5b7f395e007555cde884",
+                  "name": "Microglia",
+                  "nodeColor": "#995C60",
+                  "cell_ontology_id": [
+                    "CL:0000129"
+                  ],
+                  "display_order": 53,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:4695af762bdc8338f8801f64f574f4a3a0e2235795b735c6ee3cb77391a07824",
+                  "abbreviations": [
+                    {
+                      "term": "Microglia",
+                      "meaning": "microglial cell",
+                      "denotes": [
+                        "CL:0000129"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:730a151a5bdd6ee5c243cad3685d29c1f2b3adb829d3e51eb106dd02e7387e08",
+              "name": "Macrophage",
+              "nodeColor": "#CC887A",
+              "cell_ontology_id": [
+                "CL:0000235"
+              ],
+              "display_order": 4,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:63825e3f5959893bff128b1aefaffa71ef069e287c36664144ba7aacb9a1014e",
+              "abbreviations": [
+                {
+                  "term": "Macrophage",
+                  "meaning": "macrophage",
+                  "denotes": [
+                    "CL:0000235"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:d4937b79950f182def055f496b7dcc5cf71c37425f9258f56715d4d68fa40fca",
+                  "name": "BAM",
+                  "nodeColor": "#CC887A",
+                  "cell_ontology_id": [
+                    "CL:4042003"
+                  ],
+                  "display_order": 54,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:730a151a5bdd6ee5c243cad3685d29c1f2b3adb829d3e51eb106dd02e7387e08",
+                  "abbreviations": [
+                    {
+                      "term": "BAM",
+                      "meaning": "border-associated macrophage",
+                      "denotes": [
+                        "CL:4042003"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:41ea1e11edb3ca303837108a7b9d85e88c9bacc220f65a37260f9dd14e768f2c",
+              "name": "Monocyte",
+              "nodeColor": "#C3CC7A",
+              "cell_ontology_id": [
+                "CL:0000576"
+              ],
+              "display_order": 6,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:63825e3f5959893bff128b1aefaffa71ef069e287c36664144ba7aacb9a1014e",
+              "abbreviations": [
+                {
+                  "term": "Monocyte",
+                  "meaning": "monocyte",
+                  "denotes": [
+                    "CL:0000576"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:1fa3905d9b4b44097a5917298c0dcd09e1efd20dc0acbb779d1dadccff44a297",
+                  "name": "Monocyte",
+                  "nodeColor": "#C3CC7A",
+                  "cell_ontology_id": [],
+                  "display_order": 55,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:41ea1e11edb3ca303837108a7b9d85e88c9bacc220f65a37260f9dd14e768f2c",
+                  "abbreviations": [
+                    {
+                      "term": "Monocyte",
+                      "meaning": "monocyte",
+                      "denotes": [
+                        "CL:0000576"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:4866dc63915b196cd67b357ddcdca6cfaa148150caf3519128adbc9e5de55ae1",
+              "name": "Lymphocyte",
+              "nodeColor": "#5A662E",
+              "cell_ontology_id": [
+                "CL:0000542"
+              ],
+              "display_order": 5,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:63825e3f5959893bff128b1aefaffa71ef069e287c36664144ba7aacb9a1014e",
+              "abbreviations": [
+                {
+                  "term": "Lymphocyte",
+                  "meaning": "lymphocyte",
+                  "denotes": [
+                    "CL:0000542"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:bb197dc4ad41c867c26ef14af5b3f68b3657519e99fb521a24fe9163c0ff51ec",
+                  "name": "B cells",
+                  "nodeColor": "#999517",
+                  "cell_ontology_id": [],
+                  "display_order": 56,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:4866dc63915b196cd67b357ddcdca6cfaa148150caf3519128adbc9e5de55ae1",
+                  "abbreviations": [
+                    {
+                      "term": "B cells",
+                      "meaning": "B cell",
+                      "denotes": [
+                        "CL:0000236"
+                      ]
+                    }
+                  ],
+                  "children": []
+                },
+                {
+                  "id": "urn:bkbit:72c0b7a411a7f556b8126fce0cad7cf6dcf477587214b079e04df6044d285a8e",
+                  "name": "T cells",
+                  "nodeColor": "#5A662E",
+                  "cell_ontology_id": [
+                    "CL:0000084"
+                  ],
+                  "display_order": 57,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:4866dc63915b196cd67b357ddcdca6cfaa148150caf3519128adbc9e5de55ae1",
+                  "abbreviations": [
+                    {
+                      "term": "T cells",
+                      "meaning": "T cell",
+                      "denotes": [
+                        "CL:0000084"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "urn:bkbit:1a3edf129d4cd649e039f45c26b8e758efe955418917de5be9b01f03e7078e46",
+          "name": "Vascular",
+          "nodeColor": "#a8afa5",
+          "cell_ontology_id": [
+            "CL:0000192"
+          ],
+          "display_order": 4,
+          "level": "Class",
+          "parent_id": "urn:bkbit:087066b0d3b9a04f78d06557cac22f66f710473c4a2700894c6d2d10d46ef323",
+          "abbreviations": [
+            {
+              "term": "Vascular",
+              "meaning": "vascular system",
+              "denotes": [
+                "http://purl.obolibrary.org/obo/UBERON_0007798"
+              ]
+            }
+          ],
+          "children": [
+            {
+              "id": "urn:bkbit:528b9972150aabfa3a2054fefbfb772262e3f510c9ecf3a287b5c794b4c95d7b",
+              "name": "VLMC",
+              "nodeColor": "#a8afa5",
+              "cell_ontology_id": [
+                "CL:4023051"
+              ],
+              "display_order": 13,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:1a3edf129d4cd649e039f45c26b8e758efe955418917de5be9b01f03e7078e46",
+              "abbreviations": [
+                {
+                  "term": "VLMC",
+                  "meaning": "vascular leptomeningeal cell",
+                  "denotes": [
+                    "CL:4023051"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:21862370affc315c3a415c99923b941efc30973a2d4cc7e23414fb475f1c28db",
+                  "name": "VLMC",
+                  "nodeColor": "#a8afa5",
+                  "cell_ontology_id": [
+                    "CL:4023051"
+                  ],
+                  "display_order": 58,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:528b9972150aabfa3a2054fefbfb772262e3f510c9ecf3a287b5c794b4c95d7b",
+                  "abbreviations": [
+                    {
+                      "term": "VLMC",
+                      "meaning": "vascular leptomeningeal cell",
+                      "denotes": [
+                        "CL:4023051"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:df51e3faf4b107a1326a033471eb55b852e29f192488b4fc7a7e88359a62db94",
+              "name": "SMC",
+              "nodeColor": "#858881",
+              "cell_ontology_id": [
+                "CL:0000192"
+              ],
+              "display_order": 12,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:1a3edf129d4cd649e039f45c26b8e758efe955418917de5be9b01f03e7078e46",
+              "abbreviations": [
+                {
+                  "term": "SMC",
+                  "meaning": "smooth muscle cell",
+                  "denotes": [
+                    "CL:0000192"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:d3d658d5758c8b05e06e711e69d2d7a5d495f50bd4aaa1473a1de47c2457b5ad",
+                  "name": "SMC",
+                  "nodeColor": "#858881",
+                  "cell_ontology_id": [
+                    "CL:0000192"
+                  ],
+                  "display_order": 59,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:df51e3faf4b107a1326a033471eb55b852e29f192488b4fc7a7e88359a62db94",
+                  "abbreviations": [
+                    {
+                      "term": "SMC",
+                      "meaning": "smooth muscle cell",
+                      "denotes": [
+                        "CL:0000192"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "urn:bkbit:f261c30beaff465f90c10fc352ee0d3c5a04eff2e53f1ca811171c4f92a126a1",
+          "name": "Vascular",
+          "nodeColor": "#a8afa5",
+          "cell_ontology_id": [
+            "CL:0002320"
+          ],
+          "display_order": 4,
+          "level": "Class",
+          "parent_id": "urn:bkbit:087066b0d3b9a04f78d06557cac22f66f710473c4a2700894c6d2d10d46ef323",
+          "abbreviations": [
+            {
+              "term": "Vascular",
+              "meaning": "vascular system",
+              "denotes": [
+                "http://purl.obolibrary.org/obo/UBERON_0007798"
+              ]
+            }
+          ],
+          "children": [
+            {
+              "id": "urn:bkbit:c08e67b3f8635b5861730f98cb9b65cdffd963bea34bfb16bb718ab6d5abde75",
+              "name": "Pericyte",
+              "nodeColor": "#B97300",
+              "cell_ontology_id": [
+                "CL:0000669"
+              ],
+              "display_order": 11,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:f261c30beaff465f90c10fc352ee0d3c5a04eff2e53f1ca811171c4f92a126a1",
+              "abbreviations": [
+                {
+                  "term": "Pericyte",
+                  "meaning": "pericyte",
+                  "denotes": [
+                    "CL:0000669"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:0c5f1713c849c33a0e3e0be9f9963971f7ea6833aa3d1d55c6462e59906caffc",
+                  "name": "Pericyte",
+                  "nodeColor": "#B97300",
+                  "cell_ontology_id": [
+                    "CL:0000669"
+                  ],
+                  "display_order": 60,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:c08e67b3f8635b5861730f98cb9b65cdffd963bea34bfb16bb718ab6d5abde75",
+                  "abbreviations": [
+                    {
+                      "term": "Pericyte",
+                      "meaning": "pericyte",
+                      "denotes": [
+                        "CL:0000669"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            },
+            {
+              "id": "urn:bkbit:20a43da4c80f98ce00183fd054c9411bc5c33ea98533ed97d3b84fc1e8f08f11",
+              "name": "Endo",
+              "nodeColor": "#66493D",
+              "cell_ontology_id": [
+                "CL:0000115"
+              ],
+              "display_order": 10,
+              "level": "Subclass",
+              "parent_id": "urn:bkbit:f261c30beaff465f90c10fc352ee0d3c5a04eff2e53f1ca811171c4f92a126a1",
+              "abbreviations": [
+                {
+                  "term": "Endo",
+                  "meaning": "endothelial cell",
+                  "denotes": [
+                    "CL:0000115"
+                  ]
+                }
+              ],
+              "children": [
+                {
+                  "id": "urn:bkbit:4fdad3df80cd18394a5ead7d3de586296d9e82ba49d4161296c4e359d7e57b1a",
+                  "name": "Endo",
+                  "nodeColor": "#66493D",
+                  "cell_ontology_id": [
+                    "CL:0000115"
+                  ],
+                  "display_order": 61,
+                  "level": "Group",
+                  "parent_id": "urn:bkbit:20a43da4c80f98ce00183fd054c9411bc5c33ea98533ed97d3b84fc1e8f08f11",
+                  "abbreviations": [
+                    {
+                      "term": "Endo",
+                      "meaning": "endothelial cell",
+                      "denotes": [
+                        "CL:0000115"
+                      ]
+                    }
+                  ],
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
