@@ -157,18 +157,6 @@ export default function HMBATaxonomyPage() {
     return () => clearTimeout(timeoutId);
   }, [data, size.width, size.height, fitToContent]);
 
-  // Fitting to content is disabled for now, not sure if we need it
-  // But it's pretty annoying since the search doesn't work well with it
-  // useEffect(() => {
-  //   const onKey = (e: KeyboardEvent) => {
-  //     if (e.key.toLowerCase() === 'f') {
-  //       e.preventDefault();
-  //       fitToContent();
-  //     }
-  //   };
-  //   window.addEventListener('keydown', onKey);
-  //   return () => window.removeEventListener('keydown', onKey);
-  // }, [fitToContent]);
 
   if (!data) return (
     <div>
