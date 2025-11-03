@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
-    "@highcharts/react": "^4.0.0-beta.5",
     "@types/d3": "^7.4.3",
     "@types/form-data": "^2.5.2",
     "@types/js-yaml": "^4.0.9",
