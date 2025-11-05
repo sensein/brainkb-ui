@@ -29,7 +29,7 @@ const UserSideBar: React.FC = () => {
         },
         {
             title: "Pdf2Reproschema",
-            href: "/user/dashboard",
+            href: "/user/pdf2reproschema",
             icon: Upload,
         },
 

@@ -515,6 +515,20 @@ export default function IngestStructuredResourcePage() {
                     >
                         {isValidatingKey ? "Validating..." : "Validate API Key"}
                     </button>
+                    {isApiKeyValid && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setApiKey('');
+                                setIsApiKeyValid(false);
+                                setApiKeyError(null);
+                                setSuccessMessage(null);
+                            }}
+                            className="px-6 py-2 rounded-lg font-medium text-white bg-red-500 hover:bg-red-600 transition-colors"
+                        >
+                            Clear API Key
+                        </button>
+                    )}
                 </div>
                 {apiKeyError && (
                     <p className="mt-3 text-sm text-red-600 dark:text-red-400">{apiKeyError}</p>
