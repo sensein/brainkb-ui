@@ -95,7 +95,7 @@ export default function Profile() {
 
     useEffect(() => {
         if (!session || !session.user) {
-            router.push("/login");
+            router.push("/");
         }
     }, [session, router]);
 
