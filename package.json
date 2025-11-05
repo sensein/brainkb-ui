@@ -10,16 +10,24 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
+    "@radix-ui/react-popover": "^1.1.15",
+    "@radix-ui/react-scroll-area": "^1.2.10",
+    "@radix-ui/react-slot": "^1.2.3",
     "@types/d3": "^7.4.3",
     "@types/form-data": "^2.5.2",
     "@types/js-yaml": "^4.0.9",
     "autoprefixer": "^10.4.20",
     "aws-sdk": "^2.1692.0",
     "brainkb-assistant": "^1.0.75",
+    "class-variance-authority": "^0.7.1",
+    "cmdk": "^1.1.1",
     "cross-spawn": "^7.0.5",
     "d3": "^7.9.0",
     "date-fns": "^4.1.0",
     "form-data": "^4.0.2",
+    "framer-motion": "^12.23.12",
     "js-yaml": "^4.1.0",
     "jsonld": "^8.3.3",
     "lucide-react": "^0.487.0",
@@ -33,6 +41,7 @@
     "react-d3-tree": "^3.6.6",
     "react-dom": "^18.2.0",
     "react-dropzone": "^14.3.5",
+    "tailwind-merge": "^3.3.1",
     "undici": "^7.9.0",
     "yaml": "^2.5.0"
   },
@@ -44,6 +53,7 @@
     "eslint-config-next": "14.2.5",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
+    "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.7.2"
   }
 }
