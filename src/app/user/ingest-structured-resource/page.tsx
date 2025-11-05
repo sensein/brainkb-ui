@@ -22,6 +22,10 @@ export default function IngestStructuredResourcePage() {
     const [extractionResult, setExtractionResult] = useState<any>(null);
     const [isSaving, setIsSaving] = useState<boolean>(false);
     const [lastResult, setLastResult] = useState<any>(null);
+    const [apiKey, setApiKey] = useState<string>('');
+    const [isApiKeyValid, setIsApiKeyValid] = useState<boolean>(false);
+    const [isValidatingKey, setIsValidatingKey] = useState<boolean>(false);
+    const [apiKeyError, setApiKeyError] = useState<string | null>(null);
 
     // Redirect if not logged in
     useEffect(() => {
@@ -29,6 +33,55 @@ export default function IngestStructuredResourcePage() {
             router.push("/login");
         }
     }, [session, router]);
+
+    // Validate OpenRouter API Key
+    const validateApiKey = async () => {
+        if (!apiKey.trim()) {
+            setApiKeyError("Please enter an API key.");
+            setIsApiKeyValid(false);
+            return;
+        }
+
+        setIsValidatingKey(true);
+        setApiKeyError(null);
+
+        try {
+            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${apiKey.trim()}`,
+                    "HTTP-Referer": typeof window !== 'undefined' ? window.location.origin : "",
+                    "X-Title": "BrainKB",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    "model": "openai/gpt-4o-mini",
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": "test"
+                        }
+                    ],
+                    "max_tokens": 1
+                })
+            });
+
+            if (response.ok) {
+                setIsApiKeyValid(true);
+                setApiKeyError(null);
+                setSuccessMessage("API key validated successfully!");
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                setIsApiKeyValid(false);
+                setApiKeyError(errorData.error?.message || "Invalid API key. Please check your key and try again.");
+            }
+        } catch (error) {
+            setIsApiKeyValid(false);
+            setApiKeyError("Failed to validate API key. Please check your connection and try again.");
+        } finally {
+            setIsValidatingKey(false);
+        }
+    };
 
 
     const validateAndSetFile = (selectedFile: File) => {
@@ -85,6 +138,11 @@ export default function IngestStructuredResourcePage() {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         
+        // Check if API key is valid
+        if (!isApiKeyValid) {
+            setError("Please provide a valid OpenRouter API key before processing.");
+            return;
+        }
 
         // Validate input based on selected type
         if (selectedInputType === 'doi' && !doiInput.trim()) {
@@ -107,6 +165,7 @@ export default function IngestStructuredResourcePage() {
         try {
             const formData = new FormData();
             formData.append("input_type", selectedInputType);
+            formData.append("openrouter_api_key", apiKey.trim()); // Add API key to form data
 
             if (selectedInputType === 'doi') {
                 formData.append("doi", doiInput.trim());
@@ -415,6 +474,51 @@ export default function IngestStructuredResourcePage() {
                 Structured Extraction and Knowledge Representation of Resources from DOIs, PDFs, and Text.
             </p>
 
+            {/* OpenRouter API Key Configuration */}
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6 mb-6 border border-gray-200 dark:border-gray-700">
+                <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">OpenRouter API Key Configuration</h2>
+                <div className="flex flex-col sm:flex-row gap-3">
+                    <input
+                        type="password"
+                        value={apiKey}
+                        onChange={(e) => {
+                            setApiKey(e.target.value);
+                            setIsApiKeyValid(false);
+                            setApiKeyError(null);
+                            setSuccessMessage(null);
+                        }}
+                        placeholder="Enter your API key"
+                        className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
+                    <button
+                        type="button"
+                        onClick={validateApiKey}
+                        disabled={isValidatingKey || !apiKey.trim()}
+                        className={`px-6 py-2 rounded-lg font-medium text-white transition-colors ${
+                            isValidatingKey || !apiKey.trim()
+                                ? "bg-gray-400 cursor-not-allowed"
+                                : "bg-gray-600 hover:bg-gray-700"
+                        }`}
+                    >
+                        {isValidatingKey ? "Validating..." : "Validate API Key"}
+                    </button>
+                </div>
+                {apiKeyError && (
+                    <p className="mt-3 text-sm text-red-600 dark:text-red-400">{apiKeyError}</p>
+                )}
+                {isApiKeyValid && (
+                    <p className="mt-3 text-sm text-green-600 dark:text-green-400">✓ API key validated successfully. You can now process resources.</p>
+                )}
+            </div>
+
+            {!isApiKeyValid && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                        ⚠️ Please validate your OpenRouter API key above to enable resource processing.
+                    </p>
+                </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-gray-800 rounded-lg p-8 shadow-lg">
 
 
@@ -564,13 +668,13 @@ export default function IngestStructuredResourcePage() {
 
                     <button
                         type="submit"
-                        disabled={isUploading || 
+                        disabled={!isApiKeyValid || isUploading || 
                             (selectedInputType === 'doi' && !doiInput.trim()) ||
                             (selectedInputType === 'text' && !textInput.trim()) ||
                             (selectedInputType === 'pdf' && files.length === 0)
                         }
                         className={`w-full px-6 py-3 text-white rounded-lg font-semibold transition-all duration-200 ${
-                            isUploading || 
+                            !isApiKeyValid || isUploading || 
                             (selectedInputType === 'doi' && !doiInput.trim()) ||
                             (selectedInputType === 'text' && !textInput.trim()) ||
                             (selectedInputType === 'pdf' && files.length === 0)
