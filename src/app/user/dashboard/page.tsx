@@ -37,7 +37,7 @@ export default function Dashboard() {
             title: "Resource Extraction",
             description: "Extract structured resources from unstructured sources and documents",
             icon: FileText,
-            href: "/user/ingest-structured-resource",
+            href: "/user/extract-resource",
             color: "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800"
         },
         {

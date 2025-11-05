@@ -24,7 +24,7 @@ const UserSideBar: React.FC = () => {
         },
         {
             title: "Resource Extraction",
-            href: "/user/ingest-structured-resource",
+            href: "/user/extract-resource",
             icon: FileText,
         },
         {
