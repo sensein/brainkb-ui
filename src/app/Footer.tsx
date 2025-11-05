@@ -43,7 +43,7 @@ const Footer: React.FC = () => {
                 </div>
                 <hr className="my-6 border-gray-200 sm:mx-auto dark:border-gray-700 lg:my-8"/>
                 <span className="block text-sm text-gray-500 sm:text-center dark:text-gray-400">
-                    © 2024 - {new Date().getFullYear()} BrainKB™ &  <Link className="hover:underline" href="https://sensein.group" target="_blank">Senseable Intelligence Group</Link>. All Rights Reserved.
+                    © 2024 - {new Date().getFullYear()} BrainKB &  <Link className="hover:underline" href="https://sensein.group" target="_blank">Senseable Intelligence Group</Link>. All Rights Reserved.
                 </span>
             </div>
         </footer>
