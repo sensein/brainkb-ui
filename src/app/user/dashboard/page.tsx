@@ -44,7 +44,7 @@ export default function Dashboard() {
             title: "Pdf2Reproschema",
             description: "Convert PDF documents to Reproschema format using multi-agent extraction",
             icon: Upload,
-            href: "/user/dashboard",
+            href: "/user/pdf2reproschema",
             color: "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800"
         }
     ];
