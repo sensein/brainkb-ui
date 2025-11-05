@@ -73,7 +73,20 @@ export default function IngestStructuredResourcePage() {
             } else {
                 const errorData = await response.json().catch(() => ({}));
                 setIsApiKeyValid(false);
-                setApiKeyError(errorData.error?.message || "Invalid API key. Please check your key and try again.");
+                
+                // Handle specific error messages with user-friendly text
+                const errorMessage = errorData.error?.message || "";
+                if (errorMessage.toLowerCase().includes("cookie") || 
+                    errorMessage.toLowerCase().includes("auth") ||
+                    errorMessage.toLowerCase().includes("credentials") ||
+                    response.status === 401 || 
+                    response.status === 403) {
+                    setApiKeyError("Invalid API key. Please check your OpenRouter API key and try again.");
+                } else if (errorMessage) {
+                    setApiKeyError(`Validation failed: ${errorMessage}`);
+                } else {
+                    setApiKeyError("Invalid API key. Please check your key and try again.");
+                }
             }
         } catch (error) {
             setIsApiKeyValid(false);
