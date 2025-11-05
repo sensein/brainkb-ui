@@ -121,42 +121,12 @@ const Navbar: React.FC = () => {
                         </li>
 
                         {session && (
-                            <li className="flex items-center relative">
-                                <div ref={submitDataRef} className="relative">
-                                    <button
-                                        onClick={() => setIsSubmitDataOpen(!isSubmitDataOpen)}
-                                        className="flex items-center gap-2 py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700"
-                                    >
-                                        SUBMIT DATA
-                                        <ChevronDown className={`w-4 h-4 transition-transform ${isSubmitDataOpen ? 'rotate-180' : ''}`} />
-                                    </button>
-                                    {isSubmitDataOpen && (
-                                        <div className="absolute left-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-50 min-w-[180px]">
-                                            <Link
-                                                href="/user/ingest-kg"
-                                                onClick={() => setIsSubmitDataOpen(false)}
-                                                className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                            >
-                                                <span>KNOWLEDGE GRAPHS</span>
-                                            </Link>
-                                            <Link
-                                                href="/user/sie"
-                                                onClick={() => setIsSubmitDataOpen(false)}
-                                                className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                            >
-                                                <span>NER EXTRACTION</span>
-                                            </Link>
-                                            <Link
-                                                href="/user/ingest-structured-resource"
-                                                onClick={() => setIsSubmitDataOpen(false)}
-                                                className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                            >
-                                                <span>RESOURCE EXTRACTION</span>
-                                            </Link>
-                                        </div>
-                                    )}
-                                </div>
-                            </li>
+                            <li className="flex items-center">
+                            <Link href="/user/dashboard"
+                                  className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">
+                                SUBMIT DATA
+                            </Link>
+                        </li>
                         )}
                          
 
