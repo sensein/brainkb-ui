@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { FileText, Link as LinkIcon, Type } from "lucide-react";
 
-type InputType = 'doi' | 'pdf' | 'text' | 'file';
+type InputType = 'doi' | 'pdf' | 'text';
 
 export default function IngestStructuredResourcePage() {
     const { data: session } = useSession();
@@ -32,12 +33,12 @@ export default function IngestStructuredResourcePage() {
 
     const validateAndSetFile = (selectedFile: File) => {
         const fileType = selectedFile.name.split('.').pop()?.toLowerCase();
-        if (fileType === 'json' || fileType === 'pdf') {
+        if (fileType === 'pdf') {
             setFiles(prevFiles => [...prevFiles, selectedFile]);
             setError(null);
             setSuccessMessage(null);
         } else {
-            setError("Please upload only JSON (.json) or PDF (.pdf) files.");
+            setError("Please upload only PDF (.pdf) files.");
             setSuccessMessage(null);
         }
     };
@@ -94,8 +95,8 @@ export default function IngestStructuredResourcePage() {
             setError("Please enter text content.");
             return;
         }
-        if (selectedInputType === 'file' && files.length === 0) {
-            setError("Please select files to upload.");
+        if (selectedInputType === 'pdf' && files.length === 0) {
+            setError("Please select PDF files to upload.");
             return;
         }
 
@@ -116,13 +117,7 @@ export default function IngestStructuredResourcePage() {
                 for (let i = 0; i < files.length; i++) {
                     formData.append("pdf_file", files[i]);
                 }
-            } else if (selectedInputType === 'file') {
-                // JSON/TXT files go to json_text_file parameter -- removed txt file option
-                for (let i = 0; i < files.length; i++) {
-                    formData.append("json_text_file", files[i]);
-                }
             }
-
             // Add endpoint
             const endpoint = process.env.NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT;
             formData.append("endpoint", endpoint || '');
@@ -414,78 +409,81 @@ export default function IngestStructuredResourcePage() {
     }
 
     return (
-        <div className="flex flex-col max-w-4xl mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-6">Structured Resource Extraction</h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">
-                Structured Extraction and Knowledge Representation of Resources from DOIs.
+        <div className="flex flex-col max-w-6xl mx-auto p-4">
+            <h1 className="text-3xl font-bold mb-4 dark:text-white">Structured Resource Extraction</h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg">
+                Structured Extraction and Knowledge Representation of Resources from DOIs, PDFs, and Text.
             </p>
 
-            <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-gray-800 rounded-lg p-8 shadow-md">
+            <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-gray-800 rounded-lg p-8 shadow-lg">
 
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-4">
                         Select Type
                     </label>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <button
                             type="button"
                             onClick={() => setSelectedInputType('doi')}
-                            className={`p-3 rounded-lg border-2 transition-colors duration-200 flex items-center justify-center space-x-2 ${
+                            className={`p-4 rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center space-y-2 group ${
                                 selectedInputType === 'doi'
-                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md'
+                                    : 'border-gray-300 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-sm'
                             }`}
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            <span>DOI</span>
+                            <LinkIcon className={`w-6 h-6 transition-colors ${
+                                selectedInputType === 'doi'
+                                    ? 'text-blue-600 dark:text-blue-400'
+                                    : 'text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'
+                            }`} />
+                            <span className={`font-medium ${
+                                selectedInputType === 'doi'
+                                    ? 'text-blue-700 dark:text-blue-300'
+                                    : 'text-gray-700 dark:text-gray-300'
+                            }`}>DOI</span>
                         </button>
                         
                         <button
                             type="button"
                             onClick={() => setSelectedInputType('pdf')}
-                            className={`p-3 rounded-lg border-2 transition-colors duration-200 flex items-center justify-center space-x-2 ${
+                            className={`p-4 rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center space-y-2 group ${
                                 selectedInputType === 'pdf'
-                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md'
+                                    : 'border-gray-300 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-sm'
                             }`}
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
-                            <span>PDF</span>
+                            <FileText className={`w-6 h-6 transition-colors ${
+                                selectedInputType === 'pdf'
+                                    ? 'text-blue-600 dark:text-blue-400'
+                                    : 'text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'
+                            }`} />
+                            <span className={`font-medium ${
+                                selectedInputType === 'pdf'
+                                    ? 'text-blue-700 dark:text-blue-300'
+                                    : 'text-gray-700 dark:text-gray-300'
+                            }`}>PDF</span>
                         </button>
                         
                         <button
                             type="button"
                             onClick={() => setSelectedInputType('text')}
-                            className={`p-3 rounded-lg border-2 transition-colors duration-200 flex items-center justify-center space-x-2 ${
+                            className={`p-4 rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center space-y-2 group ${
                                 selectedInputType === 'text'
-                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md'
+                                    : 'border-gray-300 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-sm'
                             }`}
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                            </svg>
-                            <span>Text</span>
-                        </button>
-                        
-                        <button
-                            type="button"
-                            onClick={() => setSelectedInputType('file')}
-                            className={`p-3 rounded-lg border-2 transition-colors duration-200 flex items-center justify-center space-x-2 ${
-                                selectedInputType === 'file'
-                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
-                            }`}
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                            </svg>
-                            <span>JSON File</span>
+                            <Type className={`w-6 h-6 transition-colors ${
+                                selectedInputType === 'text'
+                                    ? 'text-blue-600 dark:text-blue-400'
+                                    : 'text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'
+                            }`} />
+                            <span className={`font-medium ${
+                                selectedInputType === 'text'
+                                    ? 'text-blue-700 dark:text-blue-300'
+                                    : 'text-gray-700 dark:text-gray-300'
+                            }`}>Text</span>
                         </button>
                     </div>
                 </div>
@@ -496,7 +494,6 @@ export default function IngestStructuredResourcePage() {
                         {selectedInputType === 'doi' && 'Enter DOI'}
                         {selectedInputType === 'pdf' && 'Upload PDF'}
                         {selectedInputType === 'text' && 'Type a Text'}
-                        {selectedInputType === 'file' && 'Upload JSON Files'}
                     </label>
                     
                     {selectedInputType === 'doi' && (
@@ -558,42 +555,6 @@ export default function IngestStructuredResourcePage() {
                         />
                     )}
                     
-                    {selectedInputType === 'file' && (
-                        <div
-                            className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors duration-200 ${
-                                isDragOver 
-                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
-                                    : 'border-gray-300 dark:border-gray-700'
-                            }`}
-                            onDragOver={handleDragOver}
-                            onDragLeave={handleDragLeave}
-                            onDrop={handleDrop}
-                        >
-                            <input
-                                type="file"
-                                id="file-files"
-                                onChange={handleFileChange}
-                                className="hidden"
-                                accept=".json"
-                                multiple
-                                disabled={isUploading}
-                            />
-                            <label
-                                htmlFor="file-files"
-                                className="cursor-pointer flex flex-col items-center justify-center"
-                            >
-                                <svg className="h-12 w-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                </svg>
-                                <span className="text-sm text-gray-500 dark:text-gray-400">
-                                    {files.length > 0 ? files.map(file => file.name).join(', ') : "Click to select files or drag and drop"}
-                                </span>
-                                <span className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                                    JSON (.json) files only
-                                </span>
-                            </label>
-                        </div>
-                    )}
                 </div>
 
                 {/* Messages and Submit Button */}
@@ -606,15 +567,15 @@ export default function IngestStructuredResourcePage() {
                         disabled={isUploading || 
                             (selectedInputType === 'doi' && !doiInput.trim()) ||
                             (selectedInputType === 'text' && !textInput.trim()) ||
-                            (selectedInputType === 'file' && files.length === 0)
+                            (selectedInputType === 'pdf' && files.length === 0)
                         }
-                        className={`w-full px-4 py-3 text-white rounded-lg font-semibold transition-colors duration-200 ${
+                        className={`w-full px-6 py-3 text-white rounded-lg font-semibold transition-all duration-200 ${
                             isUploading || 
                             (selectedInputType === 'doi' && !doiInput.trim()) ||
                             (selectedInputType === 'text' && !textInput.trim()) ||
-                            (selectedInputType === 'file' && files.length === 0)
+                            (selectedInputType === 'pdf' && files.length === 0)
                                 ? "bg-gray-400 cursor-not-allowed"
-                                : "bg-blue-600 hover:bg-blue-700"
+                                : "bg-blue-600 hover:bg-blue-700 hover:shadow-lg"
                         }`}
                     >
                         {isUploading ? "Processing..." : "Process Structured Resource"}
