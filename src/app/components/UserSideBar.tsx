@@ -32,11 +32,7 @@ const UserSideBar: React.FC = () => {
             href: "/user/dashboard",
             icon: Upload,
         },
-        {
-            title: "Profile",
-            href: "/user/profile",
-            icon: User,
-        },
+
     ];
 
     return (
