@@ -3,9 +3,7 @@
 import {useState, useEffect} from "react";
 import {useRouter} from "next/navigation";
 import {useSession} from "next-auth/react";
-import {ThumbsUp, ThumbsDown} from "lucide-react";
-import {list} from "postcss";
-import {NextResponse} from "next/server";
+import {ThumbsUp, ThumbsDown, FileText, Link as LinkIcon, Type} from "lucide-react";
 
 // Define types for our entities and results
 interface Entity {
@@ -50,10 +48,15 @@ function getCorrectedIndices(sentence: string, entity: string, origStart: number
     return { start: origStart, end: origEnd };
 }
 
+type InputType = 'doi' | 'pdf' | 'text';
+
 export default function NamedEntityRecognition() {
     const {data: session} = useSession();
     const router = useRouter();
+    const [selectedInputType, setSelectedInputType] = useState<InputType>('pdf');
     const [file, setFile] = useState<File | null>(null);
+    const [doiInput, setDoiInput] = useState<string>('');
+    const [textInput, setTextInput] = useState<string>('');
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
     const [results, setResults] = useState<Results | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -66,13 +69,16 @@ export default function NamedEntityRecognition() {
     const [isSaved, setIsSaved] = useState<boolean>(false);
     const [apiKey, setApiKey] = useState<string>('');
     const [isApiKeyValid, setIsApiKeyValid] = useState<boolean>(false);
+    const [isValidatingKey, setIsValidatingKey] = useState<boolean>(false);
+    const [apiKeyError, setApiKeyError] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     // Check if API key exists in session storage
     useEffect(() => {
         const storedApiKey = sessionStorage.getItem('ner_api_key');
         if (storedApiKey) {
             setApiKey(storedApiKey);
-            setIsApiKeyValid(true);
+            // Don't auto-validate, user needs to validate again
         }
     }, []);
 
@@ -83,40 +89,82 @@ export default function NamedEntityRecognition() {
         }
     }, [session, router]);
 
-    // Handle API key validation
-    const handleApiKeySubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
+    // Validate OpenRouter API Key
+    const validateApiKey = async () => {
         if (!apiKey.trim()) {
-            setError("Please enter an OpenRouter API key");
+            setApiKeyError("Please enter an API key.");
+            setIsApiKeyValid(false);
             return;
         }
 
+        setIsValidatingKey(true);
+        setApiKeyError(null);
+        setError(null);
+        setSuccessMessage(null);
+
         try {
-            // Store API key in session storage
-            sessionStorage.setItem('ner_api_key', apiKey.trim());
-            setIsApiKeyValid(true);
-            setError(null);
-        } catch (err) {
-            console.error("Error storing API key:", err);
-            setError("Failed to store API key. Please try again.");
+            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${apiKey.trim()}`,
+                    "HTTP-Referer": typeof window !== 'undefined' ? window.location.origin : "",
+                    "X-Title": "BrainKB",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    "model": "openai/gpt-4o-mini",
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": "test"
+                        }
+                    ],
+                    "max_tokens": 1
+                })
+            });
+
+            if (response.ok) {
+                setIsApiKeyValid(true);
+                setApiKeyError(null);
+                setSuccessMessage("API key validated successfully!");
+                // Store API key in session storage
+                sessionStorage.setItem('ner_api_key', apiKey.trim());
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                setIsApiKeyValid(false);
+                
+                // Handle specific error messages with user-friendly text
+                const errorMessage = errorData.error?.message || "";
+                if (errorMessage.toLowerCase().includes("cookie") || 
+                    errorMessage.toLowerCase().includes("auth") ||
+                    errorMessage.toLowerCase().includes("credentials") ||
+                    response.status === 401 || 
+                    response.status === 403) {
+                    setApiKeyError("Invalid API key. Please check your OpenRouter API key and try again.");
+                } else if (errorMessage) {
+                    setApiKeyError(`Validation failed: ${errorMessage}`);
+                } else {
+                    setApiKeyError("Invalid API key. Please check your key and try again.");
+                }
+            }
+        } catch (error) {
+            setIsApiKeyValid(false);
+            setApiKeyError("Failed to validate API key. Please check your connection and try again.");
+        } finally {
+            setIsValidatingKey(false);
         }
     };
 
     // Handle file selection
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!isApiKeyValid) {
-            setError("Please enter and validate API key first");
-            return;
-        }
-
         const selectedFile = e.target.files?.[0];
         if (selectedFile) {
-            if (selectedFile.type === "application/pdf") {
+            if (selectedFile.type === "application/pdf" || selectedFile.name.endsWith('.pdf') || selectedFile.name.endsWith('.txt')) {
                 setFile(selectedFile);
                 setError(null);
             } else {
                 setFile(null);
-                setError("Please upload a PDF file only.");
+                setError("Please upload a PDF or TXT file only.");
             }
         }
     };
@@ -129,20 +177,39 @@ export default function NamedEntityRecognition() {
             return;
         }
 
-        if (!file) {
+        // Validate input based on selected type
+        if (selectedInputType === 'doi' && !doiInput.trim()) {
+            setError("Please enter a DOI.");
+            return;
+        }
+        if (selectedInputType === 'text' && !textInput.trim()) {
+            setError("Please enter text content.");
+            return;
+        }
+        if (selectedInputType === 'pdf' && !file) {
             setError("Please select a file to upload.");
             return;
         }
 
         setIsProcessing(true);
         setError(null);
+        setSuccessMessage(null);
         setResults(null);
 
         try {
             console.log('Starting form submission...');
             const formData = new FormData();
-            formData.append("pdf_file", file);
+            formData.append("input_type", selectedInputType);
             formData.append("current_loggedin_user", session?.user?.email || 'unknown');
+            
+            // Add input based on selected type
+            if (selectedInputType === 'doi') {
+                formData.append("doi", doiInput.trim());
+            } else if (selectedInputType === 'text') {
+                formData.append("text_content", textInput.trim());
+            } else if (selectedInputType === 'pdf') {
+                formData.append("pdf_file", file!);
+            }
             
             // Add API key to form data
             const storedApiKey = sessionStorage.getItem('ner_api_key');
@@ -275,9 +342,15 @@ export default function NamedEntityRecognition() {
             console.log("*****************************************************");
 
             // Transform the data to match our interface
+            const documentName = selectedInputType === 'pdf' && file 
+                ? file.name 
+                : selectedInputType === 'doi' 
+                    ? `DOI: ${doiInput.trim()}` 
+                    : 'Text Input';
+            
             const transformedData: Results = {
                 entities: data.entities,
-                documentName: file.name,
+                documentName: documentName,
                 processedAt: new Date().toISOString(),
             };
 
@@ -298,6 +371,11 @@ export default function NamedEntityRecognition() {
             if (transformedData.entities && Object.keys(transformedData.entities).length > 0) {
                 setActiveEntityType(Object.keys(transformedData.entities)[0]);
             }
+            
+            // Clear inputs after successful processing
+            setFile(null);
+            setDoiInput('');
+            setTextInput('');
         } catch (err) {
             console.error("Error processing document:", err);
             setError("Failed to process document. Please try again.");
@@ -482,128 +560,238 @@ export default function NamedEntityRecognition() {
 
     return (
         <div className="flex flex-col max-w-6xl mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-6">Structured Information Extraction (SIE)</h1>
+            <h1 className="text-3xl font-bold mb-4 dark:text-white">Structured Information Extraction (SIE)</h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg">
+                Extract neuroscientific entities such as cell types, anatomical regions, and more from PDF documents.
+            </p>
 
-            {/* API Key Section */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md mb-6">
-                <h2 className="text-lg font-semibold mb-4">OpenRouter API Key Configuration</h2>
-                <form onSubmit={handleApiKeySubmit} className="space-y-4">
-                    <div className="flex gap-4">
-                        <input
-                            type="password"
-                            value={apiKey}
-                            onChange={(e) => setApiKey(e.target.value)}
-                            placeholder="Enter your API key"
-                            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                            disabled={isApiKeyValid}
-                        />
-                        <button
-                            type="submit"
-                            disabled={isApiKeyValid || !apiKey.trim()}
-                            className={`px-6 py-2 text-white rounded-lg ${
-                                isApiKeyValid || !apiKey.trim()
-                                    ? "bg-gray-400 cursor-not-allowed"
-                                    : "bg-blue-500 hover:bg-blue-600"
-                            }`}
-                        >
-                            {isApiKeyValid ? "API Key Valid" : "Validate API Key"}
-                        </button>
-                        {isApiKeyValid && (
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    sessionStorage.removeItem('ner_api_key');
-                                    setApiKey('');
-                                    setIsApiKeyValid(false);
-                                }}
-                                className="px-6 py-2 text-white bg-red-500 hover:bg-red-600 rounded-lg"
-                            >
-                                Clear API Key
-                            </button>
-                        )}
-                    </div>
+            {/* OpenRouter API Key Configuration */}
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6 mb-6 border border-gray-200 dark:border-gray-700">
+                <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">OpenRouter API Key Configuration</h2>
+                <div className="flex flex-col sm:flex-row gap-3">
+                    <input
+                        type="password"
+                        value={apiKey}
+                        onChange={(e) => {
+                            setApiKey(e.target.value);
+                            setIsApiKeyValid(false);
+                            setApiKeyError(null);
+                            setSuccessMessage(null);
+                        }}
+                        placeholder="Enter your API key"
+                        className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
+                    <button
+                        type="button"
+                        onClick={validateApiKey}
+                        disabled={isValidatingKey || !apiKey.trim()}
+                        className={`px-6 py-2 rounded-lg font-medium text-white transition-colors ${
+                            isValidatingKey || !apiKey.trim()
+                                ? "bg-gray-400 cursor-not-allowed"
+                                : "bg-gray-600 hover:bg-gray-700"
+                        }`}
+                    >
+                        {isValidatingKey ? "Validating..." : "Validate API Key"}
+                    </button>
                     {isApiKeyValid && (
-                        <div className="text-sm text-green-600 dark:text-green-400">
-                            API key is valid and stored in session
-                        </div>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                sessionStorage.removeItem('ner_api_key');
+                                setApiKey('');
+                                setIsApiKeyValid(false);
+                                setApiKeyError(null);
+                                setSuccessMessage(null);
+                            }}
+                            className="px-6 py-2 rounded-lg font-medium text-white bg-red-500 hover:bg-red-600 transition-colors"
+                        >
+                            Clear API Key
+                        </button>
                     )}
-                </form>
+                </div>
+                {apiKeyError && (
+                    <p className="mt-3 text-sm text-red-600 dark:text-red-400">{apiKeyError}</p>
+                )}
+                {isApiKeyValid && (
+                    <p className="mt-3 text-sm text-green-600 dark:text-green-400">✓ API key validated successfully. You can now process documents.</p>
+                )}
             </div>
 
-            {/* File Upload Section */}
-            <div className={`bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md mb-6 ${
-                !isApiKeyValid ? 'opacity-50 pointer-events-none' : ''
-            }`}>
-                <h2 className="text-lg font-semibold mb-4">Upload Document</h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    Upload a PDF file to extract neuroscientific entities such as cell types, anatomical regions, and more.
-                </p>
+            {!isApiKeyValid && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                        ⚠️ Please validate your OpenRouter API key above to enable document processing.
+                    </p>
+                </div>
+            )}
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div
-                        className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-6 text-center">
-                        <input
-                            type="file"
-                            id="document"
-                            onChange={handleFileChange}
-                            className="hidden"
-                            accept=".pdf,.txt"
-                        />
-                        <label
-                            htmlFor="document"
-                            className="cursor-pointer flex flex-col items-center justify-center"
+            {/* Input Type Selection and Content Section */}
+            <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-gray-800 rounded-lg p-8 shadow-lg mb-6">
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-4">
+                        Select Type
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <button
+                            type="button"
+                            onClick={() => setSelectedInputType('doi')}
+                            className={`p-4 rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center space-y-2 group ${
+                                selectedInputType === 'doi'
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md'
+                                    : 'border-gray-300 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-sm'
+                            }`}
                         >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-12 w-12 text-gray-400 mb-3"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                                />
-                            </svg>
-                            <span className="text-sm text-gray-500 dark:text-gray-400">
-                Click to select a file or drag and drop
-              </span>
-                            <span className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                PDF or TXT files only
-              </span>
-                        </label>
-                        {file && (
-                            <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
-                                Selected file: <span
-                                className="font-semibold">{file.name}</span> ({(file.size / 1024).toFixed(2)} KB)
-                            </div>
-                        )}
+                            <LinkIcon className={`w-6 h-6 transition-colors ${
+                                selectedInputType === 'doi'
+                                    ? 'text-blue-600 dark:text-blue-400'
+                                    : 'text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'
+                            }`} />
+                            <span className={`font-medium ${
+                                selectedInputType === 'doi'
+                                    ? 'text-blue-700 dark:text-blue-300'
+                                    : 'text-gray-700 dark:text-gray-300'
+                            }`}>DOI</span>
+                        </button>
+                        
+                        <button
+                            type="button"
+                            onClick={() => setSelectedInputType('pdf')}
+                            className={`p-4 rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center space-y-2 group ${
+                                selectedInputType === 'pdf'
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md'
+                                    : 'border-gray-300 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-sm'
+                            }`}
+                        >
+                            <FileText className={`w-6 h-6 transition-colors ${
+                                selectedInputType === 'pdf'
+                                    ? 'text-blue-600 dark:text-blue-400'
+                                    : 'text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'
+                            }`} />
+                            <span className={`font-medium ${
+                                selectedInputType === 'pdf'
+                                    ? 'text-blue-700 dark:text-blue-300'
+                                    : 'text-gray-700 dark:text-gray-300'
+                            }`}>PDF</span>
+                        </button>
+                        
+                        <button
+                            type="button"
+                            onClick={() => setSelectedInputType('text')}
+                            className={`p-4 rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center space-y-2 group ${
+                                selectedInputType === 'text'
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md'
+                                    : 'border-gray-300 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-sm'
+                            }`}
+                        >
+                            <Type className={`w-6 h-6 transition-colors ${
+                                selectedInputType === 'text'
+                                    ? 'text-blue-600 dark:text-blue-400'
+                                    : 'text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'
+                            }`} />
+                            <span className={`font-medium ${
+                                selectedInputType === 'text'
+                                    ? 'text-blue-700 dark:text-blue-300'
+                                    : 'text-gray-700 dark:text-gray-300'
+                            }`}>Text</span>
+                        </button>
                     </div>
+                </div>
 
+                {/* Input Content Section */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                        {selectedInputType === 'doi' && 'Enter DOI'}
+                        {selectedInputType === 'pdf' && 'Upload PDF'}
+                        {selectedInputType === 'text' && 'Type a Text'}
+                    </label>
+                    
+                    {selectedInputType === 'doi' && (
+                        <input
+                            type="text"
+                            value={doiInput}
+                            onChange={(e) => setDoiInput(e.target.value)}
+                            placeholder="Enter DOI (e.g., 10.1000/182)"
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                            disabled={isProcessing}
+                        />
+                    )}
+                    
+                    {selectedInputType === 'pdf' && (
+                        <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-6 text-center transition-colors duration-200 hover:border-blue-400 dark:hover:border-blue-600">
+                            <input
+                                type="file"
+                                id="document"
+                                onChange={handleFileChange}
+                                className="hidden"
+                                accept=".pdf"
+                                disabled={!isApiKeyValid || isProcessing}
+                            />
+                            <label
+                                htmlFor="document"
+                                className={`cursor-pointer flex flex-col items-center justify-center ${!isApiKeyValid || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                <FileText className="h-12 w-12 text-gray-400 mb-3" />
+                                <span className="text-sm text-gray-500 dark:text-gray-400">
+                                    Click to select a file or drag and drop
+                                </span>
+                                <span className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                    PDF (.pdf) files only
+                                </span>
+                            </label>
+                            {file && (
+                                <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+                                    Selected file: <span className="font-semibold">{file.name}</span> ({(file.size / 1024).toFixed(2)} KB)
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    
+                    {selectedInputType === 'text' && (
+                        <textarea
+                            value={textInput}
+                            onChange={(e) => setTextInput(e.target.value)}
+                            placeholder="Paste text here..."
+                            rows={8}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white resize-vertical"
+                            disabled={isProcessing}
+                        />
+                    )}
+                </div>
+
+                {/* Messages and Submit Button */}
+                <div className="space-y-4">
                     {error && (
-                        <div className="text-red-500 text-sm">{error}</div>
+                        <div className="text-red-500 text-sm p-3 bg-red-100 dark:bg-red-900/20 rounded-lg">{error}</div>
+                    )}
+                    {successMessage && (
+                        <div className="text-green-500 text-sm p-3 bg-green-100 dark:bg-green-900/20 rounded-lg">{successMessage}</div>
                     )}
 
                     <button
                         type="submit"
-                        disabled={!file || isProcessing}
-                        className={`w-full px-4 py-2 text-white rounded-lg ${
-                            !file || isProcessing
+                        disabled={!isApiKeyValid || isProcessing || 
+                            (selectedInputType === 'doi' && !doiInput.trim()) ||
+                            (selectedInputType === 'text' && !textInput.trim()) ||
+                            (selectedInputType === 'pdf' && !file)
+                        }
+                        className={`w-full px-6 py-3 text-white rounded-lg font-semibold transition-all duration-200 ${
+                            !isApiKeyValid || isProcessing || 
+                            (selectedInputType === 'doi' && !doiInput.trim()) ||
+                            (selectedInputType === 'text' && !textInput.trim()) ||
+                            (selectedInputType === 'pdf' && !file)
                                 ? "bg-gray-400 cursor-not-allowed"
-                                : "bg-blue-500 hover:bg-blue-600"
+                                : "bg-blue-600 hover:bg-blue-700 hover:shadow-lg"
                         }`}
                     >
                         {isProcessing ? "Processing..." : "Process Document"}
                     </button>
-                </form>
-            </div>
+                </div>
+            </form>
 
             {/* Results Section */}
             {results && (
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md">
-                    <h2 className="text-lg font-semibold mb-4">Extracted Entities</h2>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-8 shadow-lg">
+                    <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Extracted Entities</h2>
 
                     {/* Entity Type Tabs */}
                     <div className="border-b border-gray-200 dark:border-gray-700 mb-4 overflow-x-auto">
