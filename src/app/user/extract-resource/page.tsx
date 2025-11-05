@@ -30,7 +30,7 @@ export default function IngestStructuredResourcePage() {
     // Redirect if not logged in
     useEffect(() => {
         if (session === null) {
-            router.push("/login");
+            router.push("/");
         }
     }, [session, router]);
 

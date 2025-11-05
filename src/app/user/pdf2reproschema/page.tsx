@@ -29,7 +29,7 @@ export default function Pdf2ReproschemaPage() {
     // Redirect if not logged in
     useEffect(() => {
         if (session === null) {
-            router.push("/login");
+            router.push("/");
         }
     }, [session, router]);
 
