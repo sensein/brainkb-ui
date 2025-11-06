@@ -124,7 +124,7 @@ const Navbar: React.FC = () => {
                             <li className="flex items-center">
                             <Link href="/user/dashboard"
                                   className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">
-                                SUBMIT DATA
+                                STRUCTSENSE
                             </Link>
                         </li>
                         )}
@@ -182,6 +182,7 @@ const Navbar: React.FC = () => {
                                     </button>
                                     {isOpen && (
                                         <div className="absolute right-0 md:right-0 left-auto md:left-auto mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-50 min-w-[120px] max-w-[200px]">
+                                            <Link href="/user/ingest-kg" onClick={() => setIsOpen(false)} className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Submit Data</Link>
                                             <Link href="/user/profile" onClick={() => setIsOpen(false)} className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Profile</Link>
                                             <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                                                 Logout

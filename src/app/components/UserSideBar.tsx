@@ -13,11 +13,6 @@ const UserSideBar: React.FC = () => {
             icon: LayoutDashboard,
         },
         {
-            title: "Ingest KGs",
-            href: "/user/ingest-kg",
-            icon: Database,
-        },
-        {
             title: "NER Extraction",
             href: "/user/sie",
             icon: Brain,
@@ -39,8 +34,8 @@ const UserSideBar: React.FC = () => {
         <>
             
 
-            <aside id="logo-sidebar" className="fixed top-0 left-0 z-30 w-64 h-screen pt-20 transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700" aria-label="Sidebar">
-                <div className="h-full px-4 py-4 overflow-y-auto bg-white dark:bg-gray-800">
+            <aside id="logo-sidebar" className="fixed top-0 left-0 z-30 w-64 pt-20 transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700" style={{ height: "300px" }} aria-label="Sidebar">
+                <div className="h-full px-4 py-4 overflow-y-auto bg-white dark:bg-gray-800" style={{ marginTop: "55px" }}>
                     <ul className="space-y-1 font-medium">
                         {menuItems.map((item) => {
                             const Icon = item.icon;
