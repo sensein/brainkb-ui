@@ -242,7 +242,7 @@ export default function Pdf2ReproschemaPage() {
 
     return (
         <div className="flex flex-col max-w-6xl mx-auto p-4">
-            <h1 className="text-3xl font-bold mb-4 dark:text-white">Convert Survey Questionnaire to Reproschema Format</h1>
+            <h1 className="text-3xl font-bold mb-4 dark:text-white">ReproSchema Extraction</h1>
             <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg">
                 Convert PDF documents, DOIs, or text to Reproschema format using multi-agent extraction.
             </p>
