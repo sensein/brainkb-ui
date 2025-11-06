@@ -210,7 +210,7 @@ export default function IngestStructuredResourcePage() {
             console.log('Result data:', result.data);
 
             // Check if the result contains extracted data
-            let parsedData = null;
+            let parsedData: any[] | null = null;
             
             console.log('Full result object:', result);
             console.log('Result.data type:', typeof result.data);
