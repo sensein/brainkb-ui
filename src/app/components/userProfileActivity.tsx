@@ -69,8 +69,12 @@ export default function ActivityList({ userActivity }: { userActivity: Activity[
           </p>
 
           {item.meta_data && <KeyValueBlock data={item.meta_data} />}
-          {item.location && <KeyValueBlock data={item.location} />}
-          {item.as_info && <KeyValueBlock data={item.as_info} />}
+          {item.location && typeof item.location === 'object' && item.location !== null && (
+            <KeyValueBlock data={item.location as Record<string, unknown>} />
+          )}
+          {item.as_info && typeof item.as_info === 'object' && item.as_info !== null && (
+            <KeyValueBlock data={item.as_info as Record<string, unknown>} />
+          )}
 
           {(item.ip_address || item.isp || item.user_agent) && (
             <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 space-y-1">
