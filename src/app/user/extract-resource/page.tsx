@@ -194,10 +194,12 @@ export default function IngestStructuredResourcePage() {
                 }
             }
             // Add endpoint
-            const endpoint = process.env.NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT;
+            const prefix = "ws-client-id-";
+            const client_id  = (crypto.randomUUID?.() || `${prefix}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+            const endpoint = `${process.env.NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT}/${client_id}`;
             formData.append("endpoint", endpoint || '');
 
-            const response = await fetch("/api/structured-json-upload", {
+            const response = await fetch("/api/structured-extraction", {
                 method: "POST",
                 body: formData,
             });
