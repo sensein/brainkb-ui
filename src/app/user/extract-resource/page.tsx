@@ -193,169 +193,239 @@ export default function IngestStructuredResourcePage() {
                     formData.append("pdf_file", files[i]);
                 }
             }
-            // Add endpoint
+            // Add endpoint and client ID
             const prefix = "ws-client-id-";
             const client_id  = (crypto.randomUUID?.() || `${prefix}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-            const endpoint = `${process.env.NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT}/${client_id}`;
+            // Endpoint should be in format: ws://localhost:8009/api/ws/extract-resources
+            const endpoint = process.env.NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT;
             formData.append("endpoint", endpoint || '');
+            formData.append("clientId", client_id);
 
-            const response = await fetch("/api/structured-extraction", {
+            // Handle WebSocket via SSE stream
+            const response = await fetch("/api/ws-connection", {
                 method: "POST",
                 body: formData,
             });
 
-            const result = await response.json();
-
             if (!response.ok) {
-                throw new Error(result.error || `Error: ${response.status}`);
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Error: ${response.status}`);
             }
-            console.log('Full result:', result);
-            setLastResult(result);
-            console.log('Result data type:', typeof result.data);
-            console.log('Result data:', result.data);
 
-            // Check if the result contains extracted data
-            let parsedData: any[] | null = null;
-            
-            console.log('Full result object:', result);
-            console.log('Result.data type:', typeof result.data);
-            console.log('Result.data value:', result.data);
-            console.log('Result.message type:', typeof result.message);
-            console.log('Result.message value:', result.message);
-            
-            // Helper function to try parsing JSON from various sources
-            const tryParseJSON = (source: any, sourceName: string) => {
-                if (!source) return null;
-                
-                let dataToParse = source;
-                
-                // If it's already an object, return it
-                if (typeof source === 'object' && source !== null) {
-                    console.log(`${sourceName} is already an object:`, source);
-                    return source;
-                }
-                
-                // If it's a string, try to parse it
-                if (typeof source === 'string') {
-                    const trimmed = source.trim();
-                    
-                    // Check if it looks like JSON
-                    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+            // Read Server-Sent Events stream
+            const reader = response.body?.getReader();
+            const decoder = new TextDecoder();
+            let result: any = null;
+            let buffer = '';
+            let hasError = false;
+            let errorMessage = '';
+
+            if (!reader) {
+                throw new Error('Failed to get response stream');
+            }
+
+            setCurrentStatus('connecting');
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
                         try {
-                            console.log(`Attempting to parse ${sourceName} as JSON:`, trimmed);
-                            const parsed = JSON.parse(trimmed);
-                            console.log(`Successfully parsed ${sourceName}:`, parsed);
-                            return parsed;
-                        } catch (e) {
-                            console.error(`Failed to parse ${sourceName} as JSON:`, e);
-                            return null;
-                        }
-                    } else {
-                        console.log(`${sourceName} is a string but not JSON format:`, trimmed);
-                        return null;
-                    }
-                }
-                
-                return null;
-            };
-            
-            // Try parsing from different possible sources
-            const sources = [
-                { data: result.data, name: 'result.data' },
-                { data: result.message, name: 'result.message' },
-                { data: result.data?.message, name: 'result.data.message' },
-                { data: result.data?.data, name: 'result.data.data' },
-                { data: result.extracted_data, name: 'result.extracted_data' },
-                { data: result.data?.extracted_data, name: 'result.data.extracted_data' }
-            ];
-            
-            for (const source of sources) {
-                const parsed = tryParseJSON(source.data, source.name);
-                if (parsed) {
-                    console.log(`Found data in ${source.name}:`, parsed);
-                    
-                    // Special handling for objects that contain JSON strings in message field
-                    if (typeof parsed === 'object' && parsed.message && typeof parsed.message === 'string') {
-                        console.log(`Found object with message field, attempting to parse message:`, parsed.message);
-                        try {
-                            const messageParsed = JSON.parse(parsed.message);
-                            console.log(`Successfully parsed message field:`, messageParsed);
-                            if (Array.isArray(messageParsed)) {
-                                parsedData = messageParsed;
-                            } else if (typeof messageParsed === 'object') {
-                                parsedData = [messageParsed];
+                            const data = JSON.parse(line.slice(6));
+                            console.log('SSE event:', data.type);
+
+                            if (data.type === 'connected') {
+                                setCurrentStatus('connected');
+                            } else if (data.type === 'task_created') {
+                                console.log('Task created:', data.task_id);
+                                setCurrentStatus('processing');
+                            } else if (data.type === 'status') {
+                                const status = data.status;
+                                if (status === 'processing' || status === 'running' || status === 'pending') {
+                                    setCurrentStatus('processing');
+                                } else if (status === 'completed' || status === 'done' || status === 'finished' || status === 'success') {
+                                    // Status indicates completion, but wait for result data
+                                    setCurrentStatus('processing');
+                                    // If there's data in the status message, treat as result
+                                    if (data.data) {
+                                        result = data.data;
+                                    }
+                                }
+                            } else if (data.type === 'progress') {
+                                console.log('Progress:', data.progress || data.bytes);
+                                setCurrentStatus('processing');
+                            } else if (data.type === 'result') {
+                                result = data.data;
+                                console.log('Result received:', result);
+                                setCurrentStatus('processing'); // Keep as processing until we parse the result
+                            } else if (data.type === 'message') {
+                                // Handle generic messages - check if they contain result data
+                                console.log('Generic message received:', data.data);
+                                if (data.data) {
+                                    const msgData = data.data;
+                                    // Check if this message contains result data
+                                    if (msgData.data || msgData.result || (msgData.status && (msgData.status === 'completed' || msgData.status === 'done'))) {
+                                        result = msgData.data || msgData.result || msgData;
+                                        console.log('Found result in generic message:', result);
+                                    }
+                                }
+                            } else if (data.type === 'error') {
+                                hasError = true;
+                                errorMessage = data.error || 'Processing error';
+                                setCurrentStatus('error');
+                                console.error('SSE error:', errorMessage);
+                                // Don't break here, wait for 'done' event
+                            } else if (data.type === 'done') {
+                                console.log('Done event received');
+                                break;
+                            } else {
+                                console.log('Unknown SSE event type:', data.type, data);
                             }
-                            break;
                         } catch (e) {
-                            console.error(`Failed to parse message field as JSON:`, e);
+                            console.error('Error parsing SSE data:', e);
                         }
-                    }
-                    
-                    // Handle different parsed formats
-                    if (Array.isArray(parsed)) {
-                        parsedData = parsed;
-                        break;
-                    } else if (typeof parsed === 'object') {
-                        // If it's a single object, wrap it in an array
-                        parsedData = [parsed];
-                        break;
                     }
                 }
             }
-            
-            if (parsedData) {
-                // Flatten the data if it contains nested objects
-                const flattenedData = parsedData.map((item: any) => {
-                    // If the item has a message field that contains JSON, parse it first
-                    if (item.message && typeof item.message === 'string') {
-                        try {
-                            const parsedMessage = JSON.parse(item.message);
-                            console.log('Parsed message content:', parsedMessage);
-                            return flattenObject(parsedMessage);
-                        } catch (e) {
-                            console.error('Failed to parse message as JSON:', e);
-                            return flattenObject(item);
+
+            // If there was an error, throw it instead of processing result
+            if (hasError) {
+                throw new Error(errorMessage);
+            }
+
+            // Process the result only if no error occurred
+            if (result) {
+                console.log('Full result:', result);
+                setLastResult(result);
+
+                // Helper function to try parsing JSON from various sources
+                const tryParseJSON = (source: any, sourceName: string) => {
+                    if (!source) return null;
+                    
+                    let dataToParse = source;
+                    
+                    if (typeof source === 'object' && source !== null) {
+                        console.log(`${sourceName} is already an object:`, source);
+                        return source;
+                    }
+                    
+                    if (typeof source === 'string') {
+                        const trimmed = source.trim();
+                        if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+                            try {
+                                const parsed = JSON.parse(trimmed);
+                                console.log(`Successfully parsed ${sourceName}:`, parsed);
+                                return parsed;
+                            } catch (e) {
+                                console.error(`Failed to parse ${sourceName} as JSON:`, e);
+                                return null;
+                            }
                         }
                     }
-                    return flattenObject(item);
-                });
-                console.log('Original parsed data:', parsedData);
-                console.log('Flattened data for table:', flattenedData);
-                setExtractionResult(flattenedData);
-                setSuccessMessage("Content processed successfully! Review and edit the extracted data below.");
-            } else {
-                console.log('No extraction result found, showing message only');
+                    
+                    return null;
+                };
                 
-                // Find the best message to display
-                const possibleMessages = [
-                    result.data?.message,
-                    result.message,
-                    result.data?.data,
-                    "Content processed successfully!"
+                let parsedData: any[] | null = null;
+                const sources = [
+                    { data: result.data, name: 'result.data' },
+                    { data: result.message, name: 'result.message' },
+                    { data: result.data?.message, name: 'result.data.message' },
+                    { data: result.data?.data, name: 'result.data.data' },
+                    { data: result.extracted_data, name: 'result.extracted_data' },
+                    { data: result.data?.extracted_data, name: 'result.data.extracted_data' },
+                    { data: result, name: 'result' }
                 ];
                 
-                let displayMessage = "Content processed successfully!";
-                
-                for (const msg of possibleMessages) {
-                    if (msg && typeof msg === 'string') {
-                        const trimmed = msg.trim();
-                        // If it looks like JSON, don't show it as a message
-                        if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
-                            displayMessage = "Content processed successfully! Review and edit the extracted data below.";
+                for (const source of sources) {
+                    const parsed = tryParseJSON(source.data, source.name);
+                    if (parsed) {
+                        console.log(`Found data in ${source.name}:`, parsed);
+                        
+                        if (typeof parsed === 'object' && parsed.message && typeof parsed.message === 'string') {
+                            try {
+                                const messageParsed = JSON.parse(parsed.message);
+                                if (Array.isArray(messageParsed)) {
+                                    parsedData = messageParsed;
+                                } else if (typeof messageParsed === 'object') {
+                                    parsedData = [messageParsed];
+                                }
+                                break;
+                            } catch (e) {
+                                console.error(`Failed to parse message field as JSON:`, e);
+                            }
+                        }
+                        
+                        if (Array.isArray(parsed)) {
+                            parsedData = parsed;
                             break;
-                        } else if (trimmed.length > 0) {
-                            displayMessage = trimmed;
+                        } else if (typeof parsed === 'object') {
+                            parsedData = [parsed];
                             break;
                         }
                     }
                 }
                 
-                setSuccessMessage(displayMessage);
+                if (parsedData && parsedData.length > 0) {
+                    const flattenedData = parsedData.map((item: any) => {
+                        if (item.message && typeof item.message === 'string') {
+                            try {
+                                const parsedMessage = JSON.parse(item.message);
+                                return flattenObject(parsedMessage);
+                            } catch (e) {
+                                return flattenObject(item);
+                            }
+                        }
+                        return flattenObject(item);
+                    });
+                    setExtractionResult(flattenedData);
+                    setSuccessMessage("Content processed successfully! Review and edit the extracted data below.");
+                    setCurrentStatus('done');
+                    // Clear inputs on success
+                    setFiles([]);
+                    setDoiInput('');
+                    setTextInput('');
+                } else if (result) {
+                    // Result exists but couldn't parse - log it for debugging
+                    console.warn('Result received but could not parse data:', result);
+                    console.log('Full result object:', JSON.stringify(result, null, 2));
+                    
+                    // Try to display raw result or show helpful error
+                    if (typeof result === 'object') {
+                        // Try to flatten the entire result object
+                        try {
+                            const flattened = flattenObject(result);
+                            if (Object.keys(flattened).length > 0) {
+                                setExtractionResult([flattened]);
+                                setSuccessMessage("Content processed successfully! Review and edit the extracted data below.");
+                                setCurrentStatus('done');
+                                setFiles([]);
+                                setDoiInput('');
+                                setTextInput('');
+                            } else {
+                                setError("Content processed but no extractable data found. Please check the server response.");
+                                setCurrentStatus('error');
+                            }
+                        } catch (e) {
+                            setError("Content processed but data format is not recognized. Please check the server response.");
+                            setCurrentStatus('error');
+                        }
+                    } else {
+                        setError("Content processed but no extractable data found. Please check the server response.");
+                        setCurrentStatus('error');
+                    }
+                } else {
+                    // No result received
+                    setError("No result received from server. The processing may have completed without returning data.");
+                    setCurrentStatus('error');
+                }
             }
-            setFiles([]);
-            setDoiInput('');
-            setTextInput('');
-            setCurrentStatus('done');
 
         } catch (err) {
             console.error("Error processing content:", err);
