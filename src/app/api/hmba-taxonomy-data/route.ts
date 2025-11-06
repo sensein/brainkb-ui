@@ -46,6 +46,14 @@ export async function GET(request: NextRequest) {
     // Get authentication token
     try {
         const queryServiceUrl = process.env.NEXT_PUBLIC_API_QUERY_TAXONOMY_ENDPOINT;
+        
+        if (!queryServiceUrl) {
+            return NextResponse.json(
+                { error: 'Query service URL not configured' },
+                { status: 500 }
+            );
+        }
+
         let authHeaders: Record<string, string> = {};
 
         try {

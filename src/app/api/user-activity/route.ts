@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {Activity, TokenResponse, UserProfile} from "@/src/app/components/types";
+import {Activity, TokenResponse, UserProfile} from "@/src/types/types";
 
 
 
