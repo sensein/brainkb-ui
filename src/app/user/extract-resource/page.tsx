@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { FileText, Link as LinkIcon, Type } from "lucide-react";
 
-type InputType = 'doi' | 'pdf' | 'text' | 'file';
+type InputType = 'doi' | 'pdf' | 'text';
 
 export default function IngestStructuredResourcePage() {
     const { data: session } = useSession();
@@ -21,23 +22,89 @@ export default function IngestStructuredResourcePage() {
     const [extractionResult, setExtractionResult] = useState<any>(null);
     const [isSaving, setIsSaving] = useState<boolean>(false);
     const [lastResult, setLastResult] = useState<any>(null);
+    const [apiKey, setApiKey] = useState<string>('');
+    const [isApiKeyValid, setIsApiKeyValid] = useState<boolean>(false);
+    const [isValidatingKey, setIsValidatingKey] = useState<boolean>(false);
+    const [apiKeyError, setApiKeyError] = useState<string | null>(null);
 
     // Redirect if not logged in
     useEffect(() => {
         if (session === null) {
-            router.push("/login");
+            router.push("/");
         }
     }, [session, router]);
+
+    // Validate OpenRouter API Key
+    const validateApiKey = async () => {
+        if (!apiKey.trim()) {
+            setApiKeyError("Please enter an API key.");
+            setIsApiKeyValid(false);
+            return;
+        }
+
+        setIsValidatingKey(true);
+        setApiKeyError(null);
+
+        try {
+            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${apiKey.trim()}`,
+                    "HTTP-Referer": typeof window !== 'undefined' ? window.location.origin : "",
+                    "X-Title": "BrainKB",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    "model": "openai/gpt-4o-mini",
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": "test"
+                        }
+                    ],
+                    "max_tokens": 1
+                })
+            });
+
+            if (response.ok) {
+                setIsApiKeyValid(true);
+                setApiKeyError(null);
+                setSuccessMessage("API key validated successfully!");
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                setIsApiKeyValid(false);
+                
+                // Handle specific error messages with user-friendly text
+                const errorMessage = errorData.error?.message || "";
+                if (errorMessage.toLowerCase().includes("cookie") || 
+                    errorMessage.toLowerCase().includes("auth") ||
+                    errorMessage.toLowerCase().includes("credentials") ||
+                    response.status === 401 || 
+                    response.status === 403) {
+                    setApiKeyError("Invalid API key. Please check your OpenRouter API key and try again.");
+                } else if (errorMessage) {
+                    setApiKeyError(`Validation failed: ${errorMessage}`);
+                } else {
+                    setApiKeyError("Invalid API key. Please check your key and try again.");
+                }
+            }
+        } catch (error) {
+            setIsApiKeyValid(false);
+            setApiKeyError("Failed to validate API key. Please check your connection and try again.");
+        } finally {
+            setIsValidatingKey(false);
+        }
+    };
 
 
     const validateAndSetFile = (selectedFile: File) => {
         const fileType = selectedFile.name.split('.').pop()?.toLowerCase();
-        if (fileType === 'json' || fileType === 'pdf') {
+        if (fileType === 'pdf') {
             setFiles(prevFiles => [...prevFiles, selectedFile]);
             setError(null);
             setSuccessMessage(null);
         } else {
-            setError("Please upload only JSON (.json) or PDF (.pdf) files.");
+            setError("Please upload only PDF (.pdf) files.");
             setSuccessMessage(null);
         }
     };
@@ -84,6 +151,11 @@ export default function IngestStructuredResourcePage() {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         
+        // Check if API key is valid
+        if (!isApiKeyValid) {
+            setError("Please provide a valid OpenRouter API key before processing.");
+            return;
+        }
 
         // Validate input based on selected type
         if (selectedInputType === 'doi' && !doiInput.trim()) {
@@ -94,8 +166,8 @@ export default function IngestStructuredResourcePage() {
             setError("Please enter text content.");
             return;
         }
-        if (selectedInputType === 'file' && files.length === 0) {
-            setError("Please select files to upload.");
+        if (selectedInputType === 'pdf' && files.length === 0) {
+            setError("Please select PDF files to upload.");
             return;
         }
 
@@ -106,6 +178,7 @@ export default function IngestStructuredResourcePage() {
         try {
             const formData = new FormData();
             formData.append("input_type", selectedInputType);
+            formData.append("openrouter_api_key", apiKey.trim()); // Add API key to form data
 
             if (selectedInputType === 'doi') {
                 formData.append("doi", doiInput.trim());
@@ -116,13 +189,7 @@ export default function IngestStructuredResourcePage() {
                 for (let i = 0; i < files.length; i++) {
                     formData.append("pdf_file", files[i]);
                 }
-            } else if (selectedInputType === 'file') {
-                // JSON/TXT files go to json_text_file parameter -- removed txt file option
-                for (let i = 0; i < files.length; i++) {
-                    formData.append("json_text_file", files[i]);
-                }
             }
-
             // Add endpoint
             const endpoint = process.env.NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT;
             formData.append("endpoint", endpoint || '');
@@ -143,7 +210,7 @@ export default function IngestStructuredResourcePage() {
             console.log('Result data:', result.data);
 
             // Check if the result contains extracted data
-            let parsedData = null;
+            let parsedData: any[] | null = null;
             
             console.log('Full result object:', result);
             console.log('Result.data type:', typeof result.data);
@@ -414,78 +481,140 @@ export default function IngestStructuredResourcePage() {
     }
 
     return (
-        <div className="flex flex-col max-w-4xl mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-6">Structured Resource Extraction</h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">
-                Structured Extraction and Knowledge Representation of Resources from DOIs.
+        <div className="flex flex-col max-w-6xl mx-auto p-4">
+            <h1 className="text-3xl font-bold mb-4 dark:text-white">Structured Resource Extraction</h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg">
+                Structured Extraction and Knowledge Representation of Resources from DOIs, PDFs, and Text.
             </p>
 
-            <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-gray-800 rounded-lg p-8 shadow-md">
+            {/* OpenRouter API Key Configuration */}
+            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6 mb-6 border border-gray-200 dark:border-gray-700">
+                <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">OpenRouter API Key Configuration</h2>
+                <div className="flex flex-col sm:flex-row gap-3">
+                    <input
+                        type="password"
+                        value={apiKey}
+                        onChange={(e) => {
+                            setApiKey(e.target.value);
+                            setIsApiKeyValid(false);
+                            setApiKeyError(null);
+                            setSuccessMessage(null);
+                        }}
+                        placeholder="Enter your API key"
+                        className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
+                    <button
+                        type="button"
+                        onClick={validateApiKey}
+                        disabled={isValidatingKey || !apiKey.trim()}
+                        className={`px-6 py-2 rounded-lg font-medium text-white transition-colors ${
+                            isValidatingKey || !apiKey.trim()
+                                ? "bg-gray-400 cursor-not-allowed"
+                                : "bg-gray-600 hover:bg-gray-700"
+                        }`}
+                    >
+                        {isValidatingKey ? "Validating..." : "Validate API Key"}
+                    </button>
+                    {isApiKeyValid && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setApiKey('');
+                                setIsApiKeyValid(false);
+                                setApiKeyError(null);
+                                setSuccessMessage(null);
+                            }}
+                            className="px-6 py-2 rounded-lg font-medium text-white bg-red-500 hover:bg-red-600 transition-colors"
+                        >
+                            Clear API Key
+                        </button>
+                    )}
+                </div>
+                {apiKeyError && (
+                    <p className="mt-3 text-sm text-red-600 dark:text-red-400">{apiKeyError}</p>
+                )}
+                {isApiKeyValid && (
+                    <p className="mt-3 text-sm text-green-600 dark:text-green-400">✓ API key validated successfully. You can now process resources.</p>
+                )}
+            </div>
+
+            {!isApiKeyValid && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                        ⚠️ Please validate your OpenRouter API key above to enable resource processing.
+                    </p>
+                </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-gray-800 rounded-lg p-8 shadow-lg">
 
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-4">
                         Select Type
                     </label>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <button
                             type="button"
                             onClick={() => setSelectedInputType('doi')}
-                            className={`p-3 rounded-lg border-2 transition-colors duration-200 flex items-center justify-center space-x-2 ${
+                            className={`p-4 rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center space-y-2 group ${
                                 selectedInputType === 'doi'
-                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md'
+                                    : 'border-gray-300 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-sm'
                             }`}
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            <span>DOI</span>
+                            <LinkIcon className={`w-6 h-6 transition-colors ${
+                                selectedInputType === 'doi'
+                                    ? 'text-blue-600 dark:text-blue-400'
+                                    : 'text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'
+                            }`} />
+                            <span className={`font-medium ${
+                                selectedInputType === 'doi'
+                                    ? 'text-blue-700 dark:text-blue-300'
+                                    : 'text-gray-700 dark:text-gray-300'
+                            }`}>DOI</span>
                         </button>
                         
                         <button
                             type="button"
                             onClick={() => setSelectedInputType('pdf')}
-                            className={`p-3 rounded-lg border-2 transition-colors duration-200 flex items-center justify-center space-x-2 ${
+                            className={`p-4 rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center space-y-2 group ${
                                 selectedInputType === 'pdf'
-                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md'
+                                    : 'border-gray-300 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-sm'
                             }`}
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
-                            <span>PDF</span>
+                            <FileText className={`w-6 h-6 transition-colors ${
+                                selectedInputType === 'pdf'
+                                    ? 'text-blue-600 dark:text-blue-400'
+                                    : 'text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'
+                            }`} />
+                            <span className={`font-medium ${
+                                selectedInputType === 'pdf'
+                                    ? 'text-blue-700 dark:text-blue-300'
+                                    : 'text-gray-700 dark:text-gray-300'
+                            }`}>PDF</span>
                         </button>
                         
                         <button
                             type="button"
                             onClick={() => setSelectedInputType('text')}
-                            className={`p-3 rounded-lg border-2 transition-colors duration-200 flex items-center justify-center space-x-2 ${
+                            className={`p-4 rounded-lg border-2 transition-all duration-200 flex flex-col items-center justify-center space-y-2 group ${
                                 selectedInputType === 'text'
-                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md'
+                                    : 'border-gray-300 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-sm'
                             }`}
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                            </svg>
-                            <span>Text</span>
-                        </button>
-                        
-                        <button
-                            type="button"
-                            onClick={() => setSelectedInputType('file')}
-                            className={`p-3 rounded-lg border-2 transition-colors duration-200 flex items-center justify-center space-x-2 ${
-                                selectedInputType === 'file'
-                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400'
-                            }`}
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                            </svg>
-                            <span>JSON File</span>
+                            <Type className={`w-6 h-6 transition-colors ${
+                                selectedInputType === 'text'
+                                    ? 'text-blue-600 dark:text-blue-400'
+                                    : 'text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'
+                            }`} />
+                            <span className={`font-medium ${
+                                selectedInputType === 'text'
+                                    ? 'text-blue-700 dark:text-blue-300'
+                                    : 'text-gray-700 dark:text-gray-300'
+                            }`}>Text</span>
                         </button>
                     </div>
                 </div>
@@ -496,7 +625,6 @@ export default function IngestStructuredResourcePage() {
                         {selectedInputType === 'doi' && 'Enter DOI'}
                         {selectedInputType === 'pdf' && 'Upload PDF'}
                         {selectedInputType === 'text' && 'Type a Text'}
-                        {selectedInputType === 'file' && 'Upload JSON Files'}
                     </label>
                     
                     {selectedInputType === 'doi' && (
@@ -558,42 +686,6 @@ export default function IngestStructuredResourcePage() {
                         />
                     )}
                     
-                    {selectedInputType === 'file' && (
-                        <div
-                            className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors duration-200 ${
-                                isDragOver 
-                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
-                                    : 'border-gray-300 dark:border-gray-700'
-                            }`}
-                            onDragOver={handleDragOver}
-                            onDragLeave={handleDragLeave}
-                            onDrop={handleDrop}
-                        >
-                            <input
-                                type="file"
-                                id="file-files"
-                                onChange={handleFileChange}
-                                className="hidden"
-                                accept=".json"
-                                multiple
-                                disabled={isUploading}
-                            />
-                            <label
-                                htmlFor="file-files"
-                                className="cursor-pointer flex flex-col items-center justify-center"
-                            >
-                                <svg className="h-12 w-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                </svg>
-                                <span className="text-sm text-gray-500 dark:text-gray-400">
-                                    {files.length > 0 ? files.map(file => file.name).join(', ') : "Click to select files or drag and drop"}
-                                </span>
-                                <span className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                                    JSON (.json) files only
-                                </span>
-                            </label>
-                        </div>
-                    )}
                 </div>
 
                 {/* Messages and Submit Button */}
@@ -603,18 +695,18 @@ export default function IngestStructuredResourcePage() {
 
                     <button
                         type="submit"
-                        disabled={isUploading || 
+                        disabled={!isApiKeyValid || isUploading || 
                             (selectedInputType === 'doi' && !doiInput.trim()) ||
                             (selectedInputType === 'text' && !textInput.trim()) ||
-                            (selectedInputType === 'file' && files.length === 0)
+                            (selectedInputType === 'pdf' && files.length === 0)
                         }
-                        className={`w-full px-4 py-3 text-white rounded-lg font-semibold transition-colors duration-200 ${
-                            isUploading || 
+                        className={`w-full px-6 py-3 text-white rounded-lg font-semibold transition-all duration-200 ${
+                            !isApiKeyValid || isUploading || 
                             (selectedInputType === 'doi' && !doiInput.trim()) ||
                             (selectedInputType === 'text' && !textInput.trim()) ||
-                            (selectedInputType === 'file' && files.length === 0)
+                            (selectedInputType === 'pdf' && files.length === 0)
                                 ? "bg-gray-400 cursor-not-allowed"
-                                : "bg-blue-600 hover:bg-blue-700"
+                                : "bg-blue-600 hover:bg-blue-700 hover:shadow-lg"
                         }`}
                     >
                         {isUploading ? "Processing..." : "Process Structured Resource"}

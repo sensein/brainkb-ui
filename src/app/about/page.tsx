@@ -12,8 +12,6 @@ export const metadata: Metadata = {
 export default async function About() {
   const current_session = await getServerSession(authOptions);
 
-  // Redirect logged-in users to the admin page
-  if (current_session) return redirect("/admin");
 
   const sections = yaml.sections;
 

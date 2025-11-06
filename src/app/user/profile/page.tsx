@@ -5,7 +5,7 @@ import {useSession} from "next-auth/react";
 import {format} from "date-fns";
 import ActivityList from "../../components/userProfileActivity";
 import {extractApiData, isValidActivityData} from "../../utils/apiHelpers";
-import { Activity } from "../../types/types";
+import { Activity } from "@/src/types/types";
 
 // Extended session user interface to include custom properties
 interface ExtendedUser {
@@ -88,6 +88,15 @@ const validateGoogleScholar = (scholar: string): string => {
     return "";
 };
 
+// Organization interface with end_date as string | null
+interface Organization {
+    organization: string;
+    position: string;
+    department: string;
+    is_primary: boolean;
+    start_date: string;
+    end_date: string | null;
+}
 
 export default function Profile() {
     const {data: session} = useSession();
@@ -95,7 +104,7 @@ export default function Profile() {
 
     useEffect(() => {
         if (!session || !session.user) {
-            router.push("/login");
+            router.push("/");
         }
     }, [session, router]);
 
@@ -146,7 +155,7 @@ export default function Profile() {
                 start_date: new Date().toISOString().split('T')[0],
                 end_date: null
             }
-        ],
+        ] as Organization[],
         education: [
             {
                 degree: "",
@@ -1177,7 +1186,7 @@ export default function Profile() {
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        const newOrgs = [...profileData.organizations, {
+                                        const newOrgs: Organization[] = [...profileData.organizations, {
                                             organization: "",
                                             position: "",
                                             department: "",
@@ -1246,8 +1255,11 @@ export default function Profile() {
                                                 type="date"
                                                 value={formatDateForInput(org.end_date)}
                                                 onChange={(e) => {
-                                                    const newOrgs = [...profileData.organizations];
-                                                    newOrgs[index].end_date = e.target.value || null;
+                                                    const newOrgs = [...profileData.organizations].map((org, i) => 
+                                                        i === index 
+                                                            ? { ...org, end_date: (e.target.value || null) as string | null }
+                                                            : org
+                                                    );
                                                     setProfileData(prev => ({...prev, organizations: newOrgs}));
                                                 }}
                                                 placeholder="End Date (optional)"

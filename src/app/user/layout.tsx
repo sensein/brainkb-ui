@@ -1,18 +1,22 @@
 import { Inter } from "next/font/google";
 import "../globals.css";
-import FooterAdmin from "@/src/app/components/FooterAdmin";
+import dynamic from "next/dynamic";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export default async function AdminRootLayout({
+// Dynamically import the sidebar component (client component)
+const UserSideBar = dynamic(() => import("../components/UserSideBar"), { ssr: false });
+
+export default async function UserRootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
     <>
-      <div className="p-4 sm:ml-64">
-          <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 mt-14">
+      <UserSideBar />
+      <div className="p-4 sm:ml-64 mt-20">
+          <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700">
               {children}
           </div>
       </div>

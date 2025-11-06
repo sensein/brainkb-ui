@@ -26,3 +26,4 @@ declare module "next-auth/jwt" {
     orcid_id?: string
   }
 }
+

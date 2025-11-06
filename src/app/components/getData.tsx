@@ -9,7 +9,8 @@ export async function getData(
     const apiService = ApiService.getInstance();
     
     // Use the centralized API service with dynamic configuration
-      return await apiService.query(query_parameter, endpoint, useBearerToken);
+    // Note: useBearerToken is configured via environment variables in ApiService
+      return await apiService.query(query_parameter, endpoint);
 
   } catch (e) {
     const error = e as Error;

@@ -810,7 +810,7 @@ const ITEMS: CardItem[] = [
 ];
 
 /* ========== Enhanced Details Component ========== */
-function EnhancedDetailsSection({ item, originalItem }: { item: CardItem; originalItem: CardItem }) {
+function EnhancedDetailsSection({ item, originalItem }: { item: CardItem; originalItem: CardItem | null }) {
   const [activeTab, setActiveTab] = useState<string>("overview");
 
   // Helper function to check if a field has changed
@@ -1450,7 +1450,7 @@ export default function Page() {
 
 
                 {/* Provenance section - Full Width */}
-                {selectedItem.provenance && (
+                {selectedItem?.provenance && (
                   <div className="space-y-4">
                     <ProvenanceTimeline p={selectedItem.provenance} />
                     <ProvenancePanel
