@@ -118,6 +118,39 @@ export async function POST(request: NextRequest) {
         let result: any = null;
         let taskId: string | null = null;
         let isComplete = false;
+        let controllerClosed = false;
+
+        // Helper function to safely enqueue data
+        const safeEnqueue = (data: string) => {
+          if (!controllerClosed) {
+            try {
+              controller.enqueue(data);
+            } catch (error) {
+              // Controller might be closed, mark it as such
+              controllerClosed = true;
+              console.warn('Attempted to enqueue after controller closed:', error);
+            }
+          }
+        };
+
+        // Helper function to safely close controller and WebSocket
+        const safeClose = () => {
+          if (!controllerClosed) {
+            controllerClosed = true;
+            try {
+              controller.close();
+            } catch (error) {
+              console.warn('Error closing controller:', error);
+            }
+          }
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            try {
+              ws.close();
+            } catch (error) {
+              console.warn('Error closing WebSocket:', error);
+            }
+          }
+        };
 
         try {
           // Connect to WebSocket with options to disable compression (avoids bufferUtil issues)
@@ -127,7 +160,7 @@ export async function POST(request: NextRequest) {
 
           ws.on('open', async () => {
             console.log('WebSocket connected');
-            controller.enqueue(`data: ${JSON.stringify({ type: 'connected', message: 'Connected to server' })}\n\n`);
+            safeEnqueue(`data: ${JSON.stringify({ type: 'connected', message: 'Connected to server' })}\n\n`);
 
             // Send start message based on input type
             if (inputType === 'doi' && doi) {
@@ -177,7 +210,7 @@ export async function POST(request: NextRequest) {
                   offset += chunkSize;
                   
                   const progress = Math.min(100, (offset / buffer.length) * 100);
-                  controller.enqueue(`data: ${JSON.stringify({ type: 'progress', progress })}\n\n`);
+                  safeEnqueue(`data: ${JSON.stringify({ type: 'progress', progress })}\n\n`);
                 }
 
                 // Send end message
@@ -185,11 +218,8 @@ export async function POST(request: NextRequest) {
                 console.log('PDF upload complete');
               }
             } else {
-              controller.enqueue(`data: ${JSON.stringify({ type: 'error', error: 'Invalid input data' })}\n\n`);
-              controller.close();
-              if (ws) {
-                ws.close();
-              }
+              safeEnqueue(`data: ${JSON.stringify({ type: 'error', error: 'Invalid input data' })}\n\n`);
+              safeClose();
             }
           });
 
@@ -200,10 +230,10 @@ export async function POST(request: NextRequest) {
 
               if (message.type === 'task_created') {
                 taskId = message.task_id;
-                controller.enqueue(`data: ${JSON.stringify({ type: 'task_created', task_id: taskId })}\n\n`);
-              } else if (message.type === 'job_status' || message.type === 'job_update') {
-                const status = message.status || message.job_status;
-                controller.enqueue(`data: ${JSON.stringify({ type: 'status', status: status, data: message })}\n\n`);
+                safeEnqueue(`data: ${JSON.stringify({ type: 'task_created', task_id: taskId })}\n\n`);
+              } else if (message.type === 'job_status' || message.type === 'job_update' || message.type === 'status') {
+                const status = message.status || message.job_status || message.message;
+                safeEnqueue(`data: ${JSON.stringify({ type: 'status', status: status, data: message })}\n\n`);
                 
                 // Check if status indicates completion
                 if (status === 'completed' || status === 'done' || status === 'finished' || status === 'success') {
@@ -211,29 +241,23 @@ export async function POST(request: NextRequest) {
                   if (message.data || message.result) {
                     result = message.data || message.result || message;
                     isComplete = true;
-                    controller.enqueue(`data: ${JSON.stringify({ type: 'result', data: result })}\n\n`);
-                    controller.enqueue(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
-                    if (ws) {
-                      ws.close();
-                    }
+                    safeEnqueue(`data: ${JSON.stringify({ type: 'result', data: result })}\n\n`);
+                    safeEnqueue(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+                    safeClose();
                   }
                 }
               } else if (message.type === 'result' || message.type === 'complete' || message.type === 'finished') {
                 result = message.data || message.result || message;
                 isComplete = true;
-                controller.enqueue(`data: ${JSON.stringify({ type: 'result', data: result })}\n\n`);
-                controller.enqueue(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
-                if (ws) {
-                  ws.close();
-                }
+                safeEnqueue(`data: ${JSON.stringify({ type: 'result', data: result })}\n\n`);
+                safeEnqueue(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+                safeClose();
               } else if (message.type === 'error') {
-                controller.enqueue(`data: ${JSON.stringify({ type: 'error', error: message.message || message.error || 'Unknown error' })}\n\n`);
-                controller.enqueue(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
-                if (ws) {
-                  ws.close();
-                }
+                safeEnqueue(`data: ${JSON.stringify({ type: 'error', error: message.message || message.error || 'Unknown error' })}\n\n`);
+                safeEnqueue(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+                safeClose();
               } else if (message.type === 'progress') {
-                controller.enqueue(`data: ${JSON.stringify({ type: 'progress', bytes: message.bytes, progress: message.progress })}\n\n`);
+                safeEnqueue(`data: ${JSON.stringify({ type: 'progress', bytes: message.bytes, progress: message.progress })}\n\n`);
               } else {
                 // Handle any other message types - check if it contains result data
                 console.log('Unknown message type, checking for result data:', message.type);
@@ -242,29 +266,33 @@ export async function POST(request: NextRequest) {
                 if (message.data || message.result || (message.status && (message.status === 'completed' || message.status === 'done'))) {
                   result = message.data || message.result || message;
                   isComplete = true;
-                  controller.enqueue(`data: ${JSON.stringify({ type: 'result', data: result })}\n\n`);
-                  controller.enqueue(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
-                  if (ws) {
-                    ws.close();
-                  }
+                  safeEnqueue(`data: ${JSON.stringify({ type: 'result', data: result })}\n\n`);
+                  safeEnqueue(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+                  safeClose();
                 } else {
                   // Forward as generic message
-                  controller.enqueue(`data: ${JSON.stringify({ type: 'message', data: message })}\n\n`);
+                  safeEnqueue(`data: ${JSON.stringify({ type: 'message', data: message })}\n\n`);
                 }
               }
             } catch (e) {
               // Handle binary data or non-JSON messages
-              console.log('Received non-JSON message:', e);
+              if (e instanceof Error && e.message.includes('Controller is already closed')) {
+                // Controller is closed, ignore this message
+                console.warn('Received message after controller closed, ignoring');
+              } else {
+                // Actual non-JSON message or other error
+                console.log('Received non-JSON message or parsing error:', e);
+              }
             }
           });
 
           ws.on('error', (error: Error & { code?: string }) => {
             console.error('WebSocket error:', error);
             const errorMessage = error.message || error.code || 'WebSocket connection error';
-            controller.enqueue(`data: ${JSON.stringify({ type: 'error', error: errorMessage })}\n\n`);
-            controller.enqueue(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+            safeEnqueue(`data: ${JSON.stringify({ type: 'error', error: errorMessage })}\n\n`);
+            safeEnqueue(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
             isComplete = true;
-            controller.close();
+            safeClose();
           });
 
           ws.on('close', (code: number, reason: Buffer) => {
@@ -285,30 +313,29 @@ export async function POST(request: NextRequest) {
               }
               
               if (!result) {
-                controller.enqueue(`data: ${JSON.stringify({ type: 'error', error: errorMsg })}\n\n`);
+                safeEnqueue(`data: ${JSON.stringify({ type: 'error', error: errorMsg })}\n\n`);
               }
             } else if (!isComplete && result) {
-              controller.enqueue(`data: ${JSON.stringify({ type: 'result', data: result })}\n\n`);
+              safeEnqueue(`data: ${JSON.stringify({ type: 'result', data: result })}\n\n`);
             }
             
-            controller.enqueue(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
-            controller.close();
+            safeEnqueue(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+            safeClose();
           });
 
           // Set timeout (30 minutes)
           setTimeout(() => {
             if (ws && ws.readyState === WebSocket.OPEN) {
               console.log('WebSocket timeout, closing connection');
-              ws.close();
-              controller.enqueue(`data: ${JSON.stringify({ type: 'error', error: 'Request timeout' })}\n\n`);
-              controller.close();
+              safeEnqueue(`data: ${JSON.stringify({ type: 'error', error: 'Request timeout' })}\n\n`);
+              safeClose();
             }
           }, 30 * 60 * 1000);
 
         } catch (error) {
           console.error('WebSocket connection error:', error);
-          controller.enqueue(`data: ${JSON.stringify({ type: 'error', error: error instanceof Error ? error.message : 'Unknown error' })}\n\n`);
-          controller.close();
+          safeEnqueue(`data: ${JSON.stringify({ type: 'error', error: error instanceof Error ? error.message : 'Unknown error' })}\n\n`);
+          safeClose();
         }
       }
     });

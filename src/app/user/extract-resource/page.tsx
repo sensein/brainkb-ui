@@ -244,12 +244,12 @@ export default function IngestStructuredResourcePage() {
                     if (line.startsWith('data: ')) {
                         try {
                             const data = JSON.parse(line.slice(6));
-                            console.log('SSE event:', data.type);
+//                             console.log('SSE event:', data.type);
 
                             if (data.type === 'connected') {
                                 setCurrentStatus('connected');
                             } else if (data.type === 'task_created') {
-                                console.log('Task created:', data.task_id);
+//                                 console.log('Task created:', data.task_id);
                                 setCurrentStatus('processing');
                             } else if (data.type === 'status') {
                                 const status = data.status;
@@ -264,21 +264,21 @@ export default function IngestStructuredResourcePage() {
                                     }
                                 }
                             } else if (data.type === 'progress') {
-                                console.log('Progress:', data.progress || data.bytes);
+//                                 console.log('Progress:', data.progress || data.bytes);
                                 setCurrentStatus('processing');
                             } else if (data.type === 'result') {
                                 result = data.data;
-                                console.log('Result received:', result);
+//                                 console.log('Result received:', result);
                                 setCurrentStatus('processing'); // Keep as processing until we parse the result
                             } else if (data.type === 'message') {
                                 // Handle generic messages - check if they contain result data
-                                console.log('Generic message received:', data.data);
+//                                 console.log('Generic message received:', data.data);
                                 if (data.data) {
                                     const msgData = data.data;
                                     // Check if this message contains result data
                                     if (msgData.data || msgData.result || (msgData.status && (msgData.status === 'completed' || msgData.status === 'done'))) {
                                         result = msgData.data || msgData.result || msgData;
-                                        console.log('Found result in generic message:', result);
+//                                         console.log('Found result in generic message:', result);
                                     }
                                 }
                             } else if (data.type === 'error') {
@@ -288,10 +288,10 @@ export default function IngestStructuredResourcePage() {
                                 console.error('SSE error:', errorMessage);
                                 // Don't break here, wait for 'done' event
                             } else if (data.type === 'done') {
-                                console.log('Done event received');
+                                console.info('Done event received');
                                 break;
                             } else {
-                                console.log('Unknown SSE event type:', data.type, data);
+                                console.info('Unknown SSE event type:', data.type, data);
                             }
                         } catch (e) {
                             console.error('Error parsing SSE data:', e);
@@ -307,7 +307,7 @@ export default function IngestStructuredResourcePage() {
 
             // Process the result only if no error occurred
             if (result) {
-                console.log('Full result:', result);
+//                 console.log('Full result:', result);
                 setLastResult(result);
 
                 // Helper function to try parsing JSON from various sources
@@ -317,7 +317,7 @@ export default function IngestStructuredResourcePage() {
                     let dataToParse = source;
                     
                     if (typeof source === 'object' && source !== null) {
-                        console.log(`${sourceName} is already an object:`, source);
+//                         console.log(`${sourceName} is already an object:`, source);
                         return source;
                     }
                     
@@ -326,7 +326,7 @@ export default function IngestStructuredResourcePage() {
                         if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
                             try {
                                 const parsed = JSON.parse(trimmed);
-                                console.log(`Successfully parsed ${sourceName}:`, parsed);
+//                                 console.log(`Successfully parsed ${sourceName}:`, parsed);
                                 return parsed;
                             } catch (e) {
                                 console.error(`Failed to parse ${sourceName} as JSON:`, e);
