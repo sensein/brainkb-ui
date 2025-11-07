@@ -878,7 +878,7 @@ export default function IngestStructuredResourcePage() {
             {extractionResult && (
                 <>
                     {/* Debug: Log the data being passed */}
-                    {console.log('ExtractionResult being passed to component:', extractionResult)}
+                    {(() => { console.log('ExtractionResult being passed to component:', extractionResult); return null; })()}
                     <ExtractedResourceResultTableMapping
                         data={extractionResult}
                         onDataChange={(updatedData) => setExtractionResult(updatedData)}

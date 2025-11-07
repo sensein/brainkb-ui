@@ -137,8 +137,10 @@ export async function POST(request: NextRequest) {
                 doi: doi.trim(),
                 openrouter_api_key: openrouterApiKey
               };
-              ws.send(JSON.stringify(startMessage));
-              console.log('Sent DOI start message:', doi);
+              if (ws) {
+                ws.send(JSON.stringify(startMessage));
+                console.log('Sent DOI start message:', doi);
+              }
             } else if (inputType === 'text' && textContent) {
               const startMessage = {
                 type: 'start',
@@ -146,8 +148,10 @@ export async function POST(request: NextRequest) {
                 text_content: textContent.trim(),
                 openrouter_api_key: openrouterApiKey
               };
-              ws.send(JSON.stringify(startMessage));
-              console.log('Sent text start message, length:', textContent?.length);
+              if (ws) {
+                ws.send(JSON.stringify(startMessage));
+                console.log('Sent text start message, length:', textContent?.length);
+              }
             } else if (inputType === 'pdf' && pdfFile) {
               // Send start message for PDF
               const startMessage = {
@@ -157,31 +161,35 @@ export async function POST(request: NextRequest) {
                 size: pdfFile.size,
                 openrouter_api_key: openrouterApiKey
               };
-              ws.send(JSON.stringify(startMessage));
-              console.log('Sent PDF start message:', pdfFile.name, 'size:', pdfFile.size);
+              if (ws) {
+                ws.send(JSON.stringify(startMessage));
+                console.log('Sent PDF start message:', pdfFile.name, 'size:', pdfFile.size);
 
-              // Upload PDF file in chunks
-              const chunkSize = 64 * 1024; // 64KB
-              const arrayBuffer = await pdfFile.arrayBuffer();
-              const buffer = Buffer.from(arrayBuffer);
-              
-              let offset = 0;
-              while (offset < buffer.length) {
-                const chunk = buffer.slice(offset, offset + chunkSize);
-                ws.send(chunk);
-                offset += chunkSize;
+                // Upload PDF file in chunks
+                const chunkSize = 64 * 1024; // 64KB
+                const arrayBuffer = await pdfFile.arrayBuffer();
+                const buffer = Buffer.from(arrayBuffer);
                 
-                const progress = Math.min(100, (offset / buffer.length) * 100);
-                controller.enqueue(`data: ${JSON.stringify({ type: 'progress', progress })}\n\n`);
-              }
+                let offset = 0;
+                while (offset < buffer.length) {
+                  const chunk = buffer.slice(offset, offset + chunkSize);
+                  ws.send(chunk);
+                  offset += chunkSize;
+                  
+                  const progress = Math.min(100, (offset / buffer.length) * 100);
+                  controller.enqueue(`data: ${JSON.stringify({ type: 'progress', progress })}\n\n`);
+                }
 
-              // Send end message
-              ws.send(JSON.stringify({ type: 'end' }));
-              console.log('PDF upload complete');
+                // Send end message
+                ws.send(JSON.stringify({ type: 'end' }));
+                console.log('PDF upload complete');
+              }
             } else {
               controller.enqueue(`data: ${JSON.stringify({ type: 'error', error: 'Invalid input data' })}\n\n`);
               controller.close();
-              ws.close();
+              if (ws) {
+                ws.close();
+              }
             }
           });
 
@@ -205,7 +213,9 @@ export async function POST(request: NextRequest) {
                     isComplete = true;
                     controller.enqueue(`data: ${JSON.stringify({ type: 'result', data: result })}\n\n`);
                     controller.enqueue(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
-                    ws.close();
+                    if (ws) {
+                      ws.close();
+                    }
                   }
                 }
               } else if (message.type === 'result' || message.type === 'complete' || message.type === 'finished') {
@@ -213,11 +223,15 @@ export async function POST(request: NextRequest) {
                 isComplete = true;
                 controller.enqueue(`data: ${JSON.stringify({ type: 'result', data: result })}\n\n`);
                 controller.enqueue(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
-                ws.close();
+                if (ws) {
+                  ws.close();
+                }
               } else if (message.type === 'error') {
                 controller.enqueue(`data: ${JSON.stringify({ type: 'error', error: message.message || message.error || 'Unknown error' })}\n\n`);
                 controller.enqueue(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
-                ws.close();
+                if (ws) {
+                  ws.close();
+                }
               } else if (message.type === 'progress') {
                 controller.enqueue(`data: ${JSON.stringify({ type: 'progress', bytes: message.bytes, progress: message.progress })}\n\n`);
               } else {
@@ -230,7 +244,9 @@ export async function POST(request: NextRequest) {
                   isComplete = true;
                   controller.enqueue(`data: ${JSON.stringify({ type: 'result', data: result })}\n\n`);
                   controller.enqueue(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
-                  ws.close();
+                  if (ws) {
+                    ws.close();
+                  }
                 } else {
                   // Forward as generic message
                   controller.enqueue(`data: ${JSON.stringify({ type: 'message', data: message })}\n\n`);
