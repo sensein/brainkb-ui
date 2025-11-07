@@ -74,6 +74,7 @@ export default function NamedEntityRecognition() {
     const [apiKeyError, setApiKeyError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [currentStatus, setCurrentStatus] = useState<StatusType>('idle');
+    const [originalData, setOriginalData] = useState<Results | null>(null); // Store original data before modifications
 
     // Check if API key exists in session storage
     useEffect(() => {
@@ -174,8 +175,10 @@ export default function NamedEntityRecognition() {
     // Handle form submission
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        
+        // Check if API key is valid
         if (!isApiKeyValid) {
-            setError("Please enter and validate API key first");
+            setError("Please provide a valid OpenRouter API key before processing.");
             return;
         }
 
@@ -193,19 +196,19 @@ export default function NamedEntityRecognition() {
             return;
         }
 
-        setIsProcessing(true);
+        // Clear existing results and messages when starting new process
+        setResults(null);
+        setOriginalData(null);
         setError(null);
         setSuccessMessage(null);
-        setResults(null);
         setCurrentStatus('processing');
+        setIsProcessing(true);
 
         try {
-            console.log('Starting form submission...');
             const formData = new FormData();
             formData.append("input_type", selectedInputType);
-            formData.append("current_loggedin_user", session?.user?.email || 'unknown');
-            
-            // Add input based on selected type
+            formData.append("openrouter_api_key", apiKey.trim()); // Add API key to form data
+
             if (selectedInputType === 'doi') {
                 formData.append("doi", doiInput.trim());
             } else if (selectedInputType === 'text') {
@@ -214,175 +217,230 @@ export default function NamedEntityRecognition() {
                 formData.append("pdf_file", file!);
             }
             
-            // Add API key to form data
-            const storedApiKey = sessionStorage.getItem('ner_api_key');
-            if (storedApiKey) {
-                formData.append("api_key", storedApiKey);
-            }
+            // Add endpoint and client ID
+            const prefix = "ws-client-id-";
+            const client_id = (crypto.randomUUID?.() || `${prefix}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+            // Endpoint should be in format: ws://localhost:8009/api/ws/ner-extraction
+            const endpoint = process.env.NEXT_PUBLIC_API_NER_ENDPOINT;
+            formData.append("endpoint", endpoint || '');
+            formData.append("clientId", client_id);
 
-            if (process.env.NEXT_PUBLIC_JWT_USER) {
-                formData.append("email", process.env.NEXT_PUBLIC_JWT_USER);
-            }
-            if (process.env.NEXT_PUBLIC_JWT_PASSWORD) {
-                formData.append("password", process.env.NEXT_PUBLIC_JWT_PASSWORD);
-            }
-
-            // Read and append all required YAML files
-            const filesToLoad = [
-                {name: 'agent_config_file', file: process.env.NEXT_PUBLI_AGENT_CONFIG || 'ner_agent.yaml'},
-                {name: 'task_config_file', file: process.env.NEXT_PUBLI_TASK_CONFIG || 'ner_task.yaml'},
-                {name: 'embedder_config_file', file: process.env.NEXT_PUBLI_EMBEDDING_CONFIG || 'embedding.yaml'},
-                {name: 'knowledge_config_file', file: process.env.NEXT_PUBLI_KNOWLEDGE_CONFIG || 'search_ontology_knowledge.yaml'}
-            ];
-
-            console.log('Loading YAML files...');
-            for (const fileConfig of filesToLoad) {
-                console.log(`Loading ${fileConfig.name}...`);
-                const response = await fetch(`/api/config?file=${fileConfig.file}`);
-                if (!response.ok) {
-                    console.error(`Failed to load ${fileConfig.name}:`, response.status, response.statusText);
-                    throw new Error(`Failed to load ${fileConfig.name}`);
-                }
-                let text = await response.text();
-
-                // If this is the agent config file, update the API key
-                if (fileConfig.name === 'agent_config_file' && storedApiKey) {
-                    const config = JSON.parse(text);
-                    // Update API key for all agents
-                    ['extractor_agent', 'alignment_agent', 'judge_agent'].forEach(agent => {
-                        if (config[agent] && config[agent].llm) {
-                            config[agent].llm.api_key = storedApiKey;
-                        }
-                    });
-                    text = JSON.stringify(config);
-                }
-
-                const blob = new Blob([text], {type: 'application/yaml'});
-                formData.append(fileConfig.name, blob, fileConfig.file);
-                console.log(`Successfully loaded ${fileConfig.name}`);
-            }
-
-            // Add boolean flags
-            if (process.env.NEXT_PUBLIC_ENABLE_WEIGHTSANDBIAS) {
-                formData.append("ENABLE_WEIGHTSANDBIAS", process.env.NEXT_PUBLIC_ENABLE_WEIGHTSANDBIAS);
-            }
-            if (process.env.NEXT_PUBLIC_ENABLE_MLFLOW) {
-                formData.append("ENABLE_MLFLOW", process.env.NEXT_PUBLIC_ENABLE_MLFLOW);
-            }
-            if (process.env.NEXT_PUBLIC_ENABLE_KG_SOURCE) {
-                formData.append("ENABLE_KG_SOURCE", process.env.NEXT_PUBLIC_ENABLE_KG_SOURCE);
-            }
-
-            // Add Weaviate configuration
-            if (process.env.NEXT_PUBLIC_ONTOLOGY_DATABASE) {
-                formData.append("ONTOLOGY_DATABASE", process.env.NEXT_PUBLIC_ONTOLOGY_DATABASE);
-            }
-            if (process.env.NEXT_PUBLIC_WEAVIATE_API_KEY) {
-                formData.append("WEAVIATE_API_KEY", process.env.NEXT_PUBLIC_WEAVIATE_API_KEY);
-            }
-            if (process.env.NEXT_PUBLIC_WEAVIATE_HTTP_HOST) {
-                formData.append("WEAVIATE_HTTP_HOST", process.env.NEXT_PUBLIC_WEAVIATE_HTTP_HOST);
-            }
-            if (process.env.NEXT_PUBLIC_WEAVIATE_HTTP_PORT) {
-                formData.append("WEAVIATE_HTTP_PORT", process.env.NEXT_PUBLIC_WEAVIATE_HTTP_PORT);
-            }
-            if (process.env.NEXT_PUBLIC_WEAVIATE_HTTP_SECURE) {
-                formData.append("WEAVIATE_HTTP_SECURE", process.env.NEXT_PUBLIC_WEAVIATE_HTTP_SECURE);
-            }
-            if (process.env.NEXT_PUBLIC_WEAVIATE_GRPC_HOST) {
-                formData.append("WEAVIATE_GRPC_HOST", process.env.NEXT_PUBLIC_WEAVIATE_GRPC_HOST);
-            }
-            if (process.env.NEXT_PUBLIC_WEAVIATE_GRPC_PORT) {
-                formData.append("WEAVIATE_GRPC_PORT", process.env.NEXT_PUBLIC_WEAVIATE_GRPC_PORT);
-            }
-            if (process.env.NEXT_PUBLIC_WEAVIATE_GRPC_SECURE) {
-                formData.append("WEAVIATE_GRPC_SECURE", process.env.NEXT_PUBLIC_WEAVIATE_GRPC_SECURE);
-            }
-
-            // Add Ollama configuration
-            if (process.env.NEXT_PUBLIC_OLLAMA_API_ENDPOINT) {
-                formData.append("OLLAMA_API_ENDPOINT", process.env.NEXT_PUBLIC_OLLAMA_API_ENDPOINT);
-            }
-            if (process.env.NEXT_PUBLIC_OLLAMA_MODEL) {
-                formData.append("OLLAMA_MODEL", process.env.NEXT_PUBLIC_OLLAMA_MODEL);
-            }
-
-            // Add Grobid configuration
-            if (process.env.NEXT_PUBLIC_GROBID_SERVER_URL_OR_EXTERNAL_SERVICE) {
-                formData.append("GROBID_SERVER_URL_OR_EXTERNAL_SERVICE",
-                    process.env.NEXT_PUBLIC_GROBID_SERVER_URL_OR_EXTERNAL_SERVICE);
-            }
-            if (process.env.NEXT_PUBLIC_EXTERNAL_PDF_EXTRACTION_SERVICE) {
-                formData.append("EXTERNAL_PDF_EXTRACTION_SERVICE",
-                    process.env.NEXT_PUBLIC_EXTERNAL_PDF_EXTRACTION_SERVICE);
-            }
-
-            console.log('All form data prepared, making API call...');
-
-
-            // call our API route
-            const response = await fetch("/api/process-document", {
+            // Handle WebSocket via SSE stream
+            const response = await fetch("/api/ws-connection", {
                 method: "POST",
                 body: formData,
-                 // Add timeout
-                signal: AbortSignal.timeout(2000000) // 20 minutes timeout
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('API call failed:', {
-                    status: response.status,
-                    statusText: response.statusText,
-                    error: errorText
-                });
-                throw new Error(`Error: ${response.status}`);
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Error: ${response.status}`);
             }
 
-            console.log("*****************************************************");
-            console.log('API call successful, processing response...');
-            const data = await response.json();
-            console.log("response data:", JSON.stringify(data, null, 2));
-            console.log("*****************************************************");
+            // Read Server-Sent Events stream
+            const reader = response.body?.getReader();
+            const decoder = new TextDecoder();
+            let result: any = null;
+            let buffer = '';
+            let hasError = false;
+            let errorMessage = '';
 
-            // Transform the data to match our interface
-            const documentName = selectedInputType === 'pdf' && file 
-                ? file.name 
-                : selectedInputType === 'doi' 
-                    ? `DOI: ${doiInput.trim()}` 
-                    : 'Text Input';
-            
-            const transformedData: Results = {
-                entities: data.entities,
-                documentName: documentName,
-                processedAt: new Date().toISOString(),
-            };
-
-            // Initialize all entities with thumbs up feedback if not already set
-            Object.keys(transformedData.entities).forEach(key => {
-                transformedData.entities[key] = transformedData.entities[key].map(entity => ({
-                    ...entity,
-                    feedback: entity.feedback || 'up',
-                    // contributed_by: entity.contributed_by || session?.user?.email || 'unknown',
-                    // changed_by: entity.changed_by || [session?.user?.email || 'unknown']
-                }));
-            });
-
-            setResults(transformedData);
-            setAllApproved(true);
-
-            // Set the first entity type as active
-            if (transformedData.entities && Object.keys(transformedData.entities).length > 0) {
-                setActiveEntityType(Object.keys(transformedData.entities)[0]);
+            if (!reader) {
+                throw new Error('Failed to get response stream');
             }
-            
-            // Clear inputs after successful processing
-            setFile(null);
-            setDoiInput('');
-            setTextInput('');
-            setCurrentStatus('done');
+
+            setCurrentStatus('connecting');
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.slice(6));
+                            console.log('SSE event:', data.type);
+
+                            if (data.type === 'connected') {
+                                setCurrentStatus('connected');
+                            } else if (data.type === 'task_created') {
+                                console.log('Task created:', data.task_id);
+                                setCurrentStatus('processing');
+                            } else if (data.type === 'status') {
+                                const status = data.status;
+                                if (status === 'processing' || status === 'running' || status === 'pending') {
+                                    setCurrentStatus('processing');
+                                } else if (status === 'completed' || status === 'done' || status === 'finished' || status === 'success') {
+                                    setCurrentStatus('processing');
+                                    if (data.data) {
+                                        result = data.data;
+                                    }
+                                }
+                            } else if (data.type === 'progress') {
+                                console.log('Progress:', data.progress || data.bytes);
+                                setCurrentStatus('processing');
+                            } else if (data.type === 'result') {
+                                result = data.data;
+                                console.log('Result received:', result);
+                                setCurrentStatus('processing');
+                            } else if (data.type === 'message') {
+                                console.log('Generic message received:', data.data);
+                                if (data.data) {
+                                    const msgData = data.data;
+                                    if (msgData.data || msgData.result || (msgData.status && (msgData.status === 'completed' || msgData.status === 'done'))) {
+                                        result = msgData.data || msgData.result || msgData;
+                                        console.log('Found result in generic message:', result);
+                                    }
+                                }
+                            } else if (data.type === 'error') {
+                                hasError = true;
+                                errorMessage = data.error || 'Processing error';
+                                setCurrentStatus('error');
+                                console.error('SSE error:', errorMessage);
+                            } else if (data.type === 'done') {
+                                console.log('Done event received');
+                                break;
+                            } else {
+                                console.log('Unknown SSE event type:', data.type, data);
+                            }
+                        } catch (e) {
+                            console.error('Error parsing SSE data:', e);
+                        }
+                    }
+                }
+            }
+
+            // If there was an error, throw it instead of processing result
+            if (hasError) {
+                throw new Error(errorMessage);
+            }
+
+            // Process the result only if no error occurred
+            if (result) {
+                console.log('Full result:', result);
+
+                // Helper function to try parsing JSON from various sources
+                const tryParseJSON = (source: any, sourceName: string) => {
+                    if (!source) return null;
+                    
+                    let dataToParse = source;
+                    
+                    if (typeof source === 'object' && source !== null) {
+                        console.log(`${sourceName} is already an object:`, source);
+                        return source;
+                    }
+                    
+                    if (typeof source === 'string') {
+                        const trimmed = source.trim();
+                        if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+                            try {
+                                const parsed = JSON.parse(trimmed);
+                                console.log(`Successfully parsed ${sourceName}:`, parsed);
+                                return parsed;
+                            } catch (e) {
+                                console.error(`Failed to parse ${sourceName} as JSON:`, e);
+                                return null;
+                            }
+                        }
+                    }
+                    
+                    return null;
+                };
+                
+                let parsedData: any = null;
+                const sources = [
+                    { data: result.data, name: 'result.data' },
+                    { data: result.message, name: 'result.message' },
+                    { data: result.data?.message, name: 'result.data.message' },
+                    { data: result.data?.data, name: 'result.data.data' },
+                    { data: result.entities, name: 'result.entities' },
+                    { data: result.data?.entities, name: 'result.data.entities' },
+                    { data: result, name: 'result' }
+                ];
+                
+                for (const source of sources) {
+                    const parsed = tryParseJSON(source.data, source.name);
+                    if (parsed) {
+                        console.log(`Found data in ${source.name}:`, parsed);
+                        
+                        if (typeof parsed === 'object' && parsed.message && typeof parsed.message === 'string') {
+                            try {
+                                const messageParsed = JSON.parse(parsed.message);
+                                if (messageParsed.entities || (typeof messageParsed === 'object' && !Array.isArray(messageParsed))) {
+                                    parsedData = messageParsed;
+                                }
+                                break;
+                            } catch (e) {
+                                console.error(`Failed to parse message field as JSON:`, e);
+                            }
+                        }
+                        
+                        if (parsed.entities || (typeof parsed === 'object' && !Array.isArray(parsed))) {
+                            parsedData = parsed;
+                            break;
+                        }
+                    }
+                }
+                
+                if (parsedData && parsedData.entities) {
+                    // Transform the data to match our interface
+                    const documentName = selectedInputType === 'pdf' && file 
+                        ? file.name 
+                        : selectedInputType === 'doi' 
+                            ? `DOI: ${doiInput.trim()}` 
+                            : 'Text Input';
+                    
+                    const transformedData: Results = {
+                        entities: parsedData.entities,
+                        documentName: documentName,
+                        processedAt: new Date().toISOString(),
+                    };
+
+                    // Initialize all entities with thumbs up feedback if not already set
+                    Object.keys(transformedData.entities).forEach(key => {
+                        transformedData.entities[key] = transformedData.entities[key].map((entity: Entity) => ({
+                            ...entity,
+                            feedback: entity.feedback || 'up',
+                        }));
+                    });
+
+                    // Store original data before modifications
+                    setOriginalData(transformedData);
+                    setResults(transformedData);
+                    setAllApproved(true);
+
+                    // Set the first entity type as active
+                    if (transformedData.entities && Object.keys(transformedData.entities).length > 0) {
+                        setActiveEntityType(Object.keys(transformedData.entities)[0]);
+                    }
+                    
+                    setSuccessMessage("Content processed successfully! Review and edit the extracted entities below.");
+                    setCurrentStatus('done');
+                    
+                    // Clear inputs on success
+                    setFile(null);
+                    setDoiInput('');
+                    setTextInput('');
+                } else if (result) {
+                    console.warn('Result received but could not parse entities:', result);
+                    setError("Content processed but no entities found. Please check the server response.");
+                    setCurrentStatus('error');
+                } else {
+                    setError("No result received from server. The processing may have completed without returning data.");
+                    setCurrentStatus('error');
+                }
+            } else {
+                setError("No result received from server. The processing may have completed without returning data.");
+                setCurrentStatus('error');
+            }
+
         } catch (err) {
             console.error("Error processing document:", err);
-            setError("Failed to process document. Please try again.");
+            const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
+            setError(`Failed to process document: ${errorMessage}`);
             setCurrentStatus('error');
         } finally {
             setIsProcessing(false);
@@ -392,10 +450,16 @@ export default function NamedEntityRecognition() {
 
     // Handle feedback (thumbs up/down)
     const handleFeedback = (type: string, index: number, feedback: 'up' | 'down') => {
-        if (!results) return;
+        if (!results || !originalData) return;
 
         const updatedResults = {...results};
         updatedResults.entities[type][index].feedback = feedback;
+
+        // Update originalData as well
+        const updatedOriginal = {...originalData};
+        if (updatedOriginal.entities[type] && updatedOriginal.entities[type][index]) {
+            updatedOriginal.entities[type][index].feedback = feedback;
+        }
 
         // If thumbs down, set up for editing
         if (feedback === 'down') {
@@ -413,6 +477,7 @@ export default function NamedEntityRecognition() {
 
         setAllApproved(allUp);
         setResults(updatedResults);
+        setOriginalData(updatedOriginal);
         setIsSaved(false);
     };
 
@@ -424,14 +489,17 @@ export default function NamedEntityRecognition() {
 
     // Handle final save
     const handleSave = async () => {
-        if (!results) return;
+        if (!originalData) {
+            setError("No data to save.");
+            return;
+        }
 
         setIsProcessing(true);
         setError(null);
 
         try {
-            // Deep copy results to avoid mutating state directly
-            const resultsToSave = JSON.parse(JSON.stringify(results));
+            // Deep copy original data to avoid mutating state directly
+            const resultsToSave = JSON.parse(JSON.stringify(originalData));
 
             // Correct all start/end indices for all entities
             Object.keys(resultsToSave.entities).forEach(type => {
@@ -458,7 +526,17 @@ export default function NamedEntityRecognition() {
                 }
             });
 
-            console.log('Starting form submission...');
+            // Add contributed_by field to all entities
+            const contributedBy = session?.user?.email || session?.user?.name || (session?.user as any)?.orcid_id || 'unknown';
+            Object.keys(resultsToSave.entities).forEach(type => {
+                resultsToSave.entities[type] = resultsToSave.entities[type].map((entity: Entity) => ({
+                    ...entity,
+                    contributed_by: contributedBy
+                }));
+            });
+
+            console.log('JSON being sent for saving:', JSON.stringify(resultsToSave, null, 2));
+
             const formData = new FormData();
 
             // Add credentials if available
@@ -473,7 +551,6 @@ export default function NamedEntityRecognition() {
             const resultsJson = JSON.stringify(resultsToSave);
             formData.append("results", resultsJson);
 
-            console.log("Saving data:", formData.get("results"));
             const response = await fetch("/api/save-ner-result", {
                 method: 'POST',
                 body: formData,
@@ -495,13 +572,14 @@ export default function NamedEntityRecognition() {
             console.log('Data saved:', data);
 
             // Show success message and update saved state
-            setError("Results saved successfully!");
+            setSuccessMessage("Results saved successfully!");
             setIsSaved(true);
             return data;
 
         } catch (err) {
             console.error("Error saving corrections:", err);
-            setError("Failed to save results. Please try again.");
+            const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
+            setError(`Failed to save results: ${errorMessage}`);
         } finally {
             setIsProcessing(false);
         }
@@ -509,18 +587,25 @@ export default function NamedEntityRecognition() {
 
     // Update the handleTypeChange function
     const handleTypeChange = (oldType: string, index: number, newType: string) => {
-        if (!results) return;
+        if (!results || !originalData) return;
 
         const updatedResults = {...results};
+        const updatedOriginal = {...originalData};
         const entity = updatedResults.entities[oldType][index];
         const currentUser = session?.user?.email || 'unknown';
 
-        // Remove from old type
+        // Remove from old type in both results and originalData
         updatedResults.entities[oldType] = updatedResults.entities[oldType].filter((_, i) => i !== index);
+        if (updatedOriginal.entities[oldType]) {
+            updatedOriginal.entities[oldType] = updatedOriginal.entities[oldType].filter((_, i) => i !== index);
+        }
 
         // Add to new type
         if (!updatedResults.entities[newType]) {
             updatedResults.entities[newType] = [];
+        }
+        if (!updatedOriginal.entities[newType]) {
+            updatedOriginal.entities[newType] = [];
         }
 
         // Update changed_by list
@@ -539,6 +624,7 @@ export default function NamedEntityRecognition() {
         };
 
         updatedResults.entities[newType].push(updatedEntity);
+        updatedOriginal.entities[newType].push(updatedEntity);
 
         // Check if all entities now have thumbs up
         const allUp = Object.keys(updatedResults.entities).every(entityType =>
@@ -547,6 +633,7 @@ export default function NamedEntityRecognition() {
 
         setAllApproved(allUp);
         setResults(updatedResults);
+        setOriginalData(updatedOriginal);
         setIsSaved(false);
         setEditingEntity(null); // Clear editing state after type change
 
@@ -554,6 +641,11 @@ export default function NamedEntityRecognition() {
         Object.keys(updatedResults.entities).forEach(key => {
             if (updatedResults.entities[key].length === 0) {
                 delete updatedResults.entities[key];
+            }
+        });
+        Object.keys(updatedOriginal.entities).forEach(key => {
+            if (updatedOriginal.entities[key].length === 0) {
+                delete updatedOriginal.entities[key];
             }
         });
     };
