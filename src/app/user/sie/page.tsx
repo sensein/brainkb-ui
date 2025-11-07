@@ -266,12 +266,12 @@ export default function NamedEntityRecognition() {
                     if (line.startsWith('data: ')) {
                         try {
                             const data = JSON.parse(line.slice(6));
-                            console.log('SSE event:', data.type);
+//                             console.log('SSE event:', data.type);
 
                             if (data.type === 'connected') {
                                 setCurrentStatus('connected');
                             } else if (data.type === 'task_created') {
-                                console.log('Task created:', data.task_id);
+//                                 console.log('Task created:', data.task_id);
                                 setCurrentStatus('processing');
                             } else if (data.type === 'status') {
                                 const status = data.status;
@@ -284,19 +284,19 @@ export default function NamedEntityRecognition() {
                                     }
                                 }
                             } else if (data.type === 'progress') {
-                                console.log('Progress:', data.progress || data.bytes);
+//                                 console.log('Progress:', data.progress || data.bytes);
                                 setCurrentStatus('processing');
                             } else if (data.type === 'result') {
                                 result = data.data;
-                                console.log('Result received:', result);
+//                                 console.log('Result received:', result);
                                 setCurrentStatus('processing');
                             } else if (data.type === 'message') {
-                                console.log('Generic message received:', data.data);
+//                                 console.log('Generic message received:', data.data);
                                 if (data.data) {
                                     const msgData = data.data;
                                     if (msgData.data || msgData.result || (msgData.status && (msgData.status === 'completed' || msgData.status === 'done'))) {
                                         result = msgData.data || msgData.result || msgData;
-                                        console.log('Found result in generic message:', result);
+//                                         console.log('Found result in generic message:', result);
                                     }
                                 }
                             } else if (data.type === 'error') {
@@ -305,10 +305,10 @@ export default function NamedEntityRecognition() {
                                 setCurrentStatus('error');
                                 console.error('SSE error:', errorMessage);
                             } else if (data.type === 'done') {
-                                console.log('Done event received');
+                                console.info('Done event received');
                                 break;
                             } else {
-                                console.log('Unknown SSE event type:', data.type, data);
+                                console.info('Unknown SSE event type:', data.type, data);
                             }
                         } catch (e) {
                             console.error('Error parsing SSE data:', e);
@@ -330,7 +330,7 @@ export default function NamedEntityRecognition() {
                 
                 // Check if data has judge_ner_terms structure (new format)
                 if (parsedData && parsedData.judge_ner_terms) {
-                    console.log('Setting NER data with judge_ner_terms:', Object.keys(parsedData.judge_ner_terms).length, 'keys');
+//                     console.log('Setting NER data with judge_ner_terms:', Object.keys(parsedData.judge_ner_terms).length, 'keys');
                     // Store NER data in judge_ner_terms format
                     setNerData(parsedData);
                     setResults(null); // Clear old format results
@@ -469,7 +469,7 @@ export default function NamedEntityRecognition() {
                     });
                 }
 
-                console.log('JSON being sent for saving:', JSON.stringify(dataToSave, null, 2));
+//                 console.log('JSON being sent for saving:', JSON.stringify(dataToSave, null, 2));
 
                 const formData = new FormData();
                 if (process.env.NEXT_PUBLIC_JWT_USER) {
@@ -558,7 +558,7 @@ export default function NamedEntityRecognition() {
                 }));
             });
 
-            console.log('JSON being sent for saving:', JSON.stringify(resultsToSave, null, 2));
+//             console.log('JSON being sent for saving:', JSON.stringify(resultsToSave, null, 2));
 
             const formData = new FormData();
 
@@ -592,7 +592,7 @@ export default function NamedEntityRecognition() {
             }
 
             const data = await response.json();
-            console.log('Data saved:', data);
+//             console.log('Data saved:', data);
 
             // Show success message and update saved state
             setSuccessMessage("Results saved successfully!");
