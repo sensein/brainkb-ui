@@ -24,6 +24,7 @@ export default function IngestStructuredResourcePage() {
     const [extractionResult, setExtractionResult] = useState<any>(null);
     const [isSaving, setIsSaving] = useState<boolean>(false);
     const [lastResult, setLastResult] = useState<any>(null);
+    const [originalData, setOriginalData] = useState<any>(null); // Store original JSON before flattening
     const [apiKey, setApiKey] = useState<string>('');
     const [isApiKeyValid, setIsApiKeyValid] = useState<boolean>(false);
     const [isValidatingKey, setIsValidatingKey] = useState<boolean>(false);
@@ -177,6 +178,7 @@ export default function IngestStructuredResourcePage() {
         // Clear existing results and messages when starting new process
         setExtractionResult(null);
         setLastResult(null);
+        setOriginalData(null);
         setError(null);
         setSuccessMessage(null);
         setCurrentStatus('processing');
@@ -377,6 +379,9 @@ export default function IngestStructuredResourcePage() {
                 }
                 
                 if (parsedData && parsedData.length > 0) {
+                    // Store original data before flattening
+                    setOriginalData(parsedData);
+                    
                     const flattenedData = parsedData.map((item: any) => {
                         if (item.message && typeof item.message === 'string') {
                             try {
@@ -404,6 +409,9 @@ export default function IngestStructuredResourcePage() {
                     if (typeof result === 'object') {
                         // Try to flatten the entire result object
                         try {
+                            // Store original data before flattening
+                            setOriginalData([result]);
+                            
                             const flattened = flattenObject(result);
                             if (Object.keys(flattened).length > 0) {
                                 setExtractionResult([flattened]);
@@ -442,7 +450,7 @@ export default function IngestStructuredResourcePage() {
     };
 
     const handleSaveData = async () => {
-        if (!extractionResult) {
+        if (!originalData) {
             setError("No data to save.");
             return;
         }
@@ -456,9 +464,20 @@ export default function IngestStructuredResourcePage() {
                 throw new Error("Save endpoint not configured.");
             }
 
-            // Reconstruct the original nested structure
-            const reconstructedData = extractionResult.map((flattenedItem: any) => unflattenObject(flattenedItem));
-            console.log('Reconstructed data for saving:', reconstructedData);
+            // Use original JSON data and add contributed_by field
+            const contributedBy = session?.user?.email || session?.user?.name || (session?.user as any)?.orcid_id || 'unknown';
+            
+            const dataToSave = Array.isArray(originalData) 
+                ? originalData.map((item: any) => ({
+                    ...item,
+                    contributed_by: contributedBy
+                }))
+                : [{
+                    ...originalData,
+                    contributed_by: contributedBy
+                }];
+
+            console.log('JSON being sent for saving:', JSON.stringify(dataToSave, null, 2));
 
             const response = await fetch("/api/save-structured-resource", {
                 method: "POST",
@@ -466,7 +485,7 @@ export default function IngestStructuredResourcePage() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    data: reconstructedData,
+                    data: dataToSave,
                     endpoint: saveEndpoint
                 }),
             });
@@ -479,6 +498,7 @@ export default function IngestStructuredResourcePage() {
 
             setSuccessMessage("Data saved successfully!");
             setExtractionResult(null);
+            setOriginalData(null);
 
         } catch (err) {
             console.error("Error saving data:", err);
