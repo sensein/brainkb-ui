@@ -3,8 +3,9 @@
 import {useState, useEffect} from "react";
 import {useRouter} from "next/navigation";
 import {useSession} from "next-auth/react";
-import {ThumbsUp, ThumbsDown, FileText, Link as LinkIcon, Type} from "lucide-react";
+import {FileText, Link as LinkIcon, Type} from "lucide-react";
 import StatusIndicator, { StatusType } from "../../components/StatusIndicator";
+import NERResultsDisplay from "../../components/NERResultsDisplay";
 
 // Define types for our entities and results
 interface Entity {
@@ -75,6 +76,7 @@ export default function NamedEntityRecognition() {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [currentStatus, setCurrentStatus] = useState<StatusType>('idle');
     const [originalData, setOriginalData] = useState<Results | null>(null); // Store original data before modifications
+    const [nerData, setNerData] = useState<any>(null); // Store NER data in judge_ner_terms format
 
     // Check if API key exists in session storage
     useEffect(() => {
@@ -130,8 +132,8 @@ export default function NamedEntityRecognition() {
                 setIsApiKeyValid(true);
                 setApiKeyError(null);
                 setSuccessMessage("API key validated successfully!");
-                // Store API key in session storage
-                sessionStorage.setItem('ner_api_key', apiKey.trim());
+            // Store API key in session storage
+            sessionStorage.setItem('ner_api_key', apiKey.trim());
             } else {
                 const errorData = await response.json().catch(() => ({}));
                 setIsApiKeyValid(false);
@@ -199,6 +201,7 @@ export default function NamedEntityRecognition() {
         // Clear existing results and messages when starting new process
         setResults(null);
         setOriginalData(null);
+        setNerData(null);
         setError(null);
         setSuccessMessage(null);
         setCurrentStatus('processing');
@@ -231,7 +234,7 @@ export default function NamedEntityRecognition() {
                 body: formData,
             });
 
-            if (!response.ok) {
+                if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error || `Error: ${response.status}`);
             }
@@ -321,6 +324,7 @@ export default function NamedEntityRecognition() {
             // Process the result only if no error occurred
             if (result) {
                 console.log('Full result:', result);
+                console.log('Full result JSON:', JSON.stringify(result, null, 2));
 
                 // Helper function to try parsing JSON from various sources
                 const tryParseJSON = (source: any, sourceName: string) => {
@@ -350,72 +354,192 @@ export default function NamedEntityRecognition() {
                     return null;
                 };
                 
-                let parsedData: any = null;
-                const sources = [
-                    { data: result.data, name: 'result.data' },
-                    { data: result.message, name: 'result.message' },
-                    { data: result.data?.message, name: 'result.data.message' },
-                    { data: result.data?.data, name: 'result.data.data' },
-                    { data: result.entities, name: 'result.entities' },
-                    { data: result.data?.entities, name: 'result.data.entities' },
-                    { data: result, name: 'result' }
-                ];
-                
-                for (const source of sources) {
-                    const parsed = tryParseJSON(source.data, source.name);
-                    if (parsed) {
-                        console.log(`Found data in ${source.name}:`, parsed);
-                        
-                        if (typeof parsed === 'object' && parsed.message && typeof parsed.message === 'string') {
-                            try {
-                                const messageParsed = JSON.parse(parsed.message);
-                                if (messageParsed.entities || (typeof messageParsed === 'object' && !Array.isArray(messageParsed))) {
-                                    parsedData = messageParsed;
-                                }
-                                break;
-                            } catch (e) {
-                                console.error(`Failed to parse message field as JSON:`, e);
+                // Helper to recursively search for judge_ner_terms or judged_structured_information
+                const findNERData = (obj: any, path: string = 'root'): any => {
+                    if (!obj || typeof obj !== 'object') return null;
+                    
+                    // Check direct properties
+                    if (obj.judge_ner_terms) {
+                        console.log(`Found judge_ner_terms at ${path}`);
+                        return obj;
+                    }
+                    // Handle judged_structured_information - it may contain judge_ner_terms inside
+                    if (obj.judged_structured_information) {
+                        console.log(`Found judged_structured_information at ${path}`);
+                        // Check if it has judge_ner_terms inside
+                        if (obj.judged_structured_information.judge_ner_terms) {
+                            console.log(`Found judge_ner_terms inside judged_structured_information at ${path}`);
+                            return {
+                                judge_ner_terms: obj.judged_structured_information.judge_ner_terms
+                            };
+                        }
+                        // If judged_structured_information itself is the judge_ner_terms structure
+                        if (typeof obj.judged_structured_information === 'object' && !Array.isArray(obj.judged_structured_information)) {
+                            // Check if it looks like judge_ner_terms (has numeric string keys with arrays)
+                            const keys = Object.keys(obj.judged_structured_information);
+                            if (keys.length > 0 && keys.every(k => /^\d+$/.test(k))) {
+                                console.log(`judged_structured_information appears to be judge_ner_terms structure at ${path}`);
+                                return {
+                                    judge_ner_terms: obj.judged_structured_information
+                                };
                             }
                         }
-                        
-                        if (parsed.entities || (typeof parsed === 'object' && !Array.isArray(parsed))) {
-                            parsedData = parsed;
-                            break;
+                    }
+                    if (obj.entities) {
+                        console.log(`Found entities at ${path}`);
+                        return obj;
+                    }
+                    
+                    // Recursively search nested objects
+                    for (const key in obj) {
+                        if (obj.hasOwnProperty(key) && typeof obj[key] === 'object' && obj[key] !== null) {
+                            const found = findNERData(obj[key], `${path}.${key}`);
+                            if (found) return found;
+                        }
+                    }
+                    
+                    return null;
+                };
+                
+                let parsedData: any = null;
+                
+                // First, try to find NER data recursively in the result
+                parsedData = findNERData(result, 'result');
+                
+                // If not found recursively, try specific paths
+                if (!parsedData) {
+                    const sources = [
+                        { data: result.data, name: 'result.data' },
+                        { data: result.message, name: 'result.message' },
+                        { data: result.data?.message, name: 'result.data.message' },
+                        { data: result.data?.data, name: 'result.data.data' },
+                        { data: result.entities, name: 'result.entities' },
+                        { data: result.data?.entities, name: 'result.data.entities' },
+                        { data: result.judge_ner_terms, name: 'result.judge_ner_terms' },
+                        { data: result.data?.judge_ner_terms, name: 'result.data.judge_ner_terms' },
+                        { data: result.judged_structured_information, name: 'result.judged_structured_information' },
+                        { data: result.data?.judged_structured_information, name: 'result.data.judged_structured_information' },
+                        { data: result, name: 'result' }
+                    ];
+                    
+                    for (const source of sources) {
+                        const parsed = tryParseJSON(source.data, source.name);
+                        if (parsed) {
+                            console.log(`Found data in ${source.name}:`, parsed);
+                            
+                            // Check if this parsed data has NER structure
+                            const nerData = findNERData(parsed, source.name);
+                            if (nerData) {
+                                parsedData = nerData;
+                                break;
+                            }
+                            
+                            if (typeof parsed === 'object' && parsed.message && typeof parsed.message === 'string') {
+                                try {
+                                    const messageParsed = JSON.parse(parsed.message);
+                                    const nerDataInMessage = findNERData(messageParsed, `${source.name}.message`);
+                                    if (nerDataInMessage) {
+                                        parsedData = nerDataInMessage;
+                                        break;
+                                    }
+                                } catch (e) {
+                                    console.error(`Failed to parse message field as JSON:`, e);
+                                }
+                            }
                         }
                     }
                 }
                 
-                if (parsedData && parsedData.entities) {
-                    // Transform the data to match our interface
+                // Handle judged_structured_information - check for nested judge_ner_terms
+                // This handles the case where result.judged_structured_information.judge_ner_terms exists
+                if (parsedData && parsedData.judged_structured_information) {
+                    console.log('Found judged_structured_information, checking for nested judge_ner_terms');
+                    console.log('judged_structured_information keys:', Object.keys(parsedData.judged_structured_information));
+                    
+                    // Check if judged_structured_information contains judge_ner_terms
+                    if (parsedData.judged_structured_information.judge_ner_terms) {
+                        console.log('Found judge_ner_terms inside judged_structured_information');
+                        parsedData = {
+                            judge_ner_terms: parsedData.judged_structured_information.judge_ner_terms
+                        };
+                    } else if (!parsedData.judge_ner_terms) {
+                        // If judged_structured_information itself looks like judge_ner_terms structure
+                        // (has numeric string keys with arrays as values)
+                        const keys = Object.keys(parsedData.judged_structured_information);
+                        if (keys.length > 0) {
+                            const firstKey = keys[0];
+                            const firstValue = parsedData.judged_structured_information[firstKey];
+                            // Check if keys are numeric and values are arrays
+                            if (/^\d+$/.test(firstKey) && Array.isArray(firstValue)) {
+                                console.log('judged_structured_information appears to be judge_ner_terms structure');
+                                parsedData = {
+                                    judge_ner_terms: parsedData.judged_structured_information
+                                };
+                            }
+                        }
+                    }
+                }
+                
+                // Also check if the result itself has this nested structure
+                if (!parsedData || !parsedData.judge_ner_terms) {
+                    if (result.judged_structured_information?.judge_ner_terms) {
+                        console.log('Found result.judged_structured_information.judge_ner_terms directly');
+                        parsedData = {
+                            judge_ner_terms: result.judged_structured_information.judge_ner_terms
+                        };
+                    } else if (result.data?.judged_structured_information?.judge_ner_terms) {
+                        console.log('Found result.data.judged_structured_information.judge_ner_terms');
+                        parsedData = {
+                            judge_ner_terms: result.data.judged_structured_information.judge_ner_terms
+                        };
+                    }
+                }
+                
+                // Check if data has judge_ner_terms structure (new format)
+                if (parsedData && parsedData.judge_ner_terms) {
+                    console.log('Setting NER data with judge_ner_terms:', Object.keys(parsedData.judge_ner_terms).length, 'keys');
+                    // Store NER data in judge_ner_terms format
+                    setNerData(parsedData);
+                    setResults(null); // Clear old format results
+                    setSuccessMessage("Content processed successfully! Review and edit the extracted entities below.");
+                    setCurrentStatus('done');
+                    
+                    // Clear inputs on success
+                    setFile(null);
+                    setDoiInput('');
+                    setTextInput('');
+                } else if (parsedData && parsedData.entities) {
+                    // Transform the data to match our interface (old format)
                     const documentName = selectedInputType === 'pdf' && file 
                         ? file.name 
                         : selectedInputType === 'doi' 
                             ? `DOI: ${doiInput.trim()}` 
                             : 'Text Input';
                     
-                    const transformedData: Results = {
+            const transformedData: Results = {
                         entities: parsedData.entities,
                         documentName: documentName,
-                        processedAt: new Date().toISOString(),
-                    };
+                processedAt: new Date().toISOString(),
+            };
 
-                    // Initialize all entities with thumbs up feedback if not already set
-                    Object.keys(transformedData.entities).forEach(key => {
+            // Initialize all entities with thumbs up feedback if not already set
+            Object.keys(transformedData.entities).forEach(key => {
                         transformedData.entities[key] = transformedData.entities[key].map((entity: Entity) => ({
-                            ...entity,
-                            feedback: entity.feedback || 'up',
-                        }));
-                    });
+                    ...entity,
+                    feedback: entity.feedback || 'up',
+                }));
+            });
 
                     // Store original data before modifications
                     setOriginalData(transformedData);
-                    setResults(transformedData);
-                    setAllApproved(true);
+            setResults(transformedData);
+                    setNerData(null); // Clear NER format data
+            setAllApproved(true);
 
-                    // Set the first entity type as active
-                    if (transformedData.entities && Object.keys(transformedData.entities).length > 0) {
-                        setActiveEntityType(Object.keys(transformedData.entities)[0]);
-                    }
+            // Set the first entity type as active
+            if (transformedData.entities && Object.keys(transformedData.entities).length > 0) {
+                setActiveEntityType(Object.keys(transformedData.entities)[0]);
+            }
                     
                     setSuccessMessage("Content processed successfully! Review and edit the extracted entities below.");
                     setCurrentStatus('done');
@@ -489,6 +613,72 @@ export default function NamedEntityRecognition() {
 
     // Handle final save
     const handleSave = async () => {
+        // Check if we have NER data (judge_ner_terms format)
+        if (nerData) {
+            setIsProcessing(true);
+            setError(null);
+
+            try {
+                // Deep copy NER data
+                const dataToSave = JSON.parse(JSON.stringify(nerData));
+                
+                // Add contributed_by to all entities
+                const contributedBy = session?.user?.email || session?.user?.name || (session?.user as any)?.orcid_id || 'unknown';
+                
+                if (dataToSave.judge_ner_terms) {
+                    Object.keys(dataToSave.judge_ner_terms).forEach((key) => {
+                        if (Array.isArray(dataToSave.judge_ner_terms[key])) {
+                            dataToSave.judge_ner_terms[key] = dataToSave.judge_ner_terms[key].map((entity: any) => ({
+                                ...entity,
+                                contributed_by: contributedBy
+                            }));
+                        }
+                    });
+                }
+
+                console.log('JSON being sent for saving:', JSON.stringify(dataToSave, null, 2));
+
+                const formData = new FormData();
+                if (process.env.NEXT_PUBLIC_JWT_USER) {
+                    formData.append("email", process.env.NEXT_PUBLIC_JWT_USER);
+                }
+                if (process.env.NEXT_PUBLIC_JWT_PASSWORD) {
+                    formData.append("password", process.env.NEXT_PUBLIC_JWT_PASSWORD);
+                }
+
+                const resultsJson = JSON.stringify(dataToSave);
+                formData.append("results", resultsJson);
+
+                const response = await fetch("/api/save-ner-result", {
+                    method: 'POST',
+                    body: formData,
+                    signal: AbortSignal.timeout(2000000)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                setSuccessMessage("Results saved successfully!");
+                setIsSaved(true);
+                // Clear results after successful save
+                setNerData(null);
+                setResults(null);
+                setOriginalData(null);
+                return data;
+            } catch (err) {
+                console.error("Error saving NER data:", err);
+                const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
+                setError(`Failed to save results: ${errorMessage}`);
+            } finally {
+                setIsProcessing(false);
+            }
+            return;
+        }
+
+        // Handle old format (originalData)
         if (!originalData) {
             setError("No data to save.");
             return;
@@ -574,6 +764,10 @@ export default function NamedEntityRecognition() {
             // Show success message and update saved state
             setSuccessMessage("Results saved successfully!");
             setIsSaved(true);
+            // Clear results after successful save
+            setNerData(null);
+            setResults(null);
+            setOriginalData(null);
             return data;
 
         } catch (err) {
@@ -733,52 +927,52 @@ export default function NamedEntityRecognition() {
             <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6 mb-6 border border-gray-200 dark:border-gray-700">
                 <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">OpenRouter API Key Configuration</h2>
                 <div className="flex flex-col sm:flex-row gap-3">
-                    <input
-                        type="password"
-                        value={apiKey}
+                        <input
+                            type="password"
+                            value={apiKey}
                         onChange={(e) => {
                             setApiKey(e.target.value);
                             setIsApiKeyValid(false);
                             setApiKeyError(null);
                             setSuccessMessage(null);
                         }}
-                        placeholder="Enter your API key"
-                        className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                    />
-                    <button
+                            placeholder="Enter your API key"
+                            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        />
+                        <button
                         type="button"
                         onClick={validateApiKey}
                         disabled={isValidatingKey || !apiKey.trim()}
                         className={`px-6 py-2 rounded-lg font-medium text-white transition-colors ${
                             isValidatingKey || !apiKey.trim()
-                                ? "bg-gray-400 cursor-not-allowed"
+                                    ? "bg-gray-400 cursor-not-allowed"
                                 : "bg-gray-600 hover:bg-gray-700"
-                        }`}
-                    >
+                            }`}
+                        >
                         {isValidatingKey ? "Validating..." : "Validate API Key"}
-                    </button>
-                    {isApiKeyValid && (
-                        <button
-                            type="button"
-                            onClick={() => {
-                                sessionStorage.removeItem('ner_api_key');
-                                setApiKey('');
-                                setIsApiKeyValid(false);
+                        </button>
+                        {isApiKeyValid && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    sessionStorage.removeItem('ner_api_key');
+                                    setApiKey('');
+                                    setIsApiKeyValid(false);
                                 setApiKeyError(null);
                                 setSuccessMessage(null);
-                            }}
+                                }}
                             className="px-6 py-2 rounded-lg font-medium text-white bg-red-500 hover:bg-red-600 transition-colors"
-                        >
-                            Clear API Key
-                        </button>
-                    )}
-                </div>
+                            >
+                                Clear API Key
+                            </button>
+                        )}
+                    </div>
                 {apiKeyError && (
                     <p className="mt-3 text-sm text-red-600 dark:text-red-400">{apiKeyError}</p>
                 )}
-                {isApiKeyValid && (
+                    {isApiKeyValid && (
                     <p className="mt-3 text-sm text-green-600 dark:text-green-400">✓ API key validated successfully. You can now process documents.</p>
-                )}
+                    )}
             </div>
 
             {!isApiKeyValid && (
@@ -882,32 +1076,32 @@ export default function NamedEntityRecognition() {
                     
                     {selectedInputType === 'pdf' && (
                         <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-6 text-center transition-colors duration-200 hover:border-blue-400 dark:hover:border-blue-600">
-                            <input
-                                type="file"
-                                id="document"
-                                onChange={handleFileChange}
-                                className="hidden"
+                        <input
+                            type="file"
+                            id="document"
+                            onChange={handleFileChange}
+                            className="hidden"
                                 accept=".pdf"
                                 disabled={!isApiKeyValid || isProcessing}
-                            />
-                            <label
-                                htmlFor="document"
+                        />
+                        <label
+                            htmlFor="document"
                                 className={`cursor-pointer flex flex-col items-center justify-center ${!isApiKeyValid || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 <FileText className="h-12 w-12 text-gray-400 mb-3" />
-                                <span className="text-sm text-gray-500 dark:text-gray-400">
-                                    Click to select a file or drag and drop
-                                </span>
-                                <span className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                Click to select a file or drag and drop
+              </span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                                     PDF (.pdf) files only
-                                </span>
-                            </label>
-                            {file && (
-                                <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+              </span>
+                        </label>
+                        {file && (
+                            <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
                                     Selected file: <span className="font-semibold">{file.name}</span> ({(file.size / 1024).toFixed(2)} KB)
-                                </div>
-                            )}
-                        </div>
+                            </div>
+                        )}
+                    </div>
                     )}
                     
                     {selectedInputType === 'text' && (
@@ -949,255 +1143,28 @@ export default function NamedEntityRecognition() {
                     >
                         {isProcessing ? "Processing..." : "Process Document"}
                     </button>
-                </div>
+            </div>
             </form>
 
-            {/* Results Section */}
-            {results && (
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-8 shadow-lg">
-                    <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Extracted Entities</h2>
-
-                    {/* Entity Type Tabs */}
-                    <div className="border-b border-gray-200 dark:border-gray-700 mb-4 overflow-x-auto">
-                        <nav className="-mb-px flex space-x-8 min-w-max overflow-x-auto scrollbar-hide">
-                            {Object.keys(results.entities)
-                                .filter(type => results.entities[type] && results.entities[type].length > 0)
-                                .map((type) => (
-                                    <button
-                                        key={type}
-                                        onClick={() => setActiveEntityType(type)}
-                                        className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                                            activeEntityType === type
-                                                ? "border-blue-500 text-blue-500"
-                                                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                                        }`}
-                                    >
-                                        {type} ({results.entities[type].length})
-                                    </button>
-                                ))}
-                        </nav>
-                    </div>
-
-                    {/* Entity List */}
-                    {activeEntityType && results.entities[activeEntityType] && results.entities[activeEntityType].length > 0 && (
-                        <div className="space-y-4">
-                            <h3 className="text-md font-semibold text-gray-700 dark:text-gray-300">
-                                {activeEntityType} Entities
-                            </h3>
-
-                            <div className="bg-gray-50 dark:bg-gray-700 rounded-md p-4">
-                                <ul className="space-y-4">
-                                    {results.entities[activeEntityType].map((entity, index) => (
-                                        <li key={index} className="border-b border-gray-200 dark:border-gray-600 pb-3">
-                                            <EntityCard
-                                                entity={entity}
-                                                onFeedbackChange={handleFeedback}
-                                                onTypeChange={handleTypeChange}
-                                                type={activeEntityType}
-                                                index={index}
-                                                isEditing={entity.feedback === 'down'}
-                                                results={results}
-                                                session={session}
-                                            />
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Save button */}
-                    {results && (
-                        <div className="mt-6 flex justify-end">
-                            <button
-                                type="button"
-                                onClick={handleSave}
-                                disabled={!allApproved || isProcessing || isSaved}
-                                className={`px-4 py-2 rounded-lg ${
-                                    allApproved && !isProcessing && !isSaved
-                                        ? 'bg-green-500 hover:bg-green-600 text-white'
-                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                }`}
-                            >
-                                {isProcessing ? 'Saving...' : isSaved ? 'Saved Result' : 'Save Results'}
-                            </button>
-                        </div>
-                    )}
-
-                    <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
-                        Document: {results.documentName} • Processed
-                        at: {results.processedAt ? new Date(results.processedAt).toLocaleString() : 'N/A'}
-                    </div>
-                </div>
+            {/* NER Results Section - handles both formats */}
+            {(nerData || results) && (
+                <NERResultsDisplay
+                    results={results || undefined}
+                    activeEntityType={activeEntityType || undefined}
+                    onActiveEntityTypeChange={setActiveEntityType}
+                    onFeedbackChange={handleFeedback}
+                    onTypeChange={handleTypeChange}
+                    allApproved={allApproved}
+                    nerData={nerData || undefined}
+                    onNerDataChange={(updatedData) => setNerData(updatedData)}
+                    onSave={handleSave}
+                    isProcessing={isProcessing}
+                    isSaved={isSaved}
+                    session={session}
+                    showExportOptions={true}
+                />
             )}
         </div>
     );
 }
 
-// Helper to get all unique entity types from results
-function getAllEntityTypes(results: Results): string[] {
-    if (!results || !results.entities) return [];
-    const types = Object.keys(results.entities);
-    if (!types.includes('Unknown / Unable to classify')) {
-        types.push('Unknown / Unable to classify');
-    }
-    return types;
-}
-
-const EntityCard = ({
-    entity,
-    onFeedbackChange,
-    type,
-    index,
-    onTypeChange,
-    isEditing,
-    results,
-    session
-}: {
-    entity: Entity;
-    onFeedbackChange: (type: string, index: number, feedback: 'up' | 'down') => void;
-    onTypeChange: (oldType: string, index: number, newType: string) => void;
-    type: string;
-    index: number;
-    isEditing: boolean;
-    results: Results;
-    session: any;
-}) => {
-    const otherContributors = (entity.changed_by ?? []).filter(email => email !== (session?.user?.email || 'unknown'));
-    const entityTypes = getAllEntityTypes(results);
-
-    // Function to highlight the entity in a sentence
-    const highlightEntityInSentence = (sentence: string, start: number, end: number) => {
-        if (!sentence) return '';
-        const before = sentence.substring(0, start);
-        const entityText = sentence.substring(start, end);
-        const after = sentence.substring(end);
-        return `${before}<span class="bg-yellow-200 dark:bg-yellow-600 px-1 rounded font-medium">${entityText}</span>${after}`;
-    };
-
-    return (
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border border-gray-100">
-            <div className="flex justify-between items-start mb-2">
-                <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                        {entity.entity}
-                        {entity.originalEntityType !== entity.entityType && (
-                            <span className="text-xs text-red-700 ml-2">
-                                (changed from: {entity.originalEntityType})
-                            </span>
-                        )}
-                    </h3>
-                    {isEditing ? (
-                        <div className="mt-2">
-                            <label className="block text-sm font-medium text-gray-700">Entity Type</label>
-                            <select
-                                value={entity.entityType}
-                                onChange={(e) => onTypeChange(type, index, e.target.value)}
-                                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md dark:bg-gray-700 dark:text-gray-100"
-                            >
-                                {entityTypes.map((etype) => (
-                                    <option key={etype} value={etype}>{etype}</option>
-                                ))}
-                            </select>
-                        </div>
-                    ) : (
-                        <p className="text-sm text-gray-500">Type: {entity.entityType}</p>
-                    )}
-                    <p className="text-sm text-gray-500 flex items-center gap-1">
-                        Confidence: {(entity.judge_score[0] * 100).toFixed(1)}%
-                        <span
-                            className="ml-1 cursor-pointer inline-block relative"
-                            title="How well the extracted information aligns with the target ontology or schema."
-                            style={{ display: 'inline-flex', alignItems: 'center' }}
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="16"
-                                height="16"
-                                fill="currentColor"
-                                viewBox="0 0 16 16"
-                                className="text-gray-400 hover:text-gray-600"
-                            >
-                                <circle cx="8" cy="8" r="8" fill="#e5e7eb"/>
-                                <text x="8" y="12" textAnchor="middle" fontSize="10" fill="#374151">?</text>
-                            </svg>
-                        </span>
-                    </p>
-                    {/*{entity.contributed_by && (*/}
-                    {/*    <p className="text-xs text-gray-400">Contributed by: {entity.contributed_by}</p>*/}
-                    {/*)}*/}
-                    {/*{entity.changed_by && entity.changed_by.length > 0 && (*/}
-                    {/*    <p className="text-xs text-gray-400">*/}
-                    {/*        Updated by: {entity.changed_by.join(', ')}*/}
-                    {/*    </p>*/}
-                    {/*)}*/}
-                </div>
-                <div className="flex space-x-2">
-                    <button
-                        onClick={() => onFeedbackChange(type, index, 'up')}
-                        className={`p-2 rounded-full ${entity.feedback === 'up' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'}`}
-                    >
-                        <ThumbsUp className="h-5 w-5"/>
-                    </button>
-                    <button
-                        onClick={() => onFeedbackChange(type, index, 'down')}
-                        className={`p-2 rounded-full ${entity.feedback === 'down' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'}`}
-                    >
-                        <ThumbsDown className="h-5 w-5"/>
-                    </button>
-                </div>
-            </div>
-
-            <div className="space-y-2">
-                <div className="text-sm text-gray-600">
-                    <span className="font-medium">Sentences:</span>
-                    <div className="mt-2 space-y-2">
-                        {entity.sentence.map((sentence, i) => {
-                            const { start, end } = getCorrectedIndices(sentence, entity.entity, entity.start[i], entity.end[i]);
-                            return (
-                                <div key={i} className="p-2 bg-gray-50 rounded">
-                                    <div className="flex items-start">
-                                        <span className="text-xs text-gray-500 mr-2 mt-1">{i + 1}.</span>
-                                        <div
-                                            className="flex-1"
-                                            dangerouslySetInnerHTML={{
-                                                __html: highlightEntityInSentence(
-                                                    sentence,
-                                                    start,
-                                                    end
-                                                )
-                                            }}
-                                        />
-                                    </div>
-                                    <div className="text-sm text-gray-500 mt-1">
-                                        <span className="font-medium">Location:</span> {entity.paper_location[i]}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-                {entity.paper_title[0] && (
-                    <div className="text-sm text-gray-600">
-                        <span className="font-medium">Paper:</span> {entity.paper_title[0]}
-                    </div>
-                )}
-                {entity.doi[0] && (
-                    <div className="text-sm text-gray-600">
-                        <span className="font-medium">DOI:</span> {entity.doi[0]}
-                    </div>
-                )}
-                {entity.ontology_id && (
-                    <div className="text-sm text-gray-600">
-                        <span className="font-medium">Ontology ID:</span> {entity.ontology_id}
-                    </div>
-                )}
-                {entity.ontology_label && (
-                    <div className="text-sm text-gray-600">
-                        <span className="font-medium">Ontology Label:</span> {entity.ontology_label}
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
