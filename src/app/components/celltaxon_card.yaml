@@ -1,9 +1,8 @@
-
 #EntityView:
 id: ui:1
 name: CellTaxon_card
 slug: celltaxon
-description: a view of a cell taxon
+# description: a view of a cell taxon
 boxes:
   - box:
     slug: summarybox
@@ -11,67 +10,52 @@ boxes:
     name: Summary
     cardtype: card
     box_header:
-      key: id
+      key: name                  # so the header shows the label
     sparql_query: |-
         PREFIX NIMP: <http://example.org/NIMP/>
-                PREFIX prov: <http://www.w3.org/ns/prov#>
-                PREFIX biolink: <https://w3id.org/biolink/vocab/>
-                
-                SELECT DISTINCT ?subject ?predicate ?object ?category_type
-                WHERE {
-                GRAPH <http://hmbataxonomy20250927.com/> {
-                  {  BIND(<{0}> AS ?id)
-                      ?subject ?predicate ?id . }
-                      UNION
-                      { BIND(<{0}> AS ?id)
-                      ?id ?predicate ?object . }
-                      UNION
-                      { BIND(<{0}> AS ?id)
-                      ?subject ?id ?object . }
-                      
-                      OPTIONAL {
-                      ?id prov:wasDerivedFrom ?derivedFrom .
-                      ?derivedFrom biolink:category ?category_type .
-                      }
-                  }
+        PREFIX prov: <http://www.w3.org/ns/prov#>
+        PREFIX biolink: <https://w3id.org/biolink/vocab/>
+        PREFIX rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs:  <http://www.w3.org/2000/01/rdf-schema#>
+        PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+        PREFIX DHBA:  <https://purl.brain-bican.org/ontology/dmbao/DMBA_>
+        SELECT DISTINCT ?name ?xref ?parentNode WHERE {
+          GRAPH <https://apitesting.com/> {
+            BIND(<{0}> AS ?id)
+            ?id a bican:CellTypeTaxon .
+            OPTIONAL { ?id rdfs:label ?name . }
+            OPTIONAL { ?id biolink:xref ?xref . }
+            OPTIONAL { ?id bican:has_parent ?parentNode . }
+            # Removed abbreviation OPTIONAL block from main query
+          }
+        }
+
+    box_additional_info:
+      header: Abbreviations
+      is_iterable: true
+      properties:
+        - key: Abbreviations
+          sparql_query: |-
+            PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+            PREFIX rdfs:  <http://www.w3.org/2000/01/rdf-schema#>
+            SELECT DISTINCT
+              ?abbrNode
+              ?abbrTerm
+              ?abbrMeaning
+              ?parcellationTerm
+              ?geneAnnotation
+              ?cellType
+            WHERE {
+              GRAPH <https://apitesting.com/> {
+                VALUES ?id { <{0}> }
+                OPTIONAL {
+                  ?id bican:has_abbreviation ?abbrNode .
+                  ?abbrNode a bican:Abbreviation ;
+                            bican:meaning ?abbrMeaning ;
+                            bican:term    ?abbrTerm .
+                  OPTIONAL { ?abbrNode bican:denotes_parcellation_term ?parcellationTerm . }
+                  OPTIONAL { ?abbrNode bican:denotes_gene_annotation    ?geneAnnotation . }
+                  OPTIONAL { ?abbrNode bican:denotes_cell_type          ?cellType . }
+                }
               }
-    # description: 
-    # Cell taxon. TODO: add description.
-    # box_additional_info:
-    #   properties:
-    #   - key: local_name
-    #     sqrl_query: "TODO (SELECT local_name FROM library_aliquot WHERE library_aliquot_id = 1)"
-    #   - key: category
-    #     sqrl_query: "TODO: query"
-  # - box:
-  #   id: ui:3
-  #   name: DonorBox
-  #   slug: donorbox
-  #   cardtype: card
-  #   box_header:
-  #     key: Donor
-  #   description:  A person or organism that is the source of a biological sample for scientific study.
-  #   box_additional_info:
-  #     header: List of donors
-  #     is_iterable: true
-  #     properties:
-  #     - key: local_name
-  #       sqrl_query: "TODO (SELECT local_name FROM library_aliquot WHERE library_aliquot_id = 1)"
-  #     - key: age_of_death
-  #       sqrl_query: "TODO: query"
-  # - box:
-  #   id: ui:4
-  #   name: TissueSample
-  #   slug: tissuesample
-  #   cardtype: cardtable
-  #   box_header:
-  #     key: TissueSample
-  #   description:  A person or organism that is the source of a biological sample for scientific study.
-  #   box_additional_info:
-  #     header: List of donors
-  #     is_iterable: true
-  #     properties:
-  #     - key: local_name
-  #       sqrl_query: "TODO (SELECT local_name FROM library_aliquot WHERE library_aliquot_id = 1)"
-  #     - key: age_of_death
-  #       sqrl_query: "TODO: query"
+            }
