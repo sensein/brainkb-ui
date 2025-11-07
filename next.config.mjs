@@ -18,6 +18,11 @@ const nextConfig = withYAML({
         path: false,
       };
     }
+    // Externalize ws package for server-side to avoid bundling issues
+    if (isServer) {
+      config.externals = config.externals || [];
+      config.externals.push('ws');
+    }
     return config;
   },
 }); 
