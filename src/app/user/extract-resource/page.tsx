@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { FileText, Link as LinkIcon, Type } from "lucide-react";
 import StatusIndicator, { StatusType } from "../../components/StatusIndicator";
-import ExtractedResultTableMapping from "../../components/ExtractedResultTableMapping";
+import ExtractedResourceResultTableMapping from "../../components/ExtractedResourceResultTableMapping";
 
 type InputType = 'doi' | 'pdf' | 'text';
 
@@ -859,7 +859,7 @@ export default function IngestStructuredResourcePage() {
                 <>
                     {/* Debug: Log the data being passed */}
                     {console.log('ExtractionResult being passed to component:', extractionResult)}
-                    <ExtractedResultTableMapping
+                    <ExtractedResourceResultTableMapping
                         data={extractionResult}
                         onDataChange={(updatedData) => setExtractionResult(updatedData)}
                         onSave={handleSaveData}

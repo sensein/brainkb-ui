@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-interface ExtractedResultTableMappingProps {
+interface ExtractedResourceResultTableMappingProps {
     data: Record<string, any>[];
     onDataChange?: (updatedData: Record<string, any>[]) => void;
     onSave?: () => void;
@@ -10,13 +10,13 @@ interface ExtractedResultTableMappingProps {
     showExportOptions?: boolean;
 }
 
-export default function ExtractedResultTableMapping({
+export default function ExtractedResourceResultTableMapping({
     data,
     onDataChange,
     onSave,
     isSaving = false,
     showExportOptions = true,
-}: ExtractedResultTableMappingProps) {
+}: ExtractedResourceResultTableMappingProps) {
     // Flatten object helper - ensures all nested objects are flattened
     const flattenObject = (obj: any, prefix = ''): Record<string, any> => {
         const flattened: Record<string, any> = {};
@@ -182,7 +182,7 @@ export default function ExtractedResultTableMapping({
 
     // Process data to ensure all nested objects are flattened
     const processData = (inputData: Record<string, any>[]): Record<string, any>[] => {
-        console.log('Processing data in ExtractedResultTableMapping:', inputData);
+        console.log('Processing data in ExtractedResourceResultTableMapping:', inputData);
         
         return inputData.map((row, rowIndex) => {
             const processedRow: Record<string, any> = {};
