@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
 
         console.log('Getting token from /api/token...');
         // Get token from /api/token with credentials
-        const tokenResponse = await fetch(process.env.NEXT_PUBLIC_TOKEN_ENDPOINT || 'http://localhost:8007/api/token', {
+        const tokenResponse = await fetch(process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE || 'http://localhost:8009/api/token', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
         while (retryCount < maxRetries) {
             try {
                 console.log(`Calling external API with token (attempt ${retryCount + 1}/${maxRetries})...`);
-                externalResponse = await fetch(process.env.NEXT_PUBLIC_NER_SAVE_ENDPOINT || 'http://localhost:8007/api/multiagent/result/save', {
+                externalResponse = await fetch(process.env.NEXT_PUBLIC_NER_SAVE_ENDPOINT || 'http://localhost:8009/api/save/ner', {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
