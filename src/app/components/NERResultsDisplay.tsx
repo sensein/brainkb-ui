@@ -106,15 +106,6 @@ const EntityCard = ({
 }) => {
     const entityTypes = getAllEntityTypes(results);
 
-    // Function to highlight the entity in a sentence
-    const highlightEntityInSentence = (sentence: string, start: number, end: number) => {
-        if (!sentence) return '';
-        const before = sentence.substring(0, start);
-        const entityText = sentence.substring(start, end);
-        const after = sentence.substring(end);
-        return `${before}<span class="bg-yellow-200 dark:bg-yellow-600 px-1 rounded font-medium">${entityText}</span>${after}`;
-    };
-
     return (
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border border-gray-100">
             <div className="flex justify-between items-start mb-2">
@@ -190,16 +181,13 @@ const EntityCard = ({
                                 <div key={i} className="p-2 bg-gray-50 rounded">
                                     <div className="flex items-start">
                                         <span className="text-xs text-gray-500 mr-2 mt-1">{i + 1}.</span>
-                                        <div
-                                            className="flex-1"
-                                            dangerouslySetInnerHTML={{
-                                                __html: highlightEntityInSentence(
-                                                    sentence,
-                                                    start,
-                                                    end
-                                                )
-                                            }}
-                                        />
+                                        <div className="flex-1">
+                                            {sentence.substring(0, start)}
+                                            <span className="bg-yellow-200 dark:bg-yellow-600 px-1 rounded font-medium">
+                                                {sentence.substring(start, end)}
+                                            </span>
+                                            {sentence.substring(end)}
+                                        </div>
                                     </div>
                                     <div className="text-sm text-gray-500 mt-1">
                                         <span className="font-medium">Location:</span> {entity.paper_location[i]}
