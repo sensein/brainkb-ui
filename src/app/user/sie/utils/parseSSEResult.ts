@@ -37,7 +37,6 @@ function tryParseJSON(source: any, sourceName: string): any {
     
     // If already an object, return as-is
     if (typeof source === 'object' && source !== null) {
-        console.log(`${sourceName} is already an object:`, source);
         return source;
     }
     
@@ -47,7 +46,6 @@ function tryParseJSON(source: any, sourceName: string): any {
         if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
             try {
                 const parsed = JSON.parse(trimmed);
-                console.log(`Successfully parsed ${sourceName}:`, parsed);
                 return parsed;
             } catch (e) {
                 console.error(`Failed to parse ${sourceName} as JSON:`, e);
@@ -72,17 +70,16 @@ function findNERData(obj: any, path: string = 'root'): ParsedNERResult | null {
     
     // Check for direct judge_ner_terms property (new format)
     if (obj.judge_ner_terms) {
-        console.log(`Found judge_ner_terms at ${path}`);
         return obj;
     }
     
     // Handle judged_structured_information - it may contain judge_ner_terms inside
     if (obj.judged_structured_information) {
-        console.log(`Found judged_structured_information at ${path}`);
+        console.info(`Found judged_structured_information at ${path}`);
         
         // Check if it has judge_ner_terms inside
         if (obj.judged_structured_information.judge_ner_terms) {
-            console.log(`Found judge_ner_terms inside judged_structured_information at ${path}`);
+            console.info(`Found judge_ner_terms inside judged_structured_information at ${path}`);
             return {
                 judge_ner_terms: obj.judged_structured_information.judge_ner_terms
             };
@@ -93,7 +90,6 @@ function findNERData(obj: any, path: string = 'root'): ParsedNERResult | null {
         if (typeof obj.judged_structured_information === 'object' && !Array.isArray(obj.judged_structured_information)) {
             const keys = Object.keys(obj.judged_structured_information);
             if (keys.length > 0 && keys.every(k => /^\d+$/.test(k))) {
-                console.log(`judged_structured_information appears to be judge_ner_terms structure at ${path}`);
                 return {
                     judge_ner_terms: obj.judged_structured_information
                 };
@@ -103,7 +99,7 @@ function findNERData(obj: any, path: string = 'root'): ParsedNERResult | null {
     
     // Check for entities property (old format)
     if (obj.entities) {
-        console.log(`Found entities at ${path}`);
+        console.info(`Found entities at ${path}`);
         return obj;
     }
     
@@ -129,13 +125,10 @@ function normalizeJudgedStructuredInformation(parsedData: any): ParsedNERResult 
     if (!parsedData || !parsedData.judged_structured_information) {
         return parsedData;
     }
-    
-    console.log('Found judged_structured_information, checking for nested judge_ner_terms');
-    console.log('judged_structured_information keys:', Object.keys(parsedData.judged_structured_information));
+
     
     // Check if judged_structured_information contains judge_ner_terms
     if (parsedData.judged_structured_information.judge_ner_terms) {
-        console.log('Found judge_ner_terms inside judged_structured_information');
         return {
             judge_ner_terms: parsedData.judged_structured_information.judge_ner_terms
         };
@@ -150,7 +143,6 @@ function normalizeJudgedStructuredInformation(parsedData: any): ParsedNERResult 
             const firstValue = parsedData.judged_structured_information[firstKey];
             // Check if keys are numeric and values are arrays
             if (/^\d+$/.test(firstKey) && Array.isArray(firstValue)) {
-                console.log('judged_structured_information appears to be judge_ner_terms structure');
                 return {
                     judge_ner_terms: parsedData.judged_structured_information
                 };
@@ -177,9 +169,7 @@ export function parseSSEResult(result: any): ParsedNERResult | null {
     if (!result) {
         return null;
     }
-    
-    console.log('Full result:', result);
-    console.log('Full result JSON:', JSON.stringify(result, null, 2));
+
     
     let parsedData: ParsedNERResult | null = null;
     
@@ -205,7 +195,6 @@ export function parseSSEResult(result: any): ParsedNERResult | null {
         for (const source of sources) {
             const parsed = tryParseJSON(source.data, source.name);
             if (parsed) {
-                console.log(`Found data in ${source.name}:`, parsed);
                 
                 // Check if this parsed data has NER structure
                 const nerData = findNERData(parsed, source.name);
@@ -239,12 +228,10 @@ export function parseSSEResult(result: any): ParsedNERResult | null {
     // Strategy 4: Check for nested structures in the original result
     if (!parsedData || !parsedData.judge_ner_terms) {
         if (result.judged_structured_information?.judge_ner_terms) {
-            console.log('Found result.judged_structured_information.judge_ner_terms directly');
             parsedData = {
                 judge_ner_terms: result.judged_structured_information.judge_ner_terms
             };
-        } else if (result.data?.judged_structured_information?.judge_ner_terms) {
-            console.log('Found result.data.judged_structured_information.judge_ner_terms');
+        } else if (result.data?.judged_structured_information?.judge_ner_terms) { 
             parsedData = {
                 judge_ner_terms: result.data.judged_structured_information.judge_ner_terms
             };
