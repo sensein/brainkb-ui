@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { FileText, Link as LinkIcon, Type } from "lucide-react";
 import StatusIndicator, { StatusType } from "../../components/StatusIndicator";
+import ExtractedResultTableMapping from "../../components/ExtractedResultTableMapping";
 
 type InputType = 'doi' | 'pdf' | 'text';
 
@@ -173,10 +174,13 @@ export default function IngestStructuredResourcePage() {
             return;
         }
 
-        setIsUploading(true);
+        // Clear existing results and messages when starting new process
+        setExtractionResult(null);
+        setLastResult(null);
         setError(null);
         setSuccessMessage(null);
         setCurrentStatus('processing');
+        setIsUploading(true);
 
         try {
             const formData = new FormData();
@@ -542,16 +546,7 @@ export default function IngestStructuredResourcePage() {
         return result;
     };
 
-    const handleTableDataChange = (rowIndex: number, field: string, value: any) => {
-        if (!extractionResult) return;
-
-        const updatedData = [...extractionResult];
-        updatedData[rowIndex] = {
-            ...updatedData[rowIndex],
-            [field]: value
-        };
-        setExtractionResult(updatedData);
-    };
+    // handleTableDataChange is now handled by ExtractedResultTableMapping component
 
     if (session === undefined) {
         return <p>Loading...</p>;
@@ -861,152 +856,17 @@ export default function IngestStructuredResourcePage() {
 
             {/* Extracted Data Table */}
             {extractionResult && (
-                <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg p-8 shadow-md">
-                    <h2 className="text-xl font-bold mb-4">Extracted Data</h2>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        Review and edit the extracted data before saving.
-                    </p>
-                    
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full border border-gray-300 dark:border-gray-600">
-                            <thead>
-                                <tr className="bg-gray-50 dark:bg-gray-700">
-                                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200 border-b">
-                                        Field
-                                    </th>
-                                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-gray-200 border-b">
-                                        Value
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {extractionResult.map((row: any, rowIndex: number) => (
-                                    Object.entries(row).map(([field, value], fieldIndex: number) => {
-                                        // Check if the value is an array (either actual array or JSON string that represents an array)
-                                        let isArray = false;
-                                        let arrayValues: string[] = [];
-                                        
-                                        if (Array.isArray(value)) {
-                                            isArray = true;
-                                            arrayValues = value.map(v => String(v));
-                                        } else if (typeof value === 'string') {
-                                            // Try to parse as JSON array
-                                            try {
-                                                const parsed = JSON.parse(value);
-                                                if (Array.isArray(parsed)) {
-                                                    isArray = true;
-                                                    arrayValues = parsed.map(v => String(v));
-                                                }
-                                            } catch (e) {
-                                                // Not a JSON array, treat as regular string
-                                            }
-                                        }
-                                        
-                                        if (isArray) {
-                                            // Render multiple input boxes for array values
-                                            return arrayValues.map((arrayValue, arrayIndex) => (
-                                                <tr key={`${rowIndex}-${fieldIndex}-${arrayIndex}`} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
-                                                    <td className="px-4 py-2 font-medium text-gray-700 dark:text-gray-200">
-                                                        {arrayIndex === 0 ? field : ''}
-                                                    </td>
-                                                    <td className="px-4 py-2">
-                                                        <div className="flex items-center space-x-2">
-                                                            <input
-                                                                type="text"
-                                                                value={arrayValue}
-                                                                onChange={(e) => {
-                                                                    // Update the specific array element
-                                                                    const newArrayValues = [...arrayValues];
-                                                                    newArrayValues[arrayIndex] = e.target.value;
-                                                                    
-                                                                    // Update the flattened data
-                                                                    const updatedData = [...extractionResult];
-                                                                    updatedData[rowIndex] = { 
-                                                                        ...updatedData[rowIndex], 
-                                                                        [field]: JSON.stringify(newArrayValues)
-                                                                    };
-                                                                    setExtractionResult(updatedData);
-                                                                }}
-                                                                className="flex-1 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm"
-                                                            />
-                                                            {arrayIndex === arrayValues.length - 1 && (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        // Add new array element
-                                                                        const newArrayValues = [...arrayValues, ''];
-                                                                        const updatedData = [...extractionResult];
-                                                                        updatedData[rowIndex] = { 
-                                                                            ...updatedData[rowIndex], 
-                                                                            [field]: JSON.stringify(newArrayValues)
-                                                                        };
-                                                                        setExtractionResult(updatedData);
-                                                                    }}
-                                                                    className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
-                                                                >
-                                                                    +
-                                                                </button>
-                                                            )}
-                                                            {arrayValues.length > 1 && (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        // Remove array element
-                                                                        const newArrayValues = arrayValues.filter((_, i) => i !== arrayIndex);
-                                                                        const updatedData = [...extractionResult];
-                                                                        updatedData[rowIndex] = { 
-                                                                            ...updatedData[rowIndex], 
-                                                                            [field]: JSON.stringify(newArrayValues)
-                                                                        };
-                                                                        setExtractionResult(updatedData);
-                                                                    }}
-                                                                    className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
-                                                                >
-                                                                    ×
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ));
-                                        } else {
-                                            // Render single input for non-array values
-                                            return (
-                                                <tr key={`${rowIndex}-${fieldIndex}`} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
-                                                    <td className="px-4 py-2 font-medium text-gray-700 dark:text-gray-200">
-                                                        {field}
-                                                    </td>
-                                                    <td className="px-4 py-2">
-                                                        <input
-                                                            type="text"
-                                                            value={value as string || ''}
-                                                            onChange={(e) => handleTableDataChange(rowIndex, field, e.target.value)}
-                                                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm"
-                                                        />
-                                                    </td>
-                                                </tr>
-                                            );
-                                        }
-                                    })
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div className="mt-6 flex justify-end">
-                        <button
-                            onClick={handleSaveData}
-                            disabled={isSaving}
-                            className={`px-6 py-2 text-white rounded-lg font-semibold transition-colors duration-200 ${
-                                isSaving
-                                    ? "bg-gray-400 cursor-not-allowed"
-                                    : "bg-green-600 hover:bg-green-700"
-                            }`}
-                        >
-                            {isSaving ? "Saving..." : "Save Data"}
-                        </button>
-                    </div>
-                </div>
+                <>
+                    {/* Debug: Log the data being passed */}
+                    {console.log('ExtractionResult being passed to component:', extractionResult)}
+                    <ExtractedResultTableMapping
+                        data={extractionResult}
+                        onDataChange={(updatedData) => setExtractionResult(updatedData)}
+                        onSave={handleSaveData}
+                        isSaving={isSaving}
+                        showExportOptions={true}
+                    />
+                </>
             )}
 
             {/* Debug: Show raw result if table is not showing */}
