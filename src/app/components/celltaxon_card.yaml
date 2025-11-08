@@ -26,7 +26,7 @@ boxes:
             OPTIONAL { ?id rdfs:label ?name . }
             OPTIONAL { ?id biolink:xref ?xref . }
             OPTIONAL { ?id bican:has_parent ?parentNode . }
-            # Removed abbreviation OPTIONAL block from main query
+
           }
         }
 
@@ -56,6 +56,33 @@ boxes:
                   OPTIONAL { ?abbrNode bican:denotes_parcellation_term ?parcellationTerm . }
                   OPTIONAL { ?abbrNode bican:denotes_gene_annotation    ?geneAnnotation . }
                   OPTIONAL { ?abbrNode bican:denotes_cell_type          ?cellType . }
+                }
+              }
+            }
+        - key: SpatialRegionalProportions
+          sparql_query: |-
+            PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+
+            SELECT DISTINCT
+              ?srp_node
+              ?srp_str
+              ?srp_gpe
+              ?srp_gpi
+              ?srp_sn
+              ?srp_adj
+              ?srp_sth
+            WHERE {
+              GRAPH <https://apitesting.com/> {
+                VALUES ?id { <{0}> }
+                OPTIONAL {
+                  ?id bican:spatial_regional_proportions ?srp_node .
+                  ?srp_node a bican:SpatialProportions .
+                  OPTIONAL { ?srp_node bican:str ?srp_str . }
+                  OPTIONAL { ?srp_node bican:gpe ?srp_gpe . }
+                  OPTIONAL { ?srp_node bican:gpi ?srp_gpi . }
+                  OPTIONAL { ?srp_node bican:sn  ?srp_sn  . }
+                  OPTIONAL { ?srp_node bican:adj ?srp_adj . }
+                  OPTIONAL { ?srp_node bican:sth ?srp_sth . }
                 }
               }
             }
