@@ -19,19 +19,18 @@ boxes:
         PREFIX rdfs:  <http://www.w3.org/2000/01/rdf-schema#>
         PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
         PREFIX DHBA:  <https://purl.brain-bican.org/ontology/dmbao/DMBA_>
-        SELECT DISTINCT ?name ?xref ?parentNode WHERE {
+        SELECT DISTINCT ?Name ?Cell_Ontology_ID ?Parent_Node WHERE {
           GRAPH <https://apitesting.com/> {
             BIND(<{0}> AS ?id)
             ?id a bican:CellTypeTaxon .
-            OPTIONAL { ?id rdfs:label ?name . }
-            OPTIONAL { ?id biolink:xref ?xref . }
-            OPTIONAL { ?id bican:has_parent ?parentNode . }
+            OPTIONAL { ?id rdfs:label ?Name . }
+            OPTIONAL { ?id biolink:xref ?Cell_Ontology_ID . }
+            OPTIONAL { ?id bican:has_parent ?Parent_Node . }
 
           }
         }
 
     box_additional_info:
-      header: Abbreviations
       is_iterable: true
       properties:
         - key: Abbreviations
@@ -40,23 +39,22 @@ boxes:
             PREFIX rdfs:  <http://www.w3.org/2000/01/rdf-schema#>
 
             SELECT
-              ?abbrNode
-              ?abbrTerm
-              ?abbrMeaning
-              (GROUP_CONCAT(DISTINCT STR(?parcellationTerm); separator=", ") AS ?parcellationTerms)
-              (GROUP_CONCAT(DISTINCT STR(?geneAnnotation);   separator=", ") AS ?geneAnnotations)
-              (GROUP_CONCAT(DISTINCT STR(?cellType);         separator=", ") AS ?cellTypes)
+              ?Term
+              ?Meaning
+              (GROUP_CONCAT(DISTINCT STR(?parcellationTerm); separator=", ") AS ?Mapping_to_Parcellation_Terms)
+              (GROUP_CONCAT(DISTINCT STR(?geneAnnotation);   separator=", ") AS ?Mapping_to_Gene_Annotations)
+              (GROUP_CONCAT(DISTINCT STR(?cellType);         separator=", ") AS ?Mapping_to_Cell_Types)
             WHERE {
               GRAPH <https://apitesting.com/> {
-                VALUES ?id { <urn:bkbit:71e0a3dc10f0d41bcbba139f47a4921da20b78ef6cee9eccbdf465565249def4> }
+                BIND(<{0}> AS ?id)
 
                 # Only abbreviations actually linked to this id
                 ?id bican:has_abbreviation ?abbrNode .
 
                 # One row per abbrNode (term/meaning are single-valued per node)
                 ?abbrNode a bican:Abbreviation ;
-                          bican:term    ?abbrTerm ;
-                          bican:meaning ?abbrMeaning .
+                          bican:term    ?Term ;
+                          bican:meaning ?Meaning .
 
                 # Denotations (may be 0..many) — aggregate them
                 OPTIONAL { ?abbrNode bican:denotes_parcellation_term ?parcellationTerm . }
@@ -64,33 +62,33 @@ boxes:
                 OPTIONAL { ?abbrNode bican:denotes_cell_type          ?cellType . }
               }
             }
-            GROUP BY ?abbrNode ?abbrTerm ?abbrMeaning
+            GROUP BY ?abbrNode ?Term ?Meaning
             ORDER BY ?abbrNode
 
-        # - key: SpatialRegionalProportions
-        #   sparql_query: |-
-        #     PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+        - key: >
+            Spatial Regional Proportions
+          sparql_query: |-
+            PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
 
-        #     SELECT DISTINCT
-        #       ?srp_node
-        #       ?srp_str
-        #       ?srp_gpe
-        #       ?srp_gpi
-        #       ?srp_sn
-        #       ?srp_adj
-        #       ?srp_sth
-        #     WHERE {
-        #       GRAPH <https://apitesting.com/> {
-        #         VALUES ?id { <{0}> }
-        #         OPTIONAL {
-        #           ?id bican:spatial_regional_proportions ?srp_node .
-        #           ?srp_node a bican:SpatialProportions .
-        #           OPTIONAL { ?srp_node bican:str ?srp_str . }
-        #           OPTIONAL { ?srp_node bican:gpe ?srp_gpe . }
-        #           OPTIONAL { ?srp_node bican:gpi ?srp_gpi . }
-        #           OPTIONAL { ?srp_node bican:sn  ?srp_sn  . }
-        #           OPTIONAL { ?srp_node bican:adj ?srp_adj . }
-        #           OPTIONAL { ?srp_node bican:sth ?srp_sth . }
-        #         }
-        #       }
-        #     }
+            SELECT DISTINCT
+              ?srp_str
+              ?srp_gpe
+              ?srp_gpi
+              ?srp_sn
+              ?srp_adj
+              ?srp_sth
+            WHERE {
+              GRAPH <https://apitesting.com/> {
+                VALUES ?id { <{0}> }
+                OPTIONAL {
+                  ?id bican:spatial_regional_proportions ?srp_node .
+                  ?srp_node a bican:SpatialProportions .
+                  OPTIONAL { ?srp_node bican:str ?srp_str . }
+                  OPTIONAL { ?srp_node bican:gpe ?srp_gpe . }
+                  OPTIONAL { ?srp_node bican:gpi ?srp_gpi . }
+                  OPTIONAL { ?srp_node bican:sn  ?srp_sn  . }
+                  OPTIONAL { ?srp_node bican:adj ?srp_adj . }
+                  OPTIONAL { ?srp_node bican:sth ?srp_sth . }
+                }
+              }
+            }

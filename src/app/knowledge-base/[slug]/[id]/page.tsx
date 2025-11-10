@@ -304,7 +304,7 @@ const IndividualEntityPage = () => {
                         {data[entitycards.slug ?? "unknown"] ? (
                           Object.entries(data[entitycards.slug ?? "unknown"]).map(([key, value], idx) => (
                             <div key={idx} className="mb-3">
-                              <div className="font-semibold mb-1">{key}:</div>
+                              <div className="font-semibold mb-1">{key.replace(/_/g, ' ')}:</div>
                               <RenderValue value={value} />
                             </div>
                           ))
