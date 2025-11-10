@@ -41,7 +41,7 @@ boxes:
             SELECT
               ?Term
               ?Meaning
-              (GROUP_CONCAT(DISTINCT STR(?parcellationTerm); separator=", ") AS ?Anatomical_Identifier)
+              (GROUP_CONCAT(DISTINCT STR(?parcellationTerm); separator=", ") AS ?Anatomical_Identifiers)
               (GROUP_CONCAT(DISTINCT STR(?geneAnnotation);   separator=", ") AS ?Gene_Identifiers)
               (GROUP_CONCAT(DISTINCT STR(?cellType);         separator=", ") AS ?Cell_Type_Identifiers)
             WHERE {
@@ -71,24 +71,105 @@ boxes:
             PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
 
             SELECT DISTINCT
-              ?srp_str
-              ?srp_gpe
-              ?srp_gpi
-              ?srp_sn
-              ?srp_adj
-              ?srp_sth
+              ?Striatum
+              ?External_Globus_Pallidus
+              ?Internal_Globus_Pallidus
+              ?Substantia_Nigra
+              ?Adjacent_Regions
+              ?Subthalamic_Nucleus
             WHERE {
               GRAPH <https://apitesting.com/> {
                 VALUES ?id { <{0}> }
                 OPTIONAL {
                   ?id bican:spatial_regional_proportions ?srp_node .
                   ?srp_node a bican:SpatialProportions .
-                  OPTIONAL { ?srp_node bican:str ?srp_str . }
-                  OPTIONAL { ?srp_node bican:gpe ?srp_gpe . }
-                  OPTIONAL { ?srp_node bican:gpi ?srp_gpi . }
-                  OPTIONAL { ?srp_node bican:sn  ?srp_sn  . }
-                  OPTIONAL { ?srp_node bican:adj ?srp_adj . }
-                  OPTIONAL { ?srp_node bican:sth ?srp_sth . }
+                  OPTIONAL { ?srp_node bican:str ?Striatum . }
+                  OPTIONAL { ?srp_node bican:gpe ?External_Globus_Pallidus . }
+                  OPTIONAL { ?srp_node bican:gpi ?Internal_Globus_Pallidus . }
+                  OPTIONAL { ?srp_node bican:sn  ?Substantia_Nigra . }
+                  OPTIONAL { ?srp_node bican:adj ?Adjacent_Regions . }
+                  OPTIONAL { ?srp_node bican:sth ?Subthalamic_Nucleus . }
+                }
+              }
+            }
+        - key: >
+            Marmoset Spatial Proportions
+          sparql_query: |-
+            PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+
+            SELECT DISTINCT
+              ?Striatum
+              ?External_Globus_Pallidus
+              ?Internal_Globus_Pallidus
+              ?Substantia_Nigra
+              ?Adjacent_Regions
+              ?Subthalamic_Nucleus
+            WHERE {
+              GRAPH <https://apitesting.com/> {
+                VALUES ?id { <{0}> }
+                OPTIONAL {
+                  ?id bican:spatial_proportions_marmoset ?spm_node .
+                  ?spm_node a bican:SpatialProportions .
+                  OPTIONAL { ?spm_node bican:str ?Striatum . }
+                  OPTIONAL { ?spm_node bican:gpe ?External_Globus_Pallidus . }
+                  OPTIONAL { ?spm_node bican:gpi ?Internal_Globus_Pallidus . }
+                  OPTIONAL { ?spm_node bican:sn  ?Substantia_Nigra . }
+                  OPTIONAL { ?spm_node bican:adj ?Adjacent_Regions . }
+                  OPTIONAL { ?spm_node bican:sth ?Subthalamic_Nucleus . }
+                }
+              }
+            }
+        - key: >
+            Macaque Spatial Proportions
+          sparql_query: |-
+            PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+
+            SELECT DISTINCT
+              ?Striatum
+              ?External_Globus_Pallidus
+              ?Internal_Globus_Pallidus
+              ?Substantia_Nigra
+              ?Adjacent_Regions
+              ?Subthalamic_Nucleus
+            WHERE {
+              GRAPH <https://apitesting.com/> {
+                VALUES ?id { <{0}> }
+                OPTIONAL {
+                  ?id bican:spatial_proportions_macaque ?spm_node .
+                  ?spm_node a bican:SpatialProportions .
+                  OPTIONAL { ?spm_node bican:str ?Striatum . }
+                  OPTIONAL { ?spm_node bican:gpe ?External_Globus_Pallidus . }
+                  OPTIONAL { ?spm_node bican:gpi ?Internal_Globus_Pallidus . }
+                  OPTIONAL { ?spm_node bican:sn  ?Substantia_Nigra . }
+                  OPTIONAL { ?spm_node bican:adj ?Adjacent_Regions . }
+                  OPTIONAL { ?spm_node bican:sth ?Subthalamic_Nucleus . }
+                }
+              }
+            }
+        - key: >
+            Human Spatial Proportions
+          sparql_query: |-
+            PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+
+            SELECT DISTINCT
+              ?Striatum
+              ?External_Globus_Pallidus
+              ?Internal_Globus_Pallidus
+              ?Substantia_Nigra
+              ?Adjacent_Regions
+              ?Subthalamic_Nucleus
+            WHERE {
+              GRAPH <https://apitesting.com/> {
+                VALUES ?id { <{0}> }
+                OPTIONAL {
+                  ?id bican:spatial_proportions_human ?sph_node .
+                  ?sph_node a bican:SpatialProportions .
+                  OPTIONAL { ?sph_node bican:str ?Striatum . }
+                  OPTIONAL { ?sph_node bican:gpe ?External_Globus_Pallidus . }
+                  OPTIONAL { ?sph_node bican:gpi ?Internal_Globus_Pallidus . }
+                  OPTIONAL { ?sph_node bican:sn  ?Substantia_Nigra . }
+                  OPTIONAL { ?sph_node bican:adj ?Adjacent_Regions . }
+                  OPTIONAL { ?sph_node bican:sth ?Subthalamic_Nucleus . }
                 }
               }
             }
