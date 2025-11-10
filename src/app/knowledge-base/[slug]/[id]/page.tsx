@@ -70,16 +70,23 @@ function replaceEntityIdInQuery(query: string, rawId: string) {
 
 // Convert SPARQL JSON result bindings -> array of row objects { varName: value }
 function bindingsToObjects(bindings: any[]): Array<Record<string, string>> {
-  return (bindings || []).map((b: any) => {
+  const isSet = (x: any) =>
+    x != null && !(typeof x === "string" && x.trim() === "");
+
+  return (bindings ?? []).map((b: any) => {
     const row: Record<string, string> = {};
     Object.entries(b).forEach(([k, v]: [string, any]) => {
-      // SPARQL JSON shape { type, value, ... } -> use .value
-      row[k] = (v && typeof v === 'object' && 'value' in v) ? String(v.value) : String(v ?? '');
+      // SPARQL JSON shape { type, value, ... } -> prefer .value if present
+      const raw = (v && typeof v === "object" && "value" in v) ? v.value : v;
+
+      if (isSet(raw)) {
+        row[k.replace(/_/g, " ")] = String(raw);
+      }
+      // else: skip adding this key entirely
     });
     return row;
   });
 }
-
 // Fetch -> return raw bindings
 async function fetchBindings(queryParameter: QueryParameter) {
   try {
@@ -280,9 +287,9 @@ const IndividualEntityPage = () => {
       <div className="grid fix-left-margin grid-cols-1">
         <div className="w-full bg-white shadow-md rounded-lg overflow-hidden">
           <div className="p-4">
-            <h2 className="text-xl font-bold">
+            {/* <h2 className="text-xl font-bold">
               {decodeURIComponent(id).substring(decodeURIComponent(id).lastIndexOf("/") + 1)}
-            </h2>
+            </h2> */}
             <p className="text-gray-700">{mainCardDescription}</p>
           </div>
 
