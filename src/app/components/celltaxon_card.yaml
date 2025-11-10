@@ -41,9 +41,9 @@ boxes:
             SELECT
               ?Term
               ?Meaning
-              (GROUP_CONCAT(DISTINCT STR(?parcellationTerm); separator=", ") AS ?Mapping_to_Parcellation_Terms)
-              (GROUP_CONCAT(DISTINCT STR(?geneAnnotation);   separator=", ") AS ?Mapping_to_Gene_Annotations)
-              (GROUP_CONCAT(DISTINCT STR(?cellType);         separator=", ") AS ?Mapping_to_Cell_Types)
+              (GROUP_CONCAT(DISTINCT STR(?parcellationTerm); separator=", ") AS ?Anatomical_Identifier)
+              (GROUP_CONCAT(DISTINCT STR(?geneAnnotation);   separator=", ") AS ?Gene_Identifiers)
+              (GROUP_CONCAT(DISTINCT STR(?cellType);         separator=", ") AS ?Cell_Type_Identifiers)
             WHERE {
               GRAPH <https://apitesting.com/> {
                 BIND(<{0}> AS ?id)
