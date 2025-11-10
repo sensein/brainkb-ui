@@ -309,12 +309,20 @@ const IndividualEntityPage = () => {
 
                       <div className="bg-white p-4 rounded-lg border border-gray-300">
                         {data[entitycards.slug ?? "unknown"] ? (
-                          Object.entries(data[entitycards.slug ?? "unknown"]).map(([key, value], idx) => (
-                            <div key={idx} className="mb-3">
-                              <div className="font-semibold mb-1">{key.replace(/_/g, ' ')}:</div>
-                              <RenderValue value={value} />
-                            </div>
-                          ))
+                          Object.entries(data[entitycards.slug ?? "unknown"]).map(([key, value], idx) => {
+                            if (value == null || 
+                              (typeof value === "string" && value.trim() === "") ||
+                              (value.length === 1 &&
+                                value[0] &&
+                                typeof value[0] === "object" &&
+                                Object.keys(value[0]).length === 0)) return null; // skip unset/empty values
+                            return (
+                              <div key={idx} className="mb-3">
+                                <div className="font-semibold mb-1">{key.replace(/_/g, " ")}:</div>
+                                <RenderValue value={value} />
+                              </div>
+                            );
+                          })
                         ) : (
                           "Loading Data..."
                         )}
