@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { FileText, Link as LinkIcon, Type } from "lucide-react";
 import StatusIndicator, { StatusType } from "../../components/StatusIndicator";
 import ExtractedResourceResultTableMapping from "../../components/ExtractedResourceResultTableMapping";
+import { useSseStream } from "../../utils/useSseStream";
 
 type InputType = 'doi' | 'pdf' | 'text';
 
@@ -17,7 +18,7 @@ export default function IngestStructuredResourcePage() {
     const [files, setFiles] = useState<File[]>([]);
     const [doiInput, setDoiInput] = useState<string>('');
     const [textInput, setTextInput] = useState<string>('');
-    const [isUploading, setIsUploading] = useState<boolean>(false);
+    const [isProcessing, setIsProcessing] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [isDragOver, setIsDragOver] = useState<boolean>(false);
@@ -152,6 +153,40 @@ export default function IngestStructuredResourcePage() {
         }
     };
 
+    // Use SSE stream hook
+    const { result: sseResult, error: sseError, status: sseStatus, isLoading: sseIsLoading, processStream } = useSseStream({
+        createFormData: () => {
+            const formData = new FormData();
+            formData.append("input_type", selectedInputType);
+            formData.append("openrouter_api_key", apiKey.trim());
+
+            if (selectedInputType === 'doi') {
+                formData.append("doi", doiInput.trim());
+            } else if (selectedInputType === 'text') {
+                formData.append("text_content", textInput.trim());
+            } else if (selectedInputType === 'pdf') {
+                for (let i = 0; i < files.length; i++) {
+                    formData.append("pdf_file", files[i]);
+                }
+            }
+            
+            const prefix = "ws-client-id-";
+            const client_id = (crypto.randomUUID?.() || `${prefix}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+            const endpoint = process.env.NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT;
+            formData.append("endpoint", endpoint || '');
+            formData.append("clientId", client_id);
+            
+            return formData;
+        },
+        onStatusChange: (status) => {
+            setCurrentStatus(status === 'idle' ? 'idle' : status === 'done' ? 'done' : status === 'error' ? 'error' : status);
+        },
+        onError: (error) => {
+            setError(error);
+            setIsProcessing(false);
+        },
+    });
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         
@@ -182,132 +217,23 @@ export default function IngestStructuredResourcePage() {
         setError(null);
         setSuccessMessage(null);
         setCurrentStatus('processing');
-        setIsUploading(true);
+        setIsProcessing(true);
 
         try {
-            const formData = new FormData();
-            formData.append("input_type", selectedInputType);
-            formData.append("openrouter_api_key", apiKey.trim()); // Add API key to form data
+            // Process SSE stream using the hook
+            await processStream();
 
-            if (selectedInputType === 'doi') {
-                formData.append("doi", doiInput.trim());
-            } else if (selectedInputType === 'text') {
-                formData.append("text_content", textInput.trim());
-            } else if (selectedInputType === 'pdf') {
-                // PDF files go to pdf_file parameter
-                for (let i = 0; i < files.length; i++) {
-                    formData.append("pdf_file", files[i]);
-                }
-            }
-            // Add endpoint and client ID
-            const prefix = "ws-client-id-";
-            const client_id  = (crypto.randomUUID?.() || `${prefix}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-            // Endpoint should be in format: ws://localhost:8009/api/ws/extract-resources
-            const endpoint = process.env.NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT;
-            formData.append("endpoint", endpoint || '');
-            formData.append("clientId", client_id);
-
-            // Handle WebSocket via SSE stream
-            const response = await fetch("/api/ws-connection", {
-                method: "POST",
-                body: formData,
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || `Error: ${response.status}`);
-            }
-
-            // Read Server-Sent Events stream
-            const reader = response.body?.getReader();
-            const decoder = new TextDecoder();
-            let result: any = null;
-            let buffer = '';
-            let hasError = false;
-            let errorMessage = '';
-
-            if (!reader) {
-                throw new Error('Failed to get response stream');
-            }
-
-            setCurrentStatus('connecting');
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split('\n');
-                buffer = lines.pop() || '';
-
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const data = JSON.parse(line.slice(6));
-//                             console.log('SSE event:', data.type);
-
-                            if (data.type === 'connected') {
-                                setCurrentStatus('connected');
-                            } else if (data.type === 'task_created') {
-//                                 console.log('Task created:', data.task_id);
-                                setCurrentStatus('processing');
-                            } else if (data.type === 'status') {
-                                const status = data.status;
-                                if (status === 'processing' || status === 'running' || status === 'pending') {
-                                    setCurrentStatus('processing');
-                                } else if (status === 'completed' || status === 'done' || status === 'finished' || status === 'success') {
-                                    // Status indicates completion, but wait for result data
-                                    setCurrentStatus('processing');
-                                    // If there's data in the status message, treat as result
-                                    if (data.data) {
-                                        result = data.data;
-                                    }
-                                }
-                            } else if (data.type === 'progress') {
-//                                 console.log('Progress:', data.progress || data.bytes);
-                                setCurrentStatus('processing');
-                            } else if (data.type === 'result') {
-                                result = data.data;
-//                                 console.log('Result received:', result);
-                                setCurrentStatus('processing'); // Keep as processing until we parse the result
-                            } else if (data.type === 'message') {
-                                // Handle generic messages - check if they contain result data
-//                                 console.log('Generic message received:', data.data);
-                                if (data.data) {
-                                    const msgData = data.data;
-                                    // Check if this message contains result data
-                                    if (msgData.data || msgData.result || (msgData.status && (msgData.status === 'completed' || msgData.status === 'done'))) {
-                                        result = msgData.data || msgData.result || msgData;
-//                                         console.log('Found result in generic message:', result);
-                                    }
-                                }
-                            } else if (data.type === 'error') {
-                                hasError = true;
-                                errorMessage = data.error || 'Processing error';
-                                setCurrentStatus('error');
-                                console.error('SSE error:', errorMessage);
-                                // Don't break here, wait for 'done' event
-                            } else if (data.type === 'done') {
-                                console.info('Done event received');
-                                break;
-                            } else {
-                                console.info('Unknown SSE event type:', data.type, data);
-                            }
-                        } catch (e) {
-                            console.error('Error parsing SSE data:', e);
-                        }
-                    }
-                }
-            }
-
-            // If there was an error, throw it instead of processing result
-            if (hasError) {
-                throw new Error(errorMessage);
+            // Check for errors from the hook
+            if (sseError) {
+                setError(sseError);
+                setCurrentStatus('error');
+                setIsProcessing(false);
+                return;
             }
 
             // Process the result only if no error occurred
+            const result = sseResult;
             if (result) {
-//                 console.log('Full result:', result);
                 setLastResult(result);
 
                 // Helper function to try parsing JSON from various sources
@@ -317,7 +243,6 @@ export default function IngestStructuredResourcePage() {
                     let dataToParse = source;
                     
                     if (typeof source === 'object' && source !== null) {
-//                         console.log(`${sourceName} is already an object:`, source);
                         return source;
                     }
                     
@@ -326,7 +251,6 @@ export default function IngestStructuredResourcePage() {
                         if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
                             try {
                                 const parsed = JSON.parse(trimmed);
-//                                 console.log(`Successfully parsed ${sourceName}:`, parsed);
                                 return parsed;
                             } catch (e) {
                                 console.error(`Failed to parse ${sourceName} as JSON:`, e);
@@ -352,8 +276,6 @@ export default function IngestStructuredResourcePage() {
                 for (const source of sources) {
                     const parsed = tryParseJSON(source.data, source.name);
                     if (parsed) {
-                        console.log(`Found data in ${source.name}:`, parsed);
-                        
                         if (typeof parsed === 'object' && parsed.message && typeof parsed.message === 'string') {
                             try {
                                 const messageParsed = JSON.parse(parsed.message);
@@ -401,11 +323,7 @@ export default function IngestStructuredResourcePage() {
                     setDoiInput('');
                     setTextInput('');
                 } else if (result) {
-                    // Result exists but couldn't parse - log it for debugging
-                    console.warn('Result received but could not parse data:', result);
-                    console.log('Full result object:', JSON.stringify(result, null, 2));
-                    
-                    // Try to display raw result or show helpful error
+                    // Result exists but couldn't parse - try to display raw result or show helpful error
                     if (typeof result === 'object') {
                         // Try to flatten the entire result object
                         try {
@@ -445,7 +363,7 @@ export default function IngestStructuredResourcePage() {
             setError(`Failed to process content: ${errorMessage}`);
             setCurrentStatus('error');
         } finally {
-            setIsUploading(false);
+            setIsProcessing(false);
         }
     };
 
@@ -793,7 +711,7 @@ export default function IngestStructuredResourcePage() {
                             onChange={(e) => setDoiInput(e.target.value)}
                             placeholder="Enter DOI (e.g., 10.1000/182)"
                             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                            disabled={isUploading}
+                            disabled={isProcessing}
                         />
                     )}
                     
@@ -815,7 +733,7 @@ export default function IngestStructuredResourcePage() {
                                 className="hidden"
                                 accept=".pdf"
                                 multiple
-                                disabled={isUploading}
+                                disabled={isProcessing}
                             />
                             <label
                                 htmlFor="pdf-files"
@@ -841,7 +759,7 @@ export default function IngestStructuredResourcePage() {
                             placeholder="Paste text here..."
                             rows={8}
                             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white resize-vertical"
-                            disabled={isUploading}
+                            disabled={isProcessing}
                         />
                     )}
                     
@@ -854,13 +772,13 @@ export default function IngestStructuredResourcePage() {
 
                     <button
                         type="submit"
-                        disabled={!isApiKeyValid || isUploading || 
+                        disabled={!isApiKeyValid || isProcessing || 
                             (selectedInputType === 'doi' && !doiInput.trim()) ||
                             (selectedInputType === 'text' && !textInput.trim()) ||
                             (selectedInputType === 'pdf' && files.length === 0)
                         }
                         className={`w-full px-6 py-3 text-white rounded-lg font-semibold transition-all duration-200 ${
-                            !isApiKeyValid || isUploading || 
+                            !isApiKeyValid || isProcessing || 
                             (selectedInputType === 'doi' && !doiInput.trim()) ||
                             (selectedInputType === 'text' && !textInput.trim()) ||
                             (selectedInputType === 'pdf' && files.length === 0)
@@ -868,7 +786,7 @@ export default function IngestStructuredResourcePage() {
                                 : "bg-blue-600 hover:bg-blue-700 hover:shadow-lg"
                         }`}
                     >
-                        {isUploading ? "Processing..." : "Process Structured Resource"}
+                        {isProcessing ? "Processing..." : "Process Structured Resource"}
                     </button>
                 </div>
 

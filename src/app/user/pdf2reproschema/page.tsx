@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { FileText, Link as LinkIcon, Type } from "lucide-react";
 import StatusIndicator, { StatusType } from "../../components/StatusIndicator";
+import { useSseStream } from "../../utils/useSseStream";
 
 type InputType = 'doi' | 'pdf' | 'text';
 
@@ -16,7 +17,7 @@ export default function Pdf2ReproschemaPage() {
     const [files, setFiles] = useState<File[]>([]);
     const [doiInput, setDoiInput] = useState<string>('');
     const [textInput, setTextInput] = useState<string>('');
-    const [isUploading, setIsUploading] = useState<boolean>(false);
+    const [isProcessing, setIsProcessing] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [isDragOver, setIsDragOver] = useState<boolean>(false);
@@ -148,6 +149,42 @@ export default function Pdf2ReproschemaPage() {
         }
     };
 
+    // Use SSE stream hook
+    const { result: sseResult, error: sseError, status: sseStatus, isLoading: sseIsLoading, processStream } = useSseStream({
+        createFormData: () => {
+            const formData = new FormData();
+            formData.append("input_type", selectedInputType);
+            formData.append("openrouter_api_key", apiKey.trim());
+
+            if (selectedInputType === 'doi') {
+                formData.append("doi", doiInput.trim());
+            } else if (selectedInputType === 'text') {
+                formData.append("text_content", textInput.trim());
+            } else if (selectedInputType === 'pdf') {
+                for (let i = 0; i < files.length; i++) {
+                    formData.append("pdf_file", files[i]);
+                }
+            }
+            
+            const prefix = "ws-client-id-";
+            const client_id = (crypto.randomUUID?.() || `${prefix}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+            const endpoint = process.env.NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT;
+            if (endpoint) {
+                formData.append("endpoint", endpoint);
+            }
+            formData.append("clientId", client_id);
+            
+            return formData;
+        },
+        onStatusChange: (status) => {
+            setCurrentStatus(status === 'idle' ? 'idle' : status === 'done' ? 'done' : status === 'error' ? 'error' : status);
+        },
+        onError: (error) => {
+            setError(error);
+            setIsProcessing(false);
+        },
+    });
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         
@@ -171,50 +208,36 @@ export default function Pdf2ReproschemaPage() {
             return;
         }
 
-        setIsUploading(true);
+        setIsProcessing(true);
         setError(null);
         setSuccessMessage(null);
         setCurrentStatus('processing');
 
         try {
-            const formData = new FormData();
-            formData.append("input_type", selectedInputType);
-            formData.append("openrouter_api_key", apiKey.trim());
+            // Process SSE stream using the hook
+            await processStream();
 
-            if (selectedInputType === 'doi') {
-                formData.append("doi", doiInput.trim());
-            } else if (selectedInputType === 'text') {
-                formData.append("text_content", textInput.trim());
-            } else if (selectedInputType === 'pdf') {
-                // PDF files go to pdf_file parameter
-                for (let i = 0; i < files.length; i++) {
-                    formData.append("pdf_file", files[i]);
-                }
-            }
-            
-            // Add endpoint if available
-            const endpoint = process.env.NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT;
-            if (endpoint) {
-                formData.append("endpoint", endpoint);
+            // Check for errors from the hook
+            if (sseError) {
+                setError(sseError);
+                setCurrentStatus('error');
+                setIsProcessing(false);
+                return;
             }
 
-            const response = await fetch("/api/ws-connection", {
-                method: "POST",
-                body: formData,
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || `Error: ${response.status}`);
+            // Process the result only if no error occurred
+            const result = sseResult;
+            if (result) {
+                setConversionResult(result);
+                setSuccessMessage("Document converted to Reproschema format successfully!");
+                setFiles([]);
+                setDoiInput('');
+                setTextInput('');
+                setCurrentStatus('done');
+            } else {
+                setError("No result received from server. The processing may have completed without returning data.");
+                setCurrentStatus('error');
             }
-
-            setConversionResult(result);
-            setSuccessMessage("Document converted to Reproschema format successfully!");
-            setFiles([]);
-            setDoiInput('');
-            setTextInput('');
-            setCurrentStatus('done');
 
         } catch (err) {
             console.error("Error converting document:", err);
@@ -222,7 +245,7 @@ export default function Pdf2ReproschemaPage() {
             setError(`Failed to convert document: ${errorMessage}`);
             setCurrentStatus('error');
         } finally {
-            setIsUploading(false);
+            setIsProcessing(false);
         }
     };
 
@@ -465,7 +488,7 @@ export default function Pdf2ReproschemaPage() {
                             onChange={(e) => setDoiInput(e.target.value)}
                             placeholder="Enter DOI (e.g., 10.1000/182)"
                             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                            disabled={isUploading}
+                            disabled={isProcessing}
                         />
                     )}
                     
@@ -487,7 +510,7 @@ export default function Pdf2ReproschemaPage() {
                                 className="hidden"
                                 accept=".pdf"
                                 multiple
-                                disabled={isUploading}
+                                disabled={isProcessing}
                             />
                             <label
                                 htmlFor="pdf-files"
@@ -513,7 +536,7 @@ export default function Pdf2ReproschemaPage() {
                             placeholder="Paste text here..."
                             rows={8}
                             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white resize-vertical"
-                            disabled={isUploading}
+                            disabled={isProcessing}
                         />
                     )}
                     
@@ -526,13 +549,13 @@ export default function Pdf2ReproschemaPage() {
 
                     <button
                         type="submit"
-                        disabled={!isApiKeyValid || isUploading || 
+                        disabled={!isApiKeyValid || isProcessing || 
                             (selectedInputType === 'doi' && !doiInput.trim()) ||
                             (selectedInputType === 'text' && !textInput.trim()) ||
                             (selectedInputType === 'pdf' && files.length === 0)
                         }
                         className={`w-full px-6 py-3 text-white rounded-lg font-semibold transition-all duration-200 ${
-                            !isApiKeyValid || isUploading || 
+                            !isApiKeyValid || isProcessing || 
                             (selectedInputType === 'doi' && !doiInput.trim()) ||
                             (selectedInputType === 'text' && !textInput.trim()) ||
                             (selectedInputType === 'pdf' && files.length === 0)
@@ -540,7 +563,7 @@ export default function Pdf2ReproschemaPage() {
                                 : "bg-blue-600 hover:bg-blue-700 hover:shadow-lg"
                         }`}
                     >
-                        {isUploading ? "Converting..." : "Convert to Reproschema"}
+                        {isProcessing ? "Converting..." : "Convert to Reproschema"}
                     </button>
                 </div>
 
