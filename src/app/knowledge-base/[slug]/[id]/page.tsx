@@ -6,6 +6,8 @@ import {getData} from "../../../components/getData";
 import { processSparqlQueryResult } from "../../../components/helper";
 
 import { useParams } from "next/navigation";
+import router from "next/router";
+import Link from "next/link";
 
 /** ---------- Types ---------- */
 type BoxAdditionalProperty = {
@@ -333,15 +335,37 @@ const IndividualEntityPage = () => {
                       <div className="bg-white p-4 rounded-lg border border-gray-300">
                         {data[entitycards.slug ?? "unknown"] ? (
                           Object.entries(data[entitycards.slug ?? "unknown"]).map(([key, value], idx) => {
-                            if (value == null || 
+                            // skip unset / empty / [{}]
+                            if (
+                              value == null ||
                               (typeof value === "string" && value.trim() === "") ||
-                              (value.length === 1 &&
+                              (Array.isArray(value) &&
+                                value.length === 1 &&
                                 value[0] &&
                                 typeof value[0] === "object" &&
-                                Object.keys(value[0]).length === 0)) return null; // skip unset/empty values
+                                Object.keys(value[0]).length === 0)
+                            ) return null;
+
+                            const label = key.replace(/_/g, " ");
+
+                            // if it's a bkbit URN, render as a clickable link
+                            if (typeof value === "string" && value.startsWith("urn:bkbit")) {
+                              return (
+                                <div key={idx} className="mb-3">
+                                  <div className="font-semibold mb-1">{label}:</div>
+                                  <Link
+                                    href={`/knowledge-base/celltaxon/${encodeURIComponent(value)}`}
+                                    className="underline text-blue-700 break-all"
+                                  >
+                                    {value}
+                                  </Link>
+                                </div>
+                              );
+                            }
+
                             return (
                               <div key={idx} className="mb-3">
-                                <div className="font-semibold mb-1">{key.replace(/_/g, " ")}:</div>
+                                <div className="font-semibold mb-1">{label}:</div>
                                 <RenderValue value={value} />
                               </div>
                             );
