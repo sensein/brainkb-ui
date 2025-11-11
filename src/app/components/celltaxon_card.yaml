@@ -19,13 +19,13 @@ boxes:
         PREFIX rdfs:  <http://www.w3.org/2000/01/rdf-schema#>
         PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
         PREFIX DHBA:  <https://purl.brain-bican.org/ontology/dmbao/DMBA_>
-        SELECT DISTINCT ?Name ?Cell_Ontology_ID ?Parent_Node WHERE {
+        SELECT DISTINCT ?Name ?Identifier ?Cell_Ontology_ID ?Parent_Node WHERE {
           GRAPH <https://apitesting.com/> {
-            BIND(<{0}> AS ?id)
-            ?id a bican:CellTypeTaxon .
-            OPTIONAL { ?id rdfs:label ?Name . }
-            OPTIONAL { ?id biolink:xref ?Cell_Ontology_ID . }
-            OPTIONAL { ?id bican:has_parent ?Parent_Node . }
+            BIND(<{0}> AS ?Identifier)
+            ?Identifier a bican:CellTypeTaxon .
+            OPTIONAL { ?Identifier rdfs:label ?Name . }
+            OPTIONAL { ?Identifier biolink:xref ?Cell_Ontology_ID . }
+            OPTIONAL { ?Identifier bican:has_parent ?Parent_Node . }
 
           }
         }
@@ -170,6 +170,36 @@ boxes:
                   OPTIONAL { ?sph_node bican:sn  ?Substantia_Nigra . }
                   OPTIONAL { ?sph_node bican:adj ?Adjacent_Regions . }
                   OPTIONAL { ?sph_node bican:sth ?Subthalamic_Nucleus . }
+                }
+              }
+            }
+        - key: >
+            Curated Markers to Primates
+          sparql_query: |-
+            PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+
+            SELECT DISTINCT
+              (GROUP_CONCAT(DISTINCT STR(?markers); separator=", ") AS ?Genes)
+              WHERE {
+              GRAPH <https://apitesting.com/> {
+                VALUES ?id { <{0}> }
+                OPTIONAL {
+                  ?id bican:curated_markers_to_primates ?markers .
+                }
+              }
+            }
+        - key: >
+            Curated Markers to Mouse
+          sparql_query: |-
+            PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+
+            SELECT DISTINCT
+              (GROUP_CONCAT(DISTINCT STR(?markers); separator=", ") AS ?Genes)
+              WHERE {
+              GRAPH <https://apitesting.com/> {
+                VALUES ?id { <{0}> }
+                OPTIONAL {
+                  ?id bican:curated_markers_to_mouse ?markers .
                 }
               }
             }
