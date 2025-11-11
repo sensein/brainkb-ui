@@ -152,8 +152,12 @@ export default function Pdf2ReproschemaPage() {
     const sanitizeErrorMessage = (message: string): string => {
         if (!message) return message;
         
+        const lowerMessage = message.toLowerCase();
+        
         // Check for 500 Server Error related to PDF/document extraction
-        if (message.includes('500 Server Error') && (message.includes('pdf') || message.includes('document'))) {
+        // Check for various patterns: 500 error, server error, pdf/document related
+        if ((lowerMessage.includes('500') || lowerMessage.includes('server error')) && 
+            (lowerMessage.includes('pdf') || lowerMessage.includes('document') || lowerMessage.includes('fylogenesis'))) {
             return 'External service down, unable to extract text from PDF. Please try again later.';
         }
         
@@ -267,10 +271,23 @@ export default function Pdf2ReproschemaPage() {
                                 } else if (status === 'failed' || status === 'error') {
                                     // Handle failed status
                                     hasError = true;
-                                    const rawError = data.error || data.message || 'Task failed. Please try again.';
+                                    // Debug: Check all possible error locations
+                                    console.log('Checking error fields:');
+                                    console.log('data.error:', data.error);
+                                    console.log('data.data?.error:', data.data?.error);
+                                    console.log('data.message:', data.message);
+                                    console.log('data.data?.message:', data.data?.message);
+                                    console.log('data.error_message:', data.error_message);
+                                    console.log('Full data object:', JSON.stringify(data, null, 2));
+                                    
+                                    // Try multiple possible error fields - check nested data first (data.data.error because job_update is wrapped)
+                                    const rawError = data.data?.error || data.error || data.data?.message || data.message || data.error_message || 'Task failed. Please try again.';
+                                    console.log('Raw error received:', rawError);
                                     errorMessage = sanitizeErrorMessage(rawError);
+                                    console.log('Sanitized error:', errorMessage);
                                     setError(errorMessage);
                                     setCurrentStatus('error');
+                                    setIsUploading(false); // Re-enable the button immediately
                                     console.error('Task failed:', data);
                                 } else if (status === 'completed' || status === 'done' || status === 'finished' || status === 'success') {
                                     // Check if status is completed but result is null (indicates failure)
@@ -279,6 +296,7 @@ export default function Pdf2ReproschemaPage() {
                                         errorMessage = 'Agent couldn\'t complete task, likely LLM auth failed. Please check your API key and try again.';
                                         setError(errorMessage);
                                         setCurrentStatus('error');
+                                        setIsUploading(false); // Re-enable the button immediately
                                         console.error('Task completed with null result:', data);
                                     } else {
                                         setCurrentStatus('processing');
@@ -307,6 +325,7 @@ export default function Pdf2ReproschemaPage() {
                                 errorMessage = sanitizeErrorMessage(rawError);
                                 setError(errorMessage);
                                 setCurrentStatus('error');
+                                setIsUploading(false); // Re-enable the button immediately
                                 console.error('SSE error:', errorMessage);
                             } else if (data.type === 'done') {
                                 console.info('Done event received');
@@ -325,6 +344,7 @@ export default function Pdf2ReproschemaPage() {
             if (hasError) {
                 setError(errorMessage || 'An error occurred during processing.');
                 setCurrentStatus('error');
+                setIsUploading(false); // Re-enable the button
                 return;
             }
 
