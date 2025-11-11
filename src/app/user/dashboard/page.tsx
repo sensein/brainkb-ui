@@ -40,13 +40,13 @@ export default function Dashboard() {
             href: "/user/extract-resource",
             color: "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800"
         },
-        {
-            title: "Pdf2Reproschema",
-            description: "Convert PDF documents to Reproschema format using multi-agent extraction",
-            icon: Upload,
-            href: "/user/pdf2reproschema",
-            color: "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800"
-        }
+//         {
+//             title: "Pdf2Reproschema",
+//             description: "Convert PDF documents to Reproschema format using multi-agent extraction",
+//             icon: Upload,
+//             href: "/user/pdf2reproschema",
+//             color: "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800"
+//         }
     ];
 
     return (
