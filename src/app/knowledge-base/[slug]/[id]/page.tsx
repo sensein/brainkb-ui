@@ -1,5 +1,4 @@
 "use client";
-import SideBarKBFromConfig from "../../../components/SideBarKBFromConfig";
 import {useEffect, useState} from "react";
 import enititycardmapperconfig from '../../../components/enititycardmapper.yaml';
 import {getData} from "../../../components/getData";
@@ -129,9 +128,8 @@ const IndividualEntityPage = () => {
     }, [extractedBoxes, id]);
 
     return (
-        <div className="kb-page-margin">
-            <SideBarKBFromConfig/>
-            <div className="grid fix-left-margin grid-cols-1">
+        <div className="kb-page-margin pt-12">
+            <div className="grid grid-cols-1 ml-8">
                 <div className="w-full bg-white shadow-md rounded-lg overflow-hidden">
                     <div className="p-4">
                         <h2 className="text-xl font-bold">{decodeURIComponent(id).substring(decodeURIComponent(id).lastIndexOf("/") + 1)}</h2>
