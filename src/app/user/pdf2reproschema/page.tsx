@@ -148,6 +148,24 @@ export default function Pdf2ReproschemaPage() {
         }
     };
 
+    // Helper function to sanitize error messages by removing URLs and providing user-friendly messages
+    const sanitizeErrorMessage = (message: string): string => {
+        if (!message) return message;
+        
+        // Check for 500 Server Error related to PDF/document extraction
+        if (message.includes('500 Server Error') && (message.includes('pdf') || message.includes('document'))) {
+            return 'External service down, unable to extract text from PDF. Please try again later.';
+        }
+        
+        // Remove URLs (http://, https://, or any URL pattern)
+        let sanitized = message.replace(/https?:\/\/[^\s]+/gi, '').trim();
+        
+        // Clean up any trailing "for url:" or similar phrases
+        sanitized = sanitized.replace(/\s+for\s+url:?\s*$/i, '').trim();
+        
+        return sanitized;
+    };
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         
@@ -192,34 +210,142 @@ export default function Pdf2ReproschemaPage() {
                 }
             }
             
-            // Add endpoint if available
+            // Add endpoint and client ID
+            const prefix = "ws-client-id-";
+            const client_id = (crypto.randomUUID?.() || `${prefix}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
             const endpoint = process.env.NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT;
             if (endpoint) {
                 formData.append("endpoint", endpoint);
             }
+            formData.append("clientId", client_id);
 
             const response = await fetch("/api/ws-connection", {
                 method: "POST",
                 body: formData,
             });
 
-            const result = await response.json();
-
             if (!response.ok) {
-                throw new Error(result.error || `Error: ${response.status}`);
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Error: ${response.status}`);
             }
 
-            setConversionResult(result);
-            setSuccessMessage("Document converted to Reproschema format successfully!");
-            setFiles([]);
-            setDoiInput('');
-            setTextInput('');
-            setCurrentStatus('done');
+            // Read Server-Sent Events stream
+            const reader = response.body?.getReader();
+            const decoder = new TextDecoder();
+            let result: any = null;
+            let buffer = '';
+            let hasError = false;
+            let errorMessage = '';
+
+            if (!reader) {
+                throw new Error('Failed to get response stream');
+            }
+
+            setCurrentStatus('connecting');
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.slice(6));
+
+                            if (data.type === 'connected') {
+                                setCurrentStatus('connected');
+                            } else if (data.type === 'task_created') {
+                                setCurrentStatus('processing');
+                            } else if (data.type === 'status' || data.type === 'job_update') {
+                                const status = data.status;
+                                if (status === 'processing' || status === 'running' || status === 'pending') {
+                                    setCurrentStatus('processing');
+                                } else if (status === 'failed' || status === 'error') {
+                                    // Handle failed status
+                                    hasError = true;
+                                    const rawError = data.error || data.message || 'Task failed. Please try again.';
+                                    errorMessage = sanitizeErrorMessage(rawError);
+                                    setError(errorMessage);
+                                    setCurrentStatus('error');
+                                    console.error('Task failed:', data);
+                                } else if (status === 'completed' || status === 'done' || status === 'finished' || status === 'success') {
+                                    // Check if status is completed but result is null (indicates failure)
+                                    if (data.result === null || (data.data === null && !data.result)) {
+                                        hasError = true;
+                                        errorMessage = 'Agent couldn\'t complete task, likely LLM auth failed. Please check your API key and try again.';
+                                        setError(errorMessage);
+                                        setCurrentStatus('error');
+                                        console.error('Task completed with null result:', data);
+                                    } else {
+                                        setCurrentStatus('processing');
+                                        if (data.data) {
+                                            result = data.data;
+                                        } else if (data.result) {
+                                            result = data.result;
+                                        }
+                                    }
+                                }
+                            } else if (data.type === 'progress') {
+                                setCurrentStatus('processing');
+                            } else if (data.type === 'result') {
+                                result = data.data;
+                                setCurrentStatus('processing');
+                            } else if (data.type === 'message') {
+                                if (data.data) {
+                                    const msgData = data.data;
+                                    if (msgData.data || msgData.result || (msgData.status && (msgData.status === 'completed' || msgData.status === 'done'))) {
+                                        result = msgData.data || msgData.result || msgData;
+                                    }
+                                }
+                            } else if (data.type === 'error') {
+                                hasError = true;
+                                const rawError = data.error || 'Processing error';
+                                errorMessage = sanitizeErrorMessage(rawError);
+                                setError(errorMessage);
+                                setCurrentStatus('error');
+                                console.error('SSE error:', errorMessage);
+                            } else if (data.type === 'done') {
+                                console.info('Done event received');
+                                break;
+                            } else {
+                                console.info('Unknown SSE event type:', data.type, data);
+                            }
+                        } catch (e) {
+                            console.error('Error parsing SSE data:', e);
+                        }
+                    }
+                }
+            }
+
+            // If there was an error, set it and return early
+            if (hasError) {
+                setError(errorMessage || 'An error occurred during processing.');
+                setCurrentStatus('error');
+                return;
+            }
+
+            // Process the result only if no error occurred
+            if (result) {
+                setConversionResult(result);
+                setSuccessMessage("Document converted to Reproschema format successfully!");
+                setFiles([]);
+                setDoiInput('');
+                setTextInput('');
+                setCurrentStatus('done');
+            } else {
+                setError("No result received from server. The processing may have completed without returning data.");
+                setCurrentStatus('error');
+            }
 
         } catch (err) {
             console.error("Error converting document:", err);
-            const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
-            setError(`Failed to convert document: ${errorMessage}`);
+            const rawErrorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
+            const sanitizedError = sanitizeErrorMessage(rawErrorMessage);
+            setError(`Failed to convert document: ${sanitizedError}`);
             setCurrentStatus('error');
         } finally {
             setIsUploading(false);

@@ -152,6 +152,24 @@ export default function IngestStructuredResourcePage() {
         }
     };
 
+    // Helper function to sanitize error messages by removing URLs and providing user-friendly messages
+    const sanitizeErrorMessage = (message: string): string => {
+        if (!message) return message;
+        
+        // Check for 500 Server Error related to PDF/document extraction
+        if (message.includes('500 Server Error') && (message.includes('pdf') || message.includes('document'))) {
+            return 'External service down, unable to extract text from PDF. Please try again later.';
+        }
+        
+        // Remove URLs (http://, https://, or any URL pattern)
+        let sanitized = message.replace(/https?:\/\/[^\s]+/gi, '').trim();
+        
+        // Clean up any trailing "for url:" or similar phrases
+        sanitized = sanitized.replace(/\s+for\s+url:?\s*$/i, '').trim();
+        
+        return sanitized;
+    };
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         
@@ -251,16 +269,35 @@ export default function IngestStructuredResourcePage() {
                             } else if (data.type === 'task_created') {
 //                                 console.log('Task created:', data.task_id);
                                 setCurrentStatus('processing');
-                            } else if (data.type === 'status') {
+                            } else if (data.type === 'status' || data.type === 'job_update') {
                                 const status = data.status;
                                 if (status === 'processing' || status === 'running' || status === 'pending') {
                                     setCurrentStatus('processing');
+                                } else if (status === 'failed' || status === 'error') {
+                                    // Handle failed status
+                                    hasError = true;
+                                    const rawError = data.error || data.message || 'Task failed. Please try again.';
+                                    errorMessage = sanitizeErrorMessage(rawError);
+                                    setError(errorMessage);
+                                    setCurrentStatus('error');
+                                    console.error('Task failed:', data);
                                 } else if (status === 'completed' || status === 'done' || status === 'finished' || status === 'success') {
-                                    // Status indicates completion, but wait for result data
-                                    setCurrentStatus('processing');
-                                    // If there's data in the status message, treat as result
-                                    if (data.data) {
-                                        result = data.data;
+                                    // Check if status is completed but result is null (indicates failure)
+                                    if (data.result === null || (data.data === null && !data.result)) {
+                                        hasError = true;
+                                        errorMessage = 'Agent couldn\'t complete task, likely LLM auth failed. Please check your API key and try again.';
+                                        setError(errorMessage);
+                                        setCurrentStatus('error');
+                                        console.error('Task completed with null result:', data);
+                                    } else {
+                                        // Status indicates completion, but wait for result data
+                                        setCurrentStatus('processing');
+                                        // If there's data in the status message, treat as result
+                                        if (data.data) {
+                                            result = data.data;
+                                        } else if (data.result) {
+                                            result = data.result;
+                                        }
                                     }
                                 }
                             } else if (data.type === 'progress') {
@@ -283,7 +320,9 @@ export default function IngestStructuredResourcePage() {
                                 }
                             } else if (data.type === 'error') {
                                 hasError = true;
-                                errorMessage = data.error || 'Processing error';
+                                const rawError = data.error || 'Processing error';
+                                errorMessage = sanitizeErrorMessage(rawError);
+                                setError(errorMessage);
                                 setCurrentStatus('error');
                                 console.error('SSE error:', errorMessage);
                                 // Don't break here, wait for 'done' event
@@ -300,9 +339,11 @@ export default function IngestStructuredResourcePage() {
                 }
             }
 
-            // If there was an error, throw it instead of processing result
+            // If there was an error, set it and return early
             if (hasError) {
-                throw new Error(errorMessage);
+                setError(errorMessage || 'An error occurred during processing.');
+                setCurrentStatus('error');
+                return;
             }
 
             // Process the result only if no error occurred
@@ -441,8 +482,9 @@ export default function IngestStructuredResourcePage() {
 
         } catch (err) {
             console.error("Error processing content:", err);
-            const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
-            setError(`Failed to process content: ${errorMessage}`);
+            const rawErrorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
+            const sanitizedError = sanitizeErrorMessage(rawErrorMessage);
+            setError(`Failed to process content: ${sanitizedError}`);
             setCurrentStatus('error');
         } finally {
             setIsUploading(false);
