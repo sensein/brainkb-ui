@@ -103,7 +103,7 @@ async function fetchBindings(queryParameter: QueryParameter) {
   }
 }
 
-function LoadingSpinner({ label = "Loading data..." }: { label?: string }) {
+function LoadingSpinner({ label = "LOADING...may take up to one minute" }: { label?: string }) {
   return (
     <div className="flex items-center gap-2 text-gray-500" role="status" aria-live="polite">
       <svg
