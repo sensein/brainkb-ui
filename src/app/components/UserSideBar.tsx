@@ -22,11 +22,11 @@ const UserSideBar: React.FC = () => {
             href: "/user/extract-resource",
             icon: FileText,
         },
-        {
-            title: "Pdf2Reproschema",
-            href: "/user/pdf2reproschema",
-            icon: Upload,
-        },
+//         {
+//             title: "Pdf2Reproschema",
+//             href: "/user/pdf2reproschema",
+//             icon: Upload,
+//         },
 
     ];
 
