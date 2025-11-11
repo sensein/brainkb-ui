@@ -349,7 +349,7 @@ const IndividualEntityPage = () => {
                             const label = key.replace(/_/g, " ");
 
                             // if it's a bkbit URN, render as a clickable link
-                            if (typeof value === "string" && value.startsWith("urn:bkbit")) {
+                            if (typeof value === "string" && value.startsWith("urn:bkbit") && value !== decodeURIComponent(id)) {
                               return (
                                 <div key={idx} className="mb-3">
                                   <div className="font-semibold mb-1">{label}:</div>
