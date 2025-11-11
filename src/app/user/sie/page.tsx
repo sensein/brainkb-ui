@@ -7,6 +7,7 @@ import {FileText, Link as LinkIcon, Type} from "lucide-react";
 import StatusIndicator, { StatusType } from "../../components/StatusIndicator";
 import NERResultsDisplay from "../../components/NERResultsDisplay";
 import { parseSSEResult } from "./utils/parseSSEResult";
+import { useSseStream } from "../../utils/useSseStream";
 
 // Define types for our entities and results
 interface Entity {
@@ -175,27 +176,37 @@ export default function NamedEntityRecognition() {
         }
     };
 
-    // Helper function to sanitize error messages by removing URLs and providing user-friendly messages
-    const sanitizeErrorMessage = (message: string): string => {
-        if (!message) return message;
-        
-        const lowerMessage = message.toLowerCase();
-        
-        // Check for 500 Server Error related to PDF/document extraction
-        // Check for various patterns: 500 error, server error, pdf/document related
-        if ((lowerMessage.includes('500') || lowerMessage.includes('server error')) && 
-            (lowerMessage.includes('pdf') || lowerMessage.includes('document') || lowerMessage.includes('fylogenesis'))) {
-            return 'External service down, unable to extract text from PDF. Please try again later.';
-        }
-        
-        // Remove URLs (http://, https://, or any URL pattern)
-        let sanitized = message.replace(/https?:\/\/[^\s]+/gi, '').trim();
-        
-        // Clean up any trailing "for url:" or similar phrases
-        sanitized = sanitized.replace(/\s+for\s+url:?\s*$/i, '').trim();
-        
-        return sanitized;
-    };
+    // Use SSE stream hook
+    const { result: sseResult, error: sseError, status: sseStatus, isLoading: sseIsLoading, processStream } = useSseStream({
+        createFormData: () => {
+            const formData = new FormData();
+            formData.append("input_type", selectedInputType);
+            formData.append("openrouter_api_key", apiKey.trim());
+
+            if (selectedInputType === 'doi') {
+                formData.append("doi", doiInput.trim());
+            } else if (selectedInputType === 'text') {
+                formData.append("text_content", textInput.trim());
+            } else if (selectedInputType === 'pdf') {
+                formData.append("pdf_file", file!);
+            }
+            
+            const prefix = "ws-client-id-";
+            const client_id = (crypto.randomUUID?.() || `${prefix}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+            const endpoint = process.env.NEXT_PUBLIC_API_NER_ENDPOINT;
+            formData.append("endpoint", endpoint || '');
+            formData.append("clientId", client_id);
+            
+            return formData;
+        },
+        onStatusChange: (status) => {
+            setCurrentStatus(status === 'idle' ? 'idle' : status === 'done' ? 'done' : status === 'error' ? 'error' : status);
+        },
+        onError: (error) => {
+            setError(error);
+            setIsProcessing(false);
+        },
+    });
 
     // Handle form submission
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -231,159 +242,19 @@ export default function NamedEntityRecognition() {
         setIsProcessing(true);
 
         try {
-            const formData = new FormData();
-            formData.append("input_type", selectedInputType);
-            formData.append("openrouter_api_key", apiKey.trim()); // Add API key to form data
+            // Process SSE stream using the hook
+            await processStream();
 
-            if (selectedInputType === 'doi') {
-                formData.append("doi", doiInput.trim());
-            } else if (selectedInputType === 'text') {
-                formData.append("text_content", textInput.trim());
-            } else if (selectedInputType === 'pdf') {
-                formData.append("pdf_file", file!);
-            }
-            
-            // Add endpoint and client ID
-            const prefix = "ws-client-id-";
-            const client_id = (crypto.randomUUID?.() || `${prefix}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-            // Endpoint should be in format: ws://localhost:8009/api/ws/ner-extraction
-            const endpoint = process.env.NEXT_PUBLIC_API_NER_ENDPOINT;
-            formData.append("endpoint", endpoint || '');
-            formData.append("clientId", client_id);
-
-            // Handle WebSocket via SSE stream
-            const response = await fetch("/api/ws-connection", {
-                method: "POST",
-                body: formData,
-            });
-
-                if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || `Error: ${response.status}`);
-            }
-
-            // Read Server-Sent Events stream
-            const reader = response.body?.getReader();
-            const decoder = new TextDecoder();
-            let result: any = null;
-            let buffer = '';
-            let hasError = false;
-            let errorMessage = '';
-
-            if (!reader) {
-                throw new Error('Failed to get response stream');
-            }
-
-            setCurrentStatus('connecting');
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split('\n');
-                buffer = lines.pop() || '';
-
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const data = JSON.parse(line.slice(6));
-//                             console.log('SSE event:', data.type);
-
-                            if (data.type === 'connected') {
-                                setCurrentStatus('connected');
-                            } else if (data.type === 'task_created') {
-//                                 console.log('Task created:', data.task_id);
-                                setCurrentStatus('processing');
-                            } else if (data.type === 'status' || data.type === 'job_update') {
-                                const status = data.status;
-                                if (status === 'processing' || status === 'running' || status === 'pending') {
-                                    setCurrentStatus('processing');
-                                } else if (status === 'failed' || status === 'error') {
-                                    // Handle failed status
-                                    hasError = true;
-                                    // Debug: Check all possible error locations
-                                    console.log('Checking error fields:');
-                                    console.log('data.error:', data.error);
-                                    console.log('data.data?.error:', data.data?.error);
-                                    console.log('data.message:', data.message);
-                                    console.log('data.data?.message:', data.data?.message);
-                                    console.log('data.error_message:', data.error_message);
-                                    console.log('Full data object:', JSON.stringify(data, null, 2));
-                                    
-                                    // Try multiple possible error fields - check nested data first (data.data.error because job_update is wrapped)
-                                    const rawError = data.data?.error || data.error || data.data?.message || data.message || data.error_message || 'Task failed. Please try again.';
-                                    console.log('Raw error received:', rawError);
-                                    errorMessage = sanitizeErrorMessage(rawError);
-                                    console.log('Sanitized error:', errorMessage);
-                                    setError(errorMessage);
-                                    setCurrentStatus('error');
-                                    setIsProcessing(false); // Re-enable the button immediately
-                                    console.error('Task failed:', data);
-                                } else if (status === 'completed' || status === 'done' || status === 'finished' || status === 'success') {
-                                    // Check if status is completed but result is null (indicates failure)
-                                    if (data.result === null || (data.data === null && !data.result)) {
-                                        hasError = true;
-                                        errorMessage = 'Agent couldn\'t complete task, likely LLM auth failed. Please check your API key and try again.';
-                                        setError(errorMessage);
-                                        setCurrentStatus('error');
-                                        setIsProcessing(false); // Re-enable the button immediately
-                                        console.error('Task completed with null result:', data);
-                                    } else {
-                                        setCurrentStatus('processing');
-                                        if (data.data) {
-                                            result = data.data;
-                                        } else if (data.result) {
-                                            result = data.result;
-                                        }
-                                    }
-                                }
-                            } else if (data.type === 'progress') {
-//                                 console.log('Progress:', data.progress || data.bytes);
-                                setCurrentStatus('processing');
-                            } else if (data.type === 'result') {
-                                result = data.data;
-//                                 console.log('Result received:', result);
-                                setCurrentStatus('processing');
-                            } else if (data.type === 'message') {
-//                                 console.log('Generic message received:', data.data);
-                                if (data.data) {
-                                    const msgData = data.data;
-                                    if (msgData.data || msgData.result || (msgData.status && (msgData.status === 'completed' || msgData.status === 'done'))) {
-                                        result = msgData.data || msgData.result || msgData;
-//                                         console.log('Found result in generic message:', result);
-                                    }
-                                }
-                            } else if (data.type === 'error') {
-                                hasError = true;
-                                const rawError = data.error || 'Processing error';
-                                errorMessage = sanitizeErrorMessage(rawError);
-                                setError(errorMessage);
-                                setCurrentStatus('error');
-                                setIsProcessing(false); // Re-enable the button immediately
-                                console.error('SSE error:', errorMessage);
-                            } else if (data.type === 'done') {
-                                console.info('Done event received');
-                                break;
-                            } else {
-                                console.info('Unknown SSE event type:', data.type, data);
-                            }
-                        } catch (e) {
-                            console.error('Error parsing SSE data:', e);
-                        }
-                    }
-                }
-            }
-
-            // If there was an error, set it and return early
-            if (hasError) {
-                setError(errorMessage || 'An error occurred during processing.');
+            // Check for errors from the hook
+            if (sseError) {
+                setError(sseError);
                 setCurrentStatus('error');
-                setIsProcessing(false); // Re-enable the button
+                setIsProcessing(false);
                 return;
             }
 
             // Process the result only if no error occurred
+            const result = sseResult;
             if (result) {
                 // Parse the result using the utility function
                 // This handles all the complex parsing logic for inconsistent API responses
@@ -457,9 +328,8 @@ export default function NamedEntityRecognition() {
 
         } catch (err) {
             console.error("Error processing document:", err);
-            const rawErrorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
-            const sanitizedError = sanitizeErrorMessage(rawErrorMessage);
-            setError(`Failed to process document: ${sanitizedError}`);
+            const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
+            setError(`Failed to process document: ${errorMessage}`);
             setCurrentStatus('error');
         } finally {
             setIsProcessing(false);
@@ -531,7 +401,6 @@ export default function NamedEntityRecognition() {
                     });
                 }
 
-//                 console.log('JSON being sent for saving:', JSON.stringify(dataToSave, null, 2));
 
                 const formData = new FormData();
                 if (process.env.NEXT_PUBLIC_JWT_USER) {
