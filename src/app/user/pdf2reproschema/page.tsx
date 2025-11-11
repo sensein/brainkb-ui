@@ -198,7 +198,7 @@ export default function Pdf2ReproschemaPage() {
                 formData.append("endpoint", endpoint);
             }
 
-            const response = await fetch("/api/pdf2reproschema", {
+            const response = await fetch("/api/ws-connection", {
                 method: "POST",
                 body: formData,
             });

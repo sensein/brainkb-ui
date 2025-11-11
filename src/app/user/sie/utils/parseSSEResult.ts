@@ -231,7 +231,7 @@ export function parseSSEResult(result: any): ParsedNERResult | null {
             parsedData = {
                 judge_ner_terms: result.judged_structured_information.judge_ner_terms
             };
-        } else if (result.data?.judged_structured_information?.judge_ner_terms) { 
+        } else if (result.data?.judged_structured_information?.judge_ner_terms) {
             parsedData = {
                 judge_ner_terms: result.data.judged_structured_information.judge_ner_terms
             };
