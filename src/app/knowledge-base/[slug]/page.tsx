@@ -4,6 +4,7 @@ import {getData} from "@/src/app/components/getData";
 import yaml from "@/src/app/components/config-knowledgebases.yaml";
 import SideBarKBFromConfig from "@/src/app/components/SideBarKBFromConfig";
 import {useParams} from "next/navigation";
+import {Database, Loader2, AlertCircle, ChevronLeft, ChevronRight, ExternalLink, Search} from "lucide-react";
 
 // Do not import this again as it has been imported in other place already
 // Re-importing will cause an error.
@@ -22,6 +23,7 @@ const KbIndividualPageAllData = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [pagetitle, setPageTitle] = useState("");
     const [pagesubtitle, setSubPageTitle] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
 
     const fetchData = async () => {
         setLoading(true);
@@ -72,111 +74,230 @@ const KbIndividualPageAllData = () => {
     const renderTable = () => {
         if (!data || !Array.isArray(data) || data.length === 0) return null;
 
+        // Filter data based on search query
+        const filteredData = searchQuery.trim() === "" 
+            ? data 
+            : data.filter((item) => {
+                return headers.some((header) => {
+                    const value = item[header]?.value || "";
+                    return value.toLowerCase().includes(searchQuery.toLowerCase());
+                });
+            });
+
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
         const endIndex = startIndex + ITEMS_PER_PAGE;
-        const currentPageData = data.slice(startIndex, endIndex);
+        const currentPageData = filteredData.slice(startIndex, endIndex);
+        
+        // Reset to first page when search changes
+        if (currentPage > Math.ceil(filteredData.length / ITEMS_PER_PAGE) && filteredData.length > 0) {
+            setCurrentPage(1);
+        }
 
         return (
-            <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                <thead
-                    className="sticky top-0 text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                <tr>
-                    {headers.map((header, index) => (
-                        <th key={index} className="border border-gray-400 px-4 py-2">{header}</th>
-                    ))}
-                </tr>
-                </thead>
-                <tbody>
-                {currentPageData.map((item, index) => (
-                    <tr key={index}
-                        className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                        {headers.map((header, headerIndex) => (
-                            <td key={headerIndex} className="px-6 py-4">
-                                {headerIndex === 0 ? (
-                                    <a href={`${params.slug}/${encodeURIComponent(item[header]?.value)}`}
-                                       rel="noopener noreferrer">
-                                        {item[header]?.value.substring(item[header]?.value.lastIndexOf('/') + 1)}
-                                    </a>
-                                ) : (
-                                    item[header]?.value.substring(item[header]?.value.lastIndexOf('/') + 1)
-                                )}
-
-                            </td>
-                        ))}
-                    </tr>
-                ))}
-                </tbody>
-            </table>
+            <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left text-gray-700">
+                        <thead className="bg-gradient-to-r from-sky-50 to-blue-50 border-b border-gray-200">
+                            <tr>
+                                {headers.map((header, index) => (
+                                    <th key={index} className="px-6 py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs">
+                                        {header}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {currentPageData.map((item, index) => (
+                                <tr key={index} className="hover:bg-sky-50/50 transition-colors duration-150">
+                                    {headers.map((header, headerIndex) => (
+                                        <td key={headerIndex} className="px-6 py-4 whitespace-nowrap">
+                                            {headerIndex === 0 ? (
+                                                <a 
+                                                    href={`${params.slug}/${encodeURIComponent(item[header]?.value)}`}
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-2 text-sky-600 hover:text-sky-700 font-medium transition-colors group"
+                                                >
+                                                    {item[header]?.value.substring(item[header]?.value.lastIndexOf('/') + 1)}
+                                                    <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                </a>
+                                            ) : (
+                                                <span className="text-gray-700">
+                                                    {item[header]?.value.substring(item[header]?.value.lastIndexOf('/') + 1)}
+                                                </span>
+                                            )}
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         );
     };
 
-    const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
+    // Calculate filtered data for pagination
+    const filteredData = searchQuery.trim() === "" 
+        ? data 
+        : data.filter((item) => {
+            return headers.some((header) => {
+                const value = item[header]?.value || "";
+                return value.toLowerCase().includes(searchQuery.toLowerCase());
+            });
+        });
+    
+    const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
     return (
         <div className="kb-page-margin">
             <SideBarKBFromConfig/>
 
-            <div className="grid fix-left-margin grid-cols-1 ">
-                    <div className="text-center">
-                        <p className="text-2xl text-gray-600 dark:text-gray-500">
-                            {pagetitle}
-                        </p>
-                        <p className="text-gray-400 dark:text-gray-500">
-                            {pagesubtitle}
-                        </p>
+
+            {/* Hero Section */}
+            <div className="grid fix-left-margin grid-cols-1 mb-8">
+                <div className="relative overflow-hidden bg-gradient-to-br from-sky-500 via-blue-500 to-emerald-500 rounded-2xl shadow-xl">
+                    <div className="absolute inset-0 bg-gradient-to-r from-sky-600/20 to-transparent"></div>
+                    <div className="relative px-8 py-12">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4">
+                            {pagetitle || "Knowledge Base"}
+                        </h1>
+                        {pagesubtitle && (
+                            <p className="text-sky-100 text-base leading-relaxed">
+                                {pagesubtitle}
+                            </p>
+                        )}
                     </div>
             </div>
+
+            {/* Content Section */}
             <div className="grid fix-left-margin grid-cols-1">
+                {/* Search Bar */}
+                {!loading && !error && data.length > 0 && (
+                    <div className="mb-6">
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <Search className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Search across all columns..."
+                                value={searchQuery}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    setCurrentPage(1);
+                                }}
+                                className="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm"
+                            />
+                        </div>
+                        {searchQuery.trim() !== "" && (
+                            <p className="mt-2 text-sm text-gray-600">
+                                Showing {filteredData.length} of {data.length} results
+                            </p>
+                        )}
+                    </div>
+                )}
 
+                {loading && (
+                    <div className="flex flex-col items-center justify-center py-20">
+                        <Loader2 className="w-12 h-12 text-sky-500 animate-spin mb-4" />
+                        <p className="text-gray-600">Loading knowledge base data...</p>
+                    </div>
+                )}
 
-                <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
-                    {renderTable()}
-                    {data.length > 0 && (
-                        <nav className="flex items-center flex-column flex-wrap md:flex-row justify-between pt-4"
-                             aria-label="Table navigation">
-                            <span
-                                className="text-sm font-normal text-gray-500 dark:text-gray-400 mb-4 md:mb-0 block w-full md:inline md:w-auto">
-                              Showing <span
-                                className="font-semibold text-gray-900 dark:text-white">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span
-                                className="font-semibold text-gray-900 dark:text-white">{Math.min(currentPage * ITEMS_PER_PAGE, data.length)}</span> of <span
-                                className="font-semibold text-gray-900 dark:text-white">{data.length}</span>
-                            </span>
-                            <ul className="inline-flex -space-x-px rtl:space-x-reverse text-sm h-8">
-                                <li>
+                {error && (
+                    <div className="bg-red-50 border-l-4 border-red-500 rounded-lg p-6 mb-6">
+                        <div className="flex items-center gap-3">
+                            <AlertCircle className="w-6 h-6 text-red-500" />
+                            <div>
+                                <h3 className="text-lg font-semibold text-red-800">Error Loading Data</h3>
+                                <p className="text-red-700">{error}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {!loading && !error && (
+                    <>
+                        {renderTable()}
+
+                        {filteredData.length > 0 && (
+                            <nav className="flex items-center flex-wrap md:flex-row justify-between pt-6 gap-4"
+                                 aria-label="Table navigation">
+                                <div className="text-sm text-gray-600">
+                                    Showing <span className="font-semibold text-gray-900">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span
+                                    className="font-semibold text-gray-900">{Math.min(currentPage * ITEMS_PER_PAGE, filteredData.length)}</span> of <span
+                                    className="font-semibold text-gray-900">{filteredData.length}</span> entries
+                                    {searchQuery.trim() !== "" && data.length !== filteredData.length && (
+                                        <span className="text-gray-500"> (filtered from {data.length} total)</span>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2">
                                     <button
                                         onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                                         disabled={currentPage === 1}
-                                        className="flex items-center justify-center px-3 h-8 ms-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+                                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                     >
+                                        <ChevronLeft className="w-4 h-4" />
                                         Previous
                                     </button>
-                                </li>
-                                {Array.from({length: totalPages}, (_, index) => (
-                                    <li key={index}>
-                                        <button
-                                            onClick={() => setCurrentPage(index + 1)}
-                                            className={`flex items-center justify-center px-3 h-8 leading-tight ${currentPage === index + 1 ? 'text-blue-600 border border-gray-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700' : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700'} dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white`}
-                                            aria-current={currentPage === index + 1 ? 'page' : undefined}
-                                        >
-                                            {index + 1}
-                                        </button>
-                                    </li>
-                                ))}
-                                <li>
+                                    <div className="flex items-center gap-1">
+                                        {Array.from({length: Math.min(totalPages, 10)}, (_, index) => {
+                                            let pageNum;
+                                            if (totalPages <= 10) {
+                                                pageNum = index + 1;
+                                            } else if (currentPage <= 5) {
+                                                pageNum = index + 1;
+                                            } else if (currentPage >= totalPages - 4) {
+                                                pageNum = totalPages - 9 + index;
+                                            } else {
+                                                pageNum = currentPage - 5 + index;
+                                            }
+                                            return (
+                                                <button
+                                                    key={index}
+                                                    onClick={() => setCurrentPage(pageNum)}
+                                                    className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                                                        currentPage === pageNum
+                                                            ? 'bg-sky-600 text-white shadow-md'
+                                                            : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                                                    }`}
+                                                    aria-current={currentPage === pageNum ? 'page' : undefined}
+                                                >
+                                                    {pageNum}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                     <button
                                         onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                                         disabled={currentPage === totalPages}
-                                        className="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+                                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                     >
                                         Next
+                                        <ChevronRight className="w-4 h-4" />
                                     </button>
-                                </li>
-                            </ul>
-                        </nav>
-                    )}
-                </div>
-            </div>
+                                </div>
+                            </nav>
+                        )}
 
+                        {!loading && !error && filteredData.length === 0 && searchQuery.trim() !== "" && (
+                            <div className="text-center py-20 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                                <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                                <p className="text-xl font-semibold text-gray-600 mb-2">No results found</p>
+                                <p className="text-gray-500">Try adjusting your search query.</p>
+                            </div>
+                        )}
+
+                        {!loading && !error && data.length === 0 && (
+                            <div className="text-center py-20 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                                <Database className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                                <p className="text-xl font-semibold text-gray-600 mb-2">No data available</p>
+                                <p className="text-gray-500">There are no entries in this knowledge base yet.</p>
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
         </div>
     );
 };
