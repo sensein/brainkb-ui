@@ -386,13 +386,8 @@ export default function PlaygroundPage() {
   }, []);
 
   return (
-    <div className="set-margin-hundred">
+    <div className="set-margin-hundred pt-12">
       <div className="container mx-auto px-4 py-6 space-y-6">
-        <div className="flex justify-center">
-          <h2 className="mb-4 text-3xl font-extrabold leading-none text-sky-900 animate-slide-up">
-            Playground
-          </h2>
-        </div>
 
         <p className="mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
           This is a Knowledge Graphs Playground. It allows you to visualize your knowledge graphs and provides

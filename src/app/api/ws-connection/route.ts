@@ -40,7 +40,7 @@ async function getAuthToken(): Promise<string> {
   }
 }
 
-function getWebSocketUrl(endpoint: string, clientId: string, token: string): string {
+function getWebSocketUrl(endpoint: string, clientId: string, token: string, apiKey?: string): string {
   // Endpoint format: ws://localhost:8009/api/ws/extract-resources
   // Need to append clientId: ws://localhost:8009/api/ws/extract-resources/{clientId}
   const url = new URL(endpoint);
@@ -51,11 +51,19 @@ function getWebSocketUrl(endpoint: string, clientId: string, token: string): str
     : `${url.pathname}/${encodeURIComponent(clientId)}`;
   
   // Reconstruct the WebSocket URL
-  const wsUrl = `${url.protocol}//${url.host}${pathname}`;
+  let wsUrl = `${url.protocol}//${url.host}${pathname}`;
   
-  // Add token as query parameter
+  // Add query parameters
+  const queryParams: string[] = [];
+  queryParams.push(`token=${encodeURIComponent(token)}`);
+  
+  // Add api_key as query parameter if provided
+  if (apiKey && apiKey.trim()) {
+    queryParams.push(`api_key=${encodeURIComponent(apiKey.trim())}`);
+  }
+  
   const separator = wsUrl.includes('?') ? '&' : '?';
-  return `${wsUrl}${separator}token=${encodeURIComponent(token)}`;
+  return `${wsUrl}${separator}${queryParams.join('&')}`;
 }
 
 export async function POST(request: NextRequest) {
@@ -108,7 +116,7 @@ export async function POST(request: NextRequest) {
     const pdfFile = inputType === 'pdf' ? (formData.get('pdf_file') as File) : null;
 
     // Create WebSocket URL (endpoint is already a WebSocket URL, just need to insert clientId)
-    const wsUrl = getWebSocketUrl(endpoint, clientId, token);
+    const wsUrl = getWebSocketUrl(endpoint, clientId, token, openrouterApiKey);
     console.log('Connecting to WebSocket:', wsUrl);
 
     // Create a readable stream for Server-Sent Events
