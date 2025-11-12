@@ -100,6 +100,7 @@ export function useSseStream(options: UseSseStreamOptions): UseSseStreamReturn {
     const processStream = useCallback(async () => {
         const opts = optionsRef.current;
         try {
+            console.info('SSE: Starting stream processing');
             // Reset state
             setResult(null);
             setError(null);
@@ -109,6 +110,7 @@ export function useSseStream(options: UseSseStreamOptions): UseSseStreamReturn {
 
             // Create form data
             const formData = opts.createFormData();
+            console.info('SSE: Form data created, making request to /api/ws-connection');
 
             // Make request to WebSocket connection endpoint
             const response = await fetch("/api/ws-connection", {
@@ -154,14 +156,17 @@ export function useSseStream(options: UseSseStreamOptions): UseSseStreamReturn {
                             const data = JSON.parse(line.slice(6));
 
                             if (data.type === 'connected') {
+                                console.info('SSE: WebSocket connected');
                                 setStatus('connected');
                                 opts.onStatusChange?.('connected');
                             } else if (data.type === 'task_created') {
+                                console.info('SSE: Task created', data.task_id);
                                 setStatus('processing');
                                 opts.onStatusChange?.('processing');
                             } else if (data.type === 'status' || data.type === 'job_update') {
                                 const eventStatus = data.status;
                                 if (eventStatus === 'processing' || eventStatus === 'running' || eventStatus === 'pending') {
+                                    console.info('SSE: Processing status:', eventStatus);
                                     setStatus('processing');
                                     opts.onStatusChange?.('processing');
                                 } else if (eventStatus === 'failed' || eventStatus === 'error') {
@@ -190,29 +195,36 @@ export function useSseStream(options: UseSseStreamOptions): UseSseStreamReturn {
                                         console.error('Task completed with null result:', data);
                                     } else {
                                         // Status indicates completion, but wait for result data
+                                        console.info('SSE: Task completed, extracting result data');
                                         setStatus('processing');
                                         opts.onStatusChange?.('processing');
                                         // If there's data in the status message, treat as result
                                         if (data.data) {
                                             streamResult = data.data;
+                                            console.info('SSE: Result data found in status message');
                                         } else if (data.result) {
                                             streamResult = data.result;
+                                            console.info('SSE: Result found in status message');
                                         }
                                     }
                                 }
                             } else if (data.type === 'progress') {
+                                console.info('SSE: Progress update', data.progress || data.bytes);
                                 setStatus('processing');
                                 opts.onStatusChange?.('processing');
                             } else if (data.type === 'result') {
+                                console.info('SSE: Result received');
                                 streamResult = data.data;
                                 setStatus('processing');
                                 opts.onStatusChange?.('processing');
                             } else if (data.type === 'message') {
                                 // Handle generic messages - check if they contain result data
+                                console.info('SSE: Generic message received');
                                 if (data.data) {
                                     const msgData = data.data;
                                     // Check if this message contains result data
                                     if (msgData.data || msgData.result || (msgData.status && (msgData.status === 'completed' || msgData.status === 'done'))) {
+                                        console.info('SSE: Result data found in generic message');
                                         streamResult = msgData.data || msgData.result || msgData;
                                     }
                                 }
@@ -228,6 +240,7 @@ export function useSseStream(options: UseSseStreamOptions): UseSseStreamReturn {
                                 console.error('SSE error:', streamErrorMessage);
                                 // Don't break here, wait for 'done' event
                             } else if (data.type === 'done') {
+                                console.info('SSE: Done event received, stream complete');
                                 break;
                             }
                         } catch (e) {
@@ -248,6 +261,7 @@ export function useSseStream(options: UseSseStreamOptions): UseSseStreamReturn {
             }
 
             // Set the final result
+            console.info('SSE: Stream processing complete', streamResult ? 'Result available' : 'No result data');
             setResult(streamResult);
             setStatus('done');
             setIsLoading(false);

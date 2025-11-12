@@ -233,6 +233,15 @@ export default function IngestStructuredResourcePage() {
 
             // Process the result only if no error occurred
             const result = sseResult;
+            
+            // Check if status is done but no result or empty result
+            if (sseStatus === 'done' && (!result || (typeof result === 'object' && Object.keys(result).length === 0))) {
+                setError("Processing completed but no data was returned. The result may be empty.");
+                setCurrentStatus('error');
+                setIsProcessing(false);
+                return;
+            }
+            
             if (result) {
                 setLastResult(result);
 
