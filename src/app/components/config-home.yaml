@@ -111,7 +111,7 @@ whatisbrainkb:
     - title: "BrainKB aims to be the go-to resource for neuroscientists worldwide, fostering collaboration and accelerating discoveries."
       heading: "Collaboration Hub"
       icon_slug: "globe"
-      gradient: "from-orange-500 to-red-500"
+      gradient: "from-purple-500 to-pink-500"
 
 keyfeatures:
   title: "Key Features"
