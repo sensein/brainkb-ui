@@ -53,8 +53,9 @@ export interface UseSseStreamReturn {
     
     /**
      * Function to start processing the SSE stream
+     * Returns the result directly to avoid stale state issues
      */
-    processStream: () => Promise<void>;
+    processStream: () => Promise<any>;
     
     /**
      * Function to reset the stream state
@@ -127,7 +128,7 @@ export function useSseStream(options: UseSseStreamOptions): UseSseStreamReturn {
                 setIsLoading(false);
                 opts.onError?.(sanitizedError);
                 opts.onStatusChange?.('error');
-                return;
+                throw new Error(sanitizedError);
             }
 
             // Read Server-Sent Events stream
@@ -250,24 +251,58 @@ export function useSseStream(options: UseSseStreamOptions): UseSseStreamReturn {
                 }
             }
 
-            // If there was an error, set it and return early
+            // If there was an error, set it and throw
             if (hasError) {
-                setError(streamErrorMessage || 'An error occurred during processing.');
+                const finalError = streamErrorMessage || 'An error occurred during processing.';
+                setError(finalError);
                 setStatus('error');
                 setIsLoading(false);
-                opts.onError?.(streamErrorMessage || 'An error occurred during processing.');
+                opts.onError?.(finalError);
                 opts.onStatusChange?.('error');
-                return;
+                throw new Error(finalError);
+            }
+
+            // Check for empty result when status is done
+            const isEmptyResult = !streamResult || (typeof streamResult === 'object' && Object.keys(streamResult).length === 0);
+            
+            if (isEmptyResult) {
+                const emptyError = 'Processing completed but no data was returned. The result may be empty.';
+                console.info('SSE: Stream processing complete - No result data');
+                setError(emptyError);
+                setStatus('error');
+                setIsLoading(false);
+                opts.onError?.(emptyError);
+                opts.onStatusChange?.('error');
+                throw new Error(emptyError);
             }
 
             // Set the final result
-            console.info('SSE: Stream processing complete', streamResult ? 'Result available' : 'No result data');
+            console.info('SSE: Stream processing complete - Result available');
             setResult(streamResult);
             setStatus('done');
             setIsLoading(false);
             opts.onStatusChange?.('done');
+            
+            // Return the result directly to avoid stale state issues
+            return streamResult;
 
         } catch (err) {
+            // If error was already handled (error state set and onError called), just re-throw
+            // This happens for empty results, failed status, etc.
+            if (err instanceof Error && err.message) {
+                // Check if this is an error we already handled
+                const alreadyHandled = err.message.includes('Processing completed but no data') || 
+                                     err.message.includes('Agent couldn\'t complete task') ||
+                                     err.message.includes('Task failed') ||
+                                     err.message.includes('An error occurred during processing');
+                
+                if (alreadyHandled) {
+                    // Error state already set, just re-throw to propagate to component
+                    throw err;
+                }
+            }
+            
+            // Unexpected error - handle it
             console.error("Error processing SSE stream:", err);
             const rawErrorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
             const sanitizedError = sanitizeErrorMessage(rawErrorMessage);
@@ -277,6 +312,7 @@ export function useSseStream(options: UseSseStreamOptions): UseSseStreamReturn {
             setIsLoading(false);
             opts.onError?.(finalError);
             opts.onStatusChange?.('error');
+            throw err;
         }
     }, []);
 

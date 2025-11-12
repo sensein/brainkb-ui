@@ -214,28 +214,10 @@ export default function Pdf2ReproschemaPage() {
         setCurrentStatus('processing');
 
         try {
-            // Process SSE stream using the hook
-            await processStream();
-
-            // Check for errors from the hook
-            if (sseError) {
-                setError(sseError);
-                setCurrentStatus('error');
-                setIsProcessing(false);
-                return;
-            }
-
-            // Process the result only if no error occurred
-            const result = sseResult;
+            // Process SSE stream using the hook - returns result directly to avoid stale state
+            const result = await processStream();
             
-            // Check if status is done but no result or empty result
-            if (sseStatus === 'done' && (!result || (typeof result === 'object' && Object.keys(result).length === 0))) {
-                setError("Processing completed but no data was returned. The result may be empty.");
-                setCurrentStatus('error');
-                setIsProcessing(false);
-                return;
-            }
-            
+            // Result is guaranteed to be non-empty (hook throws error if empty)
             if (result) {
                 setConversionResult(result);
                 setSuccessMessage("Document converted to Reproschema format successfully!");
