@@ -2,7 +2,6 @@
 import {useState, useEffect} from 'react';
 import {getData} from "@/src/app/components/getData";
 import yaml from "@/src/app/components/config-knowledgebases.yaml";
-import SideBarKBFromConfig from "@/src/app/components/SideBarKBFromConfig";
 import {Database, Loader2, AlertCircle, ChevronLeft, ChevronRight, ExternalLink, Search} from "lucide-react";
 import {useFilteredTableData} from "@/src/app/utils/tableFilterUtils";
 
@@ -145,7 +144,7 @@ const KnowledgeBase = (
 
     return (
         <div className="kb-page-margin">
-            <SideBarKBFromConfig/>
+
 
             {/* Hero Section */}
             <div className="grid fix-left-margin grid-cols-1 mb-8">
