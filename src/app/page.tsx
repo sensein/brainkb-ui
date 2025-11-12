@@ -114,8 +114,14 @@ export default function Home() {
                         </p>
                         <div className="flex flex-wrap justify-center gap-4 animate-slide-up">
                             <a
-                                href="#structured-models"
+                                href="/knowledge-base"
                                 className="px-8 py-3 bg-gradient-to-r from-sky-600 to-blue-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
+                            >
+                                View Knowledge Base
+                            </a>
+                            <a
+                                href="#structured-models"
+                                className="px-8 py-3 bg-white text-sky-600 border-2 border-sky-600 rounded-lg font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300"
                             >
                                 Explore Models
                             </a>
