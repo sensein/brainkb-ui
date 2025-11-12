@@ -326,6 +326,12 @@ function predicateObjectBindingsToObject(bindings) {
     return result;
 }
 
+interface NormalizeSparqlBindingsOptions {
+    shape?: "object" | "rows";
+    replaceUnderscoreWithSpace?: boolean;
+    multiRowStrategy?: "first" | "merge";
+}
+
 /**
  * Normalize SPARQL JSON bindings.
  *
@@ -336,7 +342,7 @@ function predicateObjectBindingsToObject(bindings) {
  * @param {"first"|"merge"} [options.multiRowStrategy="first"] - Strategy when multiple rows are returned for object shape.
  * @returns {Object|Array}
  */
-export function normalizeSparqlBindings(bindings, options = {}) {
+export function normalizeSparqlBindings(bindings: any[], options: NormalizeSparqlBindingsOptions = {}) {
     const {
         shape = "object",
         replaceUnderscoreWithSpace = true,
