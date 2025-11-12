@@ -96,7 +96,7 @@ export default function Home() {
     };
 
     const getIconForModel = (slug: string) => {
-        const iconMap: { [key: string]: any } = {
+        const iconMap: { [key: string]: import("lucide-react").LucideIcon } = {
             "garsmodel": Code,
             "ansrsmodel": Layers,
             "librarygenerationschema": BookOpen,
