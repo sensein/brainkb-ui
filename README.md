@@ -5,10 +5,10 @@ A modern user interface for exploring and interacting with the **BrainKB Knowled
 ---
 
 ## 📸 Screenshots
+<img width="1735" height="1123" alt="landing_page" src="https://github.com/user-attachments/assets/9d1b5aa0-8fc5-4b63-8428-f0aad86f7e76" />
+<img width="1735" height="1123" alt="Screenshot 2025-11-12 at 2 06 44 PM" src="https://github.com/user-attachments/assets/de5732fe-962f-4fdf-a567-d42f0f544993" />
 
-| Home | About | Admin |
-|------|-------|-------|
-| ![](images/home.png) | ![](images/about.png) | ![](images/admin.png) |
+
 
 ---
 
