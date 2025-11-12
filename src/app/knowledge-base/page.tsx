@@ -110,24 +110,29 @@ const KnowledgeBase = (
                                 const uniqueKey = item.id?.value || item[headers[0]]?.value || index;
                                 return (
                                 <tr key={uniqueKey} className="hover:bg-sky-50/50 transition-colors duration-150">
-                                    {headers.map((header, headerIndex) => (
-                                        <td key={headerIndex} className="px-6 py-4 whitespace-nowrap">
-                                            {headerIndex === 0 ? (
-                                                <a 
-                                                    href={`knowledge-base/${entityPageSlug}/${encodeURIComponent(item[header]?.value)}`}
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-2 text-sky-600 hover:text-sky-700 font-medium transition-colors group"
-                                                >
-                                                    {item[header]?.value.substring(item[header]?.value.lastIndexOf('/') + 1)}
-                                                    <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                </a>
-                                            ) : (
-                                                <span className="text-gray-700">
-                                                    {item[header]?.value.substring(item[header]?.value.lastIndexOf('/') + 1)}
-                                                </span>
-                                            )}
-                                        </td>
-                                    ))}
+                                    {headers.map((header, headerIndex) => {
+                                        const cellValue = item[header]?.value || '';
+                                        const displayValue = cellValue ? cellValue.substring(cellValue.lastIndexOf('/') + 1) : '';
+                                        
+                                        return (
+                                            <td key={headerIndex} className="px-6 py-4 whitespace-nowrap">
+                                                {headerIndex === 0 ? (
+                                                    <a 
+                                                        href={`knowledge-base/${entityPageSlug}/${encodeURIComponent(cellValue)}`}
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-2 text-sky-600 hover:text-sky-700 font-medium transition-colors group"
+                                                    >
+                                                        {displayValue}
+                                                        <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    </a>
+                                                ) : (
+                                                    <span className="text-gray-700">
+                                                        {displayValue}
+                                                    </span>
+                                                )}
+                                            </td>
+                                        );
+                                    })}
                                 </tr>
                                 );
                             })}
