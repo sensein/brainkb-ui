@@ -1,244 +1,457 @@
 "use client";
 import SideBarKBFromConfig from "../../../components/SideBarKBFromConfig";
 import {useEffect, useState} from "react";
-import enititycardmapperconfig from '../../../components/enititycardmapper.yaml';
+import { entityCardMapperConfig } from "../../../components/entityCardMapperConfig";
 import {getData} from "../../../components/getData";
-import { processSparqlQueryResult } from "../../../components/helper";
+import { normalizeSparqlBindings, processSparqlQueryResult } from "../../../components/helper";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import {FileText, Loader2, AlertCircle, Info, Database} from "lucide-react";
 
+/** ---------- Types ---------- */
+type BoxAdditionalProperty = {
+  key: string;
+  sparql_query?: string; // optional if using shared query on box_additional_info
+};
+
+type BoxAdditionalInfo = {
+  header?: string;
+  is_iterable?: boolean;
+  sparql_query?: string;     // shared query that returns row objects (variables)
+  properties?: BoxAdditionalProperty[];
+};
+
 type ExtractedBox = {
-    cardtype: string;
-    sparql_query?: string;
-    slug?: string;
-    name?: string;
-    description?: string;
+  cardtype: string;
+  sparql_query?: string;
+  slug?: string;
+  name?: string;
+  description?: string;
+  box_additional_info?: BoxAdditionalInfo;
 };
 
 interface PageParams {
-    slug: string;
-    id: string;
+  slug: string;
+  id: string;
 }
 
 interface QueryParameter {
-    sparql_query: string;
+  sparql_query: string;
 }
 
+// value can be string | object | array
+type DataValue = string | Record<string, any> | Array<any>;
+interface DataBucket {
+  [key: string]: DataValue;
+}
 interface DataObject {
-    [key: string]: Record<string, string>;
+  [slug: string]: DataBucket;
 }
 
-interface EntityViewCard {
-    slug: string;
-    filename: string;
+type SparqlRow = Record<string, string>;
+
+/** ---------- Small helpers ---------- */
+
+// Replace <{0}> or {0} with the decoded entity IRI, preserving angle-brackets when needed
+function replaceEntityIdInQuery(query: string, rawId: string) {
+  const decodedId = decodeURIComponent(rawId);
+  let q = query;
+
+  if (q.includes('VALUES') && q.includes('<{0}>')) {
+    const uri = decodedId.startsWith('<') && decodedId.endsWith('>') ? decodedId : `<${decodedId}>`;
+    q = q.replace(/<\{0\}>/g, uri);
+    return q;
+  }
+  // Generic replacement — if your query expects a bare IRI in angle brackets, caller should include them
+  return q.replace(/\{0\}/g, decodedId);
 }
 
-const IndividualEntityPage = () => {
-    const params = useParams();
-    if (!params) return <div>Loading...</div>;
-    const {slug, id: rawId} = params;
-    const id = Array.isArray(rawId) ? rawId[0] : rawId; // Ensure id is always a string
-    const [mainCardTitle, setMainCardTitle] = useState("");
-    const [mainCardDescription, setMainCardDescription] = useState("");
-    const [extractedBoxes, setExtractedBoxes] = useState<ExtractedBox[]>([]);
-    const [data, setData] = useState<DataObject>({});
-    const [error, setError] = useState<string | null>(null);
+// Fetch -> return raw bindings
+async function fetchBindings(queryParameter: QueryParameter) {
+  try {
+    const response = await getData(queryParameter);
+    if (response.status === "success" && response.message?.results?.bindings) {
+      return response.message.results.bindings as any[];
+    }
+    return [];
+  } catch (err) {
+    console.error("Error fetching data:", err);
+    return [];
+  }
+}
 
-    const fetchData = async (queryParameter: QueryParameter) => {
-        try {
-            console.log("Fetching data with query:", queryParameter.sparql_query);
-            const response = await getData(queryParameter);
-            console.log("Raw response:", response);
-            if (response.status === "success" && response.message?.results?.bindings) {
-                console.log("Bindings found:", response.message.results.bindings);
-                return response.message.results.bindings;
-            }
-            console.log("No bindings found in response");
-            return [];
-        } catch (err) {
-            console.error("Error fetching data:", err);
-            return [];
-        }
-    };
+function LoadingSpinner({ label = "LOADING...may take up to one minute" }: { label?: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-gray-200">
+      <Loader2 className="w-12 h-12 text-sky-500 animate-spin mb-4" />
+      <p className="text-gray-600">{label}</p>
+    </div>
+  );
+}
 
-    const loadData = async () => {
-        try {
-            const page = enititycardmapperconfig.EntityViewCardsMaper.find((page: EntityViewCard) => page.slug === slug);
-            const filename = page ? page.filename : "";
+/** ---------- Pretty value renderer ---------- */
+function RenderValue({ value }: { value: any }) {
+  // Linkify IRIs
+  const isIri = (s: any) => typeof s === 'string' && /^https?:\/\//i.test(s);
 
-            const model_data = await import(`../../../components/${filename}`);
-            const extracted_data = model_data.default;
-
-            setMainCardTitle(extracted_data?.name || "");
-            setMainCardDescription(extracted_data?.description || "");
-            setExtractedBoxes(extracted_data?.boxes || []);
-        } catch (error) {
-            console.error("Failed to fetch YAML data:", error);
-        }
-    };
-
-    useEffect(() => {
-        loadData();
-    }, [slug]);
-
-    useEffect(() => {
-        const fetchBoxData = async () => {
-            console.log("Fetching box data for extractedBoxes:", extractedBoxes);
-            console.log("Raw ID from params:", id);
-            console.log("Decoded ID:", decodeURIComponent(id));
-            
-            for (const box of extractedBoxes) {
-                if (box.cardtype === "card" && box.sparql_query) {
-                    console.log("Processing box:", box);
-                    console.log("Original SPARQL query:", box.sparql_query);
-                    
-                    // Properly handle URI replacement for SPARQL
-                    let query = box.sparql_query;
-                    const decodedId = decodeURIComponent(id);
-                    
-                    // If the query uses VALUES with angle brackets, ensure proper URI formatting
-                    if (query.includes('VALUES') && query.includes('<{0}>')) {
-                        // Ensure the URI is properly formatted
-                        const uri = decodedId.startsWith('<') && decodedId.endsWith('>') 
-                            ? decodedId 
-                            : `<${decodedId}>`;
-                        query = query.replace(/<\{0\}>/g, uri);
-                        console.log("URI replacement - decodedId:", decodedId);
-                        console.log("URI replacement - final uri:", uri);
-                    } else {
-                        // For other cases, just do simple replacement
-                        query = query.replace(/\{0\}/g, decodedId);
-                    }
-                    
-                    console.log("Final processed query:", query);
-                    const boxData = await fetchData({sparql_query: query});
-                    console.log("Box data before processing:", boxData);
-                    const formattedData = await processSparqlQueryResult(boxData);
-                    console.log("Formatted data:", formattedData);
-                    setData((prevData) => ({
-                        ...prevData,
-                        [box.slug || "unknown"]: formattedData,
-                    }));
-                }
-            }
-        };
-
-        if (extractedBoxes.length > 0) {
-            fetchBoxData();
-        }
-    }, [extractedBoxes, id]);
-
-    const entityName = decodeURIComponent(id).substring(decodeURIComponent(id).lastIndexOf("/") + 1);
-    const isLoading = extractedBoxes.length === 0 || Object.keys(data).length === 0;
-
+  if (Array.isArray(value)) {
+    if (value.length === 0) return <em>none</em>;
+    // Array of primitives
+    if (value.every(v => typeof v !== "object" || v === null)) {
+      return <span>{value.join(", ")}</span>;
+    }
+    // Array of objects -> render each as a small bordered card
     return (
-        <div className="kb-page-margin">
-            <SideBarKBFromConfig/>
-            
-            {/* Hero Section */}
-            <div className="grid fix-left-margin grid-cols-1 mb-8">
-                <div className="relative overflow-hidden bg-gradient-to-br from-sky-500 via-blue-500 to-emerald-500 rounded-2xl shadow-xl">
-                    <div className="absolute inset-0 bg-gradient-to-r from-sky-600/20 to-transparent"></div>
-                    <div className="relative px-8 py-12">
-                        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-                            {entityName}
-                        </h1>
-                        {mainCardDescription && (
-                            <p className="text-sky-100 text-base leading-relaxed">
-                                {mainCardDescription}
-                            </p>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* Content Section */}
-            <div className="grid fix-left-margin grid-cols-1 gap-6">
-                {isLoading && (
-                    <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-gray-200">
-                        <Loader2 className="w-12 h-12 text-sky-500 animate-spin mb-4" />
-                        <p className="text-gray-600">Loading entity data...</p>
-                    </div>
-                )}
-
-                {!isLoading && extractedBoxes.length === 0 && (
-                    <div className="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-6">
-                        <div className="flex items-center gap-3">
-                            <AlertCircle className="w-6 h-6 text-yellow-500" />
-                            <div>
-                                <h3 className="text-lg font-semibold text-yellow-800">No Entity Cards Configured</h3>
-                                <p className="text-yellow-700">This entity type does not have any cards configured yet.</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {!isLoading && extractedBoxes.length > 0 && (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {extractedBoxes.map((entitycards, index) => (
-                            entitycards.cardtype === "card" && (
-                                <div key={index} className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                                    {/* Card Header */}
-                                    <div className="bg-gradient-to-r from-sky-500 to-blue-500 p-6">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-                                                <Info className="w-5 h-5 text-white" />
-                                            </div>
-                                            <h2 className="text-xl font-bold text-white">
-                                                {entitycards.name || "Entity Information"}
-                                            </h2>
-                                        </div>
-                                    </div>
-                                    
-                                    {/* Card Body */}
-                                    <div className="p-6">
-                                        {entitycards.description && (
-                                            <p className="text-gray-600 mb-6 leading-relaxed">
-                                                {entitycards.description}
-                                            </p>
-                                        )}
-                                        
-                                        <div className="bg-gradient-to-br from-gray-50 to-sky-50 p-6 rounded-lg border border-gray-200">
-                                            {data[entitycards.slug ?? "unknown"] ? (
-                                                <div className="space-y-4">
-                                                    {Object.entries(data[entitycards.slug ?? "unknown"]).map(([key, value], idx) => (
-                                                        <div key={idx} className="pb-4 border-b border-gray-200 last:border-b-0 last:pb-0">
-                                                            <div className="flex items-start gap-3">
-                                                                <div className="flex-shrink-0 mt-1">
-                                                                    <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center">
-                                                                        <Database className="w-4 h-4 text-sky-600" />
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <dt className="text-sm font-semibold text-gray-900 mb-1 uppercase tracking-wide">
-                                                                        {key}
-                                                                    </dt>
-                                                                    <dd className="text-base text-gray-700 break-words">
-                                                                        {value}
-                                                                    </dd>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <div className="text-center py-8">
-                                                    <Database className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                                                    <p className="text-gray-500 font-medium">No data available</p>
-                                                    <p className="text-sm text-gray-400 mt-1">This card does not have any data to display.</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            )
-                        ))}
-                    </div>
-                )}
-            </div>
-        </div>
+      <div className="space-y-2">
+        {value.map((row, i) => (
+          <div key={i} className="rounded-md border p-3">
+            {Object.entries(row).map(([k, v]) => (
+              <div key={k} className="text-sm">
+                <span className="font-medium">{k}:</span>{" "}
+                <RenderValue value={v} />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
     );
+  }
+
+  if (value && typeof value === "object") {
+    return (
+      <div className="ml-2 space-y-1">
+        {Object.entries(value).map(([k, v]) => (
+          <div key={k}>
+            <span className="font-medium">{k}:</span>{" "}
+            <RenderValue value={v} />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (isIri(value)) {
+    return (
+      <a
+        className="underline text-blue-700 break-all"
+        href={value}
+        target="_blank"
+        rel="noreferrer"
+      >
+        {value}
+      </a>
+    );
+  }
+
+  return <span>{String(value)}</span>;
+}
+
+function collapseNonIterableRows(rows: SparqlRow[]): DataValue {
+  if (rows.length === 0) {
+    return "";
+  }
+
+  if (rows.length === 1) {
+    const obj = rows[0];
+    const keys = Object.keys(obj);
+    return keys.length === 1 ? obj[keys[0]] : obj;
+  }
+
+  return rows.map((row) => {
+    const values = Object.values(row);
+    return values.length === 1 ? String(values[0]) : JSON.stringify(row);
+  });
+}
+
+/** ---------- Page ---------- */
+const IndividualEntityPage = () => {
+  const params = useParams();
+  if (!params) return <div>Loading...</div>;
+
+  const {slug, id: rawId} = params as unknown as PageParams;
+  const id = Array.isArray(rawId) ? rawId[0] : rawId; // Ensure id is always a string
+
+  const [mainCardTitle, setMainCardTitle] = useState("");
+  const [mainCardDescription, setMainCardDescription] = useState("");
+  const [extractedBoxes, setExtractedBoxes] = useState<ExtractedBox[]>([]);
+  const [data, setData] = useState<DataObject>({});
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const page = entityCardMapperConfig.EntityViewCardsMaper.find((card) => card.slug === slug);
+        const filename = page ? page.filename : "";
+
+        if (!filename) {
+          setMainCardTitle("");
+          setMainCardDescription("");
+          setExtractedBoxes([]);
+          return;
+        }
+
+        const model_data = await import(`../../../components/${filename}`);
+        const extracted_data = model_data.default;
+
+        setMainCardTitle(extracted_data?.name || "");
+        setMainCardDescription(extracted_data?.description || "");
+        setExtractedBoxes(extracted_data?.boxes || []);
+      } catch (err) {
+        console.error("Failed to fetch YAML data:", err);
+        setError("Failed to load entity configuration.");
+      }
+    };
+
+    loadData();
+  }, [slug]);
+
+  useEffect(() => {
+    const fetchBoxData = async () => {
+      for (const box of extractedBoxes) {
+        if (box.cardtype !== "card") continue;
+
+        const slugKey = box.slug || "unknown";
+        const nextBucket: DataBucket = {};
+
+        /** --- 1) Main box query -> flatten to key/value via helper --- */
+        if (box.sparql_query) {
+          const mainQuery = replaceEntityIdInQuery(box.sparql_query, id);
+          const mainBindings = await fetchBindings({ sparql_query: mainQuery });
+          const formatted = await processSparqlQueryResult(mainBindings);
+          Object.assign(nextBucket, formatted);
+        }
+
+        /** --- 2) box_additional_info support --- */
+        const add = box.box_additional_info;
+
+        if (add) {
+          const resolveRows = async (query: string): Promise<SparqlRow[]> => {
+            const q = replaceEntityIdInQuery(query, id);
+            const bindings = await fetchBindings({ sparql_query: q });
+            return normalizeSparqlBindings(bindings, { shape: "rows" }) as SparqlRow[];
+          };
+
+          let sharedRows: SparqlRow[] | null = null;
+
+          if (add.sparql_query && add.is_iterable) {
+            sharedRows = await resolveRows(add.sparql_query);
+
+            if (Array.isArray(add.properties) && add.properties.length === 1 && add.properties[0].key) {
+              nextBucket[add.properties[0].key] = sharedRows;
+            } else if (add.header) {
+              const keyFromHeader = add.header.toLowerCase().replace(/\s+/g, "_");
+              nextBucket[keyFromHeader] = sharedRows;
+            } else {
+              nextBucket["additional_info_rows"] = sharedRows;
+            }
+          }
+
+          if (Array.isArray(add.properties) && add.properties.length > 0) {
+            for (const prop of add.properties) {
+              let rows: SparqlRow[] | null = null;
+
+              if (prop.sparql_query) {
+                rows = await resolveRows(prop.sparql_query);
+              } else if (sharedRows) {
+                rows = sharedRows;
+              }
+
+              if (!rows) continue;
+
+              if (add.is_iterable) {
+                nextBucket[prop.key] = rows;
+              } else {
+                nextBucket[prop.key] = collapseNonIterableRows(rows);
+              }
+            }
+          }
+        }
+
+        // Merge this box bucket into data[slug]
+        setData(prev => ({
+          ...prev,
+          [slugKey]: {
+            ...(prev[slugKey] || {}),
+            ...nextBucket
+          }
+        }));
+      }
+    };
+
+    if (extractedBoxes.length > 0) {
+      fetchBoxData();
+    }
+  }, [extractedBoxes, id]);
+
+  const entityName = decodeURIComponent(id).substring(decodeURIComponent(id).lastIndexOf("/") + 1);
+  const isLoading = extractedBoxes.length === 0 || Object.keys(data).length === 0;
+
+  if (error) {
+    return (
+      <div className="kb-page-margin">
+        <SideBarKBFromConfig/>
+        <div className="grid fix-left-margin grid-cols-1">
+          <div className="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-6">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-6 h-6 text-yellow-500" />
+              <div>
+                <h3 className="text-lg font-semibold text-yellow-800">Error</h3>
+                <p className="text-yellow-700">{error}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="kb-page-margin">
+      <SideBarKBFromConfig/>
+      
+      {/* Hero Section disabled as it's removed in puja's work*/}
+ {/*     <div className="grid fix-left-margin grid-cols-1 mb-8">
+        <div className="relative overflow-hidden bg-gradient-to-br from-sky-500 via-blue-500 to-emerald-500 rounded-2xl shadow-xl">
+          <div className="absolute inset-0 bg-gradient-to-r from-sky-600/20 to-transparent"></div>
+          <div className="relative px-8 py-12">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4">
+              {entityName}
+            </h1>
+            {mainCardDescription && (
+              <p className="text-sky-100 text-base leading-relaxed">
+                {mainCardDescription}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>*/}
+
+      {/* Content Section */}
+      <div className="grid fix-left-margin grid-cols-1 gap-6">
+        {isLoading && (
+          <LoadingSpinner />
+        )}
+
+        {!isLoading && extractedBoxes.length === 0 && (
+          <div className="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-6">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-6 h-6 text-yellow-500" />
+              <div>
+                <h3 className="text-lg font-semibold text-yellow-800">No Entity Cards Configured</h3>
+                <p className="text-yellow-700">This entity type does not have any cards configured yet.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!isLoading && extractedBoxes.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {extractedBoxes.map((entitycards, index) => (
+              entitycards.cardtype === "card" && (
+                <div key={index} className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                  {/* Card Header */}
+                  <div className="bg-gradient-to-r from-sky-500 to-blue-500 p-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                        <Info className="w-5 h-5 text-white" />
+                      </div>
+                      <h2 className="text-xl font-bold text-white">
+                        {entitycards.name || "Entity Information"}
+                      </h2>
+                    </div>
+                  </div>
+                  
+                  {/* Card Body */}
+                  <div className="p-6">
+                    {entitycards.description && (
+                      <p className="text-gray-600 mb-6 leading-relaxed">
+                        {entitycards.description}
+                      </p>
+                    )}
+                    
+                    <div className="bg-gradient-to-br from-gray-50 to-sky-50 p-6 rounded-lg border border-gray-200">
+                      {data[entitycards.slug ?? "unknown"] ? (
+                        <div className="space-y-4">
+                          {Object.entries(data[entitycards.slug ?? "unknown"]).map(([key, value], idx) => {
+                            // skip unset / empty / [{}]
+                            if (
+                              value == null ||
+                              (typeof value === "string" && value.trim() === "") ||
+                              (Array.isArray(value) &&
+                                value.length === 1 &&
+                                value[0] &&
+                                typeof value[0] === "object" &&
+                                Object.keys(value[0]).length === 0)
+                            ) return null;
+
+                            const label = key.replace(/_/g, " ");
+
+                            // if it's a bkbit URN, render as a clickable link
+                            if (typeof value === "string" && value.startsWith("urn:bkbit") && value !== decodeURIComponent(id)) {
+                              return (
+                                <div key={idx} className="pb-4 border-b border-gray-200 last:border-b-0 last:pb-0">
+                                  <div className="flex items-start gap-3">
+                                    <div className="flex-shrink-0 mt-1">
+                                      <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center">
+                                        <Database className="w-4 h-4 text-sky-600" />
+                                      </div>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <dt className="text-sm font-semibold text-gray-900 mb-1 uppercase tracking-wide">
+                                        {label}
+                                      </dt>
+                                      <dd className="text-base text-gray-700 break-words">
+                                        <Link
+                                          href={`/knowledge-base/celltaxon/${encodeURIComponent(value)}`}
+                                          className="underline text-blue-700 break-all hover:text-blue-900"
+                                        >
+                                          {value}
+                                        </Link>
+                                      </dd>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <div key={idx} className="pb-4 border-b border-gray-200 last:border-b-0 last:pb-0">
+                                <div className="flex items-start gap-3">
+                                  <div className="flex-shrink-0 mt-1">
+                                    <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center">
+                                      <Database className="w-4 h-4 text-sky-600" />
+                                    </div>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <dt className="text-sm font-semibold text-gray-900 mb-1 uppercase tracking-wide">
+                                      {label}
+                                    </dt>
+                                    <dd className="text-base text-gray-700 break-words">
+                                      <RenderValue value={value} />
+                                    </dd>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <Database className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                          <p className="text-gray-500 font-medium">No data available</p>
+                          <p className="text-sm text-gray-400 mt-1">This card does not have any data to display.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default IndividualEntityPage;
-

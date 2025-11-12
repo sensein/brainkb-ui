@@ -258,59 +258,133 @@ export async function get_rapid_release_file(data) {
     });
 }
 
-export async function processSparqlQueryResult(bindings) {
-    console.log("processSparqlQueryResult called with bindings:", bindings);
-    
-    if (!bindings || bindings.length === 0) {
-        console.log("No bindings found, returning empty object");
+const DEFAULT_BINDING_OPTIONS = {
+    replaceUnderscoreWithSpace: true,
+};
+
+function bindingEntryToValue(entry) {
+    if (!entry) return undefined;
+    if (typeof entry === "object" && "value" in entry) {
+        return entry.value;
+    }
+    return entry;
+}
+
+function bindingToRowObject(binding, options = DEFAULT_BINDING_OPTIONS) {
+    const row = {};
+    if (!binding) return row;
+
+    Object.entries(binding).forEach(([key, raw]) => {
+        const value = bindingEntryToValue(raw);
+        if (value == null) return;
+        if (typeof value === "string" && value.trim() === "") return;
+
+        const finalKey = options.replaceUnderscoreWithSpace === false
+            ? key
+            : key.replace(/_/g, " ");
+
+        row[finalKey] = String(value);
+    });
+
+    return row;
+}
+
+function bindingsRepresentPredicateObject(bindings) {
+    if (!Array.isArray(bindings) || bindings.length === 0) return false;
+    const sample = bindings[0];
+    return sample && typeof sample === "object" && "predicate" in sample && "object" in sample;
+}
+
+function predicateObjectBindingsToObject(bindings) {
+    const result = {};
+
+    bindings.forEach(item => {
+        const predicate = bindingEntryToValue(item.predicate) || "N/A";
+        const object = bindingEntryToValue(item.object) || "N/A";
+
+        let processedKey;
+        if (predicate.includes("#")) {
+            processedKey = predicate.split("#").pop();
+        } else {
+            processedKey = predicate.split("/").pop();
+        }
+
+        let processedValue = object;
+        if (typeof object === "string" && object.includes("://")) {
+            if (object.includes("#")) {
+                processedValue = object.split("#").pop();
+            } else {
+                processedValue = object.split("/").pop();
+            }
+        } else if (typeof object === "string" && object.includes(":")) {
+            processedValue = object.split(":").pop();
+        }
+
+        result[processedKey] = processedValue;
+    });
+
+    return result;
+}
+
+interface NormalizeSparqlBindingsOptions {
+    shape?: "object" | "rows";
+    replaceUnderscoreWithSpace?: boolean;
+    multiRowStrategy?: "first" | "merge";
+}
+
+/**
+ * Normalize SPARQL JSON bindings.
+ *
+ * @param {Array} bindings - SPARQL JSON bindings array.
+ * @param {Object} options
+ * @param {"object"|"rows"} [options.shape="object"] - Desired output shape.
+ * @param {boolean} [options.replaceUnderscoreWithSpace=true] - Replace underscores with spaces in variable names.
+ * @param {"first"|"merge"} [options.multiRowStrategy="first"] - Strategy when multiple rows are returned for object shape.
+ * @returns {Object|Array}
+ */
+export function normalizeSparqlBindings(bindings: any[], options: NormalizeSparqlBindingsOptions = {}) {
+    const {
+        shape = "object",
+        replaceUnderscoreWithSpace = true,
+        multiRowStrategy = "first",
+    } = options;
+
+    if (!Array.isArray(bindings) || bindings.length === 0) {
+        return shape === "rows" ? [] : {};
+    }
+
+    if (shape === "rows") {
+        return bindings.map(binding => bindingToRowObject(binding, { replaceUnderscoreWithSpace }));
+    }
+
+    if (bindingsRepresentPredicateObject(bindings)) {
+        return predicateObjectBindingsToObject(bindings);
+    }
+
+    const rowObjects = bindings
+        .map(binding => bindingToRowObject(binding, { replaceUnderscoreWithSpace }))
+        .filter(row => Object.keys(row).length > 0);
+
+    if (rowObjects.length === 0) {
         return {};
     }
 
-    const firstRow = bindings[0];
-    console.log("First row:", firstRow);
-    
-    // Check if it's a predicate-object result
-    if (firstRow.predicate && firstRow.object) {
-        console.log("Processing as predicate-object result");
-        const predicateObjectPairs = bindings.map(item => ({
-            predicate: item.predicate?.value || 'N/A',
-            object: item.object?.value || 'N/A',
-        }));
-
-        const result = {};
-        predicateObjectPairs.forEach(({ predicate, object }) => {
-            let processedKey;
-            if (predicate.includes("#")) {
-                processedKey = predicate.split("#").pop();
-            } else {
-                processedKey = predicate.split("/").pop();
-            }
-
-            let processedValue = object;
-            if (typeof object === 'string' && object.includes("://")) {
-                 if (object.includes("#")) {
-                    processedValue = object.split("#").pop();
-                 } else {
-                    processedValue = object.split("/").pop();
-                 }
-            } else if (typeof object === 'string' && object.includes(":")) {
-                processedValue = object.split(":").pop();
-            }
-
-            result[processedKey] = processedValue;
-        });
-        console.log("Predicate-object result:", result);
-        return result;
-
-    } else {
-        console.log("Processing as flat result");
-        // Handle flat result. Just take the first row and extract values.
-        const result = {};
-        const row = bindings[0]; // Or aggregate later
-        for (const key in row) {
-            result[key] = row[key].value;
-        }
-        console.log("Flat result:", result);
-        return result;
+    if (rowObjects.length === 1 || multiRowStrategy === "first") {
+        return rowObjects[0];
     }
+
+    if (multiRowStrategy === "merge") {
+        return rowObjects.reduce((acc, row) => ({ ...acc, ...row }), {});
+    }
+
+    return rowObjects[0];
+}
+
+export async function processSparqlQueryResult(bindings: any[], options: NormalizeSparqlBindingsOptions = {}) {
+    console.log("processSparqlQueryResult called with bindings:", bindings);
+
+    const result = normalizeSparqlBindings(bindings, { shape: "object", ...options });
+
+    console.log("Normalized result:", result);
+    return result;
 }

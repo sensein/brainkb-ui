@@ -1,9 +1,8 @@
-
 #EntityView:
 id: ui:1
 name: CellTaxon_card
 slug: celltaxon
-description: a view of a cell taxon
+# description: a view of a cell taxon
 boxes:
   - box:
     slug: summarybox
@@ -11,67 +10,196 @@ boxes:
     name: Summary
     cardtype: card
     box_header:
-      key: id
+      key: name                  # so the header shows the label
     sparql_query: |-
         PREFIX NIMP: <http://example.org/NIMP/>
-                PREFIX prov: <http://www.w3.org/ns/prov#>
-                PREFIX biolink: <https://w3id.org/biolink/vocab/>
-                
-                SELECT DISTINCT ?subject ?predicate ?object ?category_type
-                WHERE {
-                GRAPH <http://hmbataxonomy20250927.com/> {
-                  {  BIND(<{0}> AS ?id)
-                      ?subject ?predicate ?id . }
-                      UNION
-                      { BIND(<{0}> AS ?id)
-                      ?id ?predicate ?object . }
-                      UNION
-                      { BIND(<{0}> AS ?id)
-                      ?subject ?id ?object . }
-                      
-                      OPTIONAL {
-                      ?id prov:wasDerivedFrom ?derivedFrom .
-                      ?derivedFrom biolink:category ?category_type .
-                      }
-                  }
+        PREFIX prov: <http://www.w3.org/ns/prov#>
+        PREFIX biolink: <https://w3id.org/biolink/vocab/>
+        PREFIX rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+        PREFIX rdfs:  <http://www.w3.org/2000/01/rdf-schema#>
+        PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+        PREFIX DHBA:  <https://purl.brain-bican.org/ontology/dmbao/DMBA_>
+        SELECT DISTINCT ?Name ?Identifier ?Cell_Ontology_ID ?Parent_Node WHERE {
+          GRAPH <https://apitesting.com/> {
+            BIND(<{0}> AS ?Identifier)
+            ?Identifier a bican:CellTypeTaxon .
+            OPTIONAL { ?Identifier rdfs:label ?Name . }
+            OPTIONAL { ?Identifier biolink:xref ?Cell_Ontology_ID . }
+            OPTIONAL { ?Identifier bican:has_parent ?Parent_Node . }
+
+          }
+        }
+
+    box_additional_info:
+      is_iterable: true
+      properties:
+        - key: Abbreviations
+          sparql_query: |-
+            PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+            PREFIX rdfs:  <http://www.w3.org/2000/01/rdf-schema#>
+
+            SELECT
+              ?Term
+              ?Meaning
+              (GROUP_CONCAT(DISTINCT STR(?parcellationTerm); separator=", ") AS ?Anatomical_Identifiers)
+              (GROUP_CONCAT(DISTINCT STR(?geneAnnotation);   separator=", ") AS ?Gene_Identifiers)
+              (GROUP_CONCAT(DISTINCT STR(?cellType);         separator=", ") AS ?Cell_Type_Identifiers)
+            WHERE {
+              GRAPH <https://apitesting.com/> {
+                BIND(<{0}> AS ?id)
+
+                # Only abbreviations actually linked to this id
+                ?id bican:has_abbreviation ?abbrNode .
+
+                # One row per abbrNode (term/meaning are single-valued per node)
+                ?abbrNode a bican:Abbreviation ;
+                          bican:term    ?Term ;
+                          bican:meaning ?Meaning .
+
+                # Denotations (may be 0..many) — aggregate them
+                OPTIONAL { ?abbrNode bican:denotes_parcellation_term ?parcellationTerm . }
+                OPTIONAL { ?abbrNode bican:denotes_gene_annotation    ?geneAnnotation . }
+                OPTIONAL { ?abbrNode bican:denotes_cell_type          ?cellType . }
               }
-    # description: 
-    # Cell taxon. TODO: add description.
-    # box_additional_info:
-    #   properties:
-    #   - key: local_name
-    #     sqrl_query: "TODO (SELECT local_name FROM library_aliquot WHERE library_aliquot_id = 1)"
-    #   - key: category
-    #     sqrl_query: "TODO: query"
-  # - box:
-  #   id: ui:3
-  #   name: DonorBox
-  #   slug: donorbox
-  #   cardtype: card
-  #   box_header:
-  #     key: Donor
-  #   description:  A person or organism that is the source of a biological sample for scientific study.
-  #   box_additional_info:
-  #     header: List of donors
-  #     is_iterable: true
-  #     properties:
-  #     - key: local_name
-  #       sqrl_query: "TODO (SELECT local_name FROM library_aliquot WHERE library_aliquot_id = 1)"
-  #     - key: age_of_death
-  #       sqrl_query: "TODO: query"
-  # - box:
-  #   id: ui:4
-  #   name: TissueSample
-  #   slug: tissuesample
-  #   cardtype: cardtable
-  #   box_header:
-  #     key: TissueSample
-  #   description:  A person or organism that is the source of a biological sample for scientific study.
-  #   box_additional_info:
-  #     header: List of donors
-  #     is_iterable: true
-  #     properties:
-  #     - key: local_name
-  #       sqrl_query: "TODO (SELECT local_name FROM library_aliquot WHERE library_aliquot_id = 1)"
-  #     - key: age_of_death
-  #       sqrl_query: "TODO: query"
+            }
+            GROUP BY ?abbrNode ?Term ?Meaning
+            ORDER BY ?abbrNode
+
+        - key: >
+            Spatial Regional Proportions
+          sparql_query: |-
+            PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+
+            SELECT DISTINCT
+              ?Striatum
+              ?External_Globus_Pallidus
+              ?Internal_Globus_Pallidus
+              ?Substantia_Nigra
+              ?Adjacent_Regions
+              ?Subthalamic_Nucleus
+            WHERE {
+              GRAPH <https://apitesting.com/> {
+                VALUES ?id { <{0}> }
+                OPTIONAL {
+                  ?id bican:spatial_regional_proportions ?srp_node .
+                  ?srp_node a bican:SpatialProportions .
+                  OPTIONAL { ?srp_node bican:str ?Striatum . }
+                  OPTIONAL { ?srp_node bican:gpe ?External_Globus_Pallidus . }
+                  OPTIONAL { ?srp_node bican:gpi ?Internal_Globus_Pallidus . }
+                  OPTIONAL { ?srp_node bican:sn  ?Substantia_Nigra . }
+                  OPTIONAL { ?srp_node bican:adj ?Adjacent_Regions . }
+                  OPTIONAL { ?srp_node bican:sth ?Subthalamic_Nucleus . }
+                }
+              }
+            }
+        - key: >
+            Marmoset Spatial Proportions
+          sparql_query: |-
+            PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+
+            SELECT DISTINCT
+              ?Striatum
+              ?External_Globus_Pallidus
+              ?Internal_Globus_Pallidus
+              ?Substantia_Nigra
+              ?Adjacent_Regions
+              ?Subthalamic_Nucleus
+            WHERE {
+              GRAPH <https://apitesting.com/> {
+                VALUES ?id { <{0}> }
+                OPTIONAL {
+                  ?id bican:spatial_proportions_marmoset ?spm_node .
+                  ?spm_node a bican:SpatialProportions .
+                  OPTIONAL { ?spm_node bican:str ?Striatum . }
+                  OPTIONAL { ?spm_node bican:gpe ?External_Globus_Pallidus . }
+                  OPTIONAL { ?spm_node bican:gpi ?Internal_Globus_Pallidus . }
+                  OPTIONAL { ?spm_node bican:sn  ?Substantia_Nigra . }
+                  OPTIONAL { ?spm_node bican:adj ?Adjacent_Regions . }
+                  OPTIONAL { ?spm_node bican:sth ?Subthalamic_Nucleus . }
+                }
+              }
+            }
+        - key: >
+            Macaque Spatial Proportions
+          sparql_query: |-
+            PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+
+            SELECT DISTINCT
+              ?Striatum
+              ?External_Globus_Pallidus
+              ?Internal_Globus_Pallidus
+              ?Substantia_Nigra
+              ?Adjacent_Regions
+              ?Subthalamic_Nucleus
+            WHERE {
+              GRAPH <https://apitesting.com/> {
+                VALUES ?id { <{0}> }
+                OPTIONAL {
+                  ?id bican:spatial_proportions_macaque ?spm_node .
+                  ?spm_node a bican:SpatialProportions .
+                  OPTIONAL { ?spm_node bican:str ?Striatum . }
+                  OPTIONAL { ?spm_node bican:gpe ?External_Globus_Pallidus . }
+                  OPTIONAL { ?spm_node bican:gpi ?Internal_Globus_Pallidus . }
+                  OPTIONAL { ?spm_node bican:sn  ?Substantia_Nigra . }
+                  OPTIONAL { ?spm_node bican:adj ?Adjacent_Regions . }
+                  OPTIONAL { ?spm_node bican:sth ?Subthalamic_Nucleus . }
+                }
+              }
+            }
+        - key: >
+            Human Spatial Proportions
+          sparql_query: |-
+            PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+
+            SELECT DISTINCT
+              ?Striatum
+              ?External_Globus_Pallidus
+              ?Internal_Globus_Pallidus
+              ?Substantia_Nigra
+              ?Adjacent_Regions
+              ?Subthalamic_Nucleus
+            WHERE {
+              GRAPH <https://apitesting.com/> {
+                VALUES ?id { <{0}> }
+                OPTIONAL {
+                  ?id bican:spatial_proportions_human ?sph_node .
+                  ?sph_node a bican:SpatialProportions .
+                  OPTIONAL { ?sph_node bican:str ?Striatum . }
+                  OPTIONAL { ?sph_node bican:gpe ?External_Globus_Pallidus . }
+                  OPTIONAL { ?sph_node bican:gpi ?Internal_Globus_Pallidus . }
+                  OPTIONAL { ?sph_node bican:sn  ?Substantia_Nigra . }
+                  OPTIONAL { ?sph_node bican:adj ?Adjacent_Regions . }
+                  OPTIONAL { ?sph_node bican:sth ?Subthalamic_Nucleus . }
+                }
+              }
+            }
+        - key: >
+            Curated Markers to Primates
+          sparql_query: |-
+            PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+
+            SELECT DISTINCT
+              (GROUP_CONCAT(DISTINCT STR(?markers); separator=", ") AS ?Genes)
+              WHERE {
+              GRAPH <https://apitesting.com/> {
+                VALUES ?id { <{0}> }
+                OPTIONAL {
+                  ?id bican:curated_markers_to_primates ?markers .
+                }
+              }
+            }
+        - key: >
+            Curated Markers to Mouse
+          sparql_query: |-
+            PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+
+            SELECT DISTINCT
+              (GROUP_CONCAT(DISTINCT STR(?markers); separator=", ") AS ?Genes)
+              WHERE {
+              GRAPH <https://apitesting.com/> {
+                VALUES ?id { <{0}> }
+                OPTIONAL {
+                  ?id bican:curated_markers_to_mouse ?markers .
+                }
+              }
+            }
