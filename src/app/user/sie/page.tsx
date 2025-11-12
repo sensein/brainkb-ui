@@ -242,19 +242,10 @@ export default function NamedEntityRecognition() {
         setIsProcessing(true);
 
         try {
-            // Process SSE stream using the hook
-            await processStream();
-
-            // Check for errors from the hook
-            if (sseError) {
-                setError(sseError);
-                setCurrentStatus('error');
-                setIsProcessing(false);
-                return;
-            }
-
-            // Process the result only if no error occurred
-            const result = sseResult;
+            // Process SSE stream using the hook - returns result directly to avoid stale state
+            const result = await processStream();
+            
+            // Result is guaranteed to be non-empty (hook throws error if empty)
             if (result) {
                 // Parse the result using the utility function
                 // This handles all the complex parsing logic for inconsistent API responses
