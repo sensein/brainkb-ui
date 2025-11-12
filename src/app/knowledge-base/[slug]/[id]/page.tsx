@@ -80,7 +80,7 @@ async function fetchBindings(queryParameter: QueryParameter) {
   }
 }
 
-function LoadingSpinner({ label = "Loading entity data..." }: { label?: string }) {
+function LoadingSpinner({ label = "LOADING...may take up to one minute" }: { label?: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-gray-200">
       <Loader2 className="w-12 h-12 text-sky-500 animate-spin mb-4" />
