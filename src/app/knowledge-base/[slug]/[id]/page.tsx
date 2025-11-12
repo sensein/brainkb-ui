@@ -323,7 +323,7 @@ const IndividualEntityPage = () => {
             <p className="text-gray-700">{mainCardDescription}</p>
           </div>
 
-          <div className="p-4 border-t border-gray-200 flex flex-col space-y-4">
+          <div className="p-4 border-t border-gray-200 flex">
             {extractedBoxes.map((entitycards, index) => (
               <div key={index} className="text-gray-700 text-base space-x-4 w-full">
                 {entitycards.cardtype === "card" && (
