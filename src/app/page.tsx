@@ -4,7 +4,6 @@ import yaml from "@/src/app/components/config-home.yaml";
 import {useEffect, useState} from "react";
 import {getData} from "@/src/app/components/getData";
 import {Brain, Database, FileText, Users, Sparkles, ExternalLink, Upload, Network, CheckCircle, FileCheck, Code, Layers, BookOpen, Search, UsersRound, Globe} from "lucide-react";
-import aboutYaml from "@/src/app/components/about.yaml";
 
 export default function Home() {
     const [modelBoxCountHeaderTitle, setModelBoxCountHeaderTitle] = useState("");
@@ -180,64 +179,56 @@ export default function Home() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-slide-up">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-                            Key Features
+                            {yaml.keyfeatures?.title || "Key Features"}
                         </h2>
                         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                            Powerful tools for neuroscience knowledge extraction and management
+                            {yaml.keyfeatures?.subtitle || "Powerful tools for neuroscience knowledge extraction and management"}
                         </p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div className="group bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent hover:border-blue-500">
-                            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                                <Database className="w-8 h-8 text-white" />
-                            </div>
-                            <h3 className="text-2xl font-bold text-gray-900 mb-2">Ingest Knowledge Graphs</h3>
-                            <p className="text-sm text-gray-500 mb-4">Easily upload neuroscience KGs in JSON-LD or TTL</p>
-                            <p className="text-gray-600 leading-relaxed mb-6">
-                                Upload Knowledge Graph files in JSON-LD or Turtle format to a specified named graph. 
-                                Seamlessly integrate your neuroscience data into the BrainKB ecosystem.
-                            </p>
-                            <a
-                                href="/user/ingest-kg"
-                                className="inline-flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700 transition-colors"
-                            >
-                                Login to try now <ExternalLink className="w-4 h-4" />
-                            </a>
-                        </div>
-                        <div className="group bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent hover:border-green-500">
-                            <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                                <Brain className="w-8 h-8 text-white" />
-                            </div>
-                            <h3 className="text-2xl font-bold text-gray-900 mb-2">NER Extraction</h3>
-                            <p className="text-sm text-gray-500 mb-4">Extract neuroscience entities using AI agents</p>
-                            <p className="text-gray-600 leading-relaxed mb-6">
-                                Extract Neuroscience Named Entities from text using multi-agent systems. 
-                                Leverage advanced AI to identify and classify neuroscience concepts automatically.
-                            </p>
-                            <a
-                                href="/user/sie"
-                                className="inline-flex items-center gap-2 text-green-600 font-semibold hover:text-green-700 transition-colors"
-                            >
-                                Login to try now <ExternalLink className="w-4 h-4" />
-                            </a>
-                        </div>
-                        <div className="group bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent hover:border-purple-500">
-                            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                                <FileText className="w-8 h-8 text-white" />
-                            </div>
-                            <h3 className="text-2xl font-bold text-gray-900 mb-2">Resource Extraction</h3>
-                            <p className="text-sm text-gray-500 mb-4">Transform documents into structured knowledge</p>
-                            <p className="text-gray-600 leading-relaxed mb-6">
-                                Extract structured resources from unstructured sources and documents. 
-                                Transform raw text and PDFs into structured, queryable knowledge.
-                            </p>
-                            <a
-                                href="/user/extract-resource"
-                                className="inline-flex items-center gap-2 text-purple-600 font-semibold hover:text-purple-700 transition-colors"
-                            >
-                                Login to try now <ExternalLink className="w-4 h-4" />
-                            </a>
-                        </div>
+                        {yaml.keyfeatures?.features?.map((feature, index) => {
+                            const icons = [Database, Brain, FileText];
+                            const colorSchemes = [
+                                { 
+                                    gradient: "from-blue-500 to-blue-600", 
+                                    borderHover: "hover:border-blue-500", 
+                                    text: "text-blue-600", 
+                                    hover: "hover:text-blue-700" 
+                                },
+                                { 
+                                    gradient: "from-green-500 to-green-600", 
+                                    borderHover: "hover:border-green-500", 
+                                    text: "text-green-600", 
+                                    hover: "hover:text-green-700" 
+                                },
+                                { 
+                                    gradient: "from-purple-500 to-purple-600", 
+                                    borderHover: "hover:border-purple-500", 
+                                    text: "text-purple-600", 
+                                    hover: "hover:text-purple-700" 
+                                }
+                            ];
+                            const Icon = icons[index] || Database;
+                            const colorScheme = colorSchemes[index] || colorSchemes[0];
+                            return (
+                                <div key={index} className={`group bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent ${colorScheme.borderHover}`}>
+                                    <div className={`w-16 h-16 bg-gradient-to-br ${colorScheme.gradient} rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                                        <Icon className="w-8 h-8 text-white" />
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-gray-900 mb-2">{feature.title}</h3>
+                                    <p className="text-sm text-gray-500 mb-4">{feature.short_description}</p>
+                                    <p className="text-gray-600 leading-relaxed mb-6">
+                                        {feature.description}
+                                    </p>
+                                    <a
+                                        href={feature.link}
+                                        className={`inline-flex items-center gap-2 ${colorScheme.text} font-semibold ${colorScheme.hover} transition-colors`}
+                                    >
+                                        {feature.button_text} <ExternalLink className="w-4 h-4" />
+                                    </a>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             </section>
@@ -247,14 +238,14 @@ export default function Home() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-slide-up">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-                            What is BrainKB?
+                            {yaml.whatisbrainkb?.title || "What is BrainKB?"}
                         </h2>
                         <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-12">
-                            {aboutYaml.sections.find(s => s.section === "whatisbrainkb")?.subtitle || 
+                            {yaml.whatisbrainkb?.subtitle || 
                              "BrainKB is a platform designed to support neuroscience research by structuring and organizing scientific knowledge using knowledge graphs (KGs) for delivering evidence-based insights."}
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {aboutYaml.sections.find(s => s.section === "whatisbrainkb")?.bullet_points?.map((point, index) => {
+                            {yaml.whatisbrainkb?.bullet_points?.map((point, index) => {
                                 const cardData = getWhatIsBrainKBCardData(index);
                                 const CardIcon = cardData.icon;
                                 return (
@@ -385,31 +376,29 @@ export default function Home() {
                             </div>
                             <div className="flex-1">
                                 <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                                    Powered by Advanced AI Agents
+                                    {yaml.publications?.title || "Powered by Advanced AI Agents"}
                                 </h2>
                                 <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                                    BrainKB leverages cutting-edge agentic frameworks for structured information extraction. 
-                                    Our platform utilizes <strong>STRUCTSENSE</strong>, a task-agnostic agentic framework 
-                                    that enables sophisticated structured information extraction with human-in-the-loop evaluation 
-                                    and benchmarking capabilities.
+                                    {yaml.publications?.description || 
+                                     "BrainKB leverages cutting-edge agentic frameworks for structured information extraction. Our platform utilizes STRUCTSENSE, a task-agnostic agentic framework that enables sophisticated structured information extraction with human-in-the-loop evaluation and benchmarking capabilities."}
                                 </p>
-                                <div className="bg-gray-50 rounded-lg p-6 border-l-4 border-purple-500">
-                                    <p className="text-sm text-gray-600 italic mb-2">Research Citation:</p>
-                                    <p className="text-base text-gray-800 leading-relaxed mb-4">
-                                        Chhetri, T.R., Chen, Y., Trivedi, P., Jarecka, D., Haobsh, S., Ray, P., Ng, L. and Ghosh, S.S., 2025. 
-                                        <strong> STRUCTSENSE: A Task-Agnostic Agentic Framework for Structured Information Extraction with Human-In-The-Loop Evaluation and Benchmarking</strong>. 
-                                        arXiv preprint arXiv:2507.03674.
-                                    </p>
-                                    <a
-                                        href="https://arxiv.org/abs/2507.03674"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                                    >
-                                        <ExternalLink className="w-5 h-5" />
-                                        See Research Paper
-                                    </a>
-                                </div>
+                                {yaml.publications?.citation && (
+                                    <div className="bg-gray-50 rounded-lg p-6 border-l-4 border-purple-500">
+                                        <p className="text-sm text-gray-600 italic mb-2">{yaml.publications.citation.label}</p>
+                                        <p className="text-base text-gray-800 leading-relaxed mb-4">
+                                            {yaml.publications.citation.text}
+                                        </p>
+                                        <a
+                                            href={yaml.publications.citation.link}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                                        >
+                                            <ExternalLink className="w-5 h-5" />
+                                            {yaml.publications.citation.button_text || "See Research Paper"}
+                                        </a>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

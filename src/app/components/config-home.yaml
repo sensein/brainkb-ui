@@ -16,15 +16,10 @@ headersboxpage:
 
 
 structuredmodelsbox:
-  - name: "evidence assertion ontology"
-    slug: "evidenceassertionontology"
-    title: "Evidence Assertion Ontology"
-    description: "A data model designed to represent types and relationships of evidence and assertions."
-    links: "https://brain-bican.github.io/models/index_assertion_evidence/"
   - name: "GARS model"
     slug: "garsmodel"
     title: "Genome Annotation Schema"
-    description: "A data model designed to represent types and relationships of an organism&apos;s annotated genome."
+    description: "A data model designed to represent types and relationships of an organism's annotated genome."
     links: "https://brain-bican.github.io/models/index_genome_annotation"
   - name: "ansrs model"
     slug: "ansrsmodel"
@@ -34,8 +29,13 @@ structuredmodelsbox:
   - name: "library model"
     slug: "librarygenerationschema"
     title: "Library Generation Schema"
-    description: "A schema that is designed to represent types and relationships of samples and digital data assets generated during processes that generate multimodal genomic data."
+    description: "A schema designed to represent types and relationships of samples and digital data assets generated during multimodal genomic data processes."
     links: "https://brain-bican.github.io/models/index_library_generation/"
+  - name: "evidence assertion ontology"
+    slug: "evidenceassertionontology"
+    title: "Evidence Assertion Ontology"
+    description: "A data model designed to represent types and relationships of evidence and assertions."
+    links: "https://brain-bican.github.io/models/index_assertion_evidence/"
 
 boxiconsstatisticscount:
   - name: "Species"
@@ -50,7 +50,7 @@ boxiconsstatisticscount:
       }
   - name: "Donor"
     slug: "donor"
-    short_description: "A person or organism that is the source of a biological sample for scientific study. Many biological samples are generated from a single donor."
+    short_description: ""
     sparql_query: |-
       PREFIX bican: <https://identifiers.org/brain-bican/vocab/> 
       PREFIX biolink: <https://w3id.org/biolink/vocab/>   
@@ -73,7 +73,7 @@ boxiconsstatisticscount:
       }
   - name: "Library Aliquot"
     slug: "libraryaliquot"
-    short_description: "One library in the library pool."
+    short_description: ""
     sparql_query: |-
       PREFIX bican: <https://identifiers.org/brain-bican/vocab/> 
       PREFIX biolink: <https://w3id.org/biolink/vocab/>   
@@ -83,3 +83,41 @@ boxiconsstatisticscount:
             ?id biolink:category "bican:LibraryAliquot"^^<http://www.w3.org/2001/XMLSchema#anyURI>; 
         }
       }
+
+whatisbrainkb:
+  title: "What is BrainKB?"
+  subtitle: "BrainKB is a platform designed to support neuroscience research by structuring and organizing scientific knowledge using knowledge graphs (KGs) for delivering evidence-based insights."
+  bullet_points:
+    - title: "BrainKB structures neuroscience knowledge into an accessible and scalable knowledge graph."
+    - title: "It provides tools for searching, exploring, visualizing, and analyzing neuroscience data."
+    - title: "Researchers can contribute new findings, represented as assertions with supporting evidence from publications."
+    - title: "BrainKB aims to be the go-to resource for neuroscientists worldwide, fostering collaboration and accelerating discoveries."
+
+keyfeatures:
+  title: "Key Features"
+  subtitle: "Powerful tools for neuroscience knowledge extraction and management"
+  features:
+    - title: "Ingest Knowledge Graphs"
+      short_description: "Easily upload neuroscience KGs in JSON-LD or TTL"
+      description: "Upload Knowledge Graph files in JSON-LD or Turtle format. Seamlessly integrate your neuroscience data into the BrainKB ecosystem."
+      link: "/user/ingest-kg"
+      button_text: "Login to try now"
+    - title: "NER Extraction"
+      short_description: "Extract neuroscience entities using AI agents"
+      description: "Extract Neuroscience Named Entities from text using multi-agent systems. Leverage advanced AI to identify and classify neuroscience concepts automatically."
+      link: "/user/sie"
+      button_text: "Login to try now"
+    - title: "Resource Extraction"
+      short_description: "Transform documents into structured knowledge"
+      description: "Extract structured resources from unstructured sources and documents. Transform raw text and PDFs into structured, queryable knowledge."
+      link: "/user/extract-resource"
+      button_text: "Login to try now"
+
+publications:
+  title: "Powered by Advanced AI Agents"
+  description: "BrainKB leverages cutting-edge agentic frameworks for structured information extraction. Our platform utilizes STRUCTSENSE, a task-agnostic agentic framework that enables sophisticated structured information extraction."
+  citation:
+    label: "Research Citation:"
+    text: "Chhetri, T.R., Chen, Y., Trivedi, P., Jarecka, D., Haobsh, S., Ray, P., Ng, L. and Ghosh, S.S., 2025. STRUCTSENSE: A Task-Agnostic Agentic Framework for Structured Information Extraction with Human-In-The-Loop Evaluation and Benchmarking. arXiv preprint arXiv:2507.03674."
+    link: "https://arxiv.org/abs/2507.03674"
+    button_text: "See Research Paper"
