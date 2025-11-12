@@ -4,6 +4,7 @@ import {getData} from "@/src/app/components/getData";
 import yaml from "@/src/app/components/config-knowledgebases.yaml";
 import SideBarKBFromConfig from "@/src/app/components/SideBarKBFromConfig";
 import {Database, Loader2, AlertCircle, ChevronLeft, ChevronRight, ExternalLink, Search} from "lucide-react";
+import {useFilteredTableData} from "@/src/app/utils/tableFilterUtils";
 
 const ITEMS_PER_PAGE = 50;
 
@@ -75,16 +76,7 @@ const KnowledgeBase = (
     const renderTable = () => {
         if (!data || !Array.isArray(data) || data.length === 0) return null;
 
-        // Filter data based on search query
-        const filteredData = searchQuery.trim() === "" 
-            ? data 
-            : data.filter((item) => {
-                return headers.some((header) => {
-                    const value = item[header]?.value || "";
-                    return value.toLowerCase().includes(searchQuery.toLowerCase());
-                });
-            });
-
+        // Use the filtered data from the hook
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
         const endIndex = startIndex + ITEMS_PER_PAGE;
         const currentPageData = filteredData.slice(startIndex, endIndex);
@@ -138,14 +130,7 @@ const KnowledgeBase = (
     };
 
     // Calculate filtered data for pagination
-    const filteredData = searchQuery.trim() === "" 
-        ? data 
-        : data.filter((item) => {
-            return headers.some((header) => {
-                const value = item[header]?.value || "";
-                return value.toLowerCase().includes(searchQuery.toLowerCase());
-            });
-        });
+    const filteredData = useFilteredTableData(data, headers, searchQuery);
     
     const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 

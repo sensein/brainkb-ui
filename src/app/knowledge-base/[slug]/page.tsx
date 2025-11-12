@@ -1,10 +1,11 @@
 "use client";
-import {useState, useEffect, useMemo} from 'react';
+import {useState, useEffect} from 'react';
 import {getData} from "@/src/app/components/getData";
 import yaml from "@/src/app/components/config-knowledgebases.yaml";
 import SideBarKBFromConfig from "@/src/app/components/SideBarKBFromConfig";
 import {useParams} from "next/navigation";
 import {Database, Loader2, AlertCircle, ChevronLeft, ChevronRight, ExternalLink, Search} from "lucide-react";
+import {useFilteredTableData} from "@/src/app/utils/tableFilterUtils";
 
 // Do not import this again as it has been imported in other place already
 // Re-importing will cause an error.
@@ -74,16 +75,7 @@ const KbIndividualPageAllData = () => {
     const renderTable = () => {
         if (!data || !Array.isArray(data) || data.length === 0) return null;
 
-        // Filter data based on search query
-        const filteredData = searchQuery.trim() === "" 
-            ? data 
-            : data.filter((item) => {
-                return headers.some((header) => {
-                    const value = item[header]?.value || "";
-                    return value.toLowerCase().includes(searchQuery.toLowerCase());
-                });
-            });
-
+        // Use the filtered data from the hook
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
         const endIndex = startIndex + ITEMS_PER_PAGE;
         const currentPageData = filteredData.slice(startIndex, endIndex);
@@ -137,19 +129,7 @@ const KbIndividualPageAllData = () => {
     };
 
     // Calculate filtered data for pagination
-const filteredData = useMemo(() => {
-    const trimmedQuery = searchQuery.trim();
-    if (trimmedQuery === "") {
-        return data;
-    }
-    const lowerCaseQuery = trimmedQuery.toLowerCase();
-    return data.filter((item) => {
-        return headers.some((header) => {
-            const value = item[header]?.value || "";
-            return value.toLowerCase().includes(lowerCaseQuery);
-        });
-    });
-}, [data, headers, searchQuery]);
+    const filteredData = useFilteredTableData(data, headers, searchQuery);
     
     const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
