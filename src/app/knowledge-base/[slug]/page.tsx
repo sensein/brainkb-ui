@@ -15,7 +15,9 @@ const ITEMS_PER_PAGE = 50;
 
 const KbIndividualPageAllData = () => {
     const params = useParams();
-    if (!params) return <div>Loading...</div>;
+    if (!params || !params.slug) {
+        return <div>Loading...</div>;
+    }
 
     const [data, setData] = useState<any[]>([]);
     const [headers, setHeaders] = useState<string[]>([]);
@@ -26,51 +28,49 @@ const KbIndividualPageAllData = () => {
     const [pagesubtitle, setSubPageTitle] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
 
-    const fetchData = async () => {
-        setLoading(true);
-        setError(null);
-        setData([]);
-        setHeaders([]);
-        setPageTitle("");
-        setSubPageTitle("");
-        const page = yaml.pages.find((page) => page.slug === params.slug);
-        const query_to_execute = page ? page.sparql_query : "";
-
-        const page_title = page ? page.page : "";
-        const page_sub_title = page ? page.description : "";
-        setPageTitle(page_title);
-        setSubPageTitle(page_sub_title);
-
-        const queryParameter = {sparql_query: query_to_execute};
-
-        // Read endpoint from environment variable for this specific page
-        const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql";
-
-        try {
-            const response = await getData(queryParameter, endpoint);
-
-            if (response.status === 'success' && response.message?.results?.bindings) {
-                const bindings = response.message.results.bindings;
-                const vars = response.message.head.vars;
-
-                setHeaders(vars);
-                setData(bindings);
-            } else {
-
-                setError("Invalid data format");
-            }
-        } catch (e) {
-            const error = e as Error;
-
-            setError(error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            setError(null);
+            setData([]);
+            setHeaders([]);
+            setPageTitle("");
+            setSubPageTitle("");
+            const page = yaml.pages.find((page) => page.slug === params.slug);
+            const query_to_execute = page ? page.sparql_query : "";
+
+            const page_title = page ? page.page : "";
+            const page_sub_title = page ? page.description : "";
+            setPageTitle(page_title);
+            setSubPageTitle(page_sub_title);
+
+            const queryParameter = {sparql_query: query_to_execute};
+
+            // Read endpoint from environment variable for this specific page
+            const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql";
+
+            try {
+                const response = await getData(queryParameter, endpoint);
+
+                if (response.status === 'success' && response.message?.results?.bindings) {
+                    const bindings = response.message.results.bindings;
+                    const vars = response.message.head.vars;
+
+                    setHeaders(vars);
+                    setData(bindings);
+                } else {
+                    setError("Invalid data format");
+                }
+            } catch (e) {
+                const error = e as Error;
+                setError(error.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchData();
-    }, []);
+    }, [params.slug]);
 
     // Calculate filtered data for pagination
     const filteredData = useFilteredTableData(data, headers, searchQuery);
@@ -104,8 +104,11 @@ const KbIndividualPageAllData = () => {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {currentPageData.map((item, index) => (
-                                <tr key={index} className="hover:bg-sky-50/50 transition-colors duration-150">
+                            {currentPageData.map((item, index) => {
+                                // Use the first header's value as a unique identifier, or fallback to id if available
+                                const uniqueKey = item.id?.value || item[headers[0]]?.value || index;
+                                return (
+                                <tr key={uniqueKey} className="hover:bg-sky-50/50 transition-colors duration-150">
                                     {headers.map((header, headerIndex) => (
                                         <td key={headerIndex} className="px-6 py-4 whitespace-nowrap">
                                             {headerIndex === 0 ? (
@@ -125,7 +128,8 @@ const KbIndividualPageAllData = () => {
                                         </td>
                                     ))}
                                 </tr>
-                            ))}
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>

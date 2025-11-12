@@ -105,8 +105,11 @@ const KnowledgeBase = (
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {currentPageData.map((item, index) => (
-                                <tr key={index} className="hover:bg-sky-50/50 transition-colors duration-150">
+                            {currentPageData.map((item, index) => {
+                                // Use the first header's value as a unique identifier, or fallback to id if available
+                                const uniqueKey = item.id?.value || item[headers[0]]?.value || index;
+                                return (
+                                <tr key={uniqueKey} className="hover:bg-sky-50/50 transition-colors duration-150">
                                     {headers.map((header, headerIndex) => (
                                         <td key={headerIndex} className="px-6 py-4 whitespace-nowrap">
                                             {headerIndex === 0 ? (
@@ -126,7 +129,8 @@ const KnowledgeBase = (
                                         </td>
                                     ))}
                                 </tr>
-                            ))}
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
