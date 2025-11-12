@@ -11,7 +11,7 @@ export default function ToolsLibraries() {
             {/* Hero Section */}
             <section className="py-20 bg-gradient-to-br from-sky-50 via-white to-emerald-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center" style={{marginTop: "30px"}}>
+                    <div className="text-center mt-[30px]">
                         <div className="inline-flex items-center justify-center mb-6">
                             <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center">
                                 <Wrench className="w-8 h-8 text-white" />
