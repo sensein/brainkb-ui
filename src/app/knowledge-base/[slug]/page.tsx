@@ -152,6 +152,7 @@ const KbIndividualPageAllData = () => {
         <div className="kb-page-margin">
             <SideBarKBFromConfig/>
 
+
             {/* Hero Section */}
             <div className="grid fix-left-margin grid-cols-1 mb-8">
                 <div className="relative overflow-hidden bg-gradient-to-br from-sky-500 via-blue-500 to-emerald-500 rounded-2xl shadow-xl">
@@ -166,7 +167,6 @@ const KbIndividualPageAllData = () => {
                             </p>
                         )}
                     </div>
-                </div>
             </div>
 
             {/* Content Section */}

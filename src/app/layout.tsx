@@ -51,7 +51,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <header>
               <ConditionalNavbar/>
           </header>
-          <main className="flex min-h-screen flex-col">{children}</main>
+          <main className="flex min-h-screen flex-col pt-16">{children}</main>
           <footer>
               <Footer/>
           </footer>
