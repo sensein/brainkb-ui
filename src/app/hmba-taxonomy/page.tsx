@@ -138,8 +138,8 @@ export default function HMBATaxonomyPage() {
 
 
   if (!data) return (
-    <div>
-      <div style={{ backgroundColor: 'red', color: 'white', padding: '20px', fontSize: '20px' }}>
+    <div className="p-4">
+      <div className="bg-red-600 text-white px-5 py-5 text-xl font-semibold">
         LOADING - DATA NOT READY
       </div>
     </div>
@@ -391,34 +391,13 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => {
       </div>
 
       {/* FIT BUTTON - SEPARATE OVERLAY LAYER */}
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        pointerEvents: 'none',
-        zIndex: 10000
-      }}>
+      <div className="fixed inset-0 pointer-events-none z-[10000]">
         <button
           onClick={() => {
             fitToContent();
           }}
-          style={{
-            position: 'absolute',
-            top: '120px',
-            right: '20px',
-            pointerEvents: 'auto',
-            backgroundColor: '#3b82f6',
-            color: 'white',
-            padding: '8px 16px',
-            border: '1px solid #1e40af',
-            borderRadius: '6px',
-            fontSize: '12px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
-          }}
+          className="absolute top-28 right-5 pointer-events-auto rounded-md border border-blue-900 bg-blue-500 px-4 py-2 text-xs font-bold text-white shadow-lg transition hover:bg-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
+          aria-label="Fit the taxonomy tree to the available content area"
           title="Fit to content"
         >
           Fit to Content
