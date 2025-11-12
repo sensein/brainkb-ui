@@ -72,6 +72,11 @@ const KbIndividualPageAllData = () => {
         fetchData();
     }, []);
 
+    // Calculate filtered data for pagination
+    const filteredData = useFilteredTableData(data, headers, searchQuery);
+    
+    const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+
     const renderTable = () => {
         if (!data || !Array.isArray(data) || data.length === 0) return null;
 
@@ -127,11 +132,6 @@ const KbIndividualPageAllData = () => {
             </div>
         );
     };
-
-    // Calculate filtered data for pagination
-    const filteredData = useFilteredTableData(data, headers, searchQuery);
-    
-    const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
     return (
         <div className="kb-page-margin">
