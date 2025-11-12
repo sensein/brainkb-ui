@@ -44,10 +44,13 @@ export default function HMBATaxonomyPage() {
 
   // Observe viewport size
   useEffect(() => {
+    console.log('Setting up viewport size detection');
+
     // Function to update size
     const updateSize = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
+      console.log('Viewport size updated:', { width, height });
       setSize({ width, height });
     };
 
@@ -109,6 +112,13 @@ export default function HMBATaxonomyPage() {
     const scaleX = cw / (bbox.width + pad * 2);
     const scaleY = ch / (bbox.height + pad * 2);
 
+    console.log('Fit debug:', {
+      bbox: { width: bbox.width, height: bbox.height },
+      container: { width: cw, height: ch },
+      scales: { scaleX, scaleY },
+      pad
+    });
+
     // Use the actual calculated scale to fit the wide tree
     const scale = Math.min(1.0, Math.min(scaleX, scaleY));
 
@@ -121,16 +131,32 @@ export default function HMBATaxonomyPage() {
     const tx = left - bbox.x * scale;
     const ty = top - bbox.y * scale;
 
+    console.log('Final fit:', { scale, translate: { x: tx, y: ty } });
+
     setTranslate({ x: tx, y: ty });
     setZoom(scale);
   }, []);
 
   useEffect(() => {
+    console.log('Auto-fit effect triggered:', {
+      data: !!data,
+      dataType: typeof data,
+      size,
+      width: size.width,
+      height: size.height,
+      containerRef: !!containerRef.current
+    });
     if (!data || size.width === 0 || size.height === 0) {
+      console.log('Auto-fit skipped - missing data or size', {
+        hasData: !!data,
+        width: size.width,
+        height: size.height
+      });
       return;
     }
     // Auto-fit when data loads and viewport is ready
     const timeoutId = setTimeout(() => {
+      console.log('Auto-fit executing...');
       fitToContent();
     }, 500); // Increased delay to ensure tree is fully rendered
     return () => clearTimeout(timeoutId);
@@ -394,6 +420,7 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => {
       <div className="fixed inset-0 pointer-events-none z-[10000]">
         <button
           onClick={() => {
+            console.log('Fit button clicked!');
             fitToContent();
           }}
           className="absolute top-28 right-5 pointer-events-auto rounded-md border border-blue-900 bg-blue-500 px-4 py-2 text-xs font-bold text-white shadow-lg transition hover:bg-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
