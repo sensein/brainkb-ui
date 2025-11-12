@@ -3,7 +3,8 @@
 import yaml from "@/src/app/components/config-home.yaml";
 import {useEffect, useState} from "react";
 import {getData} from "@/src/app/components/getData";
-import {Brain, Database, FileText, Users, Sparkles, ExternalLink} from "lucide-react";
+import {Brain, Database, FileText, Users, Sparkles, ExternalLink, Upload, Network, CheckCircle, Target, Zap} from "lucide-react";
+import aboutYaml from "@/src/app/components/about.yaml";
 
 export default function Home() {
     const [modelBoxCountHeaderTitle, setModelBoxCountHeaderTitle] = useState("");
@@ -135,6 +136,179 @@ export default function Home() {
                     </div>
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent"></div>
+            </section>
+
+            {/* What is BrainKB Section */}
+            <section className="py-20 bg-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-16">
+                        <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+                            What is BrainKB?
+                        </h2>
+                        <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-12">
+                            {aboutYaml.sections.find(s => s.section === "whatisbrainkb")?.subtitle || 
+                             "BrainKB is a platform designed to support neuroscience research by structuring and organizing scientific knowledge using knowledge graphs (KGs) for delivering evidence-based insights."}
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {aboutYaml.sections.find(s => s.section === "whatisbrainkb")?.bullet_points?.map((point, index) => (
+                                <div
+                                    key={index}
+                                    className="bg-gradient-to-br from-sky-50 to-emerald-50 rounded-xl p-6 border border-sky-100 hover:shadow-lg transition-all duration-300"
+                                >
+                                    <CheckCircle className="w-8 h-8 text-sky-600 mb-4" />
+                                    <p className="text-gray-700 font-medium leading-relaxed">
+                                        {point.title}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Key Features Section */}
+            <section className="py-20 bg-gradient-to-br from-gray-50 to-sky-50">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-16">
+                        <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+                            Key Features
+                        </h2>
+                        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                            Powerful tools for neuroscience knowledge extraction and management
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="group bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent hover:border-blue-500">
+                            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                                <Database className="w-8 h-8 text-white" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-gray-900 mb-4">Ingest Knowledge Graphs</h3>
+                            <p className="text-gray-600 leading-relaxed mb-6">
+                                Upload Knowledge Graph files in JSON-LD or Turtle format to a specified named graph. 
+                                Seamlessly integrate your neuroscience data into the BrainKB ecosystem.
+                            </p>
+                            <a
+                                href="/user/ingest-kg"
+                                className="inline-flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700 transition-colors"
+                            >
+                                Learn more <ExternalLink className="w-4 h-4" />
+                            </a>
+                        </div>
+                        <div className="group bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent hover:border-green-500">
+                            <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                                <Brain className="w-8 h-8 text-white" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-gray-900 mb-4">NER Extraction</h3>
+                            <p className="text-gray-600 leading-relaxed mb-6">
+                                Extract Neuroscience Named Entities from text using multi-agent systems. 
+                                Leverage advanced AI to identify and classify neuroscience concepts automatically.
+                            </p>
+                            <a
+                                href="/user/sie"
+                                className="inline-flex items-center gap-2 text-green-600 font-semibold hover:text-green-700 transition-colors"
+                            >
+                                Try it now <ExternalLink className="w-4 h-4" />
+                            </a>
+                        </div>
+                        <div className="group bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent hover:border-purple-500">
+                            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                                <FileText className="w-8 h-8 text-white" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-gray-900 mb-4">Resource Extraction</h3>
+                            <p className="text-gray-600 leading-relaxed mb-6">
+                                Extract structured resources from unstructured sources and documents. 
+                                Transform raw text and PDFs into structured, queryable knowledge.
+                            </p>
+                            <a
+                                href="/user/extract-resource"
+                                className="inline-flex items-center gap-2 text-purple-600 font-semibold hover:text-purple-700 transition-colors"
+                            >
+                                Get started <ExternalLink className="w-4 h-4" />
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Objectives Section */}
+            <section className="py-20 bg-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-16">
+                        <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+                            Our Objectives
+                        </h2>
+                        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                            Building a comprehensive platform for neuroscience knowledge discovery
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {aboutYaml.sections.find(s => s.section === "objectives")?.bullet_points?.map((point, index) => (
+                            <div
+                                key={index}
+                                className="group bg-gradient-to-br from-sky-50 to-white rounded-xl p-6 border-2 border-gray-100 hover:border-sky-300 hover:shadow-lg transition-all duration-300"
+                            >
+                                <div className="flex items-start gap-4">
+                                    <div className="flex-shrink-0">
+                                        <div className="w-12 h-12 bg-gradient-to-br from-sky-500 to-blue-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                            <Target className="w-6 h-6 text-white" />
+                                        </div>
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="text-lg font-bold text-gray-900 mb-2">
+                                            {point.title}
+                                        </h3>
+                                        {point.description && (
+                                            <p className="text-gray-600 text-sm leading-relaxed">
+                                                {point.description}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Expected Outcomes Section */}
+            <section className="py-20 bg-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-16">
+                        <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+                            Expected Outcomes
+                        </h2>
+                        <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-4">
+                            {aboutYaml.sections.find(s => s.section === "expectedoutcome")?.subtitle || 
+                             "The BrainKB platform aims to deliver the following key outcomes:"}
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {aboutYaml.sections.find(s => s.section === "expectedoutcome")?.bullet_points?.map((point, index) => (
+                            <div
+                                key={index}
+                                className="group bg-gradient-to-br from-emerald-50 to-sky-50 rounded-xl p-6 border-2 border-gray-100 hover:border-emerald-300 hover:shadow-lg transition-all duration-300"
+                            >
+                                <div className="flex items-start gap-4">
+                                    <div className="flex-shrink-0">
+                                        <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                            <Zap className="w-6 h-6 text-white" />
+                                        </div>
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="text-lg font-bold text-gray-900 mb-2">
+                                            {point.title}
+                                        </h3>
+                                        {point.description && (
+                                            <p className="text-gray-600 text-sm leading-relaxed">
+                                                {point.description}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </section>
 
             {/* Agents Section */}
