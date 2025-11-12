@@ -14,7 +14,7 @@ export default function About() {
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-br from-sky-50 via-white to-emerald-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center" style={{marginTop: "30px"}}>
+          <div className="text-center mt-[30px]">
             <h1 className="text-5xl sm:text-6xl font-extrabold mb-6">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 via-blue-600 to-emerald-600">
                 About BrainKB

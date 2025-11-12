@@ -89,6 +89,7 @@ export default function Home() {
         }
     };
 
+
     // Centralized icon mapping
     const getIconBySlug = (iconSlug: string) => {
         const iconMap: { [key: string]: any } = {
@@ -104,6 +105,19 @@ export default function Home() {
             "search": Search,
             "usersround": UsersRound,
             "globe": Globe,
+
+    const getIconForStat = (index: number) => {
+        const icons = [Brain, Database, FileText, Users];
+        const Icon = icons[index] || Database;
+        return <Icon className="w-8 h-8 text-sky-500" />;
+    };
+
+    const getIconForModel = (slug: string) => {
+        const iconMap: { [key: string]: import("lucide-react").LucideIcon } = {
+            "garsmodel": Code,
+            "ansrsmodel": Layers,
+            "librarygenerationschema": BookOpen,
+            "evidenceassertionontology": FileCheck,
         };
         return iconMap[iconSlug?.toLowerCase()] || Database;
     };
