@@ -117,16 +117,14 @@ const KbIndividualPageAllData = () => {
             <SideBarKBFromConfig/>
 
             <div className="grid fix-left-margin grid-cols-1 ">
-                <div className="flex items-center justify-center rounded bg-gray-50 h-28 dark:bg-gray-800">
                     <div className="text-center">
-                        <p className="text-2xl text-gray-400 dark:text-gray-500">
+                        <p className="text-2xl text-gray-600 dark:text-gray-500">
                             {pagetitle}
                         </p>
                         <p className="text-gray-400 dark:text-gray-500">
                             {pagesubtitle}
                         </p>
                     </div>
-                </div>
             </div>
             <div className="grid fix-left-margin grid-cols-1">
 
