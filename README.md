@@ -123,7 +123,11 @@ NEXT_PUBLIC_API_ADMIN_INSERT_KGS_JSONLD_TTL_ENDPOINT=http://127.0.0.1:8010/inser
    ```bash
    npm run dev
    ```
-
+   Note for production, you would run the following command.
+   ```bash
+   npm run build
+   npm start
+    ```
 ---
 
 ### 3. Run With Docker
