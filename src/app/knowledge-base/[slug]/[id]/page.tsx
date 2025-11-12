@@ -1,7 +1,7 @@
 "use client";
 import SideBarKBFromConfig from "../../../components/SideBarKBFromConfig";
 import {useEffect, useState} from "react";
-import enititycardmapperconfig from '../../../components/enititycardmapper.yaml';
+import { entityCardMapperConfig } from "../../../components/entityCardMapperConfig";
 import {getData} from "../../../components/getData";
 import { processSparqlQueryResult } from "../../../components/helper";
 
@@ -47,11 +47,6 @@ interface DataBucket {
 }
 interface DataObject {
   [slug: string]: DataBucket;
-}
-
-interface EntityViewCard {
-  slug: string;
-  filename: string;
 }
 
 /** ---------- Small helpers ---------- */
@@ -197,24 +192,32 @@ const IndividualEntityPage = () => {
   const [data, setData] = useState<DataObject>({});
   const [error, setError] = useState<string | null>(null);
 
-  const loadData = async () => {
-    try {
-      const page = (enititycardmapperconfig as any).EntityViewCardsMaper.find((page: EntityViewCard) => page.slug === slug);
-      const filename = page ? page.filename : "";
-      const model_data = await import(`../../../components/${filename}`);
-      const extracted_data = model_data.default;
-
-      setMainCardTitle(extracted_data?.name || "");
-      setMainCardDescription(extracted_data?.description || "");
-      setExtractedBoxes(extracted_data?.boxes || []);
-    } catch (error) {
-      console.error("Failed to fetch YAML data:", error);
-    }
-  };
-
   useEffect(() => {
+    const loadData = async () => {
+      try {
+        const page = entityCardMapperConfig.EntityViewCardsMaper.find((card) => card.slug === slug);
+        const filename = page ? page.filename : "";
+
+        if (!filename) {
+          setMainCardTitle("");
+          setMainCardDescription("");
+          setExtractedBoxes([]);
+          return;
+        }
+
+        const model_data = await import(`../../../components/${filename}`);
+        const extracted_data = model_data.default;
+
+        setMainCardTitle(extracted_data?.name || "");
+        setMainCardDescription(extracted_data?.description || "");
+        setExtractedBoxes(extracted_data?.boxes || []);
+      } catch (err) {
+        console.error("Failed to fetch YAML data:", err);
+        setError("Failed to load entity configuration.");
+      }
+    };
+
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
   useEffect(() => {
@@ -305,6 +308,19 @@ const IndividualEntityPage = () => {
       fetchBoxData();
     }
   }, [extractedBoxes, id]);
+
+  if (error) {
+    return (
+      <div className="kb-page-margin">
+        <SideBarKBFromConfig/>
+        <div className="grid fix-left-margin grid-cols-1">
+          <div className="w-full bg-white shadow-md rounded-lg p-6 text-red-600">
+            {error}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="kb-page-margin">
