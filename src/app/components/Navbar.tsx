@@ -8,14 +8,71 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { ChevronDown, ExternalLink } from "lucide-react";
 import SignInButtons from "./SignInButtons"; // Import the client-side sign-in buttons
 
+interface DropdownItem {
+    href: string;
+    label: string;
+    target?: string;
+    showExternalIcon?: boolean;
+}
+
+interface ClickableDropdownProps {
+    label: string;
+    items: DropdownItem[];
+    isOpen: boolean;
+    onToggle: () => void;
+    onClose: () => void;
+    dropdownRef: React.RefObject<HTMLDivElement>;
+}
+
+const ClickableDropdown: React.FC<ClickableDropdownProps> = ({ 
+    label, 
+    items, 
+    isOpen, 
+    onToggle, 
+    onClose, 
+    dropdownRef 
+}) => {
+    return (
+        <li className="flex items-center relative">
+            <div ref={dropdownRef} className="relative">
+                <button 
+                    onClick={onToggle} 
+                    className="flex items-center gap-2 py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700"
+                >
+                    {label}
+                    <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {isOpen && (
+                    <div className="absolute left-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-50 min-w-[180px]">
+                        {items.map((item, index) => (
+                            <Link 
+                                key={index}
+                                href={item.href}
+                                target={item.target || "_self"}
+                                onClick={onClose} 
+                                className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                                <span>{item.label}</span>
+                                {item.showExternalIcon && <ExternalLink className="w-4 h-4" />}
+                            </Link>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </li>
+    );
+};
+
 const Navbar: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const [isExternalResourcesOpen, setIsExternalResourcesOpen] = useState(false);
+    const [isResourcesOpen, setIsResourcesOpen] = useState(false);
+    const [isKnowledgeBaseOpen, setIsKnowledgeBaseOpen] = useState(false);
     const [isSubmitDataOpen, setIsSubmitDataOpen] = useState(false);
     const { data: session } = useSession();
     const router = useRouter();
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const externalResourcesRef = useRef<HTMLDivElement>(null);
+    const ResourcesRef = useRef<HTMLDivElement>(null);
+    const knowledgeBaseRef = useRef<HTMLDivElement>(null);
     const submitDataRef = useRef<HTMLDivElement>(null);
 
     const handleLogout = async () => {
@@ -26,26 +83,30 @@ const Navbar: React.FC = () => {
 
     // Close dropdowns when clicking outside
     useEffect(() => {
+        const dropdowns = [
+            { ref: dropdownRef, isOpen, setIsOpen: setIsOpen },
+            { ref: ResourcesRef, isOpen: isResourcesOpen, setIsOpen: setIsResourcesOpen },
+            { ref: knowledgeBaseRef, isOpen: isKnowledgeBaseOpen, setIsOpen: setIsKnowledgeBaseOpen },
+            { ref: submitDataRef, isOpen: isSubmitDataOpen, setIsOpen: setIsSubmitDataOpen }
+        ];
+
         const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-            }
-            if (externalResourcesRef.current && !externalResourcesRef.current.contains(event.target as Node)) {
-                setIsExternalResourcesOpen(false);
-            }
-            if (submitDataRef.current && !submitDataRef.current.contains(event.target as Node)) {
-                setIsSubmitDataOpen(false);
-            }
+            dropdowns.forEach(({ ref, isOpen, setIsOpen }) => {
+                if (isOpen && ref.current && !ref.current.contains(event.target as Node)) {
+                    setIsOpen(false);
+                }
+            });
         };
 
-        if (isOpen || isExternalResourcesOpen || isSubmitDataOpen) {
+        const hasOpenDropdown = dropdowns.some(({ isOpen }) => isOpen);
+        if (hasOpenDropdown) {
             document.addEventListener('mousedown', handleClickOutside);
         }
 
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [isOpen, isExternalResourcesOpen, isSubmitDataOpen]);
+    }, [isOpen, isResourcesOpen, isKnowledgeBaseOpen, isSubmitDataOpen]);
 
     return (
         <nav
@@ -83,40 +144,31 @@ const Navbar: React.FC = () => {
                         <li className="flex items-center">
                             <Link href="/"
                                   className="block py-2 px-3 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 md:dark:text-blue-500">
-                                HOME
+                                Home
                             </Link>
 
                         </li>
-                        <li className="flex items-center">
-                            <Link href="/knowledge-base"
-                                  className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">
-                                KNOWLEDGE BASE
-                            </Link>
-                        </li>
+                        <ClickableDropdown
+                            label="Knowledge Base"
+                            items={[
+                                { href: "/knowledge-base", label: "Library Generation" }
+                            ]}
+                            isOpen={isKnowledgeBaseOpen}
+                            onToggle={() => setIsKnowledgeBaseOpen(!isKnowledgeBaseOpen)}
+                            onClose={() => setIsKnowledgeBaseOpen(false)}
+                            dropdownRef={knowledgeBaseRef}
+                        />
                         <li className="flex items-center">
                             <Link href="/hmba-taxonomy"
                                   className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">
-                                HMBA TAXONOMY
+                                HMBA Taxonomy
                             </Link>
                         </li>
                          
                         <li className="flex items-center">
                             <Link href="/playground"
                                   className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">
-                                PLAYGROUND
-                            </Link>
-                        </li>
-                       <li className="flex items-center">
-                            <Link href="/see"
-                                  className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">
-                                SEE
-                            </Link>
-                        </li>
-
-                        <li className="flex items-center">
-                            <Link href="/tools-and-libraries"
-                                  className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">
-                                TOOLS
+                                Data Visualization
                             </Link>
                         </li>
 
@@ -124,54 +176,30 @@ const Navbar: React.FC = () => {
                             <li className="flex items-center">
                             <Link href="/user/dashboard"
                                   className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">
-                                STRUCTSENSE
+                                Structsense
                             </Link>
                         </li>
                         )}
                          
 
-                        <li className="flex items-center relative">
-                            <div ref={externalResourcesRef} className="relative">
-                                <button 
-                                    onClick={() => setIsExternalResourcesOpen(!isExternalResourcesOpen)} 
-                                    className="flex items-center gap-2 py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700"
-                                >
-                                    EXTERNAL RESOURCES
-                                    <ChevronDown className={`w-4 h-4 transition-transform ${isExternalResourcesOpen ? 'rotate-180' : ''}`} />
-                                </button>
-                                {isExternalResourcesOpen && (
-                                    <div className="absolute left-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-50 min-w-[180px]">
-                                        <Link 
-                                            href="/about"
-                                            onClick={(e) => {
-                                                setIsExternalResourcesOpen(false);
-                                            }} 
-                                            className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                        >
-                                            <span>About</span>
-                                        </Link>
-                                        <Link 
-                                            href="http://docs.brainkb.org" 
-                                            target="_blank"
-                                            onClick={() => setIsExternalResourcesOpen(false)} 
-                                            className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                        >
-                                            <span>Documentation</span>
-                                            <ExternalLink className="w-4 h-4" />
-                                        </Link>
-                                        <Link 
-                                            href="https://github.com/sensein/BrainKB/issues"
-                                            target="_blank"
-                                            onClick={() => setIsExternalResourcesOpen(false)} 
-                                            className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                        >
-                                            <span>Help</span>
-                                            <ExternalLink className="w-4 h-4" />
-                                        </Link>
+                        <ClickableDropdown
+                            label="Resources"
+                            items={[
+                                { href: "/tools-and-libraries", label: "Tools and Libraries" },
+                                { href: "http://docs.brainkb.org", label: "Documentation", target: "_blank", showExternalIcon: true },
+                                { href: "https://github.com/sensein/BrainKB/issues", label: "Help", target: "_blank", showExternalIcon: true }
+                            ]}
+                            isOpen={isResourcesOpen}
+                            onToggle={() => setIsResourcesOpen(!isResourcesOpen)}
+                            onClose={() => setIsResourcesOpen(false)}
+                            dropdownRef={ResourcesRef}
+                        />
 
-                                    </div>
-                                )}
-                            </div>
+                        <li className="flex items-center">
+                            <Link href="/about"
+                                  className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">
+                                About
+                            </Link>
                         </li>
 
                         <li className="md:ml-4 flex items-center relative">

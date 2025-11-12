@@ -3,7 +3,11 @@
 import {useState, useEffect} from "react";
 import {useRouter} from "next/navigation";
 import {useSession} from "next-auth/react";
-import {ThumbsUp, ThumbsDown, FileText, Link as LinkIcon, Type} from "lucide-react";
+import {FileText, Link as LinkIcon, Type} from "lucide-react";
+import StatusIndicator, { StatusType } from "../../components/StatusIndicator";
+import NERResultsDisplay from "../../components/NERResultsDisplay";
+import { parseSSEResult } from "./utils/parseSSEResult";
+import { useSseStream } from "../../utils/useSseStream";
 
 // Define types for our entities and results
 interface Entity {
@@ -72,6 +76,9 @@ export default function NamedEntityRecognition() {
     const [isValidatingKey, setIsValidatingKey] = useState<boolean>(false);
     const [apiKeyError, setApiKeyError] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [currentStatus, setCurrentStatus] = useState<StatusType>('idle');
+    const [originalData, setOriginalData] = useState<Results | null>(null); // Store original data before modifications
+    const [nerData, setNerData] = useState<any>(null); // Store NER data in judge_ner_terms format
 
     // Check if API key exists in session storage
     useEffect(() => {
@@ -127,8 +134,8 @@ export default function NamedEntityRecognition() {
                 setIsApiKeyValid(true);
                 setApiKeyError(null);
                 setSuccessMessage("API key validated successfully!");
-                // Store API key in session storage
-                sessionStorage.setItem('ner_api_key', apiKey.trim());
+            // Store API key in session storage
+            sessionStorage.setItem('ner_api_key', apiKey.trim());
             } else {
                 const errorData = await response.json().catch(() => ({}));
                 setIsApiKeyValid(false);
@@ -169,11 +176,45 @@ export default function NamedEntityRecognition() {
         }
     };
 
+    // Use SSE stream hook
+    const { result: sseResult, error: sseError, status: sseStatus, isLoading: sseIsLoading, processStream } = useSseStream({
+        createFormData: () => {
+            const formData = new FormData();
+            formData.append("input_type", selectedInputType);
+            formData.append("openrouter_api_key", apiKey.trim());
+
+            if (selectedInputType === 'doi') {
+                formData.append("doi", doiInput.trim());
+            } else if (selectedInputType === 'text') {
+                formData.append("text_content", textInput.trim());
+            } else if (selectedInputType === 'pdf') {
+                formData.append("pdf_file", file!);
+            }
+            
+            const prefix = "ws-client-id-";
+            const client_id = (crypto.randomUUID?.() || `${prefix}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+            const endpoint = process.env.NEXT_PUBLIC_API_NER_ENDPOINT;
+            formData.append("endpoint", endpoint || '');
+            formData.append("clientId", client_id);
+            
+            return formData;
+        },
+        onStatusChange: (status) => {
+            setCurrentStatus(status === 'idle' ? 'idle' : status === 'done' ? 'done' : status === 'error' ? 'error' : status);
+        },
+        onError: (error) => {
+            setError(error);
+            setIsProcessing(false);
+        },
+    });
+
     // Handle form submission
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        
+        // Check if API key is valid
         if (!isApiKeyValid) {
-            setError("Please enter and validate API key first");
+            setError("Please provide a valid OpenRouter API key before processing.");
             return;
         }
 
@@ -191,194 +232,96 @@ export default function NamedEntityRecognition() {
             return;
         }
 
-        setIsProcessing(true);
+        // Clear existing results and messages when starting new process
+        setResults(null);
+        setOriginalData(null);
+        setNerData(null);
         setError(null);
         setSuccessMessage(null);
-        setResults(null);
+        setCurrentStatus('processing');
+        setIsProcessing(true);
 
         try {
-            console.log('Starting form submission...');
-            const formData = new FormData();
-            formData.append("input_type", selectedInputType);
-            formData.append("current_loggedin_user", session?.user?.email || 'unknown');
+            // Process SSE stream using the hook - returns result directly to avoid stale state
+            const result = await processStream();
             
-            // Add input based on selected type
-            if (selectedInputType === 'doi') {
-                formData.append("doi", doiInput.trim());
-            } else if (selectedInputType === 'text') {
-                formData.append("text_content", textInput.trim());
-            } else if (selectedInputType === 'pdf') {
-                formData.append("pdf_file", file!);
-            }
-            
-            // Add API key to form data
-            const storedApiKey = sessionStorage.getItem('ner_api_key');
-            if (storedApiKey) {
-                formData.append("api_key", storedApiKey);
-            }
-
-            if (process.env.NEXT_PUBLIC_JWT_USER) {
-                formData.append("email", process.env.NEXT_PUBLIC_JWT_USER);
-            }
-            if (process.env.NEXT_PUBLIC_JWT_PASSWORD) {
-                formData.append("password", process.env.NEXT_PUBLIC_JWT_PASSWORD);
-            }
-
-            // Read and append all required YAML files
-            const filesToLoad = [
-                {name: 'agent_config_file', file: process.env.NEXT_PUBLI_AGENT_CONFIG || 'ner_agent.yaml'},
-                {name: 'task_config_file', file: process.env.NEXT_PUBLI_TASK_CONFIG || 'ner_task.yaml'},
-                {name: 'embedder_config_file', file: process.env.NEXT_PUBLI_EMBEDDING_CONFIG || 'embedding.yaml'},
-                {name: 'knowledge_config_file', file: process.env.NEXT_PUBLI_KNOWLEDGE_CONFIG || 'search_ontology_knowledge.yaml'}
-            ];
-
-            console.log('Loading YAML files...');
-            for (const fileConfig of filesToLoad) {
-                console.log(`Loading ${fileConfig.name}...`);
-                const response = await fetch(`/api/config?file=${fileConfig.file}`);
-                if (!response.ok) {
-                    console.error(`Failed to load ${fileConfig.name}:`, response.status, response.statusText);
-                    throw new Error(`Failed to load ${fileConfig.name}`);
-                }
-                let text = await response.text();
-
-                // If this is the agent config file, update the API key
-                if (fileConfig.name === 'agent_config_file' && storedApiKey) {
-                    const config = JSON.parse(text);
-                    // Update API key for all agents
-                    ['extractor_agent', 'alignment_agent', 'judge_agent'].forEach(agent => {
-                        if (config[agent] && config[agent].llm) {
-                            config[agent].llm.api_key = storedApiKey;
-                        }
-                    });
-                    text = JSON.stringify(config);
-                }
-
-                const blob = new Blob([text], {type: 'application/yaml'});
-                formData.append(fileConfig.name, blob, fileConfig.file);
-                console.log(`Successfully loaded ${fileConfig.name}`);
-            }
-
-            // Add boolean flags
-            if (process.env.NEXT_PUBLIC_ENABLE_WEIGHTSANDBIAS) {
-                formData.append("ENABLE_WEIGHTSANDBIAS", process.env.NEXT_PUBLIC_ENABLE_WEIGHTSANDBIAS);
-            }
-            if (process.env.NEXT_PUBLIC_ENABLE_MLFLOW) {
-                formData.append("ENABLE_MLFLOW", process.env.NEXT_PUBLIC_ENABLE_MLFLOW);
-            }
-            if (process.env.NEXT_PUBLIC_ENABLE_KG_SOURCE) {
-                formData.append("ENABLE_KG_SOURCE", process.env.NEXT_PUBLIC_ENABLE_KG_SOURCE);
-            }
-
-            // Add Weaviate configuration
-            if (process.env.NEXT_PUBLIC_ONTOLOGY_DATABASE) {
-                formData.append("ONTOLOGY_DATABASE", process.env.NEXT_PUBLIC_ONTOLOGY_DATABASE);
-            }
-            if (process.env.NEXT_PUBLIC_WEAVIATE_API_KEY) {
-                formData.append("WEAVIATE_API_KEY", process.env.NEXT_PUBLIC_WEAVIATE_API_KEY);
-            }
-            if (process.env.NEXT_PUBLIC_WEAVIATE_HTTP_HOST) {
-                formData.append("WEAVIATE_HTTP_HOST", process.env.NEXT_PUBLIC_WEAVIATE_HTTP_HOST);
-            }
-            if (process.env.NEXT_PUBLIC_WEAVIATE_HTTP_PORT) {
-                formData.append("WEAVIATE_HTTP_PORT", process.env.NEXT_PUBLIC_WEAVIATE_HTTP_PORT);
-            }
-            if (process.env.NEXT_PUBLIC_WEAVIATE_HTTP_SECURE) {
-                formData.append("WEAVIATE_HTTP_SECURE", process.env.NEXT_PUBLIC_WEAVIATE_HTTP_SECURE);
-            }
-            if (process.env.NEXT_PUBLIC_WEAVIATE_GRPC_HOST) {
-                formData.append("WEAVIATE_GRPC_HOST", process.env.NEXT_PUBLIC_WEAVIATE_GRPC_HOST);
-            }
-            if (process.env.NEXT_PUBLIC_WEAVIATE_GRPC_PORT) {
-                formData.append("WEAVIATE_GRPC_PORT", process.env.NEXT_PUBLIC_WEAVIATE_GRPC_PORT);
-            }
-            if (process.env.NEXT_PUBLIC_WEAVIATE_GRPC_SECURE) {
-                formData.append("WEAVIATE_GRPC_SECURE", process.env.NEXT_PUBLIC_WEAVIATE_GRPC_SECURE);
-            }
-
-            // Add Ollama configuration
-            if (process.env.NEXT_PUBLIC_OLLAMA_API_ENDPOINT) {
-                formData.append("OLLAMA_API_ENDPOINT", process.env.NEXT_PUBLIC_OLLAMA_API_ENDPOINT);
-            }
-            if (process.env.NEXT_PUBLIC_OLLAMA_MODEL) {
-                formData.append("OLLAMA_MODEL", process.env.NEXT_PUBLIC_OLLAMA_MODEL);
-            }
-
-            // Add Grobid configuration
-            if (process.env.NEXT_PUBLIC_GROBID_SERVER_URL_OR_EXTERNAL_SERVICE) {
-                formData.append("GROBID_SERVER_URL_OR_EXTERNAL_SERVICE",
-                    process.env.NEXT_PUBLIC_GROBID_SERVER_URL_OR_EXTERNAL_SERVICE);
-            }
-            if (process.env.NEXT_PUBLIC_EXTERNAL_PDF_EXTRACTION_SERVICE) {
-                formData.append("EXTERNAL_PDF_EXTRACTION_SERVICE",
-                    process.env.NEXT_PUBLIC_EXTERNAL_PDF_EXTRACTION_SERVICE);
-            }
-
-            console.log('All form data prepared, making API call...');
-
-
-            // call our API route
-            const response = await fetch("/api/process-document", {
-                method: "POST",
-                body: formData,
-                 // Add timeout
-                signal: AbortSignal.timeout(2000000) // 20 minutes timeout
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('API call failed:', {
-                    status: response.status,
-                    statusText: response.statusText,
-                    error: errorText
-                });
-                throw new Error(`Error: ${response.status}`);
-            }
-
-            console.log("*****************************************************");
-            console.log('API call successful, processing response...');
-            const data = await response.json();
-            console.log("response data:", JSON.stringify(data, null, 2));
-            console.log("*****************************************************");
-
-            // Transform the data to match our interface
-            const documentName = selectedInputType === 'pdf' && file 
-                ? file.name 
-                : selectedInputType === 'doi' 
-                    ? `DOI: ${doiInput.trim()}` 
-                    : 'Text Input';
-            
+            // Result is guaranteed to be non-empty (hook throws error if empty)
+            if (result) {
+                // Parse the result using the utility function
+                // This handles all the complex parsing logic for inconsistent API responses
+                const parsedData = parseSSEResult(result);
+                
+                // Check if data has judge_ner_terms structure (new format)
+                if (parsedData && parsedData.judge_ner_terms) {
+//                     console.log('Setting NER data with judge_ner_terms:', Object.keys(parsedData.judge_ner_terms).length, 'keys');
+                    // Store NER data in judge_ner_terms format
+                    setNerData(parsedData);
+                    setResults(null); // Clear old format results
+                    setSuccessMessage("Content processed successfully! Review and edit the extracted entities below.");
+                    setCurrentStatus('done');
+                    
+                    // Clear inputs on success
+                    setFile(null);
+                    setDoiInput('');
+                    setTextInput('');
+                } else if (parsedData && parsedData.entities) {
+                    // Transform the data to match our interface (old format)
+                    const documentName = selectedInputType === 'pdf' && file 
+                        ? file.name 
+                        : selectedInputType === 'doi' 
+                            ? `DOI: ${doiInput.trim()}` 
+                            : 'Text Input';
+                    
             const transformedData: Results = {
-                entities: data.entities,
-                documentName: documentName,
+                        entities: parsedData.entities,
+                        documentName: documentName,
                 processedAt: new Date().toISOString(),
             };
 
             // Initialize all entities with thumbs up feedback if not already set
             Object.keys(transformedData.entities).forEach(key => {
-                transformedData.entities[key] = transformedData.entities[key].map(entity => ({
+                        transformedData.entities[key] = transformedData.entities[key].map((entity: Entity) => ({
                     ...entity,
                     feedback: entity.feedback || 'up',
-                    // contributed_by: entity.contributed_by || session?.user?.email || 'unknown',
-                    // changed_by: entity.changed_by || [session?.user?.email || 'unknown']
                 }));
             });
 
+                    // Store original data before modifications
+                    setOriginalData(transformedData);
             setResults(transformedData);
+                    setNerData(null); // Clear NER format data
             setAllApproved(true);
 
             // Set the first entity type as active
             if (transformedData.entities && Object.keys(transformedData.entities).length > 0) {
                 setActiveEntityType(Object.keys(transformedData.entities)[0]);
             }
-            
-            // Clear inputs after successful processing
-            setFile(null);
-            setDoiInput('');
-            setTextInput('');
+                    
+                    setSuccessMessage("Content processed successfully! Review and edit the extracted entities below.");
+                    setCurrentStatus('done');
+                    
+                    // Clear inputs on success
+                    setFile(null);
+                    setDoiInput('');
+                    setTextInput('');
+                } else if (result) {
+                    console.warn('Result received but could not parse entities:', result);
+                    setError("Content processed but no entities found. Please check the server response.");
+                    setCurrentStatus('error');
+                } else {
+                    setError("No result received from server. The processing may have completed without returning data.");
+                    setCurrentStatus('error');
+                }
+            } else {
+                setError("No result received from server. The processing may have completed without returning data.");
+                setCurrentStatus('error');
+            }
+
         } catch (err) {
             console.error("Error processing document:", err);
-            setError("Failed to process document. Please try again.");
+            const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
+            setError(`Failed to process document: ${errorMessage}`);
+            setCurrentStatus('error');
         } finally {
             setIsProcessing(false);
         }
@@ -387,10 +330,16 @@ export default function NamedEntityRecognition() {
 
     // Handle feedback (thumbs up/down)
     const handleFeedback = (type: string, index: number, feedback: 'up' | 'down') => {
-        if (!results) return;
+        if (!results || !originalData) return;
 
         const updatedResults = {...results};
         updatedResults.entities[type][index].feedback = feedback;
+
+        // Update originalData as well
+        const updatedOriginal = {...originalData};
+        if (updatedOriginal.entities[type] && updatedOriginal.entities[type][index]) {
+            updatedOriginal.entities[type][index].feedback = feedback;
+        }
 
         // If thumbs down, set up for editing
         if (feedback === 'down') {
@@ -408,6 +357,7 @@ export default function NamedEntityRecognition() {
 
         setAllApproved(allUp);
         setResults(updatedResults);
+        setOriginalData(updatedOriginal);
         setIsSaved(false);
     };
 
@@ -419,14 +369,82 @@ export default function NamedEntityRecognition() {
 
     // Handle final save
     const handleSave = async () => {
-        if (!results) return;
+        // Check if we have NER data (judge_ner_terms format)
+        if (nerData) {
+            setIsProcessing(true);
+            setError(null);
+
+            try {
+                // Deep copy NER data
+                const dataToSave = JSON.parse(JSON.stringify(nerData));
+                
+                // Add contributed_by to all entities
+                const contributedBy = session?.user?.email || session?.user?.name || (session?.user as any)?.orcid_id || 'unknown';
+                
+                if (dataToSave.judge_ner_terms) {
+                    Object.keys(dataToSave.judge_ner_terms).forEach((key) => {
+                        if (Array.isArray(dataToSave.judge_ner_terms[key])) {
+                            dataToSave.judge_ner_terms[key] = dataToSave.judge_ner_terms[key].map((entity: any) => ({
+                                ...entity,
+                                contributed_by: contributedBy
+                            }));
+                        }
+                    });
+                }
+
+
+                const formData = new FormData();
+                if (process.env.NEXT_PUBLIC_JWT_USER) {
+                    formData.append("email", process.env.NEXT_PUBLIC_JWT_USER);
+                }
+                if (process.env.NEXT_PUBLIC_JWT_PASSWORD) {
+                    formData.append("password", process.env.NEXT_PUBLIC_JWT_PASSWORD);
+                }
+
+                const resultsJson = JSON.stringify(dataToSave);
+                formData.append("results", resultsJson);
+
+                const response = await fetch("/api/save-ner-result", {
+                    method: 'POST',
+                    body: formData,
+                    signal: AbortSignal.timeout(2000000)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                setSuccessMessage("Results saved successfully!");
+                setIsSaved(true);
+                // Clear results after successful save
+                setNerData(null);
+                setResults(null);
+                setOriginalData(null);
+                return data;
+            } catch (err) {
+                console.error("Error saving NER data:", err);
+                const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
+                setError(`Failed to save results: ${errorMessage}`);
+            } finally {
+                setIsProcessing(false);
+            }
+            return;
+        }
+
+        // Handle old format (originalData)
+        if (!originalData) {
+            setError("No data to save.");
+            return;
+        }
 
         setIsProcessing(true);
         setError(null);
 
         try {
-            // Deep copy results to avoid mutating state directly
-            const resultsToSave = JSON.parse(JSON.stringify(results));
+            // Deep copy original data to avoid mutating state directly
+            const resultsToSave = JSON.parse(JSON.stringify(originalData));
 
             // Correct all start/end indices for all entities
             Object.keys(resultsToSave.entities).forEach(type => {
@@ -453,7 +471,17 @@ export default function NamedEntityRecognition() {
                 }
             });
 
-            console.log('Starting form submission...');
+            // Add contributed_by field to all entities
+            const contributedBy = session?.user?.email || session?.user?.name || (session?.user as any)?.orcid_id || 'unknown';
+            Object.keys(resultsToSave.entities).forEach(type => {
+                resultsToSave.entities[type] = resultsToSave.entities[type].map((entity: Entity) => ({
+                    ...entity,
+                    contributed_by: contributedBy
+                }));
+            });
+
+//             console.log('JSON being sent for saving:', JSON.stringify(resultsToSave, null, 2));
+
             const formData = new FormData();
 
             // Add credentials if available
@@ -468,7 +496,6 @@ export default function NamedEntityRecognition() {
             const resultsJson = JSON.stringify(resultsToSave);
             formData.append("results", resultsJson);
 
-            console.log("Saving data:", formData.get("results"));
             const response = await fetch("/api/save-ner-result", {
                 method: 'POST',
                 body: formData,
@@ -487,16 +514,21 @@ export default function NamedEntityRecognition() {
             }
 
             const data = await response.json();
-            console.log('Data saved:', data);
+//             console.log('Data saved:', data);
 
             // Show success message and update saved state
-            setError("Results saved successfully!");
+            setSuccessMessage("Results saved successfully!");
             setIsSaved(true);
+            // Clear results after successful save
+            setNerData(null);
+            setResults(null);
+            setOriginalData(null);
             return data;
 
         } catch (err) {
             console.error("Error saving corrections:", err);
-            setError("Failed to save results. Please try again.");
+            const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
+            setError(`Failed to save results: ${errorMessage}`);
         } finally {
             setIsProcessing(false);
         }
@@ -504,18 +536,25 @@ export default function NamedEntityRecognition() {
 
     // Update the handleTypeChange function
     const handleTypeChange = (oldType: string, index: number, newType: string) => {
-        if (!results) return;
+        if (!results || !originalData) return;
 
         const updatedResults = {...results};
+        const updatedOriginal = {...originalData};
         const entity = updatedResults.entities[oldType][index];
         const currentUser = session?.user?.email || 'unknown';
 
-        // Remove from old type
+        // Remove from old type in both results and originalData
         updatedResults.entities[oldType] = updatedResults.entities[oldType].filter((_, i) => i !== index);
+        if (updatedOriginal.entities[oldType]) {
+            updatedOriginal.entities[oldType] = updatedOriginal.entities[oldType].filter((_, i) => i !== index);
+        }
 
         // Add to new type
         if (!updatedResults.entities[newType]) {
             updatedResults.entities[newType] = [];
+        }
+        if (!updatedOriginal.entities[newType]) {
+            updatedOriginal.entities[newType] = [];
         }
 
         // Update changed_by list
@@ -534,6 +573,7 @@ export default function NamedEntityRecognition() {
         };
 
         updatedResults.entities[newType].push(updatedEntity);
+        updatedOriginal.entities[newType].push(updatedEntity);
 
         // Check if all entities now have thumbs up
         const allUp = Object.keys(updatedResults.entities).every(entityType =>
@@ -542,6 +582,7 @@ export default function NamedEntityRecognition() {
 
         setAllApproved(allUp);
         setResults(updatedResults);
+        setOriginalData(updatedOriginal);
         setIsSaved(false);
         setEditingEntity(null); // Clear editing state after type change
 
@@ -549,6 +590,11 @@ export default function NamedEntityRecognition() {
         Object.keys(updatedResults.entities).forEach(key => {
             if (updatedResults.entities[key].length === 0) {
                 delete updatedResults.entities[key];
+            }
+        });
+        Object.keys(updatedOriginal.entities).forEach(key => {
+            if (updatedOriginal.entities[key].length === 0) {
+                delete updatedOriginal.entities[key];
             }
         });
     };
@@ -561,60 +607,127 @@ export default function NamedEntityRecognition() {
     return (
         <div className="flex flex-col max-w-6xl mx-auto p-4">
             <h1 className="text-3xl font-bold mb-4 dark:text-white">Structured Information Extraction (SIE)</h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg">
+            <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg">
                 Extract neuroscientific entities such as cell types, anatomical regions, and more from PDF documents.
             </p>
+
+            {/* Processing Status Header */}
+            <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center">
+                        {currentStatus === 'idle' && (
+                            <svg viewBox="0 0 20 20" fill="none" className="w-5 h-5 text-gray-400">
+                                <circle cx="10" cy="10" r="6" stroke="currentColor" strokeWidth="2" fill="none" />
+                                <circle cx="10" cy="10" r="2" fill="currentColor" />
+                            </svg>
+                        )}
+                        {currentStatus === 'connecting' && (
+                            <svg viewBox="0 0 20 20" fill="none" className="w-5 h-5 text-orange-500 animate-pulse">
+                                <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5" fill="none" strokeDasharray="4 4" />
+                                <circle cx="10" cy="10" r="3" fill="currentColor" />
+                            </svg>
+                        )}
+                        {currentStatus === 'connected' && (
+                            <svg viewBox="0 0 20 20" fill="none" className="w-5 h-5 text-green-500">
+                                <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                                <path d="M6 10l2 2 6-6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        )}
+                        {currentStatus === 'processing' && (
+                            <svg viewBox="0 0 20 20" fill="none" className="w-5 h-5 text-purple-500 animate-pulse">
+                                <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                                <path d="M10 6v4l3 2" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        )}
+                        {currentStatus === 'done' && (
+                            <svg viewBox="0 0 20 20" fill="none" className="w-5 h-5 text-green-500">
+                                <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                                <path d="M6 10l2 2 6-6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        )}
+                        {currentStatus === 'error' && (
+                            <svg viewBox="0 0 20 20" fill="none" className="w-5 h-5 text-red-500 animate-pulse">
+                                <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                                <path d="M10 7v4M10 13h.01" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
+                            </svg>
+                        )}
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-semibold text-blue-700 dark:text-blue-300">
+                            Status: {currentStatus.charAt(0).toUpperCase() + currentStatus.slice(1)}
+                        </h3>
+                        <p className="text-sm text-blue-600 dark:text-blue-400">
+                            {currentStatus === 'idle' && 'Ready to extract entities'}
+                            {currentStatus === 'connecting' && 'Establishing connection...'}
+                            {currentStatus === 'connected' && 'Connected and ready'}
+                            {currentStatus === 'processing' && 'Extracting entities from document...'}
+                            {currentStatus === 'done' && 'Entity extraction completed successfully'}
+                            {currentStatus === 'error' && 'An error occurred during extraction'}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Status Indicators */}
+            <div className="flex flex-wrap items-center gap-3 mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <StatusIndicator status="idle" label="Idle" isActive={currentStatus === 'idle'} />
+                <StatusIndicator status="connecting" label="Connecting" isActive={currentStatus === 'connecting'} />
+                <StatusIndicator status="connected" label="Connected" isActive={currentStatus === 'connected'} />
+                <StatusIndicator status="processing" label="Processing" isActive={currentStatus === 'processing'} />
+                <StatusIndicator status="done" label="Done" isActive={currentStatus === 'done'} />
+                <StatusIndicator status="error" label="Error" isActive={currentStatus === 'error'} />
+            </div>
 
             {/* OpenRouter API Key Configuration */}
             <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6 mb-6 border border-gray-200 dark:border-gray-700">
                 <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">OpenRouter API Key Configuration</h2>
                 <div className="flex flex-col sm:flex-row gap-3">
-                    <input
-                        type="password"
-                        value={apiKey}
+                        <input
+                            type="password"
+                            value={apiKey}
                         onChange={(e) => {
                             setApiKey(e.target.value);
                             setIsApiKeyValid(false);
                             setApiKeyError(null);
                             setSuccessMessage(null);
                         }}
-                        placeholder="Enter your API key"
-                        className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                    />
-                    <button
+                            placeholder="Enter your API key"
+                            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        />
+                        <button
                         type="button"
                         onClick={validateApiKey}
                         disabled={isValidatingKey || !apiKey.trim()}
                         className={`px-6 py-2 rounded-lg font-medium text-white transition-colors ${
                             isValidatingKey || !apiKey.trim()
-                                ? "bg-gray-400 cursor-not-allowed"
+                                    ? "bg-gray-400 cursor-not-allowed"
                                 : "bg-gray-600 hover:bg-gray-700"
-                        }`}
-                    >
+                            }`}
+                        >
                         {isValidatingKey ? "Validating..." : "Validate API Key"}
-                    </button>
-                    {isApiKeyValid && (
-                        <button
-                            type="button"
-                            onClick={() => {
-                                sessionStorage.removeItem('ner_api_key');
-                                setApiKey('');
-                                setIsApiKeyValid(false);
+                        </button>
+                        {isApiKeyValid && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    sessionStorage.removeItem('ner_api_key');
+                                    setApiKey('');
+                                    setIsApiKeyValid(false);
                                 setApiKeyError(null);
                                 setSuccessMessage(null);
-                            }}
+                                }}
                             className="px-6 py-2 rounded-lg font-medium text-white bg-red-500 hover:bg-red-600 transition-colors"
-                        >
-                            Clear API Key
-                        </button>
-                    )}
-                </div>
+                            >
+                                Clear API Key
+                            </button>
+                        )}
+                    </div>
                 {apiKeyError && (
                     <p className="mt-3 text-sm text-red-600 dark:text-red-400">{apiKeyError}</p>
                 )}
-                {isApiKeyValid && (
+                    {isApiKeyValid && (
                     <p className="mt-3 text-sm text-green-600 dark:text-green-400">✓ API key validated successfully. You can now process documents.</p>
-                )}
+                    )}
             </div>
 
             {!isApiKeyValid && (
@@ -718,32 +831,32 @@ export default function NamedEntityRecognition() {
                     
                     {selectedInputType === 'pdf' && (
                         <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-6 text-center transition-colors duration-200 hover:border-blue-400 dark:hover:border-blue-600">
-                            <input
-                                type="file"
-                                id="document"
-                                onChange={handleFileChange}
-                                className="hidden"
+                        <input
+                            type="file"
+                            id="document"
+                            onChange={handleFileChange}
+                            className="hidden"
                                 accept=".pdf"
                                 disabled={!isApiKeyValid || isProcessing}
-                            />
-                            <label
-                                htmlFor="document"
+                        />
+                        <label
+                            htmlFor="document"
                                 className={`cursor-pointer flex flex-col items-center justify-center ${!isApiKeyValid || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 <FileText className="h-12 w-12 text-gray-400 mb-3" />
-                                <span className="text-sm text-gray-500 dark:text-gray-400">
-                                    Click to select a file or drag and drop
-                                </span>
-                                <span className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                Click to select a file or drag and drop
+              </span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                                     PDF (.pdf) files only
-                                </span>
-                            </label>
-                            {file && (
-                                <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+              </span>
+                        </label>
+                        {file && (
+                            <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
                                     Selected file: <span className="font-semibold">{file.name}</span> ({(file.size / 1024).toFixed(2)} KB)
-                                </div>
-                            )}
-                        </div>
+                            </div>
+                        )}
+                    </div>
                     )}
                     
                     {selectedInputType === 'text' && (
@@ -785,255 +898,28 @@ export default function NamedEntityRecognition() {
                     >
                         {isProcessing ? "Processing..." : "Process Document"}
                     </button>
-                </div>
+            </div>
             </form>
 
-            {/* Results Section */}
-            {results && (
-                <div className="bg-white dark:bg-gray-800 rounded-lg p-8 shadow-lg">
-                    <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Extracted Entities</h2>
-
-                    {/* Entity Type Tabs */}
-                    <div className="border-b border-gray-200 dark:border-gray-700 mb-4 overflow-x-auto">
-                        <nav className="-mb-px flex space-x-8 min-w-max overflow-x-auto scrollbar-hide">
-                            {Object.keys(results.entities)
-                                .filter(type => results.entities[type] && results.entities[type].length > 0)
-                                .map((type) => (
-                                    <button
-                                        key={type}
-                                        onClick={() => setActiveEntityType(type)}
-                                        className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                                            activeEntityType === type
-                                                ? "border-blue-500 text-blue-500"
-                                                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                                        }`}
-                                    >
-                                        {type} ({results.entities[type].length})
-                                    </button>
-                                ))}
-                        </nav>
-                    </div>
-
-                    {/* Entity List */}
-                    {activeEntityType && results.entities[activeEntityType] && results.entities[activeEntityType].length > 0 && (
-                        <div className="space-y-4">
-                            <h3 className="text-md font-semibold text-gray-700 dark:text-gray-300">
-                                {activeEntityType} Entities
-                            </h3>
-
-                            <div className="bg-gray-50 dark:bg-gray-700 rounded-md p-4">
-                                <ul className="space-y-4">
-                                    {results.entities[activeEntityType].map((entity, index) => (
-                                        <li key={index} className="border-b border-gray-200 dark:border-gray-600 pb-3">
-                                            <EntityCard
-                                                entity={entity}
-                                                onFeedbackChange={handleFeedback}
-                                                onTypeChange={handleTypeChange}
-                                                type={activeEntityType}
-                                                index={index}
-                                                isEditing={entity.feedback === 'down'}
-                                                results={results}
-                                                session={session}
-                                            />
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Save button */}
-                    {results && (
-                        <div className="mt-6 flex justify-end">
-                            <button
-                                type="button"
-                                onClick={handleSave}
-                                disabled={!allApproved || isProcessing || isSaved}
-                                className={`px-4 py-2 rounded-lg ${
-                                    allApproved && !isProcessing && !isSaved
-                                        ? 'bg-green-500 hover:bg-green-600 text-white'
-                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                }`}
-                            >
-                                {isProcessing ? 'Saving...' : isSaved ? 'Saved Result' : 'Save Results'}
-                            </button>
-                        </div>
-                    )}
-
-                    <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
-                        Document: {results.documentName} • Processed
-                        at: {results.processedAt ? new Date(results.processedAt).toLocaleString() : 'N/A'}
-                    </div>
-                </div>
+            {/* NER Results Section - handles both formats */}
+            {(nerData || results) && (
+                <NERResultsDisplay
+                    results={results || undefined}
+                    activeEntityType={activeEntityType || undefined}
+                    onActiveEntityTypeChange={setActiveEntityType}
+                    onFeedbackChange={handleFeedback}
+                    onTypeChange={handleTypeChange}
+                    allApproved={allApproved}
+                    nerData={nerData || undefined}
+                    onNerDataChange={(updatedData) => setNerData(updatedData)}
+                    onSave={handleSave}
+                    isProcessing={isProcessing}
+                    isSaved={isSaved}
+                    session={session}
+                    showExportOptions={true}
+                />
             )}
         </div>
     );
 }
 
-// Helper to get all unique entity types from results
-function getAllEntityTypes(results: Results): string[] {
-    if (!results || !results.entities) return [];
-    const types = Object.keys(results.entities);
-    if (!types.includes('Unknown / Unable to classify')) {
-        types.push('Unknown / Unable to classify');
-    }
-    return types;
-}
-
-const EntityCard = ({
-    entity,
-    onFeedbackChange,
-    type,
-    index,
-    onTypeChange,
-    isEditing,
-    results,
-    session
-}: {
-    entity: Entity;
-    onFeedbackChange: (type: string, index: number, feedback: 'up' | 'down') => void;
-    onTypeChange: (oldType: string, index: number, newType: string) => void;
-    type: string;
-    index: number;
-    isEditing: boolean;
-    results: Results;
-    session: any;
-}) => {
-    const otherContributors = (entity.changed_by ?? []).filter(email => email !== (session?.user?.email || 'unknown'));
-    const entityTypes = getAllEntityTypes(results);
-
-    // Function to highlight the entity in a sentence
-    const highlightEntityInSentence = (sentence: string, start: number, end: number) => {
-        if (!sentence) return '';
-        const before = sentence.substring(0, start);
-        const entityText = sentence.substring(start, end);
-        const after = sentence.substring(end);
-        return `${before}<span class="bg-yellow-200 dark:bg-yellow-600 px-1 rounded font-medium">${entityText}</span>${after}`;
-    };
-
-    return (
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border border-gray-100">
-            <div className="flex justify-between items-start mb-2">
-                <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                        {entity.entity}
-                        {entity.originalEntityType !== entity.entityType && (
-                            <span className="text-xs text-red-700 ml-2">
-                                (changed from: {entity.originalEntityType})
-                            </span>
-                        )}
-                    </h3>
-                    {isEditing ? (
-                        <div className="mt-2">
-                            <label className="block text-sm font-medium text-gray-700">Entity Type</label>
-                            <select
-                                value={entity.entityType}
-                                onChange={(e) => onTypeChange(type, index, e.target.value)}
-                                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md dark:bg-gray-700 dark:text-gray-100"
-                            >
-                                {entityTypes.map((etype) => (
-                                    <option key={etype} value={etype}>{etype}</option>
-                                ))}
-                            </select>
-                        </div>
-                    ) : (
-                        <p className="text-sm text-gray-500">Type: {entity.entityType}</p>
-                    )}
-                    <p className="text-sm text-gray-500 flex items-center gap-1">
-                        Confidence: {(entity.judge_score[0] * 100).toFixed(1)}%
-                        <span
-                            className="ml-1 cursor-pointer inline-block relative"
-                            title="How well the extracted information aligns with the target ontology or schema."
-                            style={{ display: 'inline-flex', alignItems: 'center' }}
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="16"
-                                height="16"
-                                fill="currentColor"
-                                viewBox="0 0 16 16"
-                                className="text-gray-400 hover:text-gray-600"
-                            >
-                                <circle cx="8" cy="8" r="8" fill="#e5e7eb"/>
-                                <text x="8" y="12" textAnchor="middle" fontSize="10" fill="#374151">?</text>
-                            </svg>
-                        </span>
-                    </p>
-                    {/*{entity.contributed_by && (*/}
-                    {/*    <p className="text-xs text-gray-400">Contributed by: {entity.contributed_by}</p>*/}
-                    {/*)}*/}
-                    {/*{entity.changed_by && entity.changed_by.length > 0 && (*/}
-                    {/*    <p className="text-xs text-gray-400">*/}
-                    {/*        Updated by: {entity.changed_by.join(', ')}*/}
-                    {/*    </p>*/}
-                    {/*)}*/}
-                </div>
-                <div className="flex space-x-2">
-                    <button
-                        onClick={() => onFeedbackChange(type, index, 'up')}
-                        className={`p-2 rounded-full ${entity.feedback === 'up' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'}`}
-                    >
-                        <ThumbsUp className="h-5 w-5"/>
-                    </button>
-                    <button
-                        onClick={() => onFeedbackChange(type, index, 'down')}
-                        className={`p-2 rounded-full ${entity.feedback === 'down' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'}`}
-                    >
-                        <ThumbsDown className="h-5 w-5"/>
-                    </button>
-                </div>
-            </div>
-
-            <div className="space-y-2">
-                <div className="text-sm text-gray-600">
-                    <span className="font-medium">Sentences:</span>
-                    <div className="mt-2 space-y-2">
-                        {entity.sentence.map((sentence, i) => {
-                            const { start, end } = getCorrectedIndices(sentence, entity.entity, entity.start[i], entity.end[i]);
-                            return (
-                                <div key={i} className="p-2 bg-gray-50 rounded">
-                                    <div className="flex items-start">
-                                        <span className="text-xs text-gray-500 mr-2 mt-1">{i + 1}.</span>
-                                        <div
-                                            className="flex-1"
-                                            dangerouslySetInnerHTML={{
-                                                __html: highlightEntityInSentence(
-                                                    sentence,
-                                                    start,
-                                                    end
-                                                )
-                                            }}
-                                        />
-                                    </div>
-                                    <div className="text-sm text-gray-500 mt-1">
-                                        <span className="font-medium">Location:</span> {entity.paper_location[i]}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-                {entity.paper_title[0] && (
-                    <div className="text-sm text-gray-600">
-                        <span className="font-medium">Paper:</span> {entity.paper_title[0]}
-                    </div>
-                )}
-                {entity.doi[0] && (
-                    <div className="text-sm text-gray-600">
-                        <span className="font-medium">DOI:</span> {entity.doi[0]}
-                    </div>
-                )}
-                {entity.ontology_id && (
-                    <div className="text-sm text-gray-600">
-                        <span className="font-medium">Ontology ID:</span> {entity.ontology_id}
-                    </div>
-                )}
-                {entity.ontology_label && (
-                    <div className="text-sm text-gray-600">
-                        <span className="font-medium">Ontology Label:</span> {entity.ontology_label}
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};

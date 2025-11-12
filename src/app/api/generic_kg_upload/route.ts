@@ -9,7 +9,7 @@ interface TokenResponse {
 async function getAuthToken(): Promise<string> {
   const jwtUser = process.env.NEXT_PUBLIC_JWT_USER;
   const jwtPassword = process.env.NEXT_PUBLIC_JWT_PASSWORD;
-  const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT;
+  const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE;
 
   if (!jwtUser || !jwtPassword || !tokenEndpoint) {
     throw new Error('JWT credentials not configured');
@@ -45,7 +45,6 @@ export async function POST(request: NextRequest) {
     const files = formData.getAll('files') as File[];
     const namedGraphIri = formData.get('named_graph_iri') as string;
     const fileType = formData.get('file_type') as string;
-    const host = formData.get('host') as string;
     const endpoint = formData.get('endpoint') as string;
 
     if (!files || files.length === 0) {
@@ -69,12 +68,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!host || !endpoint) {
-      return NextResponse.json(
-        { error: 'Host or endpoint not provided' },
-        { status: 400 }
-      );
-    }
+
 
     // Validate file type
     const allowedTypes = ['application/ld+json', 'text/turtle', 'application/octet-stream'];
@@ -116,7 +110,7 @@ export async function POST(request: NextRequest) {
     console.log('Named graph IRI:', namedGraphIri);
     console.log('File type:', fileType);
 
-    const queryServiceUrl = endpoint.startsWith('/') ? `${host}${endpoint}` : `${host}/${endpoint}`;
+    const queryServiceUrl = endpoint;
 
     // Get authentication token
     let authHeaders: Record<string, string> = {};
