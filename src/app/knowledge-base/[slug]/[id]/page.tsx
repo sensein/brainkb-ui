@@ -4,10 +4,9 @@ import {useEffect, useState} from "react";
 import { entityCardMapperConfig } from "../../../components/entityCardMapperConfig";
 import {getData} from "../../../components/getData";
 import { normalizeSparqlBindings, processSparqlQueryResult } from "../../../components/helper";
-
 import { useParams } from "next/navigation";
-import router from "next/router";
 import Link from "next/link";
+import {FileText, Loader2, AlertCircle, Info, Database} from "lucide-react";
 
 /** ---------- Types ---------- */
 type BoxAdditionalProperty = {
@@ -83,23 +82,9 @@ async function fetchBindings(queryParameter: QueryParameter) {
 
 function LoadingSpinner({ label = "LOADING...may take up to one minute" }: { label?: string }) {
   return (
-    <div className="flex items-center gap-2 text-gray-500" role="status" aria-live="polite">
-      <svg
-        className="h-5 w-5 animate-spin"
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
-      >
-        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-        <path
-          className="opacity-75"
-          d="M4 12a8 8 0 018-8"
-          stroke="currentColor"
-          strokeWidth="4"
-          strokeLinecap="round"
-        />
-      </svg>
-      <span>{label}</span>
+    <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-gray-200">
+      <Loader2 className="w-12 h-12 text-sky-500 animate-spin mb-4" />
+      <p className="text-gray-600">{label}</p>
     </div>
   );
 }
@@ -298,13 +283,22 @@ const IndividualEntityPage = () => {
     }
   }, [extractedBoxes, id]);
 
+  const entityName = decodeURIComponent(id).substring(decodeURIComponent(id).lastIndexOf("/") + 1);
+  const isLoading = extractedBoxes.length === 0 || Object.keys(data).length === 0;
+
   if (error) {
     return (
       <div className="kb-page-margin">
         <SideBarKBFromConfig/>
         <div className="grid fix-left-margin grid-cols-1">
-          <div className="w-full bg-white shadow-md rounded-lg p-6 text-red-600">
-            {error}
+          <div className="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-6">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-6 h-6 text-yellow-500" />
+              <div>
+                <h3 className="text-lg font-semibold text-yellow-800">Error</h3>
+                <p className="text-yellow-700">{error}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -314,32 +308,71 @@ const IndividualEntityPage = () => {
   return (
     <div className="kb-page-margin">
       <SideBarKBFromConfig/>
-      <div className="grid fix-left-margin grid-cols-1">
-        <div className="w-full bg-white shadow-md rounded-lg overflow-hidden">
-          <div className="p-4">
-            {/* <h2 className="text-xl font-bold">
-              {decodeURIComponent(id).substring(decodeURIComponent(id).lastIndexOf("/") + 1)}
-            </h2> */}
-            <p className="text-gray-700">{mainCardDescription}</p>
+      
+      {/* Hero Section disabled as it's removed in puja's work*/}
+ {/*     <div className="grid fix-left-margin grid-cols-1 mb-8">
+        <div className="relative overflow-hidden bg-gradient-to-br from-sky-500 via-blue-500 to-emerald-500 rounded-2xl shadow-xl">
+          <div className="absolute inset-0 bg-gradient-to-r from-sky-600/20 to-transparent"></div>
+          <div className="relative px-8 py-12">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4">
+              {entityName}
+            </h1>
+            {mainCardDescription && (
+              <p className="text-sky-100 text-base leading-relaxed">
+                {mainCardDescription}
+              </p>
+            )}
           </div>
+        </div>
+      </div>*/}
 
-          <div className="p-4 border-t border-gray-200 flex">
+      {/* Content Section */}
+      <div className="grid fix-left-margin grid-cols-1 gap-6">
+        {isLoading && (
+          <LoadingSpinner />
+        )}
+
+        {!isLoading && extractedBoxes.length === 0 && (
+          <div className="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-6">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-6 h-6 text-yellow-500" />
+              <div>
+                <h3 className="text-lg font-semibold text-yellow-800">No Entity Cards Configured</h3>
+                <p className="text-yellow-700">This entity type does not have any cards configured yet.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!isLoading && extractedBoxes.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {extractedBoxes.map((entitycards, index) => (
-              <div key={index} className="text-gray-700 text-base space-x-4 w-full">
-                {entitycards.cardtype === "card" && (
-                  <div className="w-full bg-white shadow-md rounded-lg overflow-hidden">
-                    <div className="bg-gray-400 p-4">
-                      <h2 className="text-white text-xl font-bold">
-                        {entitycards.name}
+              entitycards.cardtype === "card" && (
+                <div key={index} className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                  {/* Card Header */}
+                  <div className="bg-gradient-to-r from-sky-500 to-blue-500 p-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                        <Info className="w-5 h-5 text-white" />
+                      </div>
+                      <h2 className="text-xl font-bold text-white">
+                        {entitycards.name || "Entity Information"}
                       </h2>
                     </div>
-
-                    <div className="p-4">
-                      <p className="text-gray-700 mb-4">{entitycards.description}</p>
-
-                      <div className="bg-white p-4 rounded-lg border border-gray-300">
-                        {data[entitycards.slug ?? "unknown"] ? (
-                          Object.entries(data[entitycards.slug ?? "unknown"]).map(([key, value], idx) => {
+                  </div>
+                  
+                  {/* Card Body */}
+                  <div className="p-6">
+                    {entitycards.description && (
+                      <p className="text-gray-600 mb-6 leading-relaxed">
+                        {entitycards.description}
+                      </p>
+                    )}
+                    
+                    <div className="bg-gradient-to-br from-gray-50 to-sky-50 p-6 rounded-lg border border-gray-200">
+                      {data[entitycards.slug ?? "unknown"] ? (
+                        <div className="space-y-4">
+                          {Object.entries(data[entitycards.slug ?? "unknown"]).map(([key, value], idx) => {
                             // skip unset / empty / [{}]
                             if (
                               value == null ||
@@ -356,37 +389,66 @@ const IndividualEntityPage = () => {
                             // if it's a bkbit URN, render as a clickable link
                             if (typeof value === "string" && value.startsWith("urn:bkbit") && value !== decodeURIComponent(id)) {
                               return (
-                                <div key={idx} className="mb-3">
-                                  <div className="font-semibold mb-1">{label}:</div>
-                                  <Link
-                                    href={`/knowledge-base/celltaxon/${encodeURIComponent(value)}`}
-                                    className="underline text-blue-700 break-all"
-                                  >
-                                    {value}
-                                  </Link>
+                                <div key={idx} className="pb-4 border-b border-gray-200 last:border-b-0 last:pb-0">
+                                  <div className="flex items-start gap-3">
+                                    <div className="flex-shrink-0 mt-1">
+                                      <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center">
+                                        <Database className="w-4 h-4 text-sky-600" />
+                                      </div>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <dt className="text-sm font-semibold text-gray-900 mb-1 uppercase tracking-wide">
+                                        {label}
+                                      </dt>
+                                      <dd className="text-base text-gray-700 break-words">
+                                        <Link
+                                          href={`/knowledge-base/celltaxon/${encodeURIComponent(value)}`}
+                                          className="underline text-blue-700 break-all hover:text-blue-900"
+                                        >
+                                          {value}
+                                        </Link>
+                                      </dd>
+                                    </div>
+                                  </div>
                                 </div>
                               );
                             }
 
                             return (
-                              <div key={idx} className="mb-3">
-                                <div className="font-semibold mb-1">{label}:</div>
-                                <RenderValue value={value} />
+                              <div key={idx} className="pb-4 border-b border-gray-200 last:border-b-0 last:pb-0">
+                                <div className="flex items-start gap-3">
+                                  <div className="flex-shrink-0 mt-1">
+                                    <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center">
+                                      <Database className="w-4 h-4 text-sky-600" />
+                                    </div>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <dt className="text-sm font-semibold text-gray-900 mb-1 uppercase tracking-wide">
+                                      {label}
+                                    </dt>
+                                    <dd className="text-base text-gray-700 break-words">
+                                      <RenderValue value={value} />
+                                    </dd>
+                                  </div>
+                                </div>
                               </div>
                             );
-                          })
-                        ) : (
-                          <LoadingSpinner />
-                        )}
-                      </div>
+                          })}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <Database className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                          <p className="text-gray-500 font-medium">No data available</p>
+                          <p className="text-sm text-gray-400 mt-1">This card does not have any data to display.</p>
+                        </div>
+                      )}
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )
             ))}
           </div>
-
-        </div>
+        )}
       </div>
     </div>
   );
