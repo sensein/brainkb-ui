@@ -137,17 +137,19 @@ const KbIndividualPageAllData = () => {
     };
 
     // Calculate filtered data for pagination
-    const filteredData = useMemo(() => {
-        if (searchQuery.trim() === "") {
-            return data;
-        }
-        return data.filter((item) => {
-            return headers.some((header) => {
-                const value = item[header]?.value || "";
-                return value.toLowerCase().includes(searchQuery.toLowerCase());
-            });
+const filteredData = useMemo(() => {
+    const trimmedQuery = searchQuery.trim();
+    if (trimmedQuery === "") {
+        return data;
+    }
+    const lowerCaseQuery = trimmedQuery.toLowerCase();
+    return data.filter((item) => {
+        return headers.some((header) => {
+            const value = item[header]?.value || "";
+            return value.toLowerCase().includes(lowerCaseQuery);
         });
-    }, [data, headers, searchQuery]);
+    });
+}, [data, headers, searchQuery]);
     
     const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
