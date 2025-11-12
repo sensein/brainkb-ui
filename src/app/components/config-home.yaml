@@ -21,26 +21,31 @@ structuredmodelsbox:
     title: "Genome Annotation Schema"
     description: "A data model designed to represent types and relationships of an organism's annotated genome."
     links: "https://brain-bican.github.io/models/index_genome_annotation"
+    icon_slug: "code"
   - name: "ansrs model"
     slug: "ansrsmodel"
     title: "Anatomical Structure Schema"
     description: "A data model designed to represent types and relationships of anatomical brain structures."
     links: "https://brain-bican.github.io/models/index_anatomical_structure"
+    icon_slug: "layers"
   - name: "library model"
     slug: "librarygenerationschema"
     title: "Library Generation Schema"
     description: "A schema designed to represent types and relationships of samples and digital data assets generated during multimodal genomic data processes."
     links: "https://brain-bican.github.io/models/index_library_generation/"
+    icon_slug: "bookopen"
   - name: "evidence assertion ontology"
     slug: "evidenceassertionontology"
     title: "Evidence Assertion Ontology"
     description: "A data model designed to represent types and relationships of evidence and assertions."
     links: "https://brain-bican.github.io/models/index_assertion_evidence/"
+    icon_slug: "filecheck"
 
 boxiconsstatisticscount:
   - name: "Species"
     slug: "species"
     short_description: ""
+    icon_slug: "brain"
     sparql_query: |-
       PREFIX biolink: <https://w3id.org/biolink/vocab/> 
       select  (COUNT(DISTINCT(?o)) as ?count) where {
@@ -51,6 +56,7 @@ boxiconsstatisticscount:
   - name: "Donor"
     slug: "donor"
     short_description: ""
+    icon_slug: "database"
     sparql_query: |-
       PREFIX bican: <https://identifiers.org/brain-bican/vocab/> 
       PREFIX biolink: <https://w3id.org/biolink/vocab/>   
@@ -63,6 +69,7 @@ boxiconsstatisticscount:
   - name: "Structure"
     slug: "structure"
     short_description: ""
+    icon_slug: "filetext"
     sparql_query: |-
       PREFIX bican: <https://identifiers.org/brain-bican/vocab/>  
       SELECT  (COUNT (DISTINCT(?id)) as ?count)
@@ -74,6 +81,7 @@ boxiconsstatisticscount:
   - name: "Library Aliquot"
     slug: "libraryaliquot"
     short_description: ""
+    icon_slug: "users"
     sparql_query: |-
       PREFIX bican: <https://identifiers.org/brain-bican/vocab/> 
       PREFIX biolink: <https://w3id.org/biolink/vocab/>   
@@ -89,9 +97,21 @@ whatisbrainkb:
   subtitle: "BrainKB is a platform designed to support neuroscience research by structuring and organizing scientific knowledge using knowledge graphs (KGs) for delivering evidence-based insights."
   bullet_points:
     - title: "BrainKB structures neuroscience knowledge into an accessible and scalable knowledge graph."
+      heading: "Structured Knowledge"
+      icon_slug: "network"
+      gradient: "from-sky-500 to-blue-500"
     - title: "It provides tools for searching, exploring, visualizing, and analyzing neuroscience data."
+      heading: "Data Exploration"
+      icon_slug: "search"
+      gradient: "from-emerald-500 to-teal-500"
     - title: "Researchers can contribute new findings, represented as assertions with supporting evidence from publications."
+      heading: "Community Contribution"
+      icon_slug: "usersround"
+      gradient: "from-purple-500 to-pink-500"
     - title: "BrainKB aims to be the go-to resource for neuroscientists worldwide, fostering collaboration and accelerating discoveries."
+      heading: "Collaboration Hub"
+      icon_slug: "globe"
+      gradient: "from-orange-500 to-red-500"
 
 keyfeatures:
   title: "Key Features"
@@ -102,16 +122,22 @@ keyfeatures:
       description: "Upload Knowledge Graph files in JSON-LD or Turtle format. Seamlessly integrate your neuroscience data into the BrainKB ecosystem."
       link: "/user/ingest-kg"
       button_text: "Login to try now"
+      icon_slug: "database"
+      color_theme: "blue"
     - title: "NER Extraction"
       short_description: "Extract neuroscience entities using AI agents"
       description: "Extract Neuroscience Named Entities from text using multi-agent systems. Leverage advanced AI to identify and classify neuroscience concepts automatically."
       link: "/user/sie"
       button_text: "Login to try now"
+      icon_slug: "brain"
+      color_theme: "green"
     - title: "Resource Extraction"
       short_description: "Transform documents into structured knowledge"
       description: "Extract structured resources from unstructured sources and documents. Transform raw text and PDFs into structured, queryable knowledge."
       link: "/user/extract-resource"
       button_text: "Login to try now"
+      icon_slug: "filetext"
+      color_theme: "purple"
 
 publications:
   title: "Powered by Advanced AI Agents"

@@ -89,47 +89,48 @@ export default function Home() {
         }
     };
 
-    const getIconForStat = (index: number) => {
-        const icons = [Brain, Database, FileText, Users];
-        const Icon = icons[index] || Database;
-        return <Icon className="w-8 h-8 text-sky-500" />;
-    };
-
-    const getIconForModel = (slug: string) => {
+    // Centralized icon mapping
+    const getIconBySlug = (iconSlug: string) => {
         const iconMap: { [key: string]: any } = {
-            "garsmodel": Code,
-            "ansrsmodel": Layers,
-            "librarygenerationschema": BookOpen,
-            "evidenceassertionontology": FileCheck,
+            "brain": Brain,
+            "database": Database,
+            "filetext": FileText,
+            "users": Users,
+            "code": Code,
+            "layers": Layers,
+            "bookopen": BookOpen,
+            "filecheck": FileCheck,
+            "network": Network,
+            "search": Search,
+            "usersround": UsersRound,
+            "globe": Globe,
         };
-        const Icon = iconMap[slug] || Network;
-        return Icon;
+        return iconMap[iconSlug?.toLowerCase()] || Database;
     };
 
-    const getWhatIsBrainKBCardData = (index: number) => {
-        const cardData = [
-            {
-                heading: "Structured Knowledge",
-                icon: Network,
-                gradient: "from-sky-500 to-blue-500"
+    // Color theme mapping
+    const getColorTheme = (theme: string) => {
+        const themes: { [key: string]: any } = {
+            "blue": {
+                gradient: "from-blue-500 to-blue-600",
+                borderHover: "hover:border-blue-500",
+                text: "text-blue-600",
+                hover: "hover:text-blue-700"
             },
-            {
-                heading: "Data Exploration",
-                icon: Search,
-                gradient: "from-emerald-500 to-teal-500"
+            "green": {
+                gradient: "from-green-500 to-green-600",
+                borderHover: "hover:border-green-500",
+                text: "text-green-600",
+                hover: "hover:text-green-700"
             },
-            {
-                heading: "Community Contribution",
-                icon: UsersRound,
-                gradient: "from-purple-500 to-pink-500"
-            },
-            {
-                heading: "Collaboration Hub",
-                icon: Globe,
-                gradient: "from-orange-500 to-red-500"
+            "purple": {
+                gradient: "from-purple-500 to-purple-600",
+                borderHover: "hover:border-purple-500",
+                text: "text-purple-600",
+                hover: "hover:text-purple-700"
             }
-        ];
-        return cardData[index] || { heading: "", icon: CheckCircle, gradient: "from-gray-500 to-gray-600" };
+        };
+        return themes[theme?.toLowerCase()] || themes["blue"];
     };
 
     return (
@@ -187,29 +188,8 @@ export default function Home() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {yaml.keyfeatures?.features?.map((feature, index) => {
-                            const icons = [Database, Brain, FileText];
-                            const colorSchemes = [
-                                { 
-                                    gradient: "from-blue-500 to-blue-600", 
-                                    borderHover: "hover:border-blue-500", 
-                                    text: "text-blue-600", 
-                                    hover: "hover:text-blue-700" 
-                                },
-                                { 
-                                    gradient: "from-green-500 to-green-600", 
-                                    borderHover: "hover:border-green-500", 
-                                    text: "text-green-600", 
-                                    hover: "hover:text-green-700" 
-                                },
-                                { 
-                                    gradient: "from-purple-500 to-purple-600", 
-                                    borderHover: "hover:border-purple-500", 
-                                    text: "text-purple-600", 
-                                    hover: "hover:text-purple-700" 
-                                }
-                            ];
-                            const Icon = icons[index] || Database;
-                            const colorScheme = colorSchemes[index] || colorSchemes[0];
+                            const Icon = getIconBySlug(feature.icon_slug);
+                            const colorScheme = getColorTheme(feature.color_theme);
                             return (
                                 <div key={index} className={`group bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent ${colorScheme.borderHover}`}>
                                     <div className={`w-16 h-16 bg-gradient-to-br ${colorScheme.gradient} rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
@@ -246,20 +226,21 @@ export default function Home() {
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             {yaml.whatisbrainkb?.bullet_points?.map((point, index) => {
-                                const cardData = getWhatIsBrainKBCardData(index);
-                                const CardIcon = cardData.icon;
+                                const CardIcon = getIconBySlug(point.icon_slug || "");
+                                const gradient = point.gradient || "from-gray-500 to-gray-600";
+                                const heading = point.heading || "";
                                 return (
                                     <div
                                         key={index}
                                         className="group bg-gradient-to-br from-sky-50 to-emerald-50 rounded-xl p-6 border border-sky-100 hover:shadow-xl hover:border-sky-300 transition-all duration-300 transform hover:-translate-y-1"
                                     >
                                         <div className="mb-4">
-                                            <div className={`w-12 h-12 bg-gradient-to-br ${cardData.gradient} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-md`}>
+                                            <div className={`w-12 h-12 bg-gradient-to-br ${gradient} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-md`}>
                                                 <CardIcon className="w-6 h-6 text-white" />
                                             </div>
                                         </div>
                                         <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-sky-600 transition-colors">
-                                            {cardData.heading}
+                                            {heading}
                                         </h3>
                                         <p className="text-gray-700 leading-relaxed">
                                             {point.title}
@@ -292,9 +273,12 @@ export default function Home() {
                                 key={index}
                                 className="group relative bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent hover:border-sky-500"
                             >
-                                <div className="flex flex-col items-center text-center">
+                                    <div className="flex flex-col items-center text-center">
                                     <div className="mb-4 p-3 bg-gradient-to-br from-sky-100 to-emerald-100 rounded-lg group-hover:scale-110 transition-transform duration-300">
-                                        {getIconForStat(index)}
+                                        {(() => {
+                                            const StatIcon = getIconBySlug(yaml.boxiconsstatisticscount[index]?.icon_slug || "");
+                                            return <StatIcon className="w-8 h-8 text-sky-500" />;
+                                        })()}
                                     </div>
                                     <h2 className="text-5xl sm:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-emerald-600 mb-3">
                                         {count || "—"}
@@ -328,7 +312,7 @@ export default function Home() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {yaml.structuredmodelsbox.map((page, index) => {
-                            const ModelIcon = getIconForModel(page.slug);
+                            const ModelIcon = getIconBySlug(page.icon_slug || "");
                             return (
                                 <div
                                     key={index}
