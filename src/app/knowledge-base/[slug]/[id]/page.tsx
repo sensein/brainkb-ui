@@ -3,7 +3,7 @@ import SideBarKBFromConfig from "../../../components/SideBarKBFromConfig";
 import {useEffect, useState} from "react";
 import { entityCardMapperConfig } from "../../../components/entityCardMapperConfig";
 import {getData} from "../../../components/getData";
-import { processSparqlQueryResult } from "../../../components/helper";
+import { normalizeSparqlBindings, processSparqlQueryResult } from "../../../components/helper";
 
 import { useParams } from "next/navigation";
 import router from "next/router";
@@ -49,6 +49,8 @@ interface DataObject {
   [slug: string]: DataBucket;
 }
 
+type SparqlRow = Record<string, string>;
+
 /** ---------- Small helpers ---------- */
 
 // Replace <{0}> or {0} with the decoded entity IRI, preserving angle-brackets when needed
@@ -65,25 +67,6 @@ function replaceEntityIdInQuery(query: string, rawId: string) {
   return q.replace(/\{0\}/g, decodedId);
 }
 
-// Convert SPARQL JSON result bindings -> array of row objects { varName: value }
-function bindingsToObjects(bindings: any[]): Array<Record<string, string>> {
-  const isSet = (x: any) =>
-    x != null && !(typeof x === "string" && x.trim() === "");
-
-  return (bindings ?? []).map((b: any) => {
-    const row: Record<string, string> = {};
-    Object.entries(b).forEach(([k, v]: [string, any]) => {
-      // SPARQL JSON shape { type, value, ... } -> prefer .value if present
-      const raw = (v && typeof v === "object" && "value" in v) ? v.value : v;
-
-      if (isSet(raw)) {
-        row[k.replace(/_/g, " ")] = String(raw);
-      }
-      // else: skip adding this key entirely
-    });
-    return row;
-  });
-}
 // Fetch -> return raw bindings
 async function fetchBindings(queryParameter: QueryParameter) {
   try {
@@ -178,6 +161,23 @@ function RenderValue({ value }: { value: any }) {
   return <span>{String(value)}</span>;
 }
 
+function collapseNonIterableRows(rows: SparqlRow[]): DataValue {
+  if (rows.length === 0) {
+    return "";
+  }
+
+  if (rows.length === 1) {
+    const obj = rows[0];
+    const keys = Object.keys(obj);
+    return keys.length === 1 ? obj[keys[0]] : obj;
+  }
+
+  return rows.map((row) => {
+    const values = Object.values(row);
+    return values.length === 1 ? String(values[0]) : JSON.stringify(row);
+  });
+}
+
 /** ---------- Page ---------- */
 const IndividualEntityPage = () => {
   const params = useParams();
@@ -222,19 +222,17 @@ const IndividualEntityPage = () => {
 
   useEffect(() => {
     const fetchBoxData = async () => {
-      const decoded = decodeURIComponent(id);
-
       for (const box of extractedBoxes) {
         if (box.cardtype !== "card") continue;
 
         const slugKey = box.slug || "unknown";
         const nextBucket: DataBucket = {};
 
-        /** --- 1) Main box query -> flatten to key/value via your helper --- */
+        /** --- 1) Main box query -> flatten to key/value via helper --- */
         if (box.sparql_query) {
           const mainQuery = replaceEntityIdInQuery(box.sparql_query, id);
           const mainBindings = await fetchBindings({ sparql_query: mainQuery });
-          const formatted = await processSparqlQueryResult(mainBindings); // your existing helper
+          const formatted = await processSparqlQueryResult(mainBindings);
           Object.assign(nextBucket, formatted);
         }
 
@@ -242,52 +240,43 @@ const IndividualEntityPage = () => {
         const add = box.box_additional_info;
 
         if (add) {
-          // 2A: Shared query (Option B) → returns multi-column rows once
-          if (add.sparql_query && add.is_iterable) {
-            const q = replaceEntityIdInQuery(add.sparql_query, id);
+          const resolveRows = async (query: string): Promise<SparqlRow[]> => {
+            const q = replaceEntityIdInQuery(query, id);
             const bindings = await fetchBindings({ sparql_query: q });
-            const rows = bindingsToObjects(bindings);
+            return normalizeSparqlBindings(bindings, { shape: "rows" }) as SparqlRow[];
+          };
 
-            // Heuristic: if exactly one property provided, store array under that key (e.g., "abbreviations")
-            // Else, store under a sensible name
-            if (add.properties && add.properties.length === 1 && add.properties[0].key) {
-              nextBucket[add.properties[0].key] = rows;
+          let sharedRows: SparqlRow[] | null = null;
+
+          if (add.sparql_query && add.is_iterable) {
+            sharedRows = await resolveRows(add.sparql_query);
+
+            if (Array.isArray(add.properties) && add.properties.length === 1 && add.properties[0].key) {
+              nextBucket[add.properties[0].key] = sharedRows;
             } else if (add.header) {
-              // header present → kebab it as a key
               const keyFromHeader = add.header.toLowerCase().replace(/\s+/g, "_");
-              nextBucket[keyFromHeader] = rows;
+              nextBucket[keyFromHeader] = sharedRows;
             } else {
-              nextBucket["additional_info_rows"] = rows;
+              nextBucket["additional_info_rows"] = sharedRows;
             }
           }
 
-          // 2B: Per-property queries (Option A)
-          if (add.properties && add.properties.length > 0) {
+          if (Array.isArray(add.properties) && add.properties.length > 0) {
             for (const prop of add.properties) {
-              if (!prop.sparql_query) continue; // skip if this prop is provided by the shared query
-              const q = replaceEntityIdInQuery(prop.sparql_query, id);
-              const bindings = await fetchBindings({ sparql_query: q });
-              const rows = bindingsToObjects(bindings);
+              let rows: SparqlRow[] | null = null;
+
+              if (prop.sparql_query) {
+                rows = await resolveRows(prop.sparql_query);
+              } else if (sharedRows) {
+                rows = sharedRows;
+              }
+
+              if (!rows) continue;
 
               if (add.is_iterable) {
-                // An iterable list → keep as array of objects
                 nextBucket[prop.key] = rows;
               } else {
-                // Non-iterable → collapse to a single value if possible
-                if (rows.length === 0) {
-                  nextBucket[prop.key] = "";
-                } else if (rows.length === 1) {
-                  // If the row has one column, use that value directly; else keep the object
-                  const obj = rows[0];
-                  const keys = Object.keys(obj);
-                  nextBucket[prop.key] = keys.length === 1 ? obj[keys[0]] : obj;
-                } else {
-                  // Multiple rows but not iterable → join stringy values
-                  nextBucket[prop.key] = rows.map(r => {
-                    const vals = Object.values(r);
-                    return vals.length === 1 ? String(vals[0]) : JSON.stringify(r);
-                  });
-                }
+                nextBucket[prop.key] = collapseNonIterableRows(rows);
               }
             }
           }
