@@ -1,5 +1,5 @@
 "use client";
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useMemo} from 'react';
 import {getData} from "@/src/app/components/getData";
 import yaml from "@/src/app/components/config-knowledgebases.yaml";
 import SideBarKBFromConfig from "@/src/app/components/SideBarKBFromConfig";
@@ -137,14 +137,19 @@ const KbIndividualPageAllData = () => {
     };
 
     // Calculate filtered data for pagination
-    const filteredData = searchQuery.trim() === "" 
-        ? data 
-        : data.filter((item) => {
-            return headers.some((header) => {
-                const value = item[header]?.value || "";
-                return value.toLowerCase().includes(searchQuery.toLowerCase());
-            });
+const filteredData = useMemo(() => {
+    const trimmedQuery = searchQuery.trim();
+    if (trimmedQuery === "") {
+        return data;
+    }
+    const lowerCaseQuery = trimmedQuery.toLowerCase();
+    return data.filter((item) => {
+        return headers.some((header) => {
+            const value = item[header]?.value || "";
+            return value.toLowerCase().includes(lowerCaseQuery);
         });
+    });
+}, [data, headers, searchQuery]);
     
     const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
