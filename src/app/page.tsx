@@ -183,8 +183,11 @@ export default function Home() {
                         <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
                             {yaml.keyfeatures?.title || "Key Features"}
                         </h2>
-                        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                        <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-4">
                             {yaml.keyfeatures?.subtitle || "Powerful tools for neuroscience knowledge extraction and management"}
+                        </p>
+                        <p className="text-sm text-gray-500 italic">
+                            Login by clicking the button on the top-right navbar to try use these features.
                         </p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -193,20 +196,19 @@ export default function Home() {
                             const colorScheme = getColorTheme(feature.color_theme);
                             return (
                                 <div key={index} className={`group bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent ${colorScheme.borderHover}`}>
-                                    <div className={`w-16 h-16 bg-gradient-to-br ${colorScheme.gradient} rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                                        <Icon className="w-8 h-8 text-white" />
-                                    </div>
+                                    <a 
+                                        href={feature.link}
+                                        className="block"
+                                    >
+                                        <div className={`w-16 h-16 bg-gradient-to-br ${colorScheme.gradient} rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 cursor-pointer`}>
+                                            <Icon className="w-8 h-8 text-white" />
+                                        </div>
+                                    </a>
                                     <h3 className="text-2xl font-bold text-gray-900 mb-2">{feature.title}</h3>
                                     <p className="text-sm text-gray-500 mb-4">{feature.short_description}</p>
-                                    <p className="text-gray-600 leading-relaxed mb-6">
+                                    <p className="text-gray-600 leading-relaxed">
                                         {feature.description}
                                     </p>
-                                    <a
-                                        href={feature.link}
-                                        className={`inline-flex items-center gap-2 ${colorScheme.text} font-semibold ${colorScheme.hover} transition-colors`}
-                                    >
-                                        {feature.button_text} <ExternalLink className="w-4 h-4" />
-                                    </a>
                                 </div>
                             );
                         })}
