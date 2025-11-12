@@ -1,5 +1,4 @@
 "use client";
-import SideBarKBFromConfig from "../../../components/SideBarKBFromConfig";
 import {useEffect, useState} from "react";
 import { entityCardMapperConfig } from "../../../components/entityCardMapperConfig";
 import {getData} from "../../../components/getData";
@@ -289,7 +288,6 @@ const IndividualEntityPage = () => {
   if (error) {
     return (
       <div className="kb-page-margin">
-        <SideBarKBFromConfig/>
         <div className="grid fix-left-margin grid-cols-1">
           <div className="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-6">
             <div className="flex items-center gap-3">
@@ -307,7 +305,6 @@ const IndividualEntityPage = () => {
 
   return (
     <div className="kb-page-margin">
-      <SideBarKBFromConfig/>
       
       {/* Hero Section disabled as it's removed in puja's work*/}
  {/*     <div className="grid fix-left-margin grid-cols-1 mb-8">
