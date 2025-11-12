@@ -28,7 +28,12 @@ export default function HMBATaxonomyPage() {
   // Load data
   useEffect(() => {
     fetch('/treeData.json')
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) {
+          throw new Error(`Failed to fetch tree data: ${r.statusText}`);
+        }
+        return r.json();
+      })
       .then(data => {
         // Just set the data without modification - we'll use initialDepth instead
         console.log('Loaded data:', data); // Debug: see what the data looks like
