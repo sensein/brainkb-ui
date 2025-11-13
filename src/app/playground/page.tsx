@@ -147,6 +147,7 @@ export default function PlaygroundPage() {
   
   const ITEMS_PER_PAGE = 50;
 
+
   useEffect(() => {
     const loadInitialData = async () => {
       try {
@@ -428,6 +429,8 @@ export default function PlaygroundPage() {
     return cleaned;
   };
 
+  // Fix React anti-pattern: Handle pagination resets in useEffect (moved after tableData definition)
+  
   // Prepare table data - show ALL relationships (subject-predicate-object)
   // This includes every link in the graph, regardless of visibility settings
   const tableData = graphData ? graphData.links
@@ -465,6 +468,57 @@ export default function PlaygroundPage() {
       };
     }) : [];
 
+  // Fix React anti-pattern: Handle pagination resets in useEffect
+  useEffect(() => {
+    if (!graphData || !tableData || tableData.length === 0) return;
+    
+    // Recalculate filtered data and total pages
+    const filtered = tableData.filter((row) => {
+      if (!graphTableSearchQuery.trim()) return true;
+      const query = graphTableSearchQuery.toLowerCase();
+      return (
+        row.subject.toLowerCase().includes(query) ||
+        row.predicate.toLowerCase().includes(query) ||
+        row.object.toLowerCase().includes(query)
+      );
+    });
+    
+    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+    
+    if (graphTablePage > totalPages && totalPages > 0) {
+      setGraphTablePage(1);
+    }
+  }, [graphData, tableData, graphTableSearchQuery, graphTablePage, ITEMS_PER_PAGE]);
+
+  useEffect(() => {
+    if (!graphData || !getStatisticDetails(selectedStatistic)) return;
+    
+    const details = getStatisticDetails(selectedStatistic)!;
+    // Recalculate filtered items and total pages
+    const filtered = details.items.filter((item: any) => {
+      if (!searchQuery.trim()) return true;
+      const query = searchQuery.toLowerCase();
+      
+      if (selectedStatistic === 'totalRelationships') {
+        return (
+          item.subject?.toLowerCase().includes(query) ||
+          item.predicate?.toLowerCase().includes(query) ||
+          item.object?.toLowerCase().includes(query)
+        );
+      } else if (selectedStatistic === 'uniqueTypes') {
+        return item.label?.toLowerCase().includes(query);
+      } else {
+        return item.label?.toLowerCase().includes(query);
+      }
+    });
+    
+    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+    
+    if (statsTablePage > totalPages && totalPages > 0) {
+      setStatsTablePage(1);
+    }
+  }, [selectedStatistic, searchQuery, statsTablePage, graphData, ITEMS_PER_PAGE]);
+
   // Toggle relationship expansion
   const toggleRelationship = (label: string) => {
     setExpandedRelationships(prev => {
@@ -501,28 +555,13 @@ export default function PlaygroundPage() {
 
     if (selectedStatistic === 'totalRelationships') {
       headers = ['Subject', 'Predicate', 'Object'];
-      // Get original labels directly from graphData for export - always use full original data
+      // Use original IDs and labels stored in item data for export
       rows = items.map((item: any) => {
-        // Find the original link to get original labels
-        const linkIndex = item.id;
-        if (linkIndex !== undefined && graphData.links[linkIndex]) {
-          const link = graphData.links[linkIndex];
-          const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
-          const targetId = typeof link.target === 'string' ? link.target : link.target.id;
-          const sourceNode = graphData.nodes.find(n => n.id === sourceId);
-          const targetNode = graphData.nodes.find(n => n.id === targetId);
-          // Prefer IDs (full original values) over labels for export
-          return [
-            sourceId || sourceNode?.id || sourceNode?.label || '',
-            link.label || '',
-            targetId || targetNode?.id || targetNode?.label || ''
-          ];
-        }
-        // Fallback: try to reconstruct from item data
+        // Prefer stored original values, fallback to IDs, then to cleaned labels
         return [
-          item.subject || '',
-          item.predicate || '',
-          item.object || ''
+          item.subjectOriginal || item.subjectId || item.subject || '',
+          item.predicateOriginal || item.predicate || '',
+          item.objectOriginal || item.objectId || item.object || ''
         ];
       });
     } else if (selectedStatistic === 'uniqueTypes') {
@@ -719,13 +758,23 @@ export default function PlaygroundPage() {
             const targetId = typeof link.target === 'string' ? link.target : link.target.id;
             const sourceNode = graphData.nodes.find(n => n.id === sourceId);
             const targetNode = graphData.nodes.find(n => n.id === targetId);
+            // Store both cleaned (for display) and original (for export) values
+            const subjectLabel = sourceNode?.label || sourceId;
+            const objectLabel = targetNode?.label || targetId;
+            const predicateLabel = link.label || '';
             return {
               id: index,
-              subject: cleanLabel(sourceNode?.label || sourceId),
-              predicate: cleanLabel(link.label),
-              object: cleanLabel(targetNode?.label || targetId),
+              subject: cleanLabel(subjectLabel), // Cleaned for display
+              predicate: cleanLabel(predicateLabel), // Cleaned for display
+              object: cleanLabel(objectLabel), // Cleaned for display
               subjectType: sourceNode?.type || 'unknown',
-              objectType: targetNode?.type || 'unknown'
+              objectType: targetNode?.type || 'unknown',
+              // Store original IDs and labels for export
+              subjectId: sourceId,
+              objectId: targetId,
+              subjectOriginal: subjectLabel,
+              predicateOriginal: predicateLabel,
+              objectOriginal: objectLabel
             };
           })
         };
@@ -1009,11 +1058,6 @@ export default function PlaygroundPage() {
                             const startIndex = (graphTablePage - 1) * ITEMS_PER_PAGE;
                             const endIndex = startIndex + ITEMS_PER_PAGE;
                             const paginatedData = filteredData.slice(startIndex, endIndex);
-                            
-                            // Reset to first page if current page is beyond available pages
-                            if (graphTablePage > totalPages && totalPages > 0) {
-                              setGraphTablePage(1);
-                            }
                             
                             return paginatedData.length > 0 ? (
                               paginatedData.map((row) => (
@@ -1316,11 +1360,6 @@ export default function PlaygroundPage() {
                             const startIndex = (statsTablePage - 1) * ITEMS_PER_PAGE;
                             const endIndex = startIndex + ITEMS_PER_PAGE;
                             const paginatedItems = filteredItems.slice(startIndex, endIndex);
-                            
-                            // Reset to first page if current page is beyond available pages
-                            if (statsTablePage > totalPages && totalPages > 0) {
-                              setStatsTablePage(1);
-                            }
                             
                             return paginatedItems.length > 0 ? (
                               paginatedItems.map((item: any, index: number) => {

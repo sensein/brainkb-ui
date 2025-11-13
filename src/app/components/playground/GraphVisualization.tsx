@@ -18,6 +18,50 @@ interface GraphVisualizationProps {
   onNodeClick: (nodeId: string) => void;
 }
 
+// Utility function to clean and format labels for graph display
+// Removes RDF syntax, extracts meaningful parts from URLs, and truncates for readability
+function cleanLabelForGraph(label: string, maxLength: number = 35): string {
+  if (!label) return '';
+  
+  let cleaned = label;
+  
+  // Remove RDF typed literal syntax: "value"^^<http://...
+  const typedLiteralMatch = cleaned.match(/^"([^"]+)"\^\^<[^>]*/);
+  if (typedLiteralMatch) {
+    cleaned = typedLiteralMatch[1]; // Extract just the value inside quotes
+  }
+  
+  // Remove surrounding quotes if still present
+  cleaned = cleaned.replace(/^["']|["']$/g, '');
+  
+  // If it's a URL, try to extract the meaningful part
+  if (cleaned.startsWith('http://') || cleaned.startsWith('https://')) {
+    // Extract last meaningful segment
+    const parts = cleaned.split('/');
+    const lastPart = parts[parts.length - 1];
+    if (lastPart && lastPart.length > 0 && lastPart.length < maxLength + 10) {
+      return lastPart;
+    }
+    // Try to get namespace prefix (after #)
+    const hashIndex = cleaned.indexOf('#');
+    if (hashIndex > 0) {
+      const afterHash = cleaned.substring(hashIndex + 1);
+      if (afterHash.length < maxLength + 10) return afterHash;
+    }
+    // Or extract domain + last part
+    const domain = parts[2]?.split('.')[0] || '';
+    const meaningful = lastPart || parts[parts.length - 2] || '';
+    const combined = domain ? `${domain}/${meaningful}` : meaningful;
+    return combined.length > maxLength ? combined.substring(0, maxLength - 3) + '...' : combined;
+  }
+  
+  // Truncate if too long
+  if (cleaned.length > maxLength) {
+    return cleaned.substring(0, maxLength - 3) + '...';
+  }
+  return cleaned;
+}
+
 export default function GraphVisualization({ data, onNodeClick }: GraphVisualizationProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -26,7 +70,7 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [hoveredNode, setHoveredNode] = useState<SimulationNode | null>(null);
   const [hoveredLink, setHoveredLink] = useState<SimulationLink | null>(null);
-  const [mousePos, setMousePos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   useEffect(() => {
     if (!svgRef.current || !data.nodes.length || !containerRef.current) return;
@@ -177,6 +221,34 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
             .style("cursor", "pointer")
             .on("mouseenter", function(event, d) {
               setHoveredLink(d);
+              
+              // Update tooltip position for links too
+              const container = containerRef.current;
+              if (container) {
+                const rect = container.getBoundingClientRect();
+                const mouseX = event.clientX - rect.left;
+                const mouseY = event.clientY - rect.top;
+                
+                const offsetX = 15;
+                const offsetY = 15;
+                const tooltipWidth = 600; // Max tooltip width (can be smaller for shorter text)
+                const tooltipHeight = 400; // Max tooltip height
+                
+                let x = mouseX + offsetX;
+                let y = mouseY + offsetY;
+                
+                if (x + tooltipWidth > rect.width) {
+                  x = mouseX - tooltipWidth - offsetX;
+                }
+                if (y + tooltipHeight > rect.height) {
+                  y = mouseY - tooltipHeight - offsetY;
+                }
+                if (x < 0) x = offsetX;
+                if (y < 0) y = offsetY;
+                
+                setTooltipPos({ x, y });
+              }
+              
               d3.select(this)
                 .attr("stroke-width", 4)
                 .attr("opacity", 0.8)
@@ -188,9 +260,6 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
                 .attr("stroke-width", 2)
                 .attr("opacity", 0.4)
                 .attr("stroke", "#64748b");
-            })
-            .on("mousemove", function(event) {
-              setMousePos({ x: event.clientX, y: event.clientY });
             });
 
           const label = linkGroup.append("g")
@@ -202,45 +271,7 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
             .attr("fill", "#475569")
             .attr("font-size", "11px")
             .attr("font-weight", "500")
-            .text(d => {
-              // Clean and extract meaningful label text for edges
-              let label = d.label;
-              
-              // Remove RDF typed literal syntax: "value"^^<http://...
-              const typedLiteralMatch = label.match(/^"([^"]+)"\^\^<[^>]*/);
-              if (typedLiteralMatch) {
-                label = typedLiteralMatch[1]; // Extract just the value inside quotes
-              }
-              
-              // Remove surrounding quotes if still present
-              label = label.replace(/^["']|["']$/g, '');
-              
-              // If it's a URL, extract meaningful part
-              if (label.startsWith('http://') || label.startsWith('https://')) {
-                const parts = label.split('/');
-                const lastPart = parts[parts.length - 1];
-                if (lastPart && lastPart.length > 0 && lastPart.length < 40) {
-                  return lastPart;
-                }
-                // Try to get namespace prefix (after #)
-                const hashIndex = label.indexOf('#');
-                if (hashIndex > 0) {
-                  const afterHash = label.substring(hashIndex + 1);
-                  if (afterHash.length < 40) return afterHash;
-                }
-                // Fallback to domain + last part
-                const domain = parts[2]?.split('.')[0] || '';
-                const meaningful = lastPart || parts[parts.length - 2] || '';
-                const combined = domain ? `${domain}/${meaningful}` : meaningful;
-                return combined.length > 25 ? combined.substring(0, 22) + '...' : combined;
-              }
-              
-              // Truncate if too long
-              if (label.length > 25) {
-                return label.substring(0, 22) + '...';
-              }
-              return label;
-            });
+            .text(d => cleanLabelForGraph(d.label, 25));
 
           text.each(function() {
             const bbox = (this as SVGTextElement).getBBox();
@@ -281,6 +312,35 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
             .on("mouseenter", function(event, d) {
               setHoveredNode(d);
               const nodeId = d.id;
+              
+              // Update tooltip position based on mouse/event position
+              const container = containerRef.current;
+              if (container) {
+                const rect = container.getBoundingClientRect();
+                const mouseX = event.clientX - rect.left;
+                const mouseY = event.clientY - rect.top;
+                
+                // Position tooltip offset from mouse, but keep it within bounds
+                const offsetX = 15;
+                const offsetY = 15;
+                const tooltipWidth = 600; // Max tooltip width (can be smaller for shorter text)
+                const tooltipHeight = 400; // Max tooltip height
+                
+                let x = mouseX + offsetX;
+                let y = mouseY + offsetY;
+                
+                // Keep tooltip within container bounds
+                if (x + tooltipWidth > rect.width) {
+                  x = mouseX - tooltipWidth - offsetX; // Position to the left
+                }
+                if (y + tooltipHeight > rect.height) {
+                  y = mouseY - tooltipHeight - offsetY; // Position above
+                }
+                if (x < 0) x = offsetX;
+                if (y < 0) y = offsetY;
+                
+                setTooltipPos({ x, y });
+              }
               
               // Find all connected node IDs
               const connectedNodeIds = new Set<string>();
@@ -356,9 +416,6 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
               d3.select(this).select("circle")
                 .attr("stroke-width", 3)
                 .attr("stroke", "#fff");
-            })
-            .on("mousemove", function(event) {
-              setMousePos({ x: event.clientX, y: event.clientY });
             });
 
           const circle = nodeGroup.append("circle")
@@ -383,47 +440,7 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
             .attr("fill", "#1f2937")
             .attr("font-size", "12px")
             .attr("font-weight", "600")
-            .text(d => {
-              // Clean and extract meaningful label text
-              let label = d.label;
-              
-              // Remove RDF typed literal syntax: "value"^^<http://...
-              // Matches patterns like: "BC-QXSSQN569230"^^<http://www...
-              const typedLiteralMatch = label.match(/^"([^"]+)"\^\^<[^>]*/);
-              if (typedLiteralMatch) {
-                label = typedLiteralMatch[1]; // Extract just the value inside quotes
-              }
-              
-              // Remove surrounding quotes if still present
-              label = label.replace(/^["']|["']$/g, '');
-              
-              // If it's a URL, try to extract the meaningful part
-              if (label.startsWith('http://') || label.startsWith('https://')) {
-                // Extract last meaningful segment
-                const parts = label.split('/');
-                const lastPart = parts[parts.length - 1];
-                if (lastPart && lastPart.length > 0 && lastPart.length < 50) {
-                  return lastPart;
-                }
-                // Try to get namespace prefix (after #)
-                const hashIndex = label.indexOf('#');
-                if (hashIndex > 0) {
-                  const afterHash = label.substring(hashIndex + 1);
-                  if (afterHash.length < 50) return afterHash;
-                }
-                // Or extract domain + last part
-                const domain = parts[2]?.split('.')[0] || '';
-                const meaningful = lastPart || parts[parts.length - 2] || '';
-                const combined = domain ? `${domain}/${meaningful}` : meaningful;
-                return combined.length > 35 ? combined.substring(0, 32) + '...' : combined;
-              }
-              
-              // Truncate if too long
-              if (label.length > 35) {
-                return label.substring(0, 32) + '...';
-              }
-              return label;
-            });
+            .text(d => cleanLabelForGraph(d.label, 35));
 
           text.each(function() {
             const bbox = (this as SVGTextElement).getBBox();
@@ -549,10 +566,8 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
       allNodes.on('click', null);
       allNodes.on('mouseenter', null);
       allNodes.on('mouseleave', null);
-      allNodes.on('mousemove', null);
       allLinks.selectAll('line').on('mouseenter', null);
       allLinks.selectAll('line').on('mouseleave', null);
-      allLinks.selectAll('line').on('mousemove', null);
 
       // Clear hover state
       setHoveredNode(null);
@@ -694,43 +709,51 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
         </div>
       </div>
 
-      {/* Tooltip - positioned at bottom to avoid covering active connections */}
+      {/* Tooltip - positioned near hovered element */}
       {(hoveredNode || hoveredLink) && (
         <div
           ref={tooltipRef}
-          className="fixed z-50 bg-gray-900 text-white rounded-lg shadow-xl p-3 max-w-md pointer-events-none border border-gray-700"
+          className="absolute z-[9999] rounded-lg shadow-2xl p-3 pointer-events-none border-2"
           style={{
-            // Position at bottom center to avoid covering graph connections
-            left: '50%',
-            bottom: '20px',
-            transform: 'translateX(-50%)',
-            maxHeight: '200px',
+            left: `${tooltipPos.x}px`,
+            top: `${tooltipPos.y}px`,
+            maxHeight: '400px',
             overflowY: 'auto',
-            maxWidth: '90%'
+            maxWidth: '90vw',
+            minWidth: '200px',
+            width: 'max-content',
+            backgroundColor: '#1f2937', // Solid dark gray background
+            color: '#ffffff', // White text
+            borderColor: '#4b5563', // Gray border
+            opacity: 1, // Ensure fully opaque
           }}
         >
           {hoveredNode && (
             <div>
-              <div className="font-semibold text-sm mb-1 text-sky-300">
+              <div className="font-semibold text-sm mb-1" style={{ color: '#60a5fa' }}>
                 {hoveredNode.type === 'subject' ? 'Subject Node' : 'Object Node'}
               </div>
-              <div className="text-xs text-gray-200 break-all">
+              <div className="text-xs" style={{ color: '#e5e7eb', whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'normal' }}>
                 {hoveredNode.label}
               </div>
-              <div className="text-xs text-gray-400 mt-1">
+              <div className="text-xs mt-1" style={{ color: '#9ca3af', whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'normal' }}>
                 ID: {hoveredNode.id}
               </div>
             </div>
           )}
           {hoveredLink && (
             <div>
-              <div className="font-semibold text-sm mb-1 text-sky-300">Relationship</div>
-              <div className="text-xs text-gray-200 break-all mb-2">
+              <div className="font-semibold text-sm mb-1" style={{ color: '#60a5fa' }}>Relationship</div>
+              <div className="text-xs mb-2" style={{ color: '#e5e7eb', whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'normal' }}>
                 {hoveredLink.label}
               </div>
-              <div className="text-xs text-gray-400">
-                <div>From: {typeof hoveredLink.source === 'string' ? hoveredLink.source : hoveredLink.source.label}</div>
-                <div>To: {typeof hoveredLink.target === 'string' ? hoveredLink.target : hoveredLink.target.label}</div>
+              <div className="text-xs" style={{ color: '#9ca3af' }}>
+                <div style={{ whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'normal' }}>
+                  From: {typeof hoveredLink.source === 'string' ? hoveredLink.source : hoveredLink.source.label}
+                </div>
+                <div className="mt-1" style={{ whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'normal' }}>
+                  To: {typeof hoveredLink.target === 'string' ? hoveredLink.target : hoveredLink.target.label}
+                </div>
               </div>
             </div>
           )}
