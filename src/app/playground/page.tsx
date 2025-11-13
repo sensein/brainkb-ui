@@ -5,7 +5,7 @@ import FileUpload from '@/src/app/components/playground/FileUpload';
 import GraphVisualization from '@/src/app/components/playground/GraphVisualization';
 import { parseTriplesFile, triplesToGraphData, getSampleTriples, extractTriplesFromPDF } from './utils/pdfProcessor';
 import { Triple, GraphData, Node as GraphNode } from './types/index';
-import {color} from "d3";
+import { Network, Table2, Copy, Check, ExternalLink, ChevronDown, ChevronUp, Search, Download, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 // Helper function to attempt to fix missing subject errors in Turtle files
 const attemptToFixMissingSubject = (content: string, problematicStatement: string): {
@@ -136,6 +136,17 @@ const attemptToFixMissingSubject = (content: string, problematicStatement: strin
 export default function PlaygroundPage() {
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'graph' | 'table'>('graph');
+  const [expandedRelationships, setExpandedRelationships] = useState<Set<string>>(new Set());
+  const [selectedStatistic, setSelectedStatistic] = useState<string>('totalNodes');
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [graphTableSearchQuery, setGraphTableSearchQuery] = useState<string>('');
+  const [graphTablePage, setGraphTablePage] = useState<number>(1);
+  const [statsTablePage, setStatsTablePage] = useState<number>(1);
+  
+  const ITEMS_PER_PAGE = 50;
+
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -385,37 +396,439 @@ export default function PlaygroundPage() {
     });
   }, []);
 
-  return (
-    <div className="set-margin-hundred pt-12">
-      <div className="container mx-auto px-4 py-6 space-y-6">
+  // Calculate statistics
+  const statistics = graphData ? {
+    totalNodes: graphData.nodes.length,
+    subjectNodes: graphData.nodes.filter(n => n.type === 'subject').length,
+    objectNodes: graphData.nodes.filter(n => n.type === 'object').length,
+    totalRelationships: graphData.links.length,
+    uniqueRelationshipTypes: new Set(graphData.links.map(l => l.label)).size,
+    relationshipDistribution: graphData.links.reduce((acc, link) => {
+      acc[link.label] = (acc[link.label] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>)
+  } : null;
 
-        <p className="mb-3 font-normal text-justify font-light text-sky-900 animate-slide-up">
-          This is a Knowledge Graphs Playground. It allows you to visualize your knowledge graphs and provides
-          insightful statistics, such as the number of nodes and relationships. While some features are still under
-          development, future updates will enable you to upload PDFs, extract knowledge graphs, visualize them, and
-          export the results seamlessly.
-          <br/>
-          <i>
-            Note: Currently, we restrict the visualization to
-            <span style={{color: "red"}}> 50,000</span> nodes.
-          </i>
-        </p>
-        <div className="mx-auto">
-          <div className="flex justify-center mb-8">
+  // Clean label text - remove RDF syntax and quotes only, keep full URLs
+  const cleanLabel = (label: string): string => {
+    if (!label) return '';
+    
+    let cleaned = label;
+    
+    // Remove RDF typed literal syntax: "value"^^<http://...
+    // Matches patterns like: "BC-QXSSQN569230"^^<http://www...
+    const typedLiteralMatch = cleaned.match(/^"([^"]+)"\^\^<[^>]*/);
+    if (typedLiteralMatch) {
+      cleaned = typedLiteralMatch[1]; // Extract just the value inside quotes
+    }
+    
+    // Remove surrounding quotes if still present
+    cleaned = cleaned.replace(/^["']|["']$/g, '');
+    
+    // Return the cleaned label as-is - no truncation, no URL extraction
+    return cleaned;
+  };
+
+  // Fix React anti-pattern: Handle pagination resets in useEffect (moved after tableData definition)
+  
+  // Prepare table data - show ALL relationships (subject-predicate-object)
+  // This includes every link in the graph, regardless of visibility settings
+  const tableData = graphData ? graphData.links
+    .filter(link => {
+      // Only filter out truly invalid links
+      if (!link || link === null || link === undefined) return false;
+      // Ensure link has required properties
+      if (!link.source || !link.target) return false;
+      return true;
+    })
+    .map((link, index) => {
+      const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
+      const targetId = typeof link.target === 'string' ? link.target : link.target.id;
+      const sourceNode = graphData.nodes.find(n => n.id === sourceId);
+      const targetNode = graphData.nodes.find(n => n.id === targetId);
+      
+      // Store both cleaned (for display) and original (for export) labels
+      const subjectLabel = sourceNode?.label || sourceId;
+      const objectLabel = targetNode?.label || targetId;
+      const predicateLabel = link.label || '';
+      
+      return {
+        id: index,
+        subject: cleanLabel(subjectLabel), // Cleaned for display
+        predicate: cleanLabel(predicateLabel), // Cleaned for display
+        object: cleanLabel(objectLabel), // Cleaned for display
+        subjectOriginal: subjectLabel, // Original for CSV export
+        predicateOriginal: predicateLabel, // Original for CSV export
+        objectOriginal: objectLabel, // Original for CSV export
+        subjectType: sourceNode?.type || 'unknown',
+        objectType: targetNode?.type || 'unknown',
+        // Store original IDs for reference
+        subjectId: sourceId,
+        objectId: targetId
+      };
+    }) : [];
+
+  // Fix React anti-pattern: Handle pagination resets in useEffect
+  useEffect(() => {
+    if (!graphData || !tableData || tableData.length === 0) return;
+    
+    // Recalculate filtered data and total pages
+    const filtered = tableData.filter((row) => {
+      if (!graphTableSearchQuery.trim()) return true;
+      const query = graphTableSearchQuery.toLowerCase();
+      return (
+        row.subject.toLowerCase().includes(query) ||
+        row.predicate.toLowerCase().includes(query) ||
+        row.object.toLowerCase().includes(query)
+      );
+    });
+    
+    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+    
+    if (graphTablePage > totalPages && totalPages > 0) {
+      setGraphTablePage(1);
+    }
+  }, [graphData, tableData, graphTableSearchQuery, graphTablePage, ITEMS_PER_PAGE]);
+
+  useEffect(() => {
+    if (!graphData || !getStatisticDetails(selectedStatistic)) return;
+    
+    const details = getStatisticDetails(selectedStatistic)!;
+    // Recalculate filtered items and total pages
+    const filtered = details.items.filter((item: any) => {
+      if (!searchQuery.trim()) return true;
+      const query = searchQuery.toLowerCase();
+      
+      if (selectedStatistic === 'totalRelationships') {
+        return (
+          item.subject?.toLowerCase().includes(query) ||
+          item.predicate?.toLowerCase().includes(query) ||
+          item.object?.toLowerCase().includes(query)
+        );
+      } else if (selectedStatistic === 'uniqueTypes') {
+        return item.label?.toLowerCase().includes(query);
+      } else {
+        return item.label?.toLowerCase().includes(query);
+      }
+    });
+    
+    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+    
+    if (statsTablePage > totalPages && totalPages > 0) {
+      setStatsTablePage(1);
+    }
+  }, [selectedStatistic, searchQuery, statsTablePage, graphData, ITEMS_PER_PAGE]);
+
+  // Toggle relationship expansion
+  const toggleRelationship = (label: string) => {
+    setExpandedRelationships(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(label)) {
+        newSet.delete(label);
+      } else {
+        newSet.add(label);
+      }
+      return newSet;
+    });
+  };
+
+  // Copy URL to clipboard
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedUrl(text);
+      setTimeout(() => setCopiedUrl(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  // Export data to CSV
+  const exportToCSV = () => {
+    if (!getStatisticDetails(selectedStatistic) || !graphData) return;
+
+    const filteredItems = filterItems(getStatisticDetails(selectedStatistic)!.items, selectedStatistic);
+    const items = filteredItems;
+    
+    let headers: string[] = [];
+    let rows: string[][] = [];
+
+    if (selectedStatistic === 'totalRelationships') {
+      headers = ['Subject', 'Predicate', 'Object'];
+      // Use original IDs and labels stored in item data for export
+      rows = items.map((item: any) => {
+        // Prefer stored original values, fallback to IDs, then to cleaned labels
+        return [
+          item.subjectOriginal || item.subjectId || item.subject || '',
+          item.predicateOriginal || item.predicate || '',
+          item.objectOriginal || item.objectId || item.object || ''
+        ];
+      });
+    } else if (selectedStatistic === 'uniqueTypes') {
+      headers = ['Relationship Type', 'Count', 'Percentage'];
+      // Get original labels from statistics
+      rows = items.map((item: any) => {
+        // Find original label from statistics relationshipDistribution
+        const originalLabel = Object.keys(statistics?.relationshipDistribution || {}).find(
+          key => cleanLabel(key) === item.label
+        ) || item.label;
+        return [
+          originalLabel || '',
+          item.count?.toString() || '0',
+          item.percentage || '0'
+        ];
+      });
+    } else {
+      headers = ['Type', 'Node Label'];
+      // Get original labels directly from graphData nodes - always use full original data
+      rows = items.map((item: any) => {
+        const originalNode = graphData.nodes.find(n => n.id === item.id);
+        // Prefer node ID (full original value) over label for export
+        const originalLabel = item.id || originalNode?.id || originalNode?.label || item.label || '';
+        return [
+          item.type === 'subject' ? 'Subject' : 'Object',
+          originalLabel
+        ];
+      });
+    }
+
+    // Convert to CSV format
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => 
+        row.map(cell => {
+          // Escape commas and quotes in cell values
+          const cellStr = String(cell || '');
+          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+            return `"${cellStr.replace(/"/g, '""')}"`;
+          }
+          return cellStr;
+        }).join(',')
+      )
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${getStatisticDetails(selectedStatistic)?.title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Export graph visualization table to CSV
+  const exportGraphTableToCSV = () => {
+    if (!graphData || !tableData || tableData.length === 0) return;
+
+    // Export filtered data if search is active
+    const dataToExport = filterGraphTableData(tableData);
+    if (dataToExport.length === 0) return;
+
+    const headers = ['Subject', 'Predicate', 'Object'];
+    // Always get original data directly from graphData to ensure full URLs
+    // Use node/link IDs (which are always full) as primary source, labels as fallback
+    const rows = dataToExport.map((row: any) => {
+      // Get original data directly from graphData using stored IDs
+      const sourceNode = graphData.nodes.find(n => n.id === row.subjectId);
+      const targetNode = graphData.nodes.find(n => n.id === row.objectId);
+      const link = graphData.links[row.id];
+      
+      // Prefer IDs (full original values) over labels (which might be truncated)
+      return [
+        row.subjectId || sourceNode?.id || sourceNode?.label || '',
+        link?.label || '',
+        row.objectId || targetNode?.id || targetNode?.label || ''
+      ];
+    });
+
+    // Convert to CSV format
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => 
+        row.map(cell => {
+          // Escape commas and quotes in cell values
+          const cellStr = String(cell || '');
+          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+            return `"${cellStr.replace(/"/g, '""')}"`;
+          }
+          return cellStr;
+        }).join(',')
+      )
+    ].join('\n');
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Knowledge_Graph_Table_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Filter items based on search query
+  const filterItems = (items: any[], statType: string) => {
+    if (!searchQuery.trim()) return items;
+    
+    const query = searchQuery.toLowerCase();
+    return items.filter((item: any) => {
+      if (statType === 'totalRelationships') {
+        return (
+          item.subject?.toLowerCase().includes(query) ||
+          item.predicate?.toLowerCase().includes(query) ||
+          item.object?.toLowerCase().includes(query)
+        );
+      } else if (statType === 'uniqueTypes') {
+        return item.label?.toLowerCase().includes(query);
+      } else {
+        return (
+          item.label?.toLowerCase().includes(query) ||
+          item.type?.toLowerCase().includes(query)
+        );
+      }
+    });
+  };
+
+  // Filter graph table data based on search query
+  const filterGraphTableData = (data: typeof tableData) => {
+    if (!graphTableSearchQuery.trim()) return data;
+    
+    const query = graphTableSearchQuery.toLowerCase();
+    return data.filter((row) => {
+      return (
+        row.subject?.toLowerCase().includes(query) ||
+        row.predicate?.toLowerCase().includes(query) ||
+        row.object?.toLowerCase().includes(query)
+      );
+    });
+  };
+
+  // Get statistic details
+  const getStatisticDetails = (statType: string) => {
+    if (!graphData || !statistics) return null;
+
+    switch (statType) {
+      case 'totalNodes':
+        return {
+          title: 'Total Nodes',
+          description: 'All nodes in the knowledge graph',
+          items: graphData.nodes.map(node => ({
+            id: node.id,
+            label: cleanLabel(node.label),
+            type: node.type
+          }))
+        };
+      case 'subjectNodes':
+        return {
+          title: 'Subject Nodes',
+          description: 'Nodes that appear as subjects in relationships',
+          items: graphData.nodes
+            .filter(node => node.type === 'subject')
+            .map(node => ({
+              id: node.id,
+              label: cleanLabel(node.label),
+              type: node.type
+            }))
+        };
+      case 'objectNodes':
+        return {
+          title: 'Object Nodes',
+          description: 'Nodes that appear as objects in relationships',
+          items: graphData.nodes
+            .filter(node => node.type === 'object')
+            .map(node => ({
+              id: node.id,
+              label: cleanLabel(node.label),
+              type: node.type
+            }))
+        };
+      case 'totalRelationships':
+        return {
+          title: 'Total Relationships',
+          description: 'All relationships in the knowledge graph',
+          items: graphData.links.map((link, index) => {
+            const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
+            const targetId = typeof link.target === 'string' ? link.target : link.target.id;
+            const sourceNode = graphData.nodes.find(n => n.id === sourceId);
+            const targetNode = graphData.nodes.find(n => n.id === targetId);
+            // Store both cleaned (for display) and original (for export) values
+            const subjectLabel = sourceNode?.label || sourceId;
+            const objectLabel = targetNode?.label || targetId;
+            const predicateLabel = link.label || '';
+            return {
+              id: index,
+              subject: cleanLabel(subjectLabel), // Cleaned for display
+              predicate: cleanLabel(predicateLabel), // Cleaned for display
+              object: cleanLabel(objectLabel), // Cleaned for display
+              subjectType: sourceNode?.type || 'unknown',
+              objectType: targetNode?.type || 'unknown',
+              // Store original IDs and labels for export
+              subjectId: sourceId,
+              objectId: targetId,
+              subjectOriginal: subjectLabel,
+              predicateOriginal: predicateLabel,
+              objectOriginal: objectLabel
+            };
+          })
+        };
+      case 'uniqueTypes':
+        return {
+          title: 'Unique Relationship Types',
+          description: 'Distinct types of relationships in the graph',
+          items: Object.entries(statistics.relationshipDistribution)
+            .sort(([, a], [, b]) => b - a)
+            .map(([label, count]) => ({
+              label: cleanLabel(label),
+              count,
+              percentage: ((count / statistics.totalRelationships) * 100).toFixed(2)
+            }))
+        };
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="pt-12">
+      <div className="container mx-auto px-4 py-6 space-y-6">
+        {/* Hero Section */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-sky-500 via-blue-500 to-emerald-500 rounded-2xl shadow-xl mb-8">
+          <div className="absolute inset-0 bg-gradient-to-r from-sky-600/20 to-transparent"></div>
+          <div className="relative px-8 py-12">
+            <p className="text-sky-100 text-base leading-relaxed mb-2">
+              Visualize your knowledge graphs and uncover meaningful insights about nodes and relationships. Below is an example visualization generated from sample data, illustrating how the structure and connections come together.
+            </p>
+            <p className="text-sky-100 text-sm italic">
+              Note: Currently, we restrict the visualization to <span className="font-semibold text-white">50,000</span> nodes.
+            </p>
+          </div>
+        </div>
+
+        {/* File Upload Section */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+          <div className="flex justify-center">
             <FileUpload
                 title="Upload Knowledge Graph/PDF file to extract knowledge graphs"
                 acceptedFileTypes={{
                   // 'application/pdf': ['.pdf'], to be enabled later.
                   'application/json': ['.jsonld'],
                   'text/turtle': ['.ttl'],
-
                 }}
                 onFileUpload={handleFileUpload}
             />
           </div>
+        </div>
 
-          {errorInfo && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-md shadow-md">
+        {/* Error Display */}
+        {errorInfo && (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg shadow-md">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
                   <svg className="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -528,31 +941,703 @@ export default function PlaygroundPage() {
                 </div>
               </div>
             </div>
-          )}
+        )}
 
-          <div className="bg-white rounded-lg shadow-lg p-6 relative h-screen min-h-[600px] w-full">
-            {isLoading && (
-                <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
+        {/* View Toggle and Main Content */}
+        {graphData && !errorInfo && (
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+            {/* View Toggle */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Graph Visualization</h2>
+              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('graph')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition-all ${
+                    viewMode === 'graph'
+                      ? 'bg-white text-sky-600 shadow-md font-semibold'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <Network className="w-4 h-4" />
+                  Graph View
+                </button>
+                <button
+                  onClick={() => setViewMode('table')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md transition-all ${
+                    viewMode === 'table'
+                      ? 'bg-white text-sky-600 shadow-md font-semibold'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <Table2 className="w-4 h-4" />
+                  Table View
+                </button>
+              </div>
+            </div>
+
+            {/* Graph or Table View */}
+            <div className="relative min-h-[600px]">
+              {isLoading && (
+                <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50 rounded-lg">
                   <div className="flex flex-col items-center space-y-2">
-                    <div
-                        className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-8 h-8 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
                     <p className="text-gray-600">Processing...</p>
                   </div>
                 </div>
-            )}
-            {graphData && !errorInfo && (
-              <GraphVisualization
-                data={graphData}
-                onNodeClick={handleNodeClick}
-              />
-            )}
-            {!graphData && !isLoading && !errorInfo && (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-gray-500 text-lg">Upload a file to visualize your knowledge graph</p>
-              </div>
-            )}
+              )}
+              
+              {viewMode === 'graph' ? (
+                <GraphVisualization
+                  data={graphData}
+                  onNodeClick={handleNodeClick}
+                />
+              ) : (
+                <div>
+                  {/* Table Header with Export Button */}
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Graph Data Table</h3>
+                    <button
+                      onClick={exportGraphTableToCSV}
+                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+                      title="Export to CSV"
+                    >
+                      <Download className="w-4 h-4" />
+                      Export CSV
+                    </button>
+                  </div>
+
+                  {/* Search Bar */}
+                  <div className="mb-4">
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <Search className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Search relationships by subject, predicate, or object..."
+                        value={graphTableSearchQuery}
+                        onChange={(e) => {
+                          setGraphTableSearchQuery(e.target.value);
+                          setGraphTablePage(1); // Reset to first page when searching
+                        }}
+                        className="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm"
+                      />
+                      {graphTableSearchQuery && (
+                        <button
+                          onClick={() => {
+                            setGraphTableSearchQuery('');
+                            setGraphTablePage(1);
+                          }}
+                          className="absolute inset-y-0 right-0 pr-4 flex items-center"
+                        >
+                          <X className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                        </button>
+                      )}
+                    </div>
+                    {graphTableSearchQuery.trim() !== "" && (
+                      <p className="mt-2 text-sm text-gray-600">
+                        Showing {filterGraphTableData(tableData).length} of {tableData.length} results
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div className="rounded-xl border border-gray-200 shadow-sm">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm text-left text-gray-700 table-auto">
+                        <thead className="bg-gradient-to-r from-sky-50 to-blue-50 border-b border-gray-200">
+                          <tr>
+                            <th className="px-6 py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs min-w-[200px]">Subject</th>
+                            <th className="px-6 py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs min-w-[200px]">Predicate</th>
+                            <th className="px-6 py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs min-w-[200px]">Object</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {(() => {
+                            const filteredData = filterGraphTableData(tableData);
+                            const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+                            const startIndex = (graphTablePage - 1) * ITEMS_PER_PAGE;
+                            const endIndex = startIndex + ITEMS_PER_PAGE;
+                            const paginatedData = filteredData.slice(startIndex, endIndex);
+                            
+                            return paginatedData.length > 0 ? (
+                              paginatedData.map((row) => (
+                              <tr key={row.id} className="hover:bg-sky-50/50 transition-colors duration-150">
+                                <td className="px-6 py-4 break-words align-top" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                                  <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                                    row.subjectType === 'subject' 
+                                      ? 'bg-blue-100 text-blue-800' 
+                                      : 'bg-green-100 text-green-800'
+                                  }`} style={{ wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}>
+                                    {row.subject}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 break-words align-top" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                                  <span className="text-gray-700 font-medium block" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}>{row.predicate}</span>
+                                </td>
+                                <td className="px-6 py-4 break-words align-top" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                                  <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                                    row.objectType === 'subject' 
+                                      ? 'bg-blue-100 text-blue-800' 
+                                      : 'bg-green-100 text-green-800'
+                                  }`} style={{ wordBreak: 'break-word', overflowWrap: 'anywhere', maxWidth: '100%' }}>
+                                    {row.object}
+                                  </span>
+                                </td>
+                              </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan={3} className="px-6 py-8 text-center text-gray-500">
+                                  {graphTableSearchQuery.trim() ? 'No results found for your search' : 'No data available'}
+                                </td>
+                              </tr>
+                            );
+                          })()}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  
+                  {/* Pagination for Graph Table */}
+                  {(() => {
+                    const filteredData = filterGraphTableData(tableData);
+                    const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+                    
+                    if (totalPages <= 1) {
+                      return (
+                        <div className="mt-4 text-sm text-gray-600">
+                          {graphTableSearchQuery.trim() ? (
+                            <>
+                              Showing {filteredData.length} of {tableData.length} relationships
+                            </>
+                          ) : (
+                            <>
+                              Showing {tableData.length} relationships
+                            </>
+                          )}
+                        </div>
+                      );
+                    }
+                    
+                    return (
+                      <nav className="flex items-center flex-wrap md:flex-row justify-between pt-6 gap-4" aria-label="Table navigation">
+                        <div className="text-sm text-gray-600">
+                          Showing <span className="font-semibold text-gray-900">{(graphTablePage - 1) * ITEMS_PER_PAGE + 1}</span> to <span
+                            className="font-semibold text-gray-900">{Math.min(graphTablePage * ITEMS_PER_PAGE, filteredData.length)}</span> of <span
+                            className="font-semibold text-gray-900">{filteredData.length}</span> entries
+                          {graphTableSearchQuery.trim() && filteredData.length !== tableData.length && (
+                            <span className="text-gray-500"> (filtered from {tableData.length} total)</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setGraphTablePage((prev) => Math.max(prev - 1, 1))}
+                            disabled={graphTablePage === 1}
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                            Previous
+                          </button>
+                          <div className="flex items-center gap-1">
+                            {Array.from({length: Math.min(totalPages, 10)}, (_, index) => {
+                              let pageNum;
+                              if (totalPages <= 10) {
+                                pageNum = index + 1;
+                              } else if (graphTablePage <= 5) {
+                                pageNum = index + 1;
+                              } else if (graphTablePage >= totalPages - 4) {
+                                pageNum = totalPages - 9 + index;
+                              } else {
+                                pageNum = graphTablePage - 5 + index;
+                              }
+                              return (
+                                <button
+                                  key={index}
+                                  onClick={() => setGraphTablePage(pageNum)}
+                                  className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                                    graphTablePage === pageNum
+                                      ? 'bg-sky-600 text-white shadow-md'
+                                      : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                                  }`}
+                                  aria-current={graphTablePage === pageNum ? 'page' : undefined}
+                                >
+                                  {pageNum}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <button
+                            onClick={() => setGraphTablePage((prev) => Math.min(prev + 1, totalPages))}
+                            disabled={graphTablePage === totalPages}
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            Next
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </nav>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Statistics Table */}
+        {statistics && !errorInfo && (
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Graph Statistics</h2>
+            
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+              <button
+                onClick={() => {
+                  setSelectedStatistic('totalNodes');
+                  setSearchQuery(''); // Clear search when switching
+                  setStatsTablePage(1); // Reset to first page
+                }}
+                className={`rounded-lg p-4 border transition-all cursor-pointer text-left ${
+                  selectedStatistic === 'totalNodes'
+                    ? 'bg-gradient-to-br from-sky-100 to-blue-100 border-sky-400 shadow-md ring-2 ring-sky-300'
+                    : 'bg-gradient-to-br from-sky-50 to-blue-50 border-sky-200 hover:border-sky-400 hover:shadow-md'
+                }`}
+              >
+                <div className="text-sm font-medium text-gray-600 mb-1">Total Nodes</div>
+                <div className="text-2xl font-bold text-sky-600">{statistics.totalNodes}</div>
+                <div className="text-xs text-gray-500 mt-1">Click to view details</div>
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedStatistic('subjectNodes');
+                  setSearchQuery(''); // Clear search when switching
+                  setStatsTablePage(1); // Reset to first page
+                }}
+                className={`rounded-lg p-4 border transition-all cursor-pointer text-left ${
+                  selectedStatistic === 'subjectNodes'
+                    ? 'bg-gradient-to-br from-blue-100 to-indigo-100 border-blue-400 shadow-md ring-2 ring-blue-300'
+                    : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 hover:border-blue-400 hover:shadow-md'
+                }`}
+              >
+                <div className="text-sm font-medium text-gray-600 mb-1">Subject Nodes</div>
+                <div className="text-2xl font-bold text-blue-600">{statistics.subjectNodes}</div>
+                <div className="text-xs text-gray-500 mt-1">Click to view details</div>
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedStatistic('objectNodes');
+                  setSearchQuery(''); // Clear search when switching
+                  setStatsTablePage(1); // Reset to first page
+                }}
+                className={`rounded-lg p-4 border transition-all cursor-pointer text-left ${
+                  selectedStatistic === 'objectNodes'
+                    ? 'bg-gradient-to-br from-green-100 to-emerald-100 border-green-400 shadow-md ring-2 ring-green-300'
+                    : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 hover:border-green-400 hover:shadow-md'
+                }`}
+              >
+                <div className="text-sm font-medium text-gray-600 mb-1">Object Nodes</div>
+                <div className="text-2xl font-bold text-green-600">{statistics.objectNodes}</div>
+                <div className="text-xs text-gray-500 mt-1">Click to view details</div>
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedStatistic('totalRelationships');
+                  setSearchQuery(''); // Clear search when switching
+                  setStatsTablePage(1); // Reset to first page
+                }}
+                className={`rounded-lg p-4 border transition-all cursor-pointer text-left ${
+                  selectedStatistic === 'totalRelationships'
+                    ? 'bg-gradient-to-br from-purple-100 to-pink-100 border-purple-400 shadow-md ring-2 ring-purple-300'
+                    : 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200 hover:border-purple-400 hover:shadow-md'
+                }`}
+              >
+                <div className="text-sm font-medium text-gray-600 mb-1">Total Relationships</div>
+                <div className="text-2xl font-bold text-purple-600">{statistics.totalRelationships}</div>
+                <div className="text-xs text-gray-500 mt-1">Click to view details</div>
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedStatistic('uniqueTypes');
+                  setSearchQuery(''); // Clear search when switching
+                  setStatsTablePage(1); // Reset to first page
+                }}
+                className={`rounded-lg p-4 border transition-all cursor-pointer text-left ${
+                  selectedStatistic === 'uniqueTypes'
+                    ? 'bg-gradient-to-br from-amber-100 to-orange-100 border-amber-400 shadow-md ring-2 ring-amber-300'
+                    : 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200 hover:border-amber-400 hover:shadow-md'
+                }`}
+              >
+                <div className="text-sm font-medium text-gray-600 mb-1">Unique Types</div>
+                <div className="text-2xl font-bold text-amber-600">{statistics.uniqueRelationshipTypes}</div>
+                <div className="text-xs text-gray-500 mt-1">Click to view details</div>
+              </button>
+            </div>
+
+            {/* Dynamic Details Table */}
+            <div className="mt-6">
+              {getStatisticDetails(selectedStatistic) && (
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {getStatisticDetails(selectedStatistic)?.title} Details
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {getStatisticDetails(selectedStatistic)?.description}
+                      </p>
+                    </div>
+                    <button
+                      onClick={exportToCSV}
+                      className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+                      title="Export to CSV"
+                    >
+                      <Download className="w-4 h-4" />
+                      Export CSV
+                    </button>
+                  </div>
+
+                  {/* Search Bar */}
+                  <div className="mb-4">
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <Search className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        placeholder={`Search ${getStatisticDetails(selectedStatistic)?.title.toLowerCase()}...`}
+                        value={searchQuery}
+                        onChange={(e) => {
+                          setSearchQuery(e.target.value);
+                          setStatsTablePage(1); // Reset to first page when searching
+                        }}
+                        className="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm"
+                      />
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery('')}
+                          className="absolute inset-y-0 right-0 pr-4 flex items-center"
+                        >
+                          <X className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                        </button>
+                      )}
+                    </div>
+                    {searchQuery.trim() !== "" && (
+                      <p className="mt-2 text-sm text-gray-600">
+                        Showing {filterItems(getStatisticDetails(selectedStatistic)!.items, selectedStatistic).length} of {getStatisticDetails(selectedStatistic)!.items.length} results
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="rounded-xl border border-gray-200 shadow-sm">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm text-left text-gray-700 table-auto">
+                        <thead className="bg-gradient-to-r from-sky-50 to-blue-50 border-b border-gray-200">
+                          <tr>
+                            {selectedStatistic === 'totalRelationships' ? (
+                              <>
+                                <th className="px-6 py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs">Subject</th>
+                                <th className="px-6 py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs">Predicate</th>
+                                <th className="px-6 py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs">Object</th>
+                              </>
+                            ) : selectedStatistic === 'uniqueTypes' ? (
+                              <>
+                                <th className="px-6 py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs">Relationship Type</th>
+                                <th className="px-6 py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs">Count</th>
+                                <th className="px-6 py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs">Percentage</th>
+                              </>
+                            ) : (
+                              <>
+                                <th className="px-6 py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs">Type</th>
+                                <th className="px-6 py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs">Node Label</th>
+                              </>
+                            )}
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {(() => {
+                            const filteredItems = filterItems(getStatisticDetails(selectedStatistic)!.items, selectedStatistic);
+                            const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+                            const startIndex = (statsTablePage - 1) * ITEMS_PER_PAGE;
+                            const endIndex = startIndex + ITEMS_PER_PAGE;
+                            const paginatedItems = filteredItems.slice(startIndex, endIndex);
+                            
+                            return paginatedItems.length > 0 ? (
+                              paginatedItems.map((item: any, index: number) => {
+                              if (selectedStatistic === 'totalRelationships') {
+                                return (
+                                  <tr key={item.id || index} className="hover:bg-sky-50/50 transition-colors duration-150">
+                                    <td className="px-6 py-4 break-words">
+                                      <span className={`inline-block px-2 py-1 rounded text-xs font-medium break-all ${
+                                        item.subjectType === 'subject' 
+                                          ? 'bg-blue-100 text-blue-800' 
+                                          : 'bg-green-100 text-green-800'
+                                      }`}>
+                                        {item.subject}
+                                      </span>
+                                    </td>
+                                    <td className="px-6 py-4 break-words">
+                                      <div className="flex items-start gap-2 flex-wrap">
+                                        <code className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-800 break-all">
+                                          {item.predicate}
+                                        </code>
+                                        {item.predicate.length > 50 && (
+                                          <button
+                                            onClick={() => toggleRelationship(item.predicate)}
+                                            className="p-1 hover:bg-gray-200 rounded transition-colors"
+                                            title={expandedRelationships.has(item.predicate) ? 'Collapse' : 'Expand'}
+                                          >
+                                            {expandedRelationships.has(item.predicate) ? (
+                                              <ChevronUp className="w-4 h-4 text-gray-600" />
+                                            ) : (
+                                              <ChevronDown className="w-4 h-4 text-gray-600" />
+                                            )}
+                                          </button>
+                                        )}
+                                        <button
+                                          onClick={() => copyToClipboard(item.predicate)}
+                                          className="p-1 hover:bg-gray-200 rounded transition-colors"
+                                          title="Copy URL"
+                                        >
+                                          {copiedUrl === item.predicate ? (
+                                            <Check className="w-4 h-4 text-green-600" />
+                                          ) : (
+                                            <Copy className="w-4 h-4 text-gray-600" />
+                                          )}
+                                        </button>
+                                        {item.predicate.startsWith('http') && (
+                                          <a
+                                            href={item.predicate}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="p-1 hover:bg-gray-200 rounded transition-colors"
+                                            title="Open in new tab"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            <ExternalLink className="w-4 h-4 text-gray-600" />
+                                          </a>
+                                        )}
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4 break-words">
+                                      <span className={`inline-block px-2 py-1 rounded text-xs font-medium break-all ${
+                                        item.objectType === 'subject' 
+                                          ? 'bg-blue-100 text-blue-800' 
+                                          : 'bg-green-100 text-green-800'
+                                      }`}>
+                                        {item.object}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                );
+                              } else if (selectedStatistic === 'uniqueTypes') {
+                                const percentage = item.percentage;
+                                const isExpanded = expandedRelationships.has(item.label);
+                                const isLongUrl = item.label.length > 50;
+                                return (
+                                  <>
+                                    <tr key={item.label} className="hover:bg-sky-50/50 transition-colors duration-150">
+                                      <td className="px-6 py-4 break-words">
+                                        <div className="flex items-start gap-2 flex-wrap">
+                                          <code className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-800 break-all">
+                                            {item.label}
+                                          </code>
+                                          <div className="flex items-center gap-1">
+                                            {isLongUrl && (
+                                              <button
+                                                onClick={() => toggleRelationship(item.label)}
+                                                className="p-1 hover:bg-gray-200 rounded transition-colors"
+                                                title={isExpanded ? 'Collapse' : 'Expand'}
+                                              >
+                                                {isExpanded ? (
+                                                  <ChevronUp className="w-4 h-4 text-gray-600" />
+                                                ) : (
+                                                  <ChevronDown className="w-4 h-4 text-gray-600" />
+                                                )}
+                                              </button>
+                                            )}
+                                            <button
+                                              onClick={() => copyToClipboard(item.label)}
+                                              className="p-1 hover:bg-gray-200 rounded transition-colors"
+                                              title="Copy URL"
+                                            >
+                                              {copiedUrl === item.label ? (
+                                                <Check className="w-4 h-4 text-green-600" />
+                                              ) : (
+                                                <Copy className="w-4 h-4 text-gray-600" />
+                                              )}
+                                            </button>
+                                            {item.label.startsWith('http') && (
+                                              <a
+                                                href={item.label}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="p-1 hover:bg-gray-200 rounded transition-colors"
+                                                title="Open in new tab"
+                                                onClick={(e) => e.stopPropagation()}
+                                              >
+                                                <ExternalLink className="w-4 h-4 text-gray-600" />
+                                              </a>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </td>
+                                      <td className="px-6 py-4 font-semibold text-gray-900">{item.count}</td>
+                                      <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                          <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-[100px]">
+                                            <div
+                                              className="bg-gradient-to-r from-sky-500 to-blue-500 h-2 rounded-full"
+                                              style={{ width: `${percentage}%` }}
+                                            ></div>
+                                          </div>
+                                          <span className="text-gray-600 text-sm">{percentage}%</span>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                    {isExpanded && (
+                                      <tr className="bg-gray-50">
+                                        <td colSpan={3} className="px-6 py-4">
+                                          <div className="bg-white rounded-lg p-4 border border-gray-200">
+                                            <div className="text-xs font-semibold text-gray-700 mb-2">Full URL:</div>
+                                            <code className="text-xs bg-gray-100 px-3 py-2 rounded text-gray-800 break-all block">
+                                              {item.label}
+                                            </code>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    )}
+                                  </>
+                                );
+                              } else {
+                                return (
+                                  <tr key={item.id || index} className="hover:bg-sky-50/50 transition-colors duration-150">
+                                    <td className="px-6 py-4">
+                                      <span className={`inline-flex items-center px-3 py-1 rounded text-sm font-medium ${
+                                        item.type === 'subject' 
+                                          ? 'bg-sky-100 text-sky-800' 
+                                          : 'bg-emerald-100 text-emerald-800'
+                                      }`}>
+                                        {item.type === 'subject' ? 'Subject' : 'Object'}
+                                      </span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                      <span className="text-gray-800 break-all block">{item.label}</span>
+                                    </td>
+                                  </tr>
+                                );
+                              }
+                              })
+                            ) : (
+                              <tr>
+                                <td colSpan={selectedStatistic === 'totalRelationships' || selectedStatistic === 'uniqueTypes' ? 3 : 2} className="px-6 py-8 text-center text-gray-500">
+                                  {searchQuery.trim() ? 'No results found for your search' : 'No items found'}
+                                </td>
+                              </tr>
+                            );
+                          })()}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  {/* Pagination for Statistics Table */}
+                  {(() => {
+                    const filteredItems = filterItems(getStatisticDetails(selectedStatistic)!.items, selectedStatistic);
+                    const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+                    
+                    if (totalPages <= 1) {
+                      return (
+                        <div className="mt-4 text-sm text-gray-600">
+                          {searchQuery.trim() ? (
+                            <>
+                              Showing {filteredItems.length} of {getStatisticDetails(selectedStatistic)!.items.length} items
+                            </>
+                          ) : (
+                            <>
+                              Showing {getStatisticDetails(selectedStatistic)!.items.length} items
+                            </>
+                          )}
+                        </div>
+                      );
+                    }
+                    
+                    return (
+                      <>
+                        <nav className="flex items-center flex-wrap md:flex-row justify-between pt-6 gap-4" aria-label="Table navigation">
+                          <div className="text-sm text-gray-600">
+                            Showing <span className="font-semibold text-gray-900">{(statsTablePage - 1) * ITEMS_PER_PAGE + 1}</span> to <span
+                              className="font-semibold text-gray-900">{Math.min(statsTablePage * ITEMS_PER_PAGE, filteredItems.length)}</span> of <span
+                              className="font-semibold text-gray-900">{filteredItems.length}</span> entries
+                            {searchQuery.trim() && filteredItems.length !== getStatisticDetails(selectedStatistic)!.items.length && (
+                              <span className="text-gray-500"> (filtered from {getStatisticDetails(selectedStatistic)!.items.length} total)</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => setStatsTablePage((prev) => Math.max(prev - 1, 1))}
+                              disabled={statsTablePage === 1}
+                              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                              <ChevronLeft className="w-4 h-4" />
+                              Previous
+                            </button>
+                            <div className="flex items-center gap-1">
+                              {Array.from({length: Math.min(totalPages, 10)}, (_, index) => {
+                                let pageNum;
+                                if (totalPages <= 10) {
+                                  pageNum = index + 1;
+                                } else if (statsTablePage <= 5) {
+                                  pageNum = index + 1;
+                                } else if (statsTablePage >= totalPages - 4) {
+                                  pageNum = totalPages - 9 + index;
+                                } else {
+                                  pageNum = statsTablePage - 5 + index;
+                                }
+                                return (
+                                  <button
+                                    key={index}
+                                    onClick={() => setStatsTablePage(pageNum)}
+                                    className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                                      statsTablePage === pageNum
+                                        ? 'bg-sky-600 text-white shadow-md'
+                                        : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                                    }`}
+                                    aria-current={statsTablePage === pageNum ? 'page' : undefined}
+                                  >
+                                    {pageNum}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <button
+                              onClick={() => setStatsTablePage((prev) => Math.min(prev + 1, totalPages))}
+                              disabled={statsTablePage === totalPages}
+                              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                              Next
+                              <ChevronRight className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </nav>
+                      </>
+                    );
+                  })()}
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!graphData && !isLoading && !errorInfo && (
+          <div className="bg-white rounded-xl shadow-lg p-12">
+            <div className="text-center">
+              <Network className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg font-medium">Upload a file to visualize your knowledge graph</p>
+              <p className="text-gray-400 text-sm mt-2">Supported formats: JSON-LD (.jsonld) and Turtle (.ttl)</p>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

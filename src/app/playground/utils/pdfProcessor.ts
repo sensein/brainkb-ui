@@ -669,10 +669,11 @@ function isCommentOrLongText(text: string): boolean {
     );
 }
 
-// Helper function to truncate long labels
+// Helper function to clean labels - no truncation, just return as-is
 function truncateLabel(label: string, maxLength: number = 30): string {
-    if (label.length <= maxLength) return label;
-    return label.substring(0, maxLength) + '...';
+    // Return full label without truncation - this function name is kept for compatibility
+    // but it no longer truncates to allow full display in playground
+    return label;
 }
 
 export async function triplesToGraphData(triples: Triple[]): Promise<GraphData> {

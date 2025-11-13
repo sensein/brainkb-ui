@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { GraphData, Node as GraphNode, Link } from '../../playground/types';
 
@@ -18,11 +18,59 @@ interface GraphVisualizationProps {
   onNodeClick: (nodeId: string) => void;
 }
 
+// Utility function to clean and format labels for graph display
+// Removes RDF syntax, extracts meaningful parts from URLs, and truncates for readability
+function cleanLabelForGraph(label: string, maxLength: number = 35): string {
+  if (!label) return '';
+  
+  let cleaned = label;
+  
+  // Remove RDF typed literal syntax: "value"^^<http://...
+  const typedLiteralMatch = cleaned.match(/^"([^"]+)"\^\^<[^>]*/);
+  if (typedLiteralMatch) {
+    cleaned = typedLiteralMatch[1]; // Extract just the value inside quotes
+  }
+  
+  // Remove surrounding quotes if still present
+  cleaned = cleaned.replace(/^["']|["']$/g, '');
+  
+  // If it's a URL, try to extract the meaningful part
+  if (cleaned.startsWith('http://') || cleaned.startsWith('https://')) {
+    // Extract last meaningful segment
+    const parts = cleaned.split('/');
+    const lastPart = parts[parts.length - 1];
+    if (lastPart && lastPart.length > 0 && lastPart.length < maxLength + 10) {
+      return lastPart;
+    }
+    // Try to get namespace prefix (after #)
+    const hashIndex = cleaned.indexOf('#');
+    if (hashIndex > 0) {
+      const afterHash = cleaned.substring(hashIndex + 1);
+      if (afterHash.length < maxLength + 10) return afterHash;
+    }
+    // Or extract domain + last part
+    const domain = parts[2]?.split('.')[0] || '';
+    const meaningful = lastPart || parts[parts.length - 2] || '';
+    const combined = domain ? `${domain}/${meaningful}` : meaningful;
+    return combined.length > maxLength ? combined.substring(0, maxLength - 3) + '...' : combined;
+  }
+  
+  // Truncate if too long
+  if (cleaned.length > maxLength) {
+    return cleaned.substring(0, maxLength - 3) + '...';
+  }
+  return cleaned;
+}
+
 export default function GraphVisualization({ data, onNodeClick }: GraphVisualizationProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const simulationRef = useRef<d3.Simulation<SimulationNode, SimulationLink> | null>(null);
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const [hoveredNode, setHoveredNode] = useState<SimulationNode | null>(null);
+  const [hoveredLink, setHoveredLink] = useState<SimulationLink | null>(null);
+  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   useEffect(() => {
     if (!svgRef.current || !data.nodes.length || !containerRef.current) return;
@@ -77,25 +125,48 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
       return { ...link, source, target };
     }) as SimulationLink[];
 
-    // Create force simulation with optimized forces for better performance
-    // Use higher decay values to stop movement faster
+    // Calculate node sizes based on degree (number of connections)
+    const nodeDegrees = new Map<string, number>();
+    links.forEach(link => {
+      const sourceId = typeof link.source === 'string' ? link.source : link.source.id;
+      const targetId = typeof link.target === 'string' ? link.target : link.target.id;
+      nodeDegrees.set(sourceId, (nodeDegrees.get(sourceId) || 0) + 1);
+      nodeDegrees.set(targetId, (nodeDegrees.get(targetId) || 0) + 1);
+    });
+
+    // Create force simulation with optimized forces for better readability
     const simulation = d3.forceSimulation<SimulationNode>(data.nodes)
       .force("link", d3.forceLink<SimulationNode, SimulationLink>(links)
         .id(d => d.id)
-        .distance(150))
+        .distance((d) => {
+          // Increase distance for nodes with more connections
+          const sourceId = typeof d.source === 'string' ? d.source : d.source.id;
+          const targetId = typeof d.target === 'string' ? d.target : d.target.id;
+          const sourceDegree = nodeDegrees.get(sourceId) || 1;
+          const targetDegree = nodeDegrees.get(targetId) || 1;
+          return 150 + Math.min(sourceDegree + targetDegree, 10) * 10;
+        }))
       .force("charge", d3.forceManyBody<SimulationNode>()
-        .strength(-600)
-        .distanceMax(width * 0.2)
-        .theta(0.9)) // Performance optimization parameter
+        .strength((d) => {
+          // Stronger repulsion for highly connected nodes
+          const degree = nodeDegrees.get(d.id) || 1;
+          return -600 - (degree * 20);
+        })
+        .distanceMax(width * 0.4)
+        .theta(0.9))
       .force("center", d3.forceCenter(width / 2, height / 2))
       .force("collision", d3.forceCollide<SimulationNode>()
-        .radius(40)
-        .strength(0.8))
+        .radius((d) => {
+          // Larger nodes for highly connected nodes
+          const degree = nodeDegrees.get(d.id) || 1;
+          return 40 + Math.min(degree, 5) * 5;
+        })
+        .strength(0.9))
       .force("x", d3.forceX(width / 2).strength(0.05))
       .force("y", d3.forceY(height / 2).strength(0.05))
-      .alphaDecay(0.05) // Much faster decay for quicker stabilization
-      .alphaMin(0.01)   // Higher minimum alpha to stop sooner
-      .velocityDecay(0.6); // Higher damping to reduce oscillations
+      .alphaDecay(0.05)
+      .alphaMin(0.01)
+      .velocityDecay(0.6);
 
     // Stop the simulation after 3 seconds to prevent continuous movement
     setTimeout(() => {
@@ -128,6 +199,10 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
     const nodeGroup = g.append("g")
       .attr("class", "nodes");
 
+    // Store references for hover effects
+    let allNodes: d3.Selection<SVGGElement, SimulationNode, SVGGElement, unknown>;
+    let allLinks: d3.Selection<SVGGElement, SimulationLink, SVGGElement, unknown>;
+
     // Create links with transitions
     const link = linkGroup
       .selectAll<SVGGElement, SimulationLink>("g")
@@ -138,10 +213,54 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
             .style("opacity", 1)
             .style("pointer-events", "all");
 
-          linkGroup.append("line")
-            .attr("stroke", "#999")
+          const line = linkGroup.append("line")
+            .attr("stroke", "#64748b")
             .attr("stroke-width", 2)
-            .attr("marker-end", "url(#arrow)");
+            .attr("opacity", 0.4)
+            .attr("marker-end", "url(#arrow)")
+            .style("cursor", "pointer")
+            .on("mouseenter", function(event, d) {
+              setHoveredLink(d);
+              
+              // Update tooltip position for links too
+              const container = containerRef.current;
+              if (container) {
+                const rect = container.getBoundingClientRect();
+                const mouseX = event.clientX - rect.left;
+                const mouseY = event.clientY - rect.top;
+                
+                const offsetX = 15;
+                const offsetY = 15;
+                const tooltipWidth = 600; // Max tooltip width (can be smaller for shorter text)
+                const tooltipHeight = 400; // Max tooltip height
+                
+                let x = mouseX + offsetX;
+                let y = mouseY + offsetY;
+                
+                if (x + tooltipWidth > rect.width) {
+                  x = mouseX - tooltipWidth - offsetX;
+                }
+                if (y + tooltipHeight > rect.height) {
+                  y = mouseY - tooltipHeight - offsetY;
+                }
+                if (x < 0) x = offsetX;
+                if (y < 0) y = offsetY;
+                
+                setTooltipPos({ x, y });
+              }
+              
+              d3.select(this)
+                .attr("stroke-width", 4)
+                .attr("opacity", 0.8)
+                .attr("stroke", "#0ea5e9");
+            })
+            .on("mouseleave", function(event, d) {
+              setHoveredLink(null);
+              d3.select(this)
+                .attr("stroke-width", 2)
+                .attr("opacity", 0.4)
+                .attr("stroke", "#64748b");
+            });
 
           const label = linkGroup.append("g")
             .attr("class", "link-label");
@@ -149,26 +268,32 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
           const text = label.append("text")
             .attr("dy", -5)
             .attr("text-anchor", "middle")
-            .attr("fill", "#666")
-            .attr("font-size", "12px")
-            .text(d => d.label);
+            .attr("fill", "#475569")
+            .attr("font-size", "11px")
+            .attr("font-weight", "500")
+            .text(d => cleanLabelForGraph(d.label, 25));
 
           text.each(function() {
             const bbox = (this as SVGTextElement).getBBox();
             d3.select(this.parentNode as SVGGElement)
               .insert("rect", "text")
               .attr("fill", "white")
+              .attr("fill-opacity", 0.95)
               .attr("rx", 4)
               .attr("ry", 4)
-              .attr("x", bbox.x - 4)
-              .attr("y", bbox.y - 2)
-              .attr("width", bbox.width + 8)
-              .attr("height", bbox.height + 4);
+              .attr("x", bbox.x - 6)
+              .attr("y", bbox.y - 3)
+              .attr("width", bbox.width + 12)
+              .attr("height", bbox.height + 6)
+              .attr("stroke", "#d1d5db")
+              .attr("stroke-width", 1);
           });
 
           return linkGroup;
         }
       );
+    
+    allLinks = link;
 
     // Create nodes with transitions
     const node = nodeGroup
@@ -183,41 +308,161 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
             .on("click", (event, d) => {
               event.stopPropagation();
               onNodeClick(d.id);
+            })
+            .on("mouseenter", function(event, d) {
+              setHoveredNode(d);
+              const nodeId = d.id;
+              
+              // Update tooltip position based on mouse/event position
+              const container = containerRef.current;
+              if (container) {
+                const rect = container.getBoundingClientRect();
+                const mouseX = event.clientX - rect.left;
+                const mouseY = event.clientY - rect.top;
+                
+                // Position tooltip offset from mouse, but keep it within bounds
+                const offsetX = 15;
+                const offsetY = 15;
+                const tooltipWidth = 600; // Max tooltip width (can be smaller for shorter text)
+                const tooltipHeight = 400; // Max tooltip height
+                
+                let x = mouseX + offsetX;
+                let y = mouseY + offsetY;
+                
+                // Keep tooltip within container bounds
+                if (x + tooltipWidth > rect.width) {
+                  x = mouseX - tooltipWidth - offsetX; // Position to the left
+                }
+                if (y + tooltipHeight > rect.height) {
+                  y = mouseY - tooltipHeight - offsetY; // Position above
+                }
+                if (x < 0) x = offsetX;
+                if (y < 0) y = offsetY;
+                
+                setTooltipPos({ x, y });
+              }
+              
+              // Find all connected node IDs
+              const connectedNodeIds = new Set<string>();
+              connectedNodeIds.add(nodeId);
+              
+              links.forEach((l: SimulationLink) => {
+                const sourceId = typeof l.source === 'string' ? l.source : l.source.id;
+                const targetId = typeof l.target === 'string' ? l.target : l.target.id;
+                if (sourceId === nodeId) {
+                  connectedNodeIds.add(targetId);
+                } else if (targetId === nodeId) {
+                  connectedNodeIds.add(sourceId);
+                }
+              });
+              
+              // Dim unconnected nodes significantly, highlight connected ones
+              allNodes.style("opacity", function(n: any) {
+                if (n.id === nodeId) return 1; // Hovered node fully visible
+                return connectedNodeIds.has(n.id) ? 1 : 0.15; // Connected nodes visible, others very dim
+              });
+              
+              // Highlight connected links and their labels, dim others
+              allLinks.each(function(l: SimulationLink) {
+                const sourceId = typeof l.source === 'string' ? l.source : l.source.id;
+                const targetId = typeof l.target === 'string' ? l.target : l.target.id;
+                const isConnected = sourceId === nodeId || targetId === nodeId;
+                
+                const linkGroup = d3.select(this);
+                
+                // Update line opacity
+                linkGroup.selectAll<SVGLineElement, SimulationLink>("line")
+                  .style("opacity", isConnected ? 1 : 0.05)
+                  .style("stroke-width", isConnected ? 3 : 1.5);
+                
+                // Update link label visibility
+                linkGroup.selectAll<SVGGElement, SimulationLink>(".link-label")
+                  .style("opacity", isConnected ? 1 : 0.1)
+                  .style("display", isConnected ? "block" : "none");
+              });
+              
+              // Highlight the hovered node with orange border
+              d3.select(this).select("circle")
+                .attr("stroke-width", 6)
+                .attr("stroke", "#fbbf24");
+              
+              // Slightly enlarge connected nodes
+              allNodes.each(function(n: any) {
+                if (n.id !== nodeId && connectedNodeIds.has(n.id)) {
+                  d3.select(this).select("circle")
+                    .attr("stroke-width", 4)
+                    .attr("stroke", "#60a5fa");
+                }
+              });
+            })
+            .on("mouseleave", function(event, d) {
+              setHoveredNode(null);
+              // Reset all nodes and links to normal state
+              allNodes.style("opacity", 1);
+              allNodes.selectAll("circle")
+                .attr("stroke-width", 3)
+                .attr("stroke", "#fff");
+              
+              allLinks.each(function() {
+                const linkGroup = d3.select(this);
+                linkGroup.selectAll<SVGLineElement, SimulationLink>("line")
+                  .style("opacity", 0.4)
+                  .style("stroke-width", 2);
+                linkGroup.selectAll<SVGGElement, SimulationLink>(".link-label")
+                  .style("opacity", 1)
+                  .style("display", "block");
+              });
+              
+              d3.select(this).select("circle")
+                .attr("stroke-width", 3)
+                .attr("stroke", "#fff");
             });
 
-          nodeGroup.append("circle")
-            .attr("r", 30)
-            .attr("fill", d => d.type === 'subject' ? '#4299e1' : '#48bb78')
+          const circle = nodeGroup.append("circle")
+            .attr("r", (d) => {
+              // Dynamic node size based on connections
+              const degree = nodeDegrees.get(d.id) || 1;
+              return 30 + Math.min(degree, 5) * 3;
+            })
+            .attr("fill", d => d.type === 'subject' ? '#0ea5e9' : '#10b981')
             .attr("stroke", "#fff")
-            .attr("stroke-width", 2);
+            .attr("stroke-width", 3);
 
           const labelGroup = nodeGroup.append("g")
             .attr("class", "label-group");
 
           const text = labelGroup.append("text")
-            .attr("dy", 45)
+            .attr("dy", (d) => {
+              const degree = nodeDegrees.get(d.id) || 1;
+              return 45 + Math.min(degree, 5) * 3;
+            })
             .attr("text-anchor", "middle")
-            .attr("fill", "#4a5568")
+            .attr("fill", "#1f2937")
             .attr("font-size", "12px")
-            .attr("font-weight", "500")
-            .text(d => d.label);
+            .attr("font-weight", "600")
+            .text(d => cleanLabelForGraph(d.label, 35));
 
           text.each(function() {
             const bbox = (this as SVGTextElement).getBBox();
             d3.select(this.parentNode as SVGGElement)
               .insert("rect", "text")
               .attr("fill", "white")
+              .attr("fill-opacity", 0.95)
               .attr("rx", 4)
               .attr("ry", 4)
-              .attr("x", bbox.x - 4)
-              .attr("y", bbox.y - 2)
-              .attr("width", bbox.width + 8)
-              .attr("height", bbox.height + 4);
+              .attr("x", bbox.x - 6)
+              .attr("y", bbox.y - 3)
+              .attr("width", bbox.width + 12)
+              .attr("height", bbox.height + 6)
+              .attr("stroke", "#d1d5db")
+              .attr("stroke-width", 1);
           });
 
           return nodeGroup;
         }
       );
+    
+    allNodes = node;
 
     // Add drag behavior
     const drag = d3.drag<SVGGElement, SimulationNode>()
@@ -236,7 +481,7 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
         d.fy = null;
       });
 
-    node.call(drag);
+    allNodes.call(drag);
 
     // Throttle updates for better performance
     let tickCount = 0;
@@ -252,23 +497,38 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
 
     const updatePositions = () => {
       // Only update visible elements
-      link.filter(d => d.visible)
+      // Links already have source and target as node objects (converted earlier)
+      allLinks.filter((d: SimulationLink) => d.visible)
         .selectAll<SVGLineElement, SimulationLink>("line")
-        .attr("x1", d => d.source.x ?? 0)
-        .attr("y1", d => d.source.y ?? 0)
-        .attr("x2", d => d.target.x ?? 0)
-        .attr("y2", d => d.target.y ?? 0);
+        .attr("x1", (d: SimulationLink) => {
+          const source = d.source as SimulationNode;
+          return source?.x ?? 0;
+        })
+        .attr("y1", (d: SimulationLink) => {
+          const source = d.source as SimulationNode;
+          return source?.y ?? 0;
+        })
+        .attr("x2", (d: SimulationLink) => {
+          const target = d.target as SimulationNode;
+          return target?.x ?? 0;
+        })
+        .attr("y2", (d: SimulationLink) => {
+          const target = d.target as SimulationNode;
+          return target?.y ?? 0;
+        });
 
-      link.filter(d => d.visible)
+      allLinks.filter((d: SimulationLink) => d.visible)
         .selectAll<SVGGElement, SimulationLink>(".link-label")
-        .attr("transform", d => {
-          const x = ((d.source.x ?? 0) + (d.target.x ?? 0)) / 2;
-          const y = ((d.source.y ?? 0) + (d.target.y ?? 0)) / 2;
+        .attr("transform", (d: SimulationLink) => {
+          const source = d.source as SimulationNode;
+          const target = d.target as SimulationNode;
+          const x = ((source?.x ?? 0) + (target?.x ?? 0)) / 2;
+          const y = ((source?.y ?? 0) + (target?.y ?? 0)) / 2;
           return `translate(${x},${y})`;
         });
 
-      node.filter(d => d.visible)
-        .attr("transform", d => `translate(${d.x ?? 0},${d.y ?? 0})`);
+      allNodes.filter((d: SimulationNode) => d.visible)
+        .attr("transform", (d: SimulationNode) => `translate(${d.x ?? 0},${d.y ?? 0})`);
 
       needsUpdate = false;
     };
@@ -303,7 +563,15 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
       }
 
       // Remove event listeners to prevent memory leaks
-      node.on('click', null);
+      allNodes.on('click', null);
+      allNodes.on('mouseenter', null);
+      allNodes.on('mouseleave', null);
+      allLinks.selectAll('line').on('mouseenter', null);
+      allLinks.selectAll('line').on('mouseleave', null);
+
+      // Clear hover state
+      setHoveredNode(null);
+      setHoveredLink(null);
 
       // Clear references
       needsUpdate = false;
@@ -311,16 +579,13 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
   }, [data, onNodeClick]);
 
   return (
-    <div className="relative flex gap-4">
-      <div ref={containerRef} className="flex-1 border rounded-lg overflow-auto bg-white" style={{ minHeight: '80vh', maxHeight: '80vh' }}>
-        <svg ref={svgRef} className="w-full h-full" style={{ minWidth: '2000px', minHeight: '2000px' }} />
-      </div>
-      <div className="w-64 flex flex-col bg-white rounded-lg shadow-lg sticky top-4 h-[calc(100vh-2rem)] overflow-hidden">
-        <div className="p-3 border-b border-gray-200">
-          <div className="text-sm font-medium text-gray-700 mb-3">Zoom Controls</div>
-          <div className="flex space-x-2 items-center mb-3">
+    <div className="relative w-full">
+      {/* Controls Bar */}
+      <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-700">Controls:</span>
           <button
-            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm"
+            className="px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 rounded-md text-sm font-medium text-gray-700 transition-colors"
             onClick={() => {
               if (!svgRef.current || !zoomRef.current) return;
               const svg = d3.select(svgRef.current);
@@ -332,7 +597,7 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
             Zoom In
           </button>
           <button
-            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm"
+            className="px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 rounded-md text-sm font-medium text-gray-700 transition-colors"
             onClick={() => {
               if (!svgRef.current || !zoomRef.current) return;
               const svg = d3.select(svgRef.current);
@@ -344,7 +609,7 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
             Zoom Out
           </button>
           <button
-            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm"
+            className="px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 rounded-md text-sm font-medium text-gray-700 transition-colors"
             onClick={() => {
               if (!svgRef.current || !zoomRef.current) return;
               const svg = d3.select(svgRef.current);
@@ -353,13 +618,13 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
                 .call(zoomRef.current.transform, d3.zoomIdentity);
             }}
           >
-            Reset
+            Reset View
           </button>
         </div>
-          <div className="text-sm font-medium text-gray-700 mb-3">Export Options</div>
-          <div className="flex space-x-2 items-center">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-700">Export:</span>
           <button
-            className="px-3 py-1 bg-green-100 hover:bg-green-200 rounded text-sm"
+            className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-md text-sm font-medium transition-colors shadow-sm"
             onClick={() => {
               const svgData = svgRef.current;
               if (!svgData) return;
@@ -378,7 +643,7 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
             Export SVG
           </button>
           <button
-            className="px-3 py-1 bg-green-100 hover:bg-green-200 rounded text-sm"
+            className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-md text-sm font-medium transition-colors shadow-sm"
             onClick={() => {
               const svgData = svgRef.current;
               if (!svgData) return;
@@ -422,29 +687,78 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
             Export PNG
           </button>
         </div>
+      </div>
+
+      {/* Graph Container */}
+      <div ref={containerRef} className="border-2 border-gray-200 rounded-lg overflow-hidden bg-gradient-to-br from-gray-50 to-white shadow-inner" style={{ minHeight: '600px', height: '70vh' }}>
+        <svg ref={svgRef} className="w-full h-full" style={{ minWidth: '2000px', minHeight: '2000px' }} />
+      </div>
+
+      {/* Legend */}
+      <div className="mt-4 flex items-center justify-center gap-6 p-3 bg-gray-50 rounded-lg border border-gray-200">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded-full bg-sky-500 border-2 border-white"></div>
+          <span className="text-sm text-gray-700 font-medium">Subject Nodes</span>
         </div>
-        <div className="flex-1 overflow-y-auto p-3">
-          <div className="text-sm font-medium text-gray-700 mb-3">Graph Statistics</div>
-          <div className="text-xs text-gray-600 space-y-2">
-            <div>Total Nodes: {data.nodes.length}</div>
-            <div>• Subject Nodes: {data.nodes.filter(n => n.type === 'subject').length}</div>
-            <div>• Object Nodes: {data.nodes.filter(n => n.type === 'object').length}</div>
-            <div>Total Relationships: {data.links.length}</div>
-            <div>Unique Relationship Types: {new Set(data.links.map(l => l.label)).size}</div>
-          </div>
-          <div className="text-xs text-gray-600 mt-4">
-            <div className="font-medium mb-2">Relationship Distribution:</div>
-            <div className="space-y-1.5">
-              {Object.entries(data.links.reduce((acc, link) => {
-                acc[link.label] = (acc[link.label] || 0) + 1;
-                return acc;
-              }, {} as Record<string, number>)).map(([label, count]) => (
-                <div key={label} className="pl-2">• {label}: {count}</div>
-              ))}
-            </div>
-          </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded-full bg-emerald-500 border-2 border-white"></div>
+          <span className="text-sm text-gray-700 font-medium">Object Nodes</span>
+        </div>
+        <div className="text-xs text-gray-500">
+          Hover to highlight connections • Click to expand/collapse • Drag to reposition
         </div>
       </div>
+
+      {/* Tooltip - positioned near hovered element */}
+      {(hoveredNode || hoveredLink) && (
+        <div
+          ref={tooltipRef}
+          className="absolute z-[9999] rounded-lg shadow-2xl p-3 pointer-events-none border-2"
+          style={{
+            left: `${tooltipPos.x}px`,
+            top: `${tooltipPos.y}px`,
+            maxHeight: '400px',
+            overflowY: 'auto',
+            maxWidth: '90vw',
+            minWidth: '200px',
+            width: 'max-content',
+            backgroundColor: '#1f2937', // Solid dark gray background
+            color: '#ffffff', // White text
+            borderColor: '#4b5563', // Gray border
+            opacity: 1, // Ensure fully opaque
+          }}
+        >
+          {hoveredNode && (
+            <div>
+              <div className="font-semibold text-sm mb-1" style={{ color: '#60a5fa' }}>
+                {hoveredNode.type === 'subject' ? 'Subject Node' : 'Object Node'}
+              </div>
+              <div className="text-xs" style={{ color: '#e5e7eb', whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'normal' }}>
+                {hoveredNode.label}
+              </div>
+              <div className="text-xs mt-1" style={{ color: '#9ca3af', whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'normal' }}>
+                ID: {hoveredNode.id}
+              </div>
+            </div>
+          )}
+          {hoveredLink && (
+            <div>
+              <div className="font-semibold text-sm mb-1" style={{ color: '#60a5fa' }}>Relationship</div>
+              <div className="text-xs mb-2" style={{ color: '#e5e7eb', whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'normal' }}>
+                {hoveredLink.label}
+              </div>
+              <div className="text-xs" style={{ color: '#9ca3af' }}>
+                <div style={{ whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'normal' }}>
+                  From: {typeof hoveredLink.source === 'string' ? hoveredLink.source : hoveredLink.source.label}
+                </div>
+                <div className="mt-1" style={{ whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'normal' }}>
+                  To: {typeof hoveredLink.target === 'string' ? hoveredLink.target : hoveredLink.target.label}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
