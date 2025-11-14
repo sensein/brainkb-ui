@@ -19,14 +19,7 @@ export function getWarmedCache<T>(cacheKey: string): T | null {
     const cacheFile = path.join(CACHE_DIR, `${cacheKey}.json`);
     
     if (!fs.existsSync(cacheFile)) {
-      console.log(`[Cache] File does not exist: ${cacheFile}`);
-      // List available files for debugging
-      try {
-        const files = fs.readdirSync(CACHE_DIR);
-        console.log(`[Cache] Available cache files: ${files.join(', ')}`);
-      } catch (e) {
-        // Ignore
-      }
+      // Don't log - missing cache files are expected for queries not pre-warmed
       return null;
     }
     
@@ -35,13 +28,17 @@ export function getWarmedCache<T>(cacheKey: string): T | null {
     
     // Check if cache is still valid (within 24 hours)
     if (cacheData.timestamp && (now - cacheData.timestamp < CACHE_DURATION)) {
-      console.log(`[Cache] Using pre-warmed cache for: ${cacheKey}`);
-      // Return data if it's wrapped, otherwise return the whole object
-      return cacheData.data !== undefined ? cacheData.data : cacheData;
+      // Only log in development to reduce noise
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[Cache] Using pre-warmed cache for: ${cacheKey}`);
+      }
+      // For KB cache files, they have {data, headers, pageTitle, ...} structure
+      // Return the whole object (not just cacheData.data) so all fields are available
+      // The API route will extract what it needs
+      return cacheData;
     }
     
-    // Cache expired
-    console.log(`[Cache] Cache expired for: ${cacheKey} (age: ${Math.round((now - cacheData.timestamp) / 1000 / 60)} minutes)`);
+    // Cache expired - don't log, just return null
     return null;
   } catch (error) {
     // Log error for debugging

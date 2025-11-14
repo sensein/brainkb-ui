@@ -12,20 +12,55 @@ const CACHE_DURATION = 24 * 60 * 60;
 
 async function fetchKnowledgeBaseData(slug: string) {
     // Check for pre-warmed cache from build time first
-    const warmedData = getWarmedCache<{
+    const warmedCache = getWarmedCache<{
         data: any[];
         headers: string[];
         pageTitle: string;
         pageSubtitle: string;
         entityPageSlug: string;
+        timestamp?: number;
     }>(`kb-${slug}`);
     
-    if (warmedData) {
-        console.log(`Using pre-warmed KB cache for slug: ${slug}`);
-        return warmedData;
+    if (warmedCache) {
+        // Extract data from cache (cache file has {data, headers, ...} structure)
+        const warmedData = warmedCache.data !== undefined ? warmedCache : warmedCache;
+        
+        // Only log in development to reduce noise
+        if (process.env.NODE_ENV === 'development') {
+            const itemCount = warmedData.data?.length || (Array.isArray(warmedData) ? warmedData.length : 0);
+            console.log(`Using pre-warmed KB cache for slug: ${slug} (${itemCount} items)`);
+        }
+        
+        // Validate warmed data structure
+        if (warmedData && typeof warmedData === 'object' && 'data' in warmedData) {
+            // Standard structure: {data, headers, pageTitle, ...}
+            if (Array.isArray(warmedData.data) && warmedData.data.length > 0) {
+                return {
+                    data: warmedData.data,
+                    headers: Array.isArray(warmedData.headers) ? warmedData.headers : [],
+                    pageTitle: warmedData.pageTitle || "",
+                    pageSubtitle: warmedData.pageSubtitle || "",
+                    entityPageSlug: warmedData.entityPageSlug || ""
+                };
+            }
+        } else if (Array.isArray(warmedData)) {
+            // If cache returned array directly (old format), wrap it
+            return {
+                data: warmedData,
+                headers: [],
+                pageTitle: "",
+                pageSubtitle: "",
+                entityPageSlug: ""
+            };
+        }
+        
+        // Warm cache has empty/invalid data, fetch fresh
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`Warm cache for ${slug} is empty or invalid, fetching fresh data`);
+        }
     }
     
-    // If no warmed cache, fetch fresh data
+    // If no warmed cache or warm cache is empty, fetch fresh data
     try {
         const page = yaml.pages.find((page) => page.slug === slug);
         if (!page) {
@@ -41,6 +76,10 @@ async function fetchKnowledgeBaseData(slug: string) {
         if (response.status === 'success' && response.message?.results?.bindings) {
             const bindings = response.message.results.bindings;
             const vars = response.message.head.vars;
+
+            if (process.env.NODE_ENV === 'development') {
+                console.log(`Fetched fresh KB data for ${slug}: ${bindings.length} items`);
+            }
 
             return {
                 data: bindings,
@@ -59,9 +98,21 @@ async function fetchKnowledgeBaseData(slug: string) {
 }
 
 // Create a cached version for each slug
+// Note: fetchKnowledgeBaseData already checks warm cache first, then fetches fresh if needed
 function getCachedKnowledgeBase(slug: string) {
     return unstable_cache(
-        async () => fetchKnowledgeBaseData(slug),
+        async () => {
+            const result = await fetchKnowledgeBaseData(slug);
+            // Validate result before caching
+            if (!result || !Array.isArray(result.data) || result.data.length === 0) {
+                if (process.env.NODE_ENV === 'development') {
+                    console.warn(`KB data for ${slug} is empty, will not cache empty result`);
+                }
+                // Return the result anyway (might be valid empty state)
+                return result;
+            }
+            return result;
+        },
         [`brainkb-kb-${slug}`],
         {
             revalidate: CACHE_DURATION,
@@ -78,10 +129,21 @@ export async function GET(request: NextRequest) {
         const cachedFetch = getCachedKnowledgeBase(slug);
         const result = await cachedFetch();
 
-        return NextResponse.json({ 
-            success: true, 
-            ...result 
-        });
+        // Ensure data and headers are always arrays
+        const response = {
+            success: true,
+            data: Array.isArray(result.data) ? result.data : [],
+            headers: Array.isArray(result.headers) ? result.headers : [],
+            pageTitle: result.pageTitle || "",
+            pageSubtitle: result.pageSubtitle || "",
+            entityPageSlug: result.entityPageSlug || ""
+        };
+
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`KB API response for ${slug}: ${response.data.length} items, ${response.headers.length} headers`);
+        }
+
+        return NextResponse.json(response);
     } catch (error: any) {
         console.error('Error in knowledge-base API:', error);
         return NextResponse.json(

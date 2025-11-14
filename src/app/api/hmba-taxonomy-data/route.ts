@@ -47,13 +47,17 @@ async function getAuthToken(): Promise<string> {
 }
 
 async function fetchTaxonomyData() {
+    // Taxonomy is cached at runtime when user clicks/navigates (not during build)
+    // No warm cache check needed - always fetch and cache at runtime
     try {
         const queryServiceUrl = process.env.NEXT_PUBLIC_API_QUERY_TAXONOMY_ENDPOINT;
         
-        if (!queryServiceUrl) {
-            // During build, if URL is not configured, return empty data instead of throwing
-            // This allows the build to complete successfully
-            console.warn('Query service URL not configured, returning empty data');
+        if (!queryServiceUrl || queryServiceUrl.trim() === '') {
+            // If URL is not configured, return null (will be handled by the GET handler)
+            // Only log in development
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('Query service URL not configured for taxonomy');
+            }
             return null;
         }
 
