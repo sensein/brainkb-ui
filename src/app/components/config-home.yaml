@@ -184,11 +184,11 @@ usecases:
       icon_color: "purple-500"
       discussion_link: "https://github.com/sensein/BrainKB/discussions/26"
       is_future: false
-      status: "in_development"
+      status: "partially_available"
       use_text: "Login to access available features" #instead of link
-    - title: "Neuroscientific Entity Extraction"
+    - title: "Entity Extraction"
       case_number: "Case 4"
-      description: "Extract and identify neuroscience entities from text using agentic AI."
+      description: "Extract and identify neuroscience entities from text using advanced AI techniques."
       icon_slug: "tag"
       gradient: "from-blue-500 to-indigo-500"
       background_gradient: "from-blue-50 to-white"
@@ -197,8 +197,7 @@ usecases:
       icon_color: "blue-500"
       discussion_link: "https://github.com/sensein/BrainKB/discussions/25"
       is_future: false
-      status: "partially_available"
-      use_text: "Login to access available features"
+      status: "in_development"
     - title: "Assertion Evidence"
       case_number: "Case 5"
       description: "Link scientific assertions with supporting evidence from publications and research."
