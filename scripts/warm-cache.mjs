@@ -2,6 +2,8 @@
  * Build-time script to warm the cache by pre-fetching data
  * This runs during build to populate cache files that API routes can use
  * 
+ * Version: 1.0.0
+ * 
  * Note: This script requires environment variables to be set
  * If API calls fail, the build will continue (cache warming is optional)
  */
@@ -14,6 +16,19 @@ import { createRequire } from 'module';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
+
+// Try to use getData function which already uses ApiService
+// This requires the TypeScript to be compiled, so we'll use a fallback approach
+let getData = null;
+try {
+  // Try to require the compiled getData (if available)
+  // Note: This might not work during build, so we have a fallback
+  const getDataModule = require('../src/app/components/getData.tsx');
+  getData = getDataModule.getData;
+} catch (error) {
+  // getData not available, we'll use direct ApiService approach
+  getData = null;
+}
 
 // Load environment variables from .env.local if it exists
 // (Next.js automatically loads these during build, but this helps if running script standalone)
@@ -44,48 +59,70 @@ if (!fs.existsSync(CACHE_DIR)) {
   fs.mkdirSync(CACHE_DIR, { recursive: true });
 }
 
-async function fetchData(queryParameter, endpoint) {
-  const apiHost = process.env.NEXT_PUBLIC_API_ADMIN_HOST || '';
-  const apiUrl = `${apiHost}/${endpoint}`;
+// Reuse ApiService logic - simplified version that matches ApiService behavior
+async function getToken() {
+  const jwtUser = process.env.NEXT_PUBLIC_JWT_USER;
+  const jwtPassword = process.env.NEXT_PUBLIC_JWT_PASSWORD;
+  const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE || '';
   
-  let headers = {
-    'Content-Type': 'application/json',
-  };
-  
-  // Try to get auth token if configured
-  try {
-    const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT;
-    const jwtUser = process.env.NEXT_PUBLIC_JWT_USER;
-    const jwtPassword = process.env.NEXT_PUBLIC_JWT_PASSWORD;
-    const useBearerToken = process.env.NEXT_PUBLIC_USE_BEARER_TOKEN !== 'false';
-    
-    if (useBearerToken && tokenEndpoint && jwtUser && jwtPassword) {
-      const tokenResponse = await fetch(tokenEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: jwtUser,
-          password: jwtPassword
-        })
-      });
-      
-      if (tokenResponse.ok) {
-        const tokenData = await tokenResponse.json();
-        headers['Authorization'] = `Bearer ${tokenData.access_token || tokenData.token}`;
-      }
-    }
-  } catch (error) {
-    // Continue without auth if token fetch fails
+  if (!jwtUser || !jwtPassword || !tokenEndpoint) {
+    throw new Error('JWT credentials not configured');
   }
   
-  const response = await fetch(apiUrl, {
+  const response = await fetch(tokenEndpoint, {
     method: 'POST',
-    headers,
-    body: JSON.stringify(queryParameter)
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: jwtUser, password: jwtPassword })
   });
   
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+    throw new Error(`Token request failed: ${response.status}`);
+  }
+  
+  const tokenData = await response.json();
+  return tokenData.access_token;
+}
+
+async function getHeaders() {
+  const headers = { 'Accept': 'application/json' };
+  const useBearerToken = process.env.NEXT_PUBLIC_USE_BEARER_TOKEN !== 'false';
+  
+  if (useBearerToken) {
+    try {
+      const token = await getToken();
+      headers['Authorization'] = `Bearer ${token}`;
+    } catch (error) {
+      console.warn('Failed to get bearer token, proceeding without authentication');
+    }
+  }
+  
+  return headers;
+}
+
+async function fetchData(queryParameter, endpoint) {
+  // Try to use getData if available (which uses ApiService)
+  if (getData) {
+    try {
+      return await getData(queryParameter, endpoint);
+    } catch (error) {
+      console.warn('getData failed, using direct ApiService approach:', error.message);
+    }
+  }
+  
+  // Use the same approach as ApiService.query()
+  const apiEndpoint = endpoint || process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || 'https://queryservice.brainkb.org/query/sparql';
+  const headers = await getHeaders();
+  
+  const queryString = new URLSearchParams(queryParameter).toString();
+  const urlWithQuery = queryString ? `${apiEndpoint}?${queryString}` : apiEndpoint;
+  
+  const response = await fetch(urlWithQuery, {
+    method: 'GET',
+    headers,
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Network response was not ok. Status: ${urlWithQuery} - ${response.status}`);
   }
   
   return await response.json();
@@ -94,10 +131,11 @@ async function fetchData(queryParameter, endpoint) {
 async function warmCache() {
   console.log('Starting cache warming during build...\n');
   
-  // Check if API is configured
-  if (!process.env.NEXT_PUBLIC_API_ADMIN_HOST) {
-    console.log('API not configured, skipping cache warming');
-    console.log('Set NEXT_PUBLIC_API_ADMIN_HOST to enable cache warming\n');
+  // Check if API endpoint is configured
+  const apiEndpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT;
+  if (!apiEndpoint) {
+    console.log('API endpoint not configured, skipping cache warming');
+    console.log('Set NEXT_PUBLIC_API_QUERY_ENDPOINT to enable cache warming\n');
     return;
   }
   
