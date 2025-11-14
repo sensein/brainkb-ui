@@ -12,13 +12,14 @@ const CACHE_DURATION = 24 * 60 * 60;
 
 async function fetchStatisticsData() {
     // Check for pre-warmed cache from build time first
-    const warmedData = getWarmedCache<number[]>('statistics');
-    if (warmedData) {
+    const warmedCache = getWarmedCache<{ data: number[], timestamp: number }>('statistics');
+    if (warmedCache && warmedCache.data) {
         // Only log in development to reduce noise
         if (process.env.NODE_ENV === 'development') {
             console.log('Using pre-warmed statistics cache from build');
         }
-        return warmedData;
+        // Return the data array from the cache object
+        return Array.isArray(warmedCache.data) ? warmedCache.data : [];
     }
     
     // If no warmed cache, fetch fresh data

@@ -56,12 +56,25 @@
 }
 
 .fix-left-margin{
-    margin-left: 13rem;
-
+    margin-left: 0;
+}
+@media (min-width: 768px) {
+    .fix-left-margin{
+        margin-left: 13rem;
+    }
 }
 .kb-page-margin{
     margin-top: 5rem;
-    margin-right: 6rem;
+    margin-right: 0;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+@media (min-width: 768px) {
+    .kb-page-margin{
+        margin-right: 6rem;
+        padding-left: 0;
+        padding-right: 0;
+    }
 }
 .fix-margin-left-footer{
     position: relative;
@@ -140,8 +153,19 @@ thead.sticky {
   * {
     @apply border-border;
   }
+  html {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
+    max-width: 100vw;
+    position: relative;
+  }
+  /* Allow navbar and its dropdowns to overflow if needed */
+  header, nav {
+    overflow: visible !important;
   }
 }
 

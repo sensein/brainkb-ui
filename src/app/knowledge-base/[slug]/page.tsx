@@ -76,29 +76,30 @@ const KbIndividualPageAllData = () => {
 
         return (
             <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left text-gray-700">
-                        <thead className="bg-gradient-to-r from-sky-50 to-blue-50 border-b border-gray-200">
-                            <tr>
-                                {headers.map((header, index) => (
-                                    <th key={index} className="px-6 py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs">
-                                        {header}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {currentPageData.map((item, index) => {
-                                // Use the first header's value as a unique identifier, or fallback to id if available
-                                const uniqueKey = item.id?.value || item[headers[0]]?.value || index;
-                                return (
-                                    <tr key={uniqueKey} className="hover:bg-sky-50/50 transition-colors duration-150">
-                                        {headers.map((header, headerIndex) => {
-                                            const cellValue = item[header]?.value || '';
-                                            const displayValue = cellValue ? cellValue.substring(cellValue.lastIndexOf('/') + 1) : '';
-                                            
-                                            return (
-                                                <td key={headerIndex} className="px-6 py-4 whitespace-nowrap">
+                <div className="overflow-x-auto -mx-4 sm:mx-0">
+                    <div className="inline-block min-w-full align-middle sm:px-0 px-4">
+                        <table className="min-w-full text-sm text-left text-gray-700">
+                            <thead className="bg-gradient-to-r from-sky-50 to-blue-50 border-b border-gray-200">
+                                <tr>
+                                    {headers.map((header, index) => (
+                                        <th key={index} className="px-3 sm:px-6 py-3 sm:py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs">
+                                            {header}
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {currentPageData.map((item, index) => {
+                                    // Use the first header's value as a unique identifier, or fallback to id if available
+                                    const uniqueKey = item.id?.value || item[headers[0]]?.value || index;
+                                    return (
+                                        <tr key={uniqueKey} className="hover:bg-sky-50/50 transition-colors duration-150">
+                                            {headers.map((header, headerIndex) => {
+                                                const cellValue = item[header]?.value || '';
+                                                const displayValue = cellValue ? cellValue.substring(cellValue.lastIndexOf('/') + 1) : '';
+                                                
+                                                return (
+                                                    <td key={headerIndex} className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                                                     {headerIndex === 0 ? (
                                                         <a 
                                                             href={`${params.slug}/${encodeURIComponent(cellValue)}`}
@@ -130,15 +131,15 @@ const KbIndividualPageAllData = () => {
         <div className="kb-page-margin">
 
             {/* Hero Section */}
-            <div className="grid fix-left-margin grid-cols-1 mb-8">
+            <div className="grid fix-left-margin grid-cols-1 mb-6 sm:mb-8">
                 <div className="relative overflow-hidden bg-gradient-to-br from-sky-500 via-blue-500 to-emerald-500 rounded-2xl shadow-xl">
                     <div className="absolute inset-0 bg-gradient-to-r from-sky-600/20 to-transparent"></div>
-                    <div className="relative px-8 py-12">
-                        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4">
+                    <div className="relative px-4 sm:px-8 py-8 sm:py-12">
+                        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3 sm:mb-4">
                             {pagetitle || "Knowledge Base"}
                         </h1>
                         {pagesubtitle && (
-                            <p className="text-sky-100 text-base leading-relaxed">
+                            <p className="text-sky-100 text-sm sm:text-base leading-relaxed">
                                 {pagesubtitle}
                             </p>
                         )}
@@ -198,7 +199,7 @@ const KbIndividualPageAllData = () => {
                         {renderTable()}
 
                         {filteredData.length > 0 && (
-                            <nav className="flex items-center flex-wrap md:flex-row justify-between pt-6 gap-4"
+                            <nav className="flex flex-col sm:flex-row items-center justify-between pt-4 sm:pt-6 gap-3 sm:gap-4"
                                  aria-label="Table navigation">
                                 <div className="text-sm text-gray-600">
                                     Showing <span className="font-semibold text-gray-900">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span

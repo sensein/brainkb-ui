@@ -369,31 +369,31 @@ const IndividualEntityPage = () => {
         )}
 
         {!isLoading && extractedBoxes.length > 0 && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {extractedBoxes.map((entitycards, index) => (
               entitycards.cardtype === "card" && (
                 <div key={index} className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow duration-300">
                   {/* Card Header */}
-                  <div className="bg-gradient-to-r from-sky-500 to-blue-500 p-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-                        <Info className="w-5 h-5 text-white" />
+                  <div className="bg-gradient-to-r from-sky-500 to-blue-500 p-4 sm:p-6">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                        <Info className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                       </div>
-                      <h2 className="text-xl font-bold text-white">
+                      <h2 className="text-lg sm:text-xl font-bold text-white">
                         {entitycards.name || "Entity Information"}
                       </h2>
                     </div>
                   </div>
                   
                   {/* Card Body */}
-                  <div className="p-6">
+                  <div className="p-4 sm:p-6">
                     {entitycards.description && (
-                      <p className="text-gray-600 mb-6 leading-relaxed">
+                      <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 leading-relaxed">
                         {entitycards.description}
                       </p>
                     )}
                     
-                    <div className="bg-gradient-to-br from-gray-50 to-sky-50 p-6 rounded-lg border border-gray-200">
+                    <div className="bg-gradient-to-br from-gray-50 to-sky-50 p-4 sm:p-6 rounded-lg border border-gray-200">
                       {data[entitycards.slug ?? "unknown"] ? (
                         <div className="space-y-4">
                           {Object.entries(data[entitycards.slug ?? "unknown"]).map(([key, value], idx) => {

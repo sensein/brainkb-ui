@@ -61,7 +61,9 @@ export default function Home() {
                 const result = await response.json();
                 
                 if (result.success && result.data) {
-                    setCountData(result.data);
+                    // Ensure data is an array
+                    const dataArray = Array.isArray(result.data) ? result.data : [];
+                    setCountData(dataArray);
                 } else {
                     console.error('Failed to fetch statistics:', result.error);
                     // Fallback to empty array
@@ -505,7 +507,7 @@ export default function Home() {
                         </p>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {dataCount.map((count, index) => (
+                        {Array.isArray(dataCount) && dataCount.length > 0 ? dataCount.map((count, index) => (
                             <div
                                 key={index}
                                 className="group relative bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent hover:border-sky-500"
@@ -530,7 +532,11 @@ export default function Home() {
                                     )}
                                 </div>
                             </div>
-                        ))}
+                        )) : (
+                            <div className="col-span-full text-center py-8 text-gray-500">
+                                Loading statistics...
+                            </div>
+                        )}
                     </div>
                 </div>
             </section>
