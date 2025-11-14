@@ -12,6 +12,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
+import yaml from 'js-yaml';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,6 +29,17 @@ try {
 } catch (error) {
   // getData not available, we'll use direct ApiService approach
   getData = null;
+}
+
+// Helper function to load and parse YAML files
+function loadYamlFile(filePath) {
+  try {
+    const yamlContent = fs.readFileSync(filePath, 'utf8');
+    return yaml.load(yamlContent);
+  } catch (error) {
+    console.error(`Failed to load YAML file ${filePath}:`, error.message);
+    throw error;
+  }
 }
 
 // Load environment variables from .env.local if it exists
@@ -130,6 +142,7 @@ async function fetchData(queryParameter, endpoint) {
 
 async function warmCache() {
   console.log('Starting cache warming during build...\n');
+  console.log(`Cache directory: ${CACHE_DIR}`);
   
   // Check if API endpoint is configured
   const apiEndpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT;
@@ -139,13 +152,27 @@ async function warmCache() {
     return;
   }
   
+  console.log(`API endpoint: ${apiEndpoint}`);
+  
+  // Ensure cache directory exists
+  if (!fs.existsSync(CACHE_DIR)) {
+    fs.mkdirSync(CACHE_DIR, { recursive: true });
+    console.log(`Created cache directory: ${CACHE_DIR}`);
+  } else {
+    console.log(`Cache directory already exists: ${CACHE_DIR}`);
+  }
+  
   try {
-    // Import YAML configs
-    const yamlHome = require('../src/app/components/config-home.yaml');
-    const yamlKB = require('../src/app/components/config-knowledgebases.yaml');
+    // Load and parse YAML configs
+    const yamlHomePath = path.join(process.cwd(), 'src', 'app', 'components', 'config-home.yaml');
+    const yamlKBPath = path.join(process.cwd(), 'src', 'app', 'components', 'config-knowledgebases.yaml');
+    
+    const yamlHome = loadYamlFile(yamlHomePath);
+    const yamlKB = loadYamlFile(yamlKBPath);
     
     // Warm statistics cache
     console.log('Warming statistics cache...');
+    let statsSuccess = false;
     try {
       const statsData = await Promise.all(
         yamlHome.boxiconsstatisticscount.map(async (page) => {
@@ -164,20 +191,31 @@ async function warmCache() {
         })
       );
       
+      const statsFile = path.join(CACHE_DIR, 'statistics.json');
       fs.writeFileSync(
-        path.join(CACHE_DIR, 'statistics.json'),
+        statsFile,
         JSON.stringify({
           data: statsData,
           timestamp: Date.now()
         }, null, 2)
       );
-      console.log('Statistics cache warmed\n');
+      
+      // Verify file was written
+      if (fs.existsSync(statsFile)) {
+        const fileStats = fs.statSync(statsFile);
+        console.log(`Statistics cache warmed (${fileStats.size} bytes)`);
+        statsSuccess = true;
+      } else {
+        console.error('Failed to write statistics cache file');
+      }
     } catch (error) {
-      console.warn('Statistics cache warming failed:', error.message);
+      console.error('Statistics cache warming failed:', error.message);
+      console.error(error.stack);
     }
     
     // Warm knowledge base caches
     console.log('Warming knowledge base caches...');
+    let kbSuccessCount = 0;
     for (const page of yamlKB.pages) {
       try {
         const queryParameter = { sparql_query: page.sparql_query };
@@ -195,24 +233,47 @@ async function warmCache() {
             timestamp: Date.now()
           };
           
-          fs.writeFileSync(
-            path.join(CACHE_DIR, `kb-${page.slug}.json`),
-            JSON.stringify(result, null, 2)
-          );
-          console.log(`KB cache warmed for: ${page.slug}`);
+          const kbFile = path.join(CACHE_DIR, `kb-${page.slug}.json`);
+          fs.writeFileSync(kbFile, JSON.stringify(result, null, 2));
+          
+          // Verify file was written
+          if (fs.existsSync(kbFile)) {
+            const fileStats = fs.statSync(kbFile);
+            console.log(`KB cache warmed for: ${page.slug} (${fileStats.size} bytes)`);
+            kbSuccessCount++;
+          } else {
+            console.error(`Failed to write KB cache file for: ${page.slug}`);
+          }
+        } else {
+          console.warn(`Invalid response for ${page.slug}:`, response.status);
         }
       } catch (error) {
-        console.warn(`KB cache warming failed for ${page.slug}:`, error.message);
+        console.error(`KB cache warming failed for ${page.slug}:`, error.message);
       }
     }
     
-    console.log('\nCache warming completed!');
+    // List all cache files created
+    console.log('\nCache files created:');
+    try {
+      const files = fs.readdirSync(CACHE_DIR);
+      files.forEach(file => {
+        const filePath = path.join(CACHE_DIR, file);
+        const fileStats = fs.statSync(filePath);
+        console.log(`  - ${file} (${fileStats.size} bytes)`);
+      });
+    } catch (error) {
+      console.error('Failed to list cache files:', error.message);
+    }
+    
+    console.log(`\nCache warming completed! Statistics: ${statsSuccess ? 'success' : 'failed'}, KB pages: ${kbSuccessCount}/${yamlKB.pages.length}`);
   } catch (error) {
     console.error('Cache warming failed:', error.message);
+    console.error(error.stack);
     // Don't fail the build if cache warming fails
     console.log('Build will continue without pre-warmed cache\n');
   }
 }
 
 warmCache();
+
 
