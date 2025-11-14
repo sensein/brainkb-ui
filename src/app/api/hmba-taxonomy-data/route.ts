@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { unstable_cache } from 'next/cache';
 
 // Force dynamic rendering - this route fetches external data
 export const dynamic = 'force-dynamic';
-
-// Cache duration: 24 hours (in seconds)
-const CACHE_DURATION = 24 * 60 * 60;
 
 interface TokenResponse {
     access_token: string;
@@ -47,8 +43,8 @@ async function getAuthToken(): Promise<string> {
 }
 
 async function fetchTaxonomyData() {
-    // Taxonomy is cached at runtime when user clicks/navigates (not during build)
-    // No warm cache check needed - always fetch and cache at runtime
+    // Taxonomy tree is NOT cached - it's fetched fresh each time
+    // Individual taxonomy node queries (when users click) are cached via entity-query API
     try {
         const queryServiceUrl = process.env.NEXT_PUBLIC_API_QUERY_TAXONOMY_ENDPOINT;
         
@@ -90,19 +86,13 @@ async function fetchTaxonomyData() {
     }
 }
 
-// Create a cached version of the fetch function
-const getCachedTaxonomyData = unstable_cache(
-    async () => fetchTaxonomyData(),
-    ['brainkb-hmba-taxonomy-data'],
-    {
-        revalidate: CACHE_DURATION,
-        tags: ['hmba-taxonomy']
-    }
-);
+// No caching for taxonomy tree - fetch fresh each time
+// Individual node queries are cached when users click via entity-query API
 
 export async function GET(request: NextRequest) {
     try {
-        const data = await getCachedTaxonomyData();
+        // Fetch fresh data (no caching for taxonomy tree)
+        const data = await fetchTaxonomyData();
         
         // If data is null (e.g., during build with missing config), return appropriate response
         if (data === null) {

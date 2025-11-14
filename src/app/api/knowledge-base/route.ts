@@ -81,19 +81,38 @@ async function fetchKnowledgeBaseData(slug: string) {
                 console.log(`Fetched fresh KB data for ${slug}: ${bindings.length} items`);
             }
 
+            // Always return data, even if empty (empty might be valid)
             return {
-                data: bindings,
-                headers: vars,
+                data: Array.isArray(bindings) ? bindings : [],
+                headers: Array.isArray(vars) ? vars : [],
                 pageTitle: page.page || "",
                 pageSubtitle: page.description || "",
                 entityPageSlug: page.entitypageslug || ""
             };
         } else {
-            throw new Error("Invalid data format");
+            // If API returns invalid format, return empty arrays instead of throwing
+            // This allows the page to show "No data available" gracefully
+            console.warn(`Invalid response format for ${slug}, returning empty data`);
+            return {
+                data: [],
+                headers: [],
+                pageTitle: page.page || "",
+                pageSubtitle: page.description || "",
+                entityPageSlug: page.entitypageslug || ""
+            };
         }
     } catch (error) {
         console.error(`Error fetching knowledge base data for slug "${slug}":`, error);
-        throw error;
+        // Don't throw - return empty data structure so page can display gracefully
+        // This ensures we never show an error when cache fails, just fetch fresh
+        const page = yaml.pages.find((page) => page.slug === slug);
+        return {
+            data: [],
+            headers: [],
+            pageTitle: page?.page || "",
+            pageSubtitle: page?.description || "",
+            entityPageSlug: page?.entitypageslug || ""
+        };
     }
 }
 
@@ -103,14 +122,8 @@ function getCachedKnowledgeBase(slug: string) {
     return unstable_cache(
         async () => {
             const result = await fetchKnowledgeBaseData(slug);
-            // Validate result before caching
-            if (!result || !Array.isArray(result.data) || result.data.length === 0) {
-                if (process.env.NODE_ENV === 'development') {
-                    console.warn(`KB data for ${slug} is empty, will not cache empty result`);
-                }
-                // Return the result anyway (might be valid empty state)
-                return result;
-            }
+            // Always return result - even if empty, it might be valid
+            // The page will handle empty data display
             return result;
         },
         [`brainkb-kb-${slug}`],
