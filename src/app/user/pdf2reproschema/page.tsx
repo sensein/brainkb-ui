@@ -567,6 +567,28 @@ export default function Pdf2ReproschemaPage() {
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                         Review the converted Reproschema format below.
                     </p>
+                    <div className="mb-6 space-y-3">
+                <div className="mb-6 space-y-3">
+                <div className="flex items-center gap-2 text-lg text-amber-600 dark:text-amber-400">
+                    <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    <span>Extraction process might take up to 3-5 minutes or more for larger text.</span>
+                </div>
+                <div>
+                    <a
+                        href="https://arxiv.org/abs/2507.03674"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white rounded-lg text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                    >
+                        Learn more about use case
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
                     
                     <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-4 overflow-x-auto">
                         <pre className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
