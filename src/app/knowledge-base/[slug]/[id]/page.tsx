@@ -78,13 +78,13 @@ async function fetchBindings(queryParameter: QueryParameter) {
         sparql_query: queryParameter.sparql_query
       })
     });
-    
+
     const result = await response.json();
     
     if (result.success && Array.isArray(result.data)) {
       return result.data;
     }
-    
+
     // Fallback to direct getData if API route fails
     const directResponse = await getData(queryParameter);
     if (directResponse.status === "success" && directResponse.message?.results?.bindings) {

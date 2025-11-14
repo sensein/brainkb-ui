@@ -50,15 +50,23 @@ async function fetchEntityQueryData(sparqlQuery: string) {
         
         if (response.status === "success" && response.message?.results?.bindings) {
             const bindings = response.message.results.bindings;
+            const count = Array.isArray(bindings) ? bindings.length : 0;
             if (process.env.NODE_ENV === 'development') {
-                console.log(`Fetched fresh entity query data: ${Array.isArray(bindings) ? bindings.length : 0} items`);
+                console.log(`[entity-query] Fetched fresh data: ${count} items`);
+                if (count === 0) {
+                    console.warn(`[entity-query] ========== QUERY RETURNED EMPTY RESULTS ==========`);
+                    console.warn(`[entity-query] Query hash: ${queryHash}`);
+                    console.warn(`[entity-query] Full query:`, sparqlQuery);
+                    console.warn(`[entity-query] ================================================`);
+                }
             }
             return Array.isArray(bindings) ? bindings : [];
         }
         
         // If API returns invalid format, return empty array instead of throwing
         if (process.env.NODE_ENV === 'development') {
-            console.warn(`Invalid response format for entity query, returning empty array`);
+            console.warn(`[entity-query] Invalid response format. Status: ${response.status}`);
+            console.warn(`[entity-query] Response:`, JSON.stringify(response).substring(0, 500));
         }
         return [];
     } catch (error) {
