@@ -28,3 +28,13 @@ sections:
       - title: "Personal Information"
         description: "When you log in using Google or GitHub OAuth, we may collect basic profile details such as your name and email address. This information is used solely for authentication and account management purposes."
 
+  - section: "fairusepolicy"
+    title: "Fair Use Policy"
+    subsections:
+      - title: "Use of Public-Release Data"
+        description: "This Fair Use Policy applies only to data that the Platform identifies as public-release data. Certain data submission features, fields, or workflows are designated by the Platform as contributing to publicly accessible or openly released datasets. Only data submitted through these designated mechanisms will be distributed under the Creative Commons Zero (CC0) license. By submitting data through these mechanisms, the user acknowledges and agrees to the following:"
+        bullet_points:
+          - content: "Public-release data may be freely used, modified, redistributed, and incorporated into derivative works by any third party without restriction, consistent with the CC0 license."
+          - content: "The Platform may collect, process, analyze, or transform public-release data for research, evaluation, quality improvement, and dissemination."
+          - content: "The Platform may publish, share, or distribute aggregated, transformed, or derivative datasets created from public-release data for educational, scientific, or public-interest purposes."
+          - content: "Users must avoid submitting personal, sensitive, or confidential information within any data submitted through public-release mechanisms, as such data will become publicly accessible and cannot be withdrawn once released."
