@@ -18,15 +18,30 @@ function getQueryHash(sparqlQuery: string): string {
 async function fetchEntityQueryData(sparqlQuery: string) {
     // Check for pre-warmed cache from build time first (only for sample entities)
     const queryHash = getQueryHash(sparqlQuery);
-    const warmedData = getWarmedCache<any[]>(`entity-query-${queryHash}`);
-    if (warmedData) {
+    const warmedCache = getWarmedCache<{ data: any[]; timestamp?: number }>(`entity-query-${queryHash}`);
+    
+    if (warmedCache) {
+        // Extract data from cache (cache file has {data, timestamp} structure)
+        const warmedData = warmedCache.data !== undefined ? warmedCache.data : (Array.isArray(warmedCache) ? warmedCache : []);
+        
         // Only log in development
         if (process.env.NODE_ENV === 'development') {
-            console.log(`Using pre-warmed entity query cache for hash: ${queryHash}`);
+            const itemCount = Array.isArray(warmedData) ? warmedData.length : 0;
+            console.log(`Using pre-warmed entity query cache for hash: ${queryHash} (${itemCount} items)`);
         }
-        return warmedData;
+        
+        // Validate warmed data - if empty, fetch fresh
+        if (Array.isArray(warmedData) && warmedData.length > 0) {
+            return warmedData;
+        } else {
+            // Warm cache has empty data, fetch fresh
+            if (process.env.NODE_ENV === 'development') {
+                console.log(`Warm cache for entity query ${queryHash} is empty, fetching fresh data`);
+            }
+        }
     }
     
+    // If no warmed cache or warm cache is empty, fetch fresh data
     try {
         const queryParameter = { sparql_query: sparqlQuery };
         const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql";
@@ -34,12 +49,23 @@ async function fetchEntityQueryData(sparqlQuery: string) {
         const response = await getData(queryParameter, endpoint);
         
         if (response.status === "success" && response.message?.results?.bindings) {
-            return response.message.results.bindings as any[];
+            const bindings = response.message.results.bindings;
+            if (process.env.NODE_ENV === 'development') {
+                console.log(`Fetched fresh entity query data: ${Array.isArray(bindings) ? bindings.length : 0} items`);
+            }
+            return Array.isArray(bindings) ? bindings : [];
+        }
+        
+        // If API returns invalid format, return empty array instead of throwing
+        if (process.env.NODE_ENV === 'development') {
+            console.warn(`Invalid response format for entity query, returning empty array`);
         }
         return [];
     } catch (error) {
         console.error('Error fetching entity query data:', error);
-        throw error;
+        // Don't throw - return empty array so page can display gracefully
+        // This ensures we never show an error when cache fails, just fetch fresh
+        return [];
     }
 }
 
