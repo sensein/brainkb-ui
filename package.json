@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "warm-cache": "node scripts/warm-cache.mjs",
+    "build": "npm run warm-cache && next build",
     "start": "next start",
     "lint": "next lint"
   },

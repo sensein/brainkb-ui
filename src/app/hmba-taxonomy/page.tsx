@@ -27,19 +27,40 @@ export default function HMBATaxonomyPage() {
 
   // Load data
   useEffect(() => {
-    fetch('/treeData.json')
+    // Try to fetch from API route first (which handles server-side caching)
+    // Fallback to static file if API is not available
+    fetch('/api/hmba-taxonomy-data')
       .then(r => {
         if (!r.ok) {
           throw new Error(`Failed to fetch tree data: ${r.statusText}`);
         }
         return r.json();
       })
-      .then(data => {
-        // Just set the data without modification - we'll use initialDepth instead
-        console.log('Loaded data:', data); // Debug: see what the data looks like
-        setData(data);
+      .then(result => {
+        if (result.success && result.data) {
+          // Just set the data without modification - we'll use initialDepth instead
+          console.log('Loaded data from API:', result.data); // Debug: see what the data looks like
+          setData(result.data);
+        } else {
+          throw new Error(result.error || 'Failed to load tree data');
+        }
       })
-      .catch(e => console.error('Error loading tree data:', e));
+      .catch(e => {
+        console.error('Error loading tree data from API:', e);
+        // Fallback to static file if API fails
+        fetch('/treeData.json')
+          .then(r => {
+            if (!r.ok) {
+              throw new Error(`Failed to fetch tree data: ${r.statusText}`);
+            }
+            return r.json();
+          })
+          .then(data => {
+            console.log('Loaded data from fallback:', data);
+            setData(data);
+          })
+          .catch(fallbackError => console.error('Error loading tree data from fallback:', fallbackError));
+      });
   }, []);
 
   // Observe viewport size

@@ -2,7 +2,6 @@
 
 import yaml from "@/src/app/components/config-home.yaml";
 import {useEffect, useState} from "react";
-import {getData} from "@/src/app/components/getData";
 import {Brain, Database, FileText, Users, Sparkles, ExternalLink, Upload, Network, CheckCircle, FileCheck, Code, Layers, BookOpen, Search, UsersRound, Globe, FolderTree, FileSearch, FileJson, Tag, MessageSquare, Eye, AlertCircle} from "lucide-react";
 
 export default function Home() {
@@ -56,38 +55,26 @@ export default function Home() {
         fetchAndSetData();
 
         const fetchAllData = async () => {
-            const updatedDataCount = await Promise.all(
-                yaml.boxiconsstatisticscount.map(async (page) => {
-                    const response = await fetchData(page.sparql_query);
-                    return response ? response.message.results.bindings[0].count.value : null;
-                })
-            );
-            setCountData(updatedDataCount);
+            try {
+                // Fetch from API route which handles server-side caching
+                const response = await fetch('/api/statistics');
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    setCountData(result.data);
+                } else {
+                    console.error('Failed to fetch statistics:', result.error);
+                    // Fallback to empty array
+                    setCountData([]);
+                }
+            } catch (error) {
+                console.error('Error fetching statistics:', error);
+                setCountData([]);
+            }
         };
 
         fetchAllData();
     }, []);
-
-    const fetchData = async (query_to_execute) => {
-        const queryParameter = {sparql_query: query_to_execute};
-
-        // Read endpoint from environment variable for this specific page
-        const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql";
-
-        try {
-            const response = await getData(queryParameter, endpoint);
-
-            if (response.status === "success" && response.message?.results?.bindings) {
-                const bindings = response.message.results.bindings;
-                return response;
-            } else {
-                console.error("Unexpected response format:", response);
-            }
-        } catch (e) {
-            const error = e;
-            console.error("Error fetching data:");
-        }
-    };
 
 
     // Centralized icon mapping

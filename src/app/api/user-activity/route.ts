@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {Activity, TokenResponse, UserProfile} from "@/src/types/types";
 
+// Force dynamic rendering - this route uses request.url
+export const dynamic = 'force-dynamic';
+
 
 
 async function getAuthToken(): Promise<string> {
