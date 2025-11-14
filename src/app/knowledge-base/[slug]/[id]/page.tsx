@@ -65,16 +65,43 @@ function replaceEntityIdInQuery(query: string, rawId: string) {
   return q.replace(/\{0\}/g, decodedId);
 }
 
-// Fetch -> return raw bindings
+// Fetch -> return raw bindings (using cached API route)
 async function fetchBindings(queryParameter: QueryParameter) {
   try {
-    const response = await getData(queryParameter);
-    if (response.status === "success" && response.message?.results?.bindings) {
-      return response.message.results.bindings as any[];
+    // Use the cached API route instead of direct getData call
+    const response = await fetch('/api/entity-query', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        sparql_query: queryParameter.sparql_query
+      })
+    });
+
+    const result = await response.json();
+    
+    if (result.success && Array.isArray(result.data)) {
+      return result.data;
+    }
+
+    // Fallback to direct getData if API route fails
+    const directResponse = await getData(queryParameter);
+    if (directResponse.status === "success" && directResponse.message?.results?.bindings) {
+      return directResponse.message.results.bindings as any[];
     }
     return [];
   } catch (err) {
     console.error("Error fetching data:", err);
+    // Fallback to direct getData on error
+    try {
+      const directResponse = await getData(queryParameter);
+      if (directResponse.status === "success" && directResponse.message?.results?.bindings) {
+        return directResponse.message.results.bindings as any[];
+      }
+    } catch (fallbackErr) {
+      console.error("Fallback fetch also failed:", fallbackErr);
+    }
     return [];
   }
 }

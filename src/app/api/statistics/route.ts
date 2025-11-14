@@ -14,7 +14,10 @@ async function fetchStatisticsData() {
     // Check for pre-warmed cache from build time first
     const warmedData = getWarmedCache<number[]>('statistics');
     if (warmedData) {
-        console.log('Using pre-warmed statistics cache from build');
+        // Only log in development to reduce noise
+        if (process.env.NODE_ENV === 'development') {
+            console.log('Using pre-warmed statistics cache from build');
+        }
         return warmedData;
     }
     
