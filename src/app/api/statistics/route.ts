@@ -10,10 +10,10 @@ export const dynamic = 'force-dynamic';
 // Cache duration: 24 hours (in seconds)
 const CACHE_DURATION = 24 * 60 * 60;
 
-async function fetchStatisticsData() {
+async function fetchStatisticsData(): Promise<number[]> {
     // Check for pre-warmed cache from build time first
     const warmedData = getWarmedCache<number[]>('statistics');
-    if (warmedData) {
+    if (warmedData && Array.isArray(warmedData)) {
         // Only log in development to reduce noise
         if (process.env.NODE_ENV === 'development') {
             console.log('Using pre-warmed statistics cache from build');
@@ -23,6 +23,12 @@ async function fetchStatisticsData() {
     
     // If no warmed cache, fetch fresh data
     try {
+        // Ensure yaml.boxiconsstatisticscount is an array
+        if (!Array.isArray(yaml.boxiconsstatisticscount)) {
+            console.error('yaml.boxiconsstatisticscount is not an array');
+            return [];
+        }
+        
         const updatedDataCount = await Promise.all(
             yaml.boxiconsstatisticscount.map(async (page) => {
                 const queryParameter = { sparql_query: page.sparql_query };
@@ -35,10 +41,12 @@ async function fetchStatisticsData() {
             })
         );
         
-        return updatedDataCount;
+        // Ensure we always return an array
+        return Array.isArray(updatedDataCount) ? updatedDataCount : [];
     } catch (error) {
         console.error('Error fetching statistics:', error);
-        throw error;
+        // Return empty array instead of throwing to prevent crashes
+        return [];
     }
 }
 
@@ -55,16 +63,19 @@ const getCachedStatistics = unstable_cache(
 export async function GET(request: NextRequest) {
     try {
         const data = await getCachedStatistics();
+        // Ensure data is always an array
+        const dataArray = Array.isArray(data) ? data : [];
         return NextResponse.json({ 
             success: true, 
-            data 
+            data: dataArray
         });
     } catch (error) {
         console.error('Error in statistics API:', error);
         return NextResponse.json(
             { 
                 success: false, 
-                error: 'Failed to fetch statistics' 
+                error: 'Failed to fetch statistics',
+                data: [] // Always return an array even on error
             },
             { status: 500 }
         );

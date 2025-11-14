@@ -61,7 +61,9 @@ export default function Home() {
                 const result = await response.json();
                 
                 if (result.success && result.data) {
-                    setCountData(result.data);
+                    // Ensure data is always an array
+                    const dataArray = Array.isArray(result.data) ? result.data : [];
+                    setCountData(dataArray);
                 } else {
                     console.error('Failed to fetch statistics:', result.error);
                     // Fallback to empty array
@@ -195,7 +197,7 @@ export default function Home() {
                         </p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {yaml.keyfeatures?.features?.map((feature, index) => {
+                        {Array.isArray(yaml.keyfeatures?.features) && yaml.keyfeatures.features.map((feature, index) => {
                             const Icon = getIconBySlug(feature.icon_slug);
                             const colorScheme = getColorTheme(feature.color_theme);
                             return (
@@ -232,7 +234,7 @@ export default function Home() {
                              "BrainKB is a platform designed to support neuroscience research by structuring and organizing scientific knowledge using knowledge graphs (KGs) for delivering evidence-based insights."}
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {yaml.whatisbrainkb?.bullet_points?.map((point, index) => {
+                            {Array.isArray(yaml.whatisbrainkb?.bullet_points) && yaml.whatisbrainkb.bullet_points.map((point, index) => {
                                 const CardIcon = getIconBySlug(point.icon_slug || "");
                                 const gradient = point.gradient || "from-gray-500 to-gray-600";
                                 const heading = point.heading || "";
@@ -276,7 +278,7 @@ export default function Home() {
                             </p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                            {yaml.usecases.cases?.map((useCase, index) => {
+                            {Array.isArray(yaml.usecases?.cases) && yaml.usecases.cases.map((useCase, index) => {
                                 const CaseIcon = getIconBySlug(useCase.icon_slug || "");
                                 const isFuture = useCase.is_future || false;
                                 const colorClasses = getUseCaseColorClasses(useCase.icon_color || "gray-400");
@@ -392,7 +394,7 @@ export default function Home() {
                                             {yaml.usecases.info_box.description}
                                         </p>
                                         <ul className="space-y-2 text-gray-700 mb-6">
-                                            {yaml.usecases.info_box.components?.map((component, compIndex) => (
+                                            {Array.isArray(yaml.usecases?.info_box?.components) && yaml.usecases.info_box.components.map((component, compIndex) => (
                                                 <li key={compIndex} className="flex items-start gap-2">
                                                     <span className="text-sky-500 font-bold">•</span>
                                                     <span><strong>{component.label}:</strong> {component.description}</span>
@@ -408,7 +410,7 @@ export default function Home() {
                                                     {yaml.usecases.info_box.status_info.description}
                                                 </p>
                                                 <div className="space-y-3">
-                                                    {yaml.usecases.info_box.status_info.statuses?.map((statusItem, statusIndex) => {
+                                                    {Array.isArray(yaml.usecases?.info_box?.status_info?.statuses) && yaml.usecases.info_box.status_info.statuses.map((statusItem, statusIndex) => {
                                                         const getStatusColors = (status: string) => {
                                                             switch(status) {
                                                                 case "available":
@@ -505,7 +507,7 @@ export default function Home() {
                         </p>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {dataCount.map((count, index) => (
+                        {Array.isArray(dataCount) && dataCount.map((count, index) => (
                             <div
                                 key={index}
                                 className="group relative bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent hover:border-sky-500"
@@ -548,7 +550,7 @@ export default function Home() {
                         ></p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {yaml.structuredmodelsbox.map((page, index) => {
+                        {yaml.structuredmodelsbox && Array.isArray(yaml.structuredmodelsbox) && yaml.structuredmodelsbox.map((page, index) => {
                             const ModelIcon = getIconBySlug(page.icon_slug || "");
                             return (
                                 <div
