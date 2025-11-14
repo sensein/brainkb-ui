@@ -105,6 +105,10 @@ export default function Home() {
             "search": Search,
             "usersround": UsersRound,
             "globe": Globe,
+            "foldertree": FolderTree,
+            "filesearch": FileSearch,
+            "filejson": FileJson,
+            "tag": Tag,
         };
         return iconMap[iconSlug?.toLowerCase()] || Database;
     };
@@ -132,6 +136,19 @@ export default function Home() {
             }
         };
         return themes[theme?.toLowerCase()] || themes["blue"];
+    };
+
+    // Get color classes for use cases
+    const getUseCaseColorClasses = (colorName: string) => {
+        const colorMap: { [key: string]: { icon: string; text: string; textHover: string; border: string } } = {
+            "sky-500": { icon: "text-sky-500", text: "text-sky-600", textHover: "hover:text-sky-700", border: "hover:border-sky-300" },
+            "emerald-500": { icon: "text-emerald-500", text: "text-emerald-600", textHover: "hover:text-emerald-700", border: "hover:border-emerald-300" },
+            "purple-500": { icon: "text-purple-500", text: "text-purple-600", textHover: "hover:text-purple-700", border: "hover:border-purple-300" },
+            "blue-500": { icon: "text-blue-500", text: "text-blue-600", textHover: "hover:text-blue-700", border: "hover:border-blue-300" },
+            "amber-500": { icon: "text-amber-500", text: "text-amber-600", textHover: "hover:text-amber-700", border: "hover:border-amber-300" },
+            "gray-400": { icon: "text-gray-400", text: "text-gray-600", textHover: "hover:text-gray-700", border: "hover:border-gray-400" }
+        };
+        return colorMap[colorName] || colorMap["gray-400"];
     };
 
     return (
@@ -257,294 +274,234 @@ export default function Home() {
             </section>
 
             {/* Use Cases Section */}
-            <section id="use-cases" className="py-20 bg-gradient-to-br from-gray-50 to-sky-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-slide-up">
-                    <div className="text-center mb-16">
-                        <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-                            Use Cases
-                        </h2>
-                        <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-4">
-                            BrainKB is actively developing use cases to support neuroscience research and knowledge management
-                        </p>
-                        <p className="text-sm text-gray-500 italic">
-                            Each use case includes ingestion, public view, and feedback components integrated with our Knowledge Graph
-                        </p>
+            {yaml.usecases && (
+                <section id="use-cases" className="py-20 bg-gradient-to-br from-gray-50 to-sky-50">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-slide-up">
+                        <div className="text-center mb-16">
+                            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+                                {yaml.usecases.title || "Use Cases"}
+                            </h2>
+                            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-4">
+                                {yaml.usecases.subtitle || "BrainKB is actively developing use cases to support neuroscience research and knowledge management"}
+                            </p>
+                            <p className="text-sm text-gray-500 italic">
+                                {yaml.usecases.description || "Each use case includes ingestion, public view, and feedback components integrated with our Knowledge Graph"}
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                            {yaml.usecases.cases?.map((useCase, index) => {
+                                const CaseIcon = getIconBySlug(useCase.icon_slug || "");
+                                const isFuture = useCase.is_future || false;
+                                const colorClasses = getUseCaseColorClasses(useCase.icon_color || "gray-400");
+                                return (
+                                    <div 
+                                        key={index} 
+                                        className={`group bg-gradient-to-br ${useCase.background_gradient || "from-gray-50 to-white"} rounded-xl p-6 border-2 ${isFuture ? "border-dashed border-gray-300 hover:border-gray-400 opacity-75" : `border-gray-100 ${colorClasses.border}`} hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1`}
+                                    >
+                                        <div className="flex items-start gap-4 mb-4">
+                                            <div className="flex-shrink-0">
+                                                <div className={`w-12 h-12 bg-gradient-to-br ${useCase.gradient || "from-gray-400 to-gray-500"} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                                                    <CaseIcon className="w-6 h-6 text-white" />
+                                                </div>
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="text-xl font-bold text-gray-900 mb-2">{useCase.title}</h3>
+                                                <p className="text-sm text-gray-600 mb-3">{useCase.case_number}</p>
+                                            </div>
+                                        </div>
+                                        <p className="text-gray-700 leading-relaxed mb-4">
+                                            {useCase.description}
+                                        </p>
+                                        <div className="space-y-2">
+                                            {isFuture ? (
+                                                <div className="flex items-center gap-2 text-sm text-gray-500">
+                                                    <CheckCircle className="w-4 h-4 text-gray-400" />
+                                                    <span>Coming Soon</span>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                        <CheckCircle className={`w-4 h-4 ${colorClasses.icon}`} />
+                                                        <span>Ingestion Process</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                        <Eye className={`w-4 h-4 ${colorClasses.icon}`} />
+                                                        <span>Public View & Interactions</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                        <MessageSquare className={`w-4 h-4 ${colorClasses.icon}`} />
+                                                        <span>Public Feedback</span>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                        <div className="mt-4 space-y-3">
+                                            <div className="flex items-center justify-between gap-4 flex-wrap">
+                                                {useCase.discussion_link && (
+                                                    <a
+                                                        href={useCase.discussion_link}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className={`inline-flex items-center gap-2 ${colorClasses.text} ${colorClasses.textHover} font-semibold transition-colors text-sm`}
+                                                    >
+                                                        View Discussion
+                                                        <ExternalLink className="w-4 h-4" />
+                                                    </a>
+                                                )}
+                                                {useCase.status && (
+                                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                                                        useCase.status === "available" 
+                                                            ? "bg-green-100 text-green-800 border border-green-300" 
+                                                            : useCase.status === "partially_available"
+                                                            ? "bg-blue-100 text-blue-800 border border-blue-300"
+                                                            : useCase.status === "in_development"
+                                                            ? "bg-yellow-100 text-yellow-800 border border-yellow-300"
+                                                            : "bg-gray-100 text-gray-800 border border-gray-300"
+                                                    }`}>
+                                                        {useCase.status === "available" 
+                                                            ? "✓ Available" 
+                                                            : useCase.status === "partially_available"
+                                                            ? "⚡ Partially Available"
+                                                            : useCase.status === "in_development"
+                                                            ? "🚧 In Development"
+                                                            : "Coming Soon"}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {(useCase.status === "available" || useCase.status === "partially_available") && (
+                                                <>
+                                                    {useCase.use_link ? (
+                                                        <a
+                                                            href={useCase.use_link}
+                                                            className={`inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r ${useCase.status === "available" ? "from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600" : "from-blue-500 to-sky-500 hover:from-blue-600 hover:to-sky-600"} text-white rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-sm`}
+                                                        >
+                                                            {useCase.use_link_text || "Login to Use"}
+                                                        </a>
+                                                    ) : useCase.use_text ? (
+                                                        <p className={`text-sm font-medium ${useCase.status === "available" ? "text-green-700" : "text-blue-700"}`}>
+                                                            {useCase.use_text}
+                                                        </p>
+                                                    ) : null}
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Info Box */}
+                        {yaml.usecases.info_box && (
+                            <div className="bg-gradient-to-br from-sky-50 to-emerald-50 rounded-xl p-6 border-2 border-sky-200">
+                                <div className="flex items-start gap-4">
+                                    <div className="flex-shrink-0">
+                                        <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-emerald-500 rounded-lg flex items-center justify-center">
+                                            <AlertCircle className="w-5 h-5 text-white" />
+                                        </div>
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="text-lg font-bold text-gray-900 mb-2">{yaml.usecases.info_box.title}</h3>
+                                        <p className="text-gray-700 leading-relaxed mb-3">
+                                            {yaml.usecases.info_box.description}
+                                        </p>
+                                        <ul className="space-y-2 text-gray-700 mb-6">
+                                            {yaml.usecases.info_box.components?.map((component, compIndex) => (
+                                                <li key={compIndex} className="flex items-start gap-2">
+                                                    <span className="text-sky-500 font-bold">•</span>
+                                                    <span><strong>{component.label}:</strong> {component.description}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+
+                                        {/* Status Information */}
+                                        {yaml.usecases.info_box.status_info && (
+                                            <div className="mt-6 pt-6 border-t border-sky-200">
+                                                <h4 className="text-base font-bold text-gray-900 mb-2">{yaml.usecases.info_box.status_info.title}</h4>
+                                                <p className="text-gray-700 text-sm mb-4">
+                                                    {yaml.usecases.info_box.status_info.description}
+                                                </p>
+                                                <div className="space-y-3">
+                                                    {yaml.usecases.info_box.status_info.statuses?.map((statusItem, statusIndex) => {
+                                                        const getStatusColors = (status: string) => {
+                                                            switch(status) {
+                                                                case "available":
+                                                                    return {
+                                                                        bg: "bg-green-50",
+                                                                        border: "border-green-200",
+                                                                        label: "text-green-800",
+                                                                        text: "text-green-700"
+                                                                    };
+                                                                case "partially_available":
+                                                                    return {
+                                                                        bg: "bg-blue-50",
+                                                                        border: "border-blue-200",
+                                                                        label: "text-blue-800",
+                                                                        text: "text-blue-700"
+                                                                    };
+                                                                case "in_development":
+                                                                    return {
+                                                                        bg: "bg-yellow-50",
+                                                                        border: "border-yellow-200",
+                                                                        label: "text-yellow-800",
+                                                                        text: "text-yellow-700"
+                                                                    };
+                                                                case "coming_soon":
+                                                                    return {
+                                                                        bg: "bg-gray-50",
+                                                                        border: "border-gray-200",
+                                                                        label: "text-gray-800",
+                                                                        text: "text-gray-700"
+                                                                    };
+                                                                default:
+                                                                    return {
+                                                                        bg: "bg-gray-50",
+                                                                        border: "border-gray-200",
+                                                                        label: "text-gray-800",
+                                                                        text: "text-gray-700"
+                                                                    };
+                                                            }
+                                                        };
+                                                        const colors = getStatusColors(statusItem.status);
+                                                        return (
+                                                            <div key={statusIndex} className={`${colors.bg} rounded-lg p-3 border ${colors.border}`}>
+                                                                <div className="flex items-start gap-3">
+                                                                    <span className={`text-sm font-semibold ${colors.label} min-w-[120px]`}>
+                                                                        {statusItem.label}
+                                                                    </span>
+                                                                    <span className={`text-sm ${colors.text} flex-1`}>
+                                                                        {statusItem.description}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {yaml.usecases.info_box.footer_note && (
+                                            <p className="text-gray-600 text-sm mt-6 italic">
+                                                {yaml.usecases.info_box.footer_note}
+                                            </p>
+                                        )}
+                                        {yaml.usecases.info_box.discussion_link && (
+                                            <a
+                                                href={yaml.usecases.info_box.discussion_link}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="mt-4 inline-flex items-center gap-2 text-sky-600 font-semibold hover:text-sky-700 transition-colors text-sm"
+                                            >
+                                                {yaml.usecases.info_box.link_text || "View Full Planning Discussion"}
+                                                <ExternalLink className="w-4 h-4" />
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                        {/* Case 1: HMBA Taxonomy */}
-                        <div className="group bg-gradient-to-br from-sky-50 to-white rounded-xl p-6 border-2 border-gray-100 hover:border-sky-300 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                            <div className="flex items-start gap-4 mb-4">
-                                <div className="flex-shrink-0">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-sky-500 to-blue-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                        <FolderTree className="w-6 h-6 text-white" />
-                                    </div>
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-xl font-bold text-gray-900 mb-2">HMBA Taxonomy</h3>
-                                    <p className="text-sm text-gray-600 mb-3">Case 1</p>
-                                </div>
-                            </div>
-                            <p className="text-gray-700 leading-relaxed mb-4">
-                                Hierarchical taxonomy management for neuroscience data classification and organization.
-                            </p>
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <CheckCircle className="w-4 h-4 text-sky-500" />
-                                    <span>Ingestion Process</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <Eye className="w-4 h-4 text-sky-500" />
-                                    <span>Public View & Interactions</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <MessageSquare className="w-4 h-4 text-sky-500" />
-                                    <span>Public Feedback</span>
-                                </div>
-                            </div>
-                            <a
-                                href="https://github.com/sensein/BrainKB/discussions/24"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-4 inline-flex items-center gap-2 text-sky-600 font-semibold hover:text-sky-700 transition-colors text-sm"
-                            >
-                                View Discussion
-                                <ExternalLink className="w-4 h-4" />
-                            </a>
-                        </div>
-
-                        {/* Case 2: Resources Extraction */}
-                        <div className="group bg-gradient-to-br from-emerald-50 to-white rounded-xl p-6 border-2 border-gray-100 hover:border-emerald-300 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                            <div className="flex items-start gap-4 mb-4">
-                                <div className="flex-shrink-0">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                        <FileSearch className="w-6 h-6 text-white" />
-                                    </div>
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-xl font-bold text-gray-900 mb-2">Resources Extraction</h3>
-                                    <p className="text-sm text-gray-600 mb-3">Case 2</p>
-                                </div>
-                            </div>
-                            <p className="text-gray-700 leading-relaxed mb-4">
-                                Extract and structure resources from unstructured documents and publications.
-                            </p>
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <CheckCircle className="w-4 h-4 text-emerald-500" />
-                                    <span>Ingestion Process</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <Eye className="w-4 h-4 text-emerald-500" />
-                                    <span>Public View & Interactions</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <MessageSquare className="w-4 h-4 text-emerald-500" />
-                                    <span>Public Feedback</span>
-                                </div>
-                            </div>
-                            <a
-                                href="https://github.com/sensein/BrainKB/discussions/28"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-4 inline-flex items-center gap-2 text-emerald-600 font-semibold hover:text-emerald-700 transition-colors text-sm"
-                            >
-                                View Discussion
-                                <ExternalLink className="w-4 h-4" />
-                            </a>
-                        </div>
-
-                        {/* Case 3: Resource Metadata Expansion */}
-                        <div className="group bg-gradient-to-br from-purple-50 to-white rounded-xl p-6 border-2 border-gray-100 hover:border-purple-300 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                            <div className="flex items-start gap-4 mb-4">
-                                <div className="flex-shrink-0">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                        <FileJson className="w-6 h-6 text-white" />
-                                    </div>
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-xl font-bold text-gray-900 mb-2">Resource Metadata Expansion</h3>
-                                    <p className="text-sm text-gray-600 mb-3">Case 3</p>
-                                </div>
-                            </div>
-                            <p className="text-gray-700 leading-relaxed mb-4">
-                                Expand and enrich resource metadata including datasets with comprehensive information.
-                            </p>
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <CheckCircle className="w-4 h-4 text-purple-500" />
-                                    <span>Ingestion Process</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <Eye className="w-4 h-4 text-purple-500" />
-                                    <span>Public View & Interactions</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <MessageSquare className="w-4 h-4 text-purple-500" />
-                                    <span>Public Feedback</span>
-                                </div>
-                            </div>
-                            <a
-                                href="https://github.com/sensein/BrainKB/discussions/26"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-4 inline-flex items-center gap-2 text-purple-600 font-semibold hover:text-purple-700 transition-colors text-sm"
-                            >
-                                View Discussion
-                                <ExternalLink className="w-4 h-4" />
-                            </a>
-                        </div>
-
-                        {/* Case 4: Entity Extraction */}
-                        <div className="group bg-gradient-to-br from-blue-50 to-white rounded-xl p-6 border-2 border-gray-100 hover:border-blue-300 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                            <div className="flex items-start gap-4 mb-4">
-                                <div className="flex-shrink-0">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                        <Tag className="w-6 h-6 text-white" />
-                                    </div>
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-xl font-bold text-gray-900 mb-2">Entity Extraction</h3>
-                                    <p className="text-sm text-gray-600 mb-3">Case 4</p>
-                                </div>
-                            </div>
-                            <p className="text-gray-700 leading-relaxed mb-4">
-                                Extract and identify neuroscience entities from text using advanced AI techniques.
-                            </p>
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <CheckCircle className="w-4 h-4 text-blue-500" />
-                                    <span>Ingestion Process</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <Eye className="w-4 h-4 text-blue-500" />
-                                    <span>Public View & Interactions</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <MessageSquare className="w-4 h-4 text-blue-500" />
-                                    <span>Public Feedback</span>
-                                </div>
-                            </div>
-                            <a
-                                href="https://github.com/sensein/BrainKB/discussions/25"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-4 inline-flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700 transition-colors text-sm"
-                            >
-                                View Discussion
-                                <ExternalLink className="w-4 h-4" />
-                            </a>
-                        </div>
-
-                        {/* Case 5: Assertion Evidence */}
-                        <div className="group bg-gradient-to-br from-amber-50 to-white rounded-xl p-6 border-2 border-gray-100 hover:border-amber-300 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                            <div className="flex items-start gap-4 mb-4">
-                                <div className="flex-shrink-0">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                        <FileCheck className="w-6 h-6 text-white" />
-                                    </div>
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-xl font-bold text-gray-900 mb-2">Assertion Evidence</h3>
-                                    <p className="text-sm text-gray-600 mb-3">Case 5</p>
-                                </div>
-                            </div>
-                            <p className="text-gray-700 leading-relaxed mb-4">
-                                Link scientific assertions with supporting evidence from publications and research.
-                            </p>
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <CheckCircle className="w-4 h-4 text-amber-500" />
-                                    <span>Ingestion Process</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <Eye className="w-4 h-4 text-amber-500" />
-                                    <span>Public View & Interactions</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-600">
-                                    <MessageSquare className="w-4 h-4 text-amber-500" />
-                                    <span>Public Feedback</span>
-                                </div>
-                            </div>
-                            <a
-                                href="https://github.com/sensein/BrainKB/discussions/27"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-4 inline-flex items-center gap-2 text-amber-600 font-semibold hover:text-amber-700 transition-colors text-sm"
-                            >
-                                View Discussion
-                                <ExternalLink className="w-4 h-4" />
-                            </a>
-                        </div>
-
-                        {/* Future Case: Brain Visualization */}
-                        <div className="group bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 border-2 border-dashed border-gray-300 hover:border-gray-400 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 opacity-75">
-                            <div className="flex items-start gap-4 mb-4">
-                                <div className="flex-shrink-0">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                        <Network className="w-6 h-6 text-white" />
-                                    </div>
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-xl font-bold text-gray-900 mb-2">Brain Visualization</h3>
-                                    <p className="text-sm text-gray-600 mb-3">Future Consideration</p>
-                                </div>
-                            </div>
-                            <p className="text-gray-700 leading-relaxed mb-4">
-                                Connect all information through interactive brain visualization for comprehensive knowledge exploration.
-                            </p>
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2 text-sm text-gray-500">
-                                    <CheckCircle className="w-4 h-4 text-gray-400" />
-                                    <span>Coming Soon</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Info Box */}
-                    <div className="bg-gradient-to-br from-sky-50 to-emerald-50 rounded-xl p-6 border-2 border-sky-200">
-                        <div className="flex items-start gap-4">
-                            <div className="flex-shrink-0">
-                                <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-emerald-500 rounded-lg flex items-center justify-center">
-                                    <AlertCircle className="w-5 h-5 text-white" />
-                                </div>
-                            </div>
-                            <div className="flex-1">
-                                <h3 className="text-lg font-bold text-gray-900 mb-2">About Use Cases</h3>
-                                <p className="text-gray-700 leading-relaxed mb-3">
-                                    Each use case in BrainKB includes three key components that work together to create a comprehensive knowledge management system:
-                                </p>
-                                <ul className="space-y-2 text-gray-700">
-                                    <li className="flex items-start gap-2">
-                                        <span className="text-sky-500 font-bold">•</span>
-                                        <span><strong>Ingestion Process:</strong> Data submission mechanisms (public or maintainer-only, depending on the use case)</span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <span className="text-sky-500 font-bold">•</span>
-                                        <span><strong>Public View & Interactions:</strong> Accessible interfaces for exploring and interacting with the knowledge</span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <span className="text-sky-500 font-bold">•</span>
-                                        <span><strong>Public Feedback:</strong> Community input and validation mechanisms</span>
-                                    </li>
-                                </ul>
-                                <p className="text-gray-600 text-sm mt-4 italic">
-                                    All use cases are integrated with the BrainKB Knowledge Graph, enabling seamless data flow and comprehensive knowledge representation.
-                                </p>
-                                <a
-                                    href="https://github.com/sensein/BrainKB/discussions/23"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="mt-4 inline-flex items-center gap-2 text-sky-600 font-semibold hover:text-sky-700 transition-colors text-sm"
-                                >
-                                    View Full Planning Discussion
-                                    <ExternalLink className="w-4 h-4" />
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+                </section>
+            )}
 
             {/* Statistics Section */}
             <section id="statistics" className="py-20 bg-gradient-to-br from-gray-50 to-sky-50">
