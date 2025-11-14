@@ -23,7 +23,7 @@ class ApiService {
       jwtUser: process.env.NEXT_PUBLIC_JWT_USER || "",
       jwtPassword: process.env.NEXT_PUBLIC_JWT_PASSWORD || "",
       tokenEndpoint: process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE || "",
-      useBearerToken: process.env.NEXT_PUBLIC_USE_BEARER_TOKEN !== "true", // Default true
+      useBearerToken: process.env.NEXT_PUBLIC_USE_BEARER_TOKEN !== "false", // Default true (enabled)
       queryEndpoint:
         process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT ||
         "https://queryservice.brainkb.org/query/sparql",

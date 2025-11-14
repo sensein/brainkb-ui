@@ -3,6 +3,9 @@ import fs from 'fs/promises';
 import path from 'path';
 import yaml from 'js-yaml';
 
+// Force dynamic rendering - this route uses searchParams
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
     try {
         const searchParams = request.nextUrl.searchParams;

@@ -1,7 +1,5 @@
 "use client";
 import {useState, useEffect} from 'react';
-import {getData} from "@/src/app/components/getData";
-import yaml from "@/src/app/components/config-knowledgebases.yaml";
 import {Database, Loader2, AlertCircle, ChevronLeft, ChevronRight, ExternalLink, Search} from "lucide-react";
 import {useFilteredTableData} from "@/src/app/utils/tableFilterUtils";
 
@@ -27,41 +25,25 @@ const KnowledgeBase = (
     const [searchQuery, setSearchQuery] = useState("");
 
     const fetchData = async () => {
-
         setLoading(true);
         setError(null);
-        setData([]);
-        setHeaders([]);
-        setPageTitle("");
-        setSubPageTitle("");
-        setEntityPageSlug("");
-        const page = yaml.pages.find((page) => page.slug === "default");
-        const query_to_execute = page ? page.sparql_query : "";
-        const entitypage = page ? page.entitypageslug : "";
-        setEntityPageSlug(entitypage);
-        const page_title = page ? page.page : "";
-        const page_sub_title = page ? page.description : "";
-        setPageTitle(page_title);
-        setSubPageTitle(page_sub_title);
-
-        const queryParameter = {sparql_query: query_to_execute};
-
+        
         try {
-            const response = await getData(queryParameter);
-
-            if (response.status === 'success' && response.message?.results?.bindings) {
-                const bindings = response.message.results.bindings;
-                const vars = response.message.head.vars;
-
-                setHeaders(vars);
-                setData(bindings);
+            // Fetch from API route which handles server-side caching
+            const response = await fetch('/api/knowledge-base?slug=default');
+            const result = await response.json();
+            
+            if (result.success) {
+                setData(result.data || []);
+                setHeaders(result.headers || []);
+                setPageTitle(result.pageTitle || "");
+                setSubPageTitle(result.pageSubtitle || "");
+                setEntityPageSlug(result.entityPageSlug || "");
             } else {
-
-                setError("Invalid data format");
+                setError(result.error || "Failed to fetch data");
             }
         } catch (e) {
             const error = e as Error;
-
             setError(error.message);
         } finally {
             setLoading(false);
