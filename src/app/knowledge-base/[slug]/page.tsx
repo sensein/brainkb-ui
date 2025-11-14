@@ -100,28 +100,29 @@ const KbIndividualPageAllData = () => {
                                                 
                                                 return (
                                                     <td key={headerIndex} className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                                                    {headerIndex === 0 ? (
-                                                        <a 
-                                                            href={`${params.slug}/${encodeURIComponent(cellValue)}`}
-                                                            rel="noopener noreferrer"
-                                                            className="inline-flex items-center gap-2 text-sky-600 hover:text-sky-700 font-medium transition-colors group"
-                                                        >
-                                                            {displayValue}
-                                                            <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                        </a>
-                                                    ) : (
-                                                        <span className="text-gray-700">
-                                                            {displayValue}
-                                                        </span>
-                                                    )}
-                                                </td>
-                                            );
-                                        })}
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                                                        {headerIndex === 0 ? (
+                                                            <a 
+                                                                href={`${params.slug}/${encodeURIComponent(cellValue)}`}
+                                                                rel="noopener noreferrer"
+                                                                className="inline-flex items-center gap-2 text-sky-600 hover:text-sky-700 font-medium transition-colors group"
+                                                            >
+                                                                {displayValue}
+                                                                <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                            </a>
+                                                        ) : (
+                                                            <span className="text-gray-700">
+                                                                {displayValue}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                );
+                                            })}
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         );
