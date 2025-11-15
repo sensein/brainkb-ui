@@ -315,7 +315,13 @@ export default function NERDetailPage({ params }: NERDetailPageProps) {
             try {
                 // Fetch specific item by ID
                 const decodedId = decodeURIComponent(id as string);
-                const url = new URL('/api/ner', window.location.origin);
+                const endpoint = process.env.NEXT_PUBLIC_NER_GET_ENDPOINT;
+                if (!endpoint) {
+                    throw new Error('NEXT_PUBLIC_NER_GET_ENDPOINT environment variable is not set');
+                }
+                
+                const url = new URL('/api/ner/withouttoken', window.location.origin);
+                url.searchParams.set('endpoint', endpoint);
                 url.searchParams.set('id', decodedId);
 
                 const response = await fetch(url.toString(), {

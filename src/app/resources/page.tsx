@@ -63,8 +63,14 @@ const Resources = () => {
         setError(null);
 
         try {
-            // Use API route that handles JWT authentication server-side
-            const url = new URL('/api/resources', window.location.origin);
+            // Use API route without token authentication
+            const endpoint = process.env.NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT;
+            if (!endpoint) {
+                throw new Error('NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT environment variable is not set');
+            }
+            
+            const url = new URL('/api/resources/withouttoken', window.location.origin);
+            url.searchParams.set('endpoint', endpoint);
             url.searchParams.set('limit', String(ITEMS_PER_PAGE));
             url.searchParams.set('skip', String(skip));
             if (search.trim()) {

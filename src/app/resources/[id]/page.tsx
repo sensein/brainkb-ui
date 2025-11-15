@@ -345,7 +345,13 @@ export default function ResourceDetailPage({ params }: { params: { id: string } 
 
             try {
                 const decodedId = decodeURIComponent(id as string);
-                const url = new URL('/api/resources', window.location.origin);
+                const endpoint = process.env.NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT;
+                if (!endpoint) {
+                    throw new Error('NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT environment variable is not set');
+                }
+                
+                const url = new URL('/api/resources/withouttoken', window.location.origin);
+                url.searchParams.set('endpoint', endpoint);
                 url.searchParams.set('id', decodedId);
 
                 const response = await fetch(url.toString(), {
