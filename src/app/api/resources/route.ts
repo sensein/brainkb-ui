@@ -1,58 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
 import { getWarmedCache } from '@/src/app/utils/cache-warm';
-import { fetchPaginatedData, searchById } from '../utils/api-client';
+import { fetchPaginatedData, searchById, FetchOptions } from '../utils/api-client';
 
 const CACHE_DURATION = 24 * 60 * 60; // 24 hours in seconds
 
 // Force dynamic rendering - this route uses searchParams
 export const dynamic = 'force-dynamic';
 
-// Search for a specific NER entity by ID
-async function searchNERById(id: string): Promise<any> {
+// Search for a specific resource by ID
+async function searchResourceById(id: string): Promise<any> {
     // Check for pre-warmed cache first
-    const warmedCache = getWarmedCache<{ data: any; timestamp?: number }>(`ner-entity-${id}`);
+    const warmedCache = getWarmedCache<{ data: any; timestamp?: number }>(`resource-entity-${id}`);
     
     if (warmedCache && warmedCache.data) {
-        console.info(`[NER API] Using pre-warmed cache for entity ID: ${id}`);
+        console.info(`[Resources API] Using pre-warmed cache for resource ID: ${id}`);
         return warmedCache.data;
     }
 
-    const endpoint = process.env.NEXT_PUBLIC_NER_GET_ENDPOINT;
+    const endpoint = process.env.NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT;
     if (!endpoint) {
-        throw new Error('NEXT_PUBLIC_NER_GET_ENDPOINT environment variable is not set');
+        throw new Error('NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT environment variable is not set');
     }
 
     return await searchById(endpoint, id);
 }
 
 // Cached version of search by ID
-function getCachedNERById(id: string) {
+function getCachedResourceById(id: string) {
     return unstable_cache(
-        async () => searchNERById(id),
-        [`ner-entity-${id}`],
+        async () => searchResourceById(id),
+        [`resource-entity-${id}`],
         {
             revalidate: CACHE_DURATION,
-            tags: [`ner-entity-${id}`]
+            tags: [`resource-entity-${id}`]
         }
     );
 }
 
-// Cached version of NER data fetch
-function getCachedNERData(limit: string, skip: string) {
+// Cached version of resource data fetch
+function getCachedResourceData(limit: string, skip: string) {
     return unstable_cache(
         async () => {
-            const endpoint = process.env.NEXT_PUBLIC_NER_GET_ENDPOINT;
+            const endpoint = process.env.NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT;
             if (!endpoint) {
-                throw new Error('NEXT_PUBLIC_NER_GET_ENDPOINT environment variable is not set');
+                throw new Error('NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT environment variable is not set');
             }
 
             return await fetchPaginatedData({ endpoint, limit, skip });
         },
-        [`ner-data-${limit}-${skip}`],
+        [`resource-data-${limit}-${skip}`],
         {
             revalidate: CACHE_DURATION,
-            tags: [`ner-list-${limit}-${skip}`]
+            tags: [`resource-list-${limit}-${skip}`]
         }
     );
 }
@@ -64,12 +64,12 @@ export async function GET(request: NextRequest) {
         const limit = searchParams.get('limit') || '50';
         const skip = searchParams.get('skip') || '0';
 
-        const endpoint = process.env.NEXT_PUBLIC_NER_GET_ENDPOINT;
+        const endpoint = process.env.NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT;
         if (!endpoint) {
             return NextResponse.json(
                 {
                     success: false,
-                    error: 'NEXT_PUBLIC_NER_GET_ENDPOINT environment variable is not set'
+                    error: 'NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT environment variable is not set'
                 },
                 { status: 500 }
             );
@@ -79,10 +79,10 @@ export async function GET(request: NextRequest) {
         if (id) {
             try {
                 // Check for pre-warmed cache first
-                const warmedCache = getWarmedCache<{ data: any; timestamp?: number }>(`ner-entity-${id}`);
+                const warmedCache = getWarmedCache<{ data: any; timestamp?: number }>(`resource-entity-${id}`);
                 
                 if (warmedCache && warmedCache.data) {
-                    console.info(`[NER API] Using pre-warmed cache for entity ID: ${id}`);
+                    console.info(`[Resources API] Using pre-warmed cache for resource ID: ${id}`);
                     return NextResponse.json({
                         success: true,
                         data: warmedCache.data,
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
                 }
 
                 // Use cached search function
-                const cachedSearch = getCachedNERById(id);
+                const cachedSearch = getCachedResourceById(id);
                 const foundItem = await cachedSearch();
 
                 return NextResponse.json({
@@ -98,11 +98,11 @@ export async function GET(request: NextRequest) {
                     data: foundItem,
                 });
             } catch (error: any) {
-                if (error.message === 'NER entity not found') {
+                if (error.message === 'Entity not found') {
                     return NextResponse.json(
                         {
                             success: false,
-                            error: 'NER entity not found'
+                            error: 'Resource not found'
                         },
                         { status: 404 }
                     );
@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
         }
 
         // List view - check for pre-warmed cache
-        const cacheKey = `ner-list-${limit}-${skip}`;
+        const cacheKey = `resource-list-${limit}-${skip}`;
         const warmedCache = getWarmedCache<{
             data: any[];
             total?: number;
@@ -123,7 +123,7 @@ export async function GET(request: NextRequest) {
         }>(cacheKey);
 
         if (warmedCache && Array.isArray(warmedCache.data)) {
-            console.info(`[NER API] Using pre-warmed cache for list (limit: ${limit}, skip: ${skip})`);
+            console.info(`[Resources API] Using pre-warmed cache for list (limit: ${limit}, skip: ${skip})`);
             return NextResponse.json({
                 success: true,
                 data: warmedCache.data,
@@ -135,12 +135,12 @@ export async function GET(request: NextRequest) {
         }
 
         // Use cached fetch function
-        const cachedFetch = getCachedNERData(limit, skip);
+        const cachedFetch = getCachedResourceData(limit, skip);
         const result = await cachedFetch();
 
-        console.info('[NER API] Response received');
-        console.info('[NER API] Data type:', Array.isArray(result.data) ? 'array' : typeof result.data);
-        console.info('[NER API] Data length:', Array.isArray(result.data) ? result.data.length : 'N/A');
+        console.info('[Resources API] Response received');
+        console.info('[Resources API] Data type:', Array.isArray(result.data) ? 'array' : typeof result.data);
+        console.info('[Resources API] Data length:', Array.isArray(result.data) ? result.data.length : 'N/A');
 
         return NextResponse.json({
             success: true,
@@ -151,11 +151,11 @@ export async function GET(request: NextRequest) {
             has_more: result.has_more || false,
         });
     } catch (error: any) {
-        console.error('[NER API] Error:', error);
+        console.error('[Resources API] Error:', error);
         return NextResponse.json(
             {
                 success: false,
-                error: error.message || 'Failed to fetch NER data'
+                error: error.message || 'Failed to fetch resource data'
             },
             { status: 500 }
         );

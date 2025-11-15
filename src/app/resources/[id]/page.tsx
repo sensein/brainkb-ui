@@ -1,7 +1,7 @@
 "use client";
 import {useState, useEffect} from 'react';
 import {useParams} from 'next/navigation';
-import {Loader2, AlertCircle, ArrowLeft, ExternalLink, Calendar, User, FileText, Tag as TagIcon, Award, MapPin, MessageSquare, Network, Database, BookOpen, Activity, Flag} from "lucide-react";
+import {Loader2, AlertCircle, ArrowLeft, ExternalLink, Calendar, User, FileText, Tag as TagIcon, Award, MapPin, MessageSquare, Network, Database, BookOpen, Activity, Flag, Link as LinkIcon, Package} from "lucide-react";
 import Link from "next/link";
 import {
   Card,
@@ -140,10 +140,10 @@ function ProvenancePanel({ history }: { history: any[] }) {
                                     }
                                     if (typeof val === 'object') {
                                         // For nested objects, show a summary or skip complex nested structures
-                                        if (key === 'judged_structured_information' || key === 'entity' || key === 'label') {
-                                            return <span className="text-xs text-muted-foreground italic">Entity information updated</span>;
+                                        if (key === 'judged_structured_information') {
+                                            return <span className="text-xs text-muted-foreground italic">Resource information updated</span>;
                                         }
-                                        // For other objects, show a generic message
+                                        // For other objects, show JSON or skip
                                         return <span className="text-xs text-muted-foreground italic">Object (see details)</span>;
                                     }
                                     return <span className="text-xs text-muted-foreground">{String(val)}</span>;
@@ -198,19 +198,35 @@ function EnhancedDetailsSection({ item }: { item: any }) {
         );
     };
 
-    const entity = getValue(item.entity);
-    const label = getValue(item.label);
-    const paperTitle = Array.isArray(getValue(item.paper_title)) ? getValue(item.paper_title) as string[] : [getValue(item.paper_title) as string];
-    const doi = Array.isArray(getValue(item.doi)) ? getValue(item.doi) as string[] : [getValue(item.doi) as string];
-    const paperLocation = Array.isArray(getValue(item.paper_location)) ? getValue(item.paper_location) as string[] : [getValue(item.paper_location) as string];
+    const name = getValue(item.name);
+    const category = getValue(item.category);
+    const type = getValue(item.type);
+    const description = Array.isArray(getValue(item.description)) ? getValue(item.description) as string[] : [getValue(item.description) as string];
     const judgeScore = Array.isArray(getValue(item.judge_score)) ? getValue(item.judge_score) as string[] : [getValue(item.judge_score) as string];
-    const sentence = Array.isArray(getValue(item.sentence)) ? getValue(item.sentence) as string[] : [getValue(item.sentence) as string];
-    const remarks = Array.isArray(getValue(item.remarks)) ? getValue(item.remarks) as string[] : [getValue(item.remarks) as string];
-    const ontologyId = getValue(item.ontology_id);
-    const ontologyLabel = getValue(item.ontology_label);
-    const documentName = getValue(item.documentName);
-    const start = Array.isArray(getValue(item.start)) ? getValue(item.start) as string[] : [getValue(item.start) as string];
-    const end = Array.isArray(getValue(item.end)) ? getValue(item.end) as string[] : [getValue(item.end) as string];
+    const target = Array.isArray(getValue(item.target)) ? getValue(item.target) as string[] : [getValue(item.target) as string];
+    const specificTarget = Array.isArray(getValue(item.specific_target)) ? getValue(item.specific_target) as string[] : [getValue(item.specific_target) as string];
+    const url = Array.isArray(getValue(item.url)) ? getValue(item.url) as string[] : [getValue(item.url) as string];
+    // Handle mapped_target_concept array
+    const mappedTargetConcept = item.mapped_target_concept && Array.isArray(item.mapped_target_concept) && item.mapped_target_concept.length > 0
+        ? item.mapped_target_concept[0]
+        : null;
+    const mappedTargetLabel = mappedTargetConcept?.label;
+    const mappedTargetId = mappedTargetConcept?.id;
+    const ontology = mappedTargetConcept?.ontology;
+    
+    // Handle mapped_specific_target_concept array
+    const mappedSpecificTargetConcept = item.mapped_specific_target_concept && Array.isArray(item.mapped_specific_target_concept) && item.mapped_specific_target_concept.length > 0
+        ? item.mapped_specific_target_concept[0]?.mapped_target_concept
+        : null;
+    const mappedSpecificTargetLabel = mappedSpecificTargetConcept?.label;
+    const mappedSpecificTargetId = mappedSpecificTargetConcept?.id;
+    const specificTargetOntology = mappedSpecificTargetConcept?.ontology;
+    
+    // Handle mentions object
+    const mentions = item.mentions || {};
+    const datasets = Array.isArray(mentions.datasets) ? mentions.datasets : [];
+    const papers = Array.isArray(mentions.papers) ? mentions.papers : [];
+    const tools = Array.isArray(mentions.tools) ? mentions.tools : [];
     const contributedBy = getValue(item.contributed_by);
     const createdAt = formatDate(getValue(item.created_at) as string);
     const updatedAt = formatDate(getValue(item.updated_at) as string);
@@ -218,8 +234,7 @@ function EnhancedDetailsSection({ item }: { item: any }) {
 
     const tabs = [
         { id: "overview", label: "Overview", icon: Network },
-        { id: "references", label: "References", icon: Database },
-        { id: "context", label: "Context", icon: BookOpen },
+        { id: "details", label: "Details", icon: Database },
         { id: "metadata", label: "Metadata", icon: Activity },
     ];
 
@@ -251,21 +266,29 @@ function EnhancedDetailsSection({ item }: { item: any }) {
             <CardContent className="p-6">
                 {activeTab === "overview" && (
                     <div className="space-y-8">
-                        {/* Entity Information */}
+                        {/* Resource Information */}
                         {renderCard(
-                            "Entity Information",
-                            Network,
-                            entity ? (
+                            "Resource Information",
+                            Package,
+                            name ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div className="rounded-lg border bg-card p-4">
-                                        <div className="text-xs font-medium text-muted-foreground mb-1.5">Entity</div>
-                                        <div className="text-sm font-semibold text-foreground">{Array.isArray(entity) ? entity[0] : entity}</div>
+                                        <div className="text-xs font-medium text-muted-foreground mb-1.5">Name</div>
+                                        <div className="text-sm font-semibold text-foreground">{Array.isArray(name) ? name[0] : name}</div>
                                     </div>
-                                    {label && (
+                                    {category && (
                                         <div className="rounded-lg border bg-card p-4">
-                                            <div className="text-xs font-medium text-muted-foreground mb-1.5">Label</div>
+                                            <div className="text-xs font-medium text-muted-foreground mb-1.5">Category</div>
                                             <Badge variant="secondary" className="text-xs mt-1">
-                                                {Array.isArray(label) ? label[0] : label}
+                                                {Array.isArray(category) ? category[0] : category}
+                                            </Badge>
+                                        </div>
+                                    )}
+                                    {type && (
+                                        <div className="rounded-lg border bg-card p-4">
+                                            <div className="text-xs font-medium text-muted-foreground mb-1.5">Type</div>
+                                            <Badge variant="secondary" className="text-xs mt-1">
+                                                {Array.isArray(type) ? type[0] : type}
                                             </Badge>
                                         </div>
                                     )}
@@ -277,116 +300,130 @@ function EnhancedDetailsSection({ item }: { item: any }) {
                                             </Badge>
                                         </div>
                                     )}
-                                    {ontologyId && (
-                                        <div className="rounded-lg border bg-card p-4">
-                                            <div className="text-xs font-medium text-muted-foreground mb-1.5">Ontology ID</div>
-                                            <div className="text-sm break-all text-foreground">{Array.isArray(ontologyId) ? ontologyId[0] : ontologyId}</div>
-                                        </div>
-                                    )}
-                                    {ontologyLabel && (
-                                        <div className="rounded-lg border bg-card p-4">
-                                            <div className="text-xs font-medium text-muted-foreground mb-1.5">Ontology Label</div>
-                                            <div className="text-sm text-foreground">{Array.isArray(ontologyLabel) ? ontologyLabel[0] : ontologyLabel}</div>
-                                        </div>
-                                    )}
                                 </div>
                             ) : null
                         )}
 
-                        {/* Remarks */}
+                        {/* Description */}
                         {renderCard(
-                            "Remarks",
-                            TagIcon,
-                            remarks[0] ? (
-                                <div className="flex flex-wrap gap-2">
-                                    {remarks.map((remark, index) => (
-                                        <Badge key={index} variant="secondary" className="text-xs px-2.5 py-1">
-                                            {remark}
-                                        </Badge>
-                                    ))}
-                                </div>
-                            ) : null
-                        )}
-                    </div>
-                )}
-
-                {activeTab === "references" && (
-                    <div className="space-y-8">
-                        {/* Paper Information */}
-                        {renderCard(
-                            "Paper Information",
-                            FileText,
-                            paperTitle[0] || documentName ? (
-                                <div className="space-y-3">
-                                    {paperTitle[0] && (
-                                        <div className="rounded-lg border bg-card p-4">
-                                            <div className="text-xs font-medium text-muted-foreground mb-1.5">Paper Title</div>
-                                            <div className="text-sm text-foreground leading-relaxed">{paperTitle[0]}</div>
-                                        </div>
-                                    )}
-                                    {documentName && (
-                                        <div className="rounded-lg border bg-card p-4">
-                                            <div className="text-xs font-medium text-muted-foreground mb-1.5">Document Name</div>
-                                            <div className="text-sm text-foreground">{Array.isArray(documentName) ? documentName[0] : documentName}</div>
-                                        </div>
-                                    )}
-                                    {doi[0] && (
-                                        <div className="rounded-lg border bg-card p-4">
-                                            <div className="text-xs font-medium text-muted-foreground mb-1.5">DOI</div>
-                                            <a
-                                                href={`https://doi.org/${doi[0]}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-sm text-primary hover:underline flex items-center gap-1.5 mt-1"
-                                            >
-                                                {doi[0]}
-                                                <ExternalLink className="h-3.5 w-3.5" />
-                                            </a>
-                                        </div>
-                                    )}
-                                    {paperLocation[0] && (
-                                        <div className="rounded-lg border bg-card p-4">
-                                            <div className="text-xs font-medium text-muted-foreground mb-1.5">Paper Location</div>
-                                            <div className="text-sm text-foreground">{paperLocation[0]}</div>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : null
-                        )}
-                    </div>
-                )}
-
-                {activeTab === "context" && (
-                    <div className="space-y-8">
-                        {/* Sentence */}
-                        {renderCard(
-                            "Sentence",
+                            "Description",
                             MessageSquare,
-                            sentence[0] ? (
+                            description[0] ? (
                                 <div className="rounded-lg border bg-card p-4">
-                                    <p className="text-sm leading-relaxed text-foreground">{sentence[0]}</p>
+                                    <p className="text-sm leading-relaxed text-foreground">{description[0]}</p>
+                                </div>
+                            ) : null
+                        )}
+                    </div>
+                )}
+
+                {activeTab === "details" && (
+                    <div className="space-y-8">
+                        {/* Target Information */}
+                        {renderCard(
+                            "Target Information",
+                            MapPin,
+                            (target[0] || specificTarget[0] || mappedTargetLabel || mappedSpecificTargetLabel) ? (
+                                <div className="space-y-3">
+                                    {target[0] && (
+                                        <div className="rounded-lg border bg-card p-4">
+                                            <div className="text-xs font-medium text-muted-foreground mb-1.5">Target</div>
+                                            <div className="text-sm text-foreground">{target[0]}</div>
+                                        </div>
+                                    )}
+                                    {specificTarget[0] && (
+                                        <div className="rounded-lg border bg-card p-4">
+                                            <div className="text-xs font-medium text-muted-foreground mb-1.5">Specific Target</div>
+                                            <div className="text-sm text-foreground">{specificTarget[0]}</div>
+                                        </div>
+                                    )}
+                                    {mappedTargetLabel && (
+                                        <div className="rounded-lg border bg-card p-4">
+                                            <div className="text-xs font-medium text-muted-foreground mb-1.5">Mapped Target</div>
+                                            <div className="text-sm text-foreground">{mappedTargetLabel}</div>
+                                            {mappedTargetId && (
+                                                <div className="text-xs text-muted-foreground mt-1 break-all">{mappedTargetId}</div>
+                                            )}
+                                            {ontology && (
+                                                <Badge variant="outline" className="text-xs mt-1">
+                                                    {ontology}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    )}
+                                    {mappedSpecificTargetLabel && (
+                                        <div className="rounded-lg border bg-card p-4">
+                                            <div className="text-xs font-medium text-muted-foreground mb-1.5">Mapped Specific Target</div>
+                                            <div className="text-sm text-foreground">{mappedSpecificTargetLabel}</div>
+                                            {mappedSpecificTargetId && (
+                                                <div className="text-xs text-muted-foreground mt-1 break-all">{mappedSpecificTargetId}</div>
+                                            )}
+                                            {specificTargetOntology && (
+                                                <Badge variant="outline" className="text-xs mt-1">
+                                                    {specificTargetOntology}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             ) : null
                         )}
 
-                        {/* Position Information */}
+                        {/* Mentions */}
                         {renderCard(
-                            "Position",
-                            MapPin,
-                            (start[0] || end[0]) ? (
-                                <div className="grid grid-cols-2 gap-3">
-                                    {start[0] && (
+                            "Mentions",
+                            Database,
+                            (datasets.length > 0 || papers.length > 0 || tools.length > 0) ? (
+                                <div className="space-y-4">
+                                    {datasets.length > 0 && (
                                         <div className="rounded-lg border bg-card p-4">
-                                            <div className="text-xs font-medium text-muted-foreground mb-1.5">Start</div>
-                                            <div className="text-sm text-foreground">{start[0]}</div>
+                                            <div className="text-xs font-medium text-muted-foreground mb-2">Datasets</div>
+                                            <ul className="space-y-1">
+                                                {datasets.map((ds: string, idx: number) => (
+                                                    <li key={idx} className="text-sm text-foreground">• {ds}</li>
+                                                ))}
+                                            </ul>
                                         </div>
                                     )}
-                                    {end[0] && (
+                                    {papers.length > 0 && (
                                         <div className="rounded-lg border bg-card p-4">
-                                            <div className="text-xs font-medium text-muted-foreground mb-1.5">End</div>
-                                            <div className="text-sm text-foreground">{end[0]}</div>
+                                            <div className="text-xs font-medium text-muted-foreground mb-2">Papers</div>
+                                            <ul className="space-y-1">
+                                                {papers.map((paper: string, idx: number) => (
+                                                    <li key={idx} className="text-sm text-foreground">• {paper}</li>
+                                                ))}
+                                            </ul>
                                         </div>
                                     )}
+                                    {tools.length > 0 && (
+                                        <div className="rounded-lg border bg-card p-4">
+                                            <div className="text-xs font-medium text-muted-foreground mb-2">Tools</div>
+                                            <ul className="space-y-1">
+                                                {tools.map((tool: string, idx: number) => (
+                                                    <li key={idx} className="text-sm text-foreground">• {tool}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : null
+                        )}
+
+                        {/* URL */}
+                        {renderCard(
+                            "URL",
+                            LinkIcon,
+                            url[0] ? (
+                                <div className="rounded-lg border bg-card p-4">
+                                    <a
+                                        href={url[0]}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-sm text-primary hover:underline flex items-center gap-1.5"
+                                    >
+                                        {url[0]}
+                                        <ExternalLink className="h-3.5 w-3.5" />
+                                    </a>
                                 </div>
                             ) : null
                         )}
@@ -449,13 +486,7 @@ function EnhancedDetailsSection({ item }: { item: any }) {
     );
 }
 
-interface NERDetailPageProps {
-    params: {
-        id: string;
-    };
-}
-
-export default function NERDetailPage({ params }: NERDetailPageProps) {
+export default function ResourceDetailPage({ params }: { params: { id: string } }) {
     const { id } = useParams();
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -467,9 +498,8 @@ export default function NERDetailPage({ params }: NERDetailPageProps) {
             setError(null);
 
             try {
-                // Fetch specific item by ID
                 const decodedId = decodeURIComponent(id as string);
-                const url = new URL('/api/ner', window.location.origin);
+                const url = new URL('/api/resources', window.location.origin);
                 url.searchParams.set('id', decodedId);
 
                 const response = await fetch(url.toString(), {
@@ -487,20 +517,51 @@ export default function NERDetailPage({ params }: NERDetailPageProps) {
                 const result = await response.json();
 
                 if (result.success) {
-                    // If data is a single object, use it directly
+                    let rawData;
                     if (result.data && !Array.isArray(result.data)) {
-                        setData(result.data);
+                        rawData = result.data;
                     } else if (Array.isArray(result.data) && result.data.length > 0) {
-                        setData(result.data[0]);
+                        rawData = result.data[0];
                     } else {
-                        throw new Error('NER entity not found');
+                        throw new Error('Resource not found');
                     }
+                    
+                    // Extract resource data from nested structure
+                    const resourceData = rawData?.judged_structured_information?.judge_resource?.["1"]?.[0];
+                    if (!resourceData) {
+                        throw new Error('Resource data not found in nested structure');
+                    }
+                    
+                    // Merge resource data with top-level fields
+                    const extractedData = {
+                        _id: rawData._id,
+                        name: resourceData.name,
+                        description: resourceData.description,
+                        type: resourceData.type,
+                        category: resourceData.category,
+                        target: resourceData.target,
+                        specific_target: resourceData.specific_target,
+                        mapped_target_concept: resourceData.mapped_target_concept,
+                        mapped_specific_target_concept: resourceData.mapped_specific_target_concept,
+                        url: resourceData.url,
+                        judge_score: resourceData.judge_score,
+                        mentions: resourceData.mentions,
+                        documentName: rawData.documentName,
+                        contributed_by: rawData.contributed_by,
+                        created_at: rawData.created_at,
+                        updated_at: rawData.updated_at,
+                        processedAt: rawData.processedAt,
+                        history: rawData.history,
+                        version: rawData.version
+                    };
+                    
+                    setData(extractedData);
                 } else {
                     throw new Error(result.error || 'Invalid response format');
                 }
             } catch (e) {
                 const err = e as Error;
-                console.error("NER Detail: Error fetching:", err);
+                console.error("Resource Detail: Error fetching:", err);
                 setError(err.message);
             } finally {
                 setLoading(false);
@@ -517,7 +578,7 @@ export default function NERDetailPage({ params }: NERDetailPageProps) {
             <div className="kb-page-margin">
                 <div className="flex flex-col items-center justify-center py-20">
                     <Loader2 className="w-12 h-12 text-sky-500 animate-spin mb-4" />
-                    <p className="text-gray-600">Loading NER entity details...</p>
+                    <p className="text-gray-600">Loading resource details...</p>
                 </div>
             </div>
         );
@@ -531,26 +592,25 @@ export default function NERDetailPage({ params }: NERDetailPageProps) {
                         <AlertCircle className="w-6 h-6 text-red-500" />
                         <div>
                             <h3 className="text-lg font-semibold text-red-800">Error Loading Data</h3>
-                            <p className="text-red-700">{error || 'NER entity not found'}</p>
+                            <p className="text-red-700">{error || 'Resource not found'}</p>
                         </div>
                     </div>
                 </div>
                 <Link 
-                    href="/ner"
+                    href="/resources"
                     className="inline-flex items-center gap-2 text-sky-600 hover:text-sky-700 font-medium"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    Back to NER List
+                    Back to Resources List
                 </Link>
             </div>
         );
     }
 
-    const entity = getValue(data.entity);
-    const label = getValue(data.label);
-    const paperTitle = Array.isArray(getValue(data.paper_title)) ? getValue(data.paper_title) as string[] : [getValue(data.paper_title) as string];
-    const doi = Array.isArray(getValue(data.doi)) ? getValue(data.doi) as string[] : [getValue(data.doi) as string];
-    const description = paperTitle[0] || (Array.isArray(entity) ? entity[0] : entity);
+    const name = getValue(data.name);
+    const description = Array.isArray(getValue(data.description)) ? getValue(data.description) as string[] : [getValue(data.description) as string];
+    const displayDescription = description[0] || (Array.isArray(name) ? name[0] : name);
+    const url = Array.isArray(getValue(data.url)) ? getValue(data.url) as string[] : [getValue(data.url) as string];
 
     return (
         <div className="kb-page-margin">
@@ -558,82 +618,83 @@ export default function NERDetailPage({ params }: NERDetailPageProps) {
                 {/* Back Button */}
                 <div className="mb-6">
                     <Link 
-                        href="/ner"
+                        href="/resources"
                         className="inline-flex items-center gap-2 text-sky-600 hover:text-sky-700 font-medium transition-colors"
                     >
                         <ArrowLeft className="w-4 h-4" />
-                        Back to NER List
+                        Back to Resources List
                     </Link>
                 </div>
 
-                {/* Header Section - matching DialogHeader */}
+                {/* Header Section */}
                 <div className="mb-8">
                     <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-4">
-                        {Array.isArray(entity) ? entity[0] : entity}
+                        {Array.isArray(name) ? name[0] : name}
                     </h1>
                     <div className="p-4 rounded-lg border bg-muted/30">
                         <p className="text-muted-foreground text-sm leading-relaxed">
-                            {description}
+                            {displayDescription}
                         </p>
                     </div>
                 </div>
 
-            {/* Layout: Enhanced with better width utilization - matching resources popup */}
-            <div className="space-y-6">
-                {/* Top row: Tabbed details and related concepts */}
-                <div className="grid gap-8 lg:grid-cols-[2fr_1fr] max-w-full">
-                    {/* Tabbed Details Section */}
-                    <div className="min-w-0">
-                        <EnhancedDetailsSection item={data} />
+                {/* Layout */}
+                <div className="space-y-6">
+                    {/* Top row: Tabbed details and related concepts */}
+                    <div className="grid gap-8 lg:grid-cols-[2fr_1fr] max-w-full">
+                        {/* Tabbed Details Section */}
+                        <div className="min-w-0">
+                            <EnhancedDetailsSection item={data} />
+                        </div>
+
+                        {/* Related Concepts */}
+                        <aside className="lg:sticky lg:top-6 lg:self-start min-w-0">
+                            <Card>
+                                <CardHeader>
+                                    <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                        Related Resources
+                                    </div>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-sm text-muted-foreground py-2">No related resources</div>
+                                </CardContent>
+                            </Card>
+                        </aside>
                     </div>
 
-                    {/* Related Concepts - Empty for now, can be populated later */}
-                    <aside className="lg:sticky lg:top-6 lg:self-start min-w-0">
-                        <Card>
-                            <CardHeader>
-                                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                                    Related Entities
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-sm text-muted-foreground py-2">No related entities</div>
-                            </CardContent>
-                        </Card>
-                    </aside>
-                </div>
+                    {/* Provenance section - Full Width */}
+                    {data.history && Array.isArray(data.history) && data.history.length > 0 && (
+                        <div className="space-y-4">
+                            <ProvenanceTimeline history={data.history} />
+                            <ProvenancePanel history={data.history} />
+                        </div>
+                    )}
 
-                {/* Provenance section - Full Width */}
-                {data.history && Array.isArray(data.history) && data.history.length > 0 && (
-                    <div className="space-y-4">
-                        <ProvenanceTimeline history={data.history} />
-                        <ProvenancePanel history={data.history} />
-                    </div>
-                )}
-
-                {/* Footer - matching DialogFooter */}
-                <div className="mt-8 flex w-full items-center justify-between pt-6 border-t">
-                    <div className="text-xs text-muted-foreground">
-                        {/* left empty intentionally */}
-                    </div>
-                    <div className="flex gap-3">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="gap-2"
-                        >
-                            <Flag className="h-4 w-4" /> Suggest correction
-                        </Button>
-                        {doi[0] && (
-                            <Button asChild size="sm" className="gap-2">
-                                <a href={`https://doi.org/${doi[0]}`} target="_blank" rel="noopener noreferrer">
-                                    <ExternalLink className="h-4 w-4" /> Open DOI
-                                </a>
+                    {/* Footer */}
+                    <div className="mt-8 flex w-full items-center justify-between pt-6 border-t">
+                        <div className="text-xs text-muted-foreground">
+                            {/* left empty intentionally */}
+                        </div>
+                        <div className="flex gap-3">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2"
+                            >
+                                <Flag className="h-4 w-4" /> Suggest correction
                             </Button>
-                        )}
+                            {url[0] && (
+                                <Button asChild size="sm" className="gap-2">
+                                    <a href={url[0]} target="_blank" rel="noopener noreferrer">
+                                        <ExternalLink className="h-4 w-4" /> Open URL
+                                    </a>
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
             </div>
         </div>
     );
 }
+

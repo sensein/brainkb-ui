@@ -68,11 +68,13 @@ const Navbar: React.FC = () => {
     const [isResourcesOpen, setIsResourcesOpen] = useState(false);
     const [isKnowledgeBaseOpen, setIsKnowledgeBaseOpen] = useState(false);
     const [isSubmitDataOpen, setIsSubmitDataOpen] = useState(false);
+    const [isExtractedKnowledgeOpen, setIsExtractedKnowledgeOpen] = useState(false);
     const { data: session } = useSession();
     const router = useRouter();
     const dropdownRef = useRef<HTMLDivElement>(null);
     const ResourcesRef = useRef<HTMLDivElement>(null);
     const knowledgeBaseRef = useRef<HTMLDivElement>(null);
+    const extractedKnowledgeRef = useRef<HTMLDivElement>(null);
     const submitDataRef = useRef<HTMLDivElement>(null);
 
     const handleLogout = async () => {
@@ -87,6 +89,7 @@ const Navbar: React.FC = () => {
             { ref: dropdownRef, isOpen, setIsOpen: setIsOpen },
             { ref: ResourcesRef, isOpen: isResourcesOpen, setIsOpen: setIsResourcesOpen },
             { ref: knowledgeBaseRef, isOpen: isKnowledgeBaseOpen, setIsOpen: setIsKnowledgeBaseOpen },
+            { ref: extractedKnowledgeRef, isOpen: isExtractedKnowledgeOpen, setIsOpen: setIsExtractedKnowledgeOpen },
             { ref: submitDataRef, isOpen: isSubmitDataOpen, setIsOpen: setIsSubmitDataOpen }
         ];
 
@@ -157,6 +160,18 @@ const Navbar: React.FC = () => {
                             onToggle={() => setIsKnowledgeBaseOpen(!isKnowledgeBaseOpen)}
                             onClose={() => setIsKnowledgeBaseOpen(false)}
                             dropdownRef={knowledgeBaseRef}
+                        />
+
+                        <ClickableDropdown
+                            label="Extracted Knowledge"
+                            items={[
+                                { href: "/ner", label: "Neuroscientific NER" },
+                                { href: "/resources", label: "Structured Resources" }
+                            ]}
+                            isOpen={isExtractedKnowledgeOpen}
+                            onToggle={() => setIsExtractedKnowledgeOpen(!isExtractedKnowledgeOpen)}
+                            onClose={() => setIsExtractedKnowledgeOpen(false)}
+                            dropdownRef={extractedKnowledgeRef}
                         />
                         <li className="flex items-center">
                             <Link href="/hmba-taxonomy"

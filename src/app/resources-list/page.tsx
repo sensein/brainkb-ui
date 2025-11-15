@@ -21,35 +21,7 @@ const getValue = (field: any): string => {
     return field ? String(field) : '';
 };
 
-// Helper function to extract resource data from nested structure
-const extractResourceData = (item: any) => {
-    const resourceData = item?.judged_structured_information?.judge_resource?.["1"]?.[0];
-    if (!resourceData) return null;
-    
-    return {
-        _id: item._id,
-        name: resourceData.name,
-        description: resourceData.description,
-        type: resourceData.type,
-        category: resourceData.category,
-        target: resourceData.target,
-        specific_target: resourceData.specific_target,
-        mapped_target_concept: resourceData.mapped_target_concept,
-        mapped_specific_target_concept: resourceData.mapped_specific_target_concept,
-        url: resourceData.url,
-        judge_score: resourceData.judge_score,
-        mentions: resourceData.mentions,
-        documentName: item.documentName,
-        contributed_by: item.contributed_by,
-        created_at: item.created_at,
-        updated_at: item.updated_at,
-        processedAt: item.processedAt,
-        history: item.history,
-        version: item.version
-    };
-};
-
-const Resources = () => {
+const ResourcesList = () => {
     const [data, setData] = useState<any[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -93,17 +65,12 @@ const Resources = () => {
             console.info("Resources: Has more:", result.has_more);
 
             if (result.success && Array.isArray(result.data)) {
-                // Extract resource data from nested structure
-                const extractedData = result.data
-                    .map(extractResourceData)
-                    .filter((item: any) => item !== null);
-                
                 if (skip === 0) {
-                    setData(extractedData);
+                    setData(result.data);
                 } else {
-                    setData(prev => [...prev, ...extractedData]);
+                    setData(prev => [...prev, ...result.data]);
                 }
-                setTotalCount(result.total || extractedData.length);
+                setTotalCount(result.total || result.data.length);
                 setHasMore(result.has_more || false);
             } else {
                 throw new Error(result.error || 'Invalid response format: data is not an array');
@@ -262,20 +229,22 @@ const Resources = () => {
             )}
 
             {/* Table */}
-            <div className="grid fix-left-margin grid-cols-1">
-                {!loading && !error && renderTable()}
+            {!loading && !error && renderTable()}
 
-                {/* Empty State */}
-                {!loading && !error && (!data || data.length === 0) && (
+            {/* Empty State */}
+            {!loading && !error && (!data || data.length === 0) && (
+                <div className="grid fix-left-margin grid-cols-1">
                     <div className="flex flex-col items-center justify-center py-20 bg-gray-50 rounded-lg">
                         <Database className="w-16 h-16 text-gray-400 mb-4" />
                         <p className="text-gray-600 text-lg">No resources found</p>
                     </div>
-                )}
+                </div>
+            )}
 
-                {/* Pagination */}
-                {!loading && !error && filteredData.length > 0 && (
-                    <div className="mt-6 flex items-center justify-between">
+            {/* Pagination */}
+            {!loading && !error && filteredData.length > 0 && (
+                <div className="grid fix-left-margin grid-cols-1 mt-6">
+                    <div className="flex items-center justify-between">
                         <div className="text-sm text-gray-700">
                             Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredData.length)} of {filteredData.length} resources
                             {totalCount > filteredData.length && ` (${totalCount} total)`}
@@ -300,11 +269,11 @@ const Resources = () => {
                             </button>
                         </div>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     );
 };
 
-export default Resources;
+export default ResourcesList;
 
