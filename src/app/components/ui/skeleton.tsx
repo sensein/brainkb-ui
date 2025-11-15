@@ -1,4 +1,5 @@
-import { cn } from "@/src/app/resources/lib/utils"
+import * as React from "react"
+import { cn } from "@/src/app/components/lib/utils"
 
 function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -11,3 +12,4 @@ function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 export { Skeleton }
+

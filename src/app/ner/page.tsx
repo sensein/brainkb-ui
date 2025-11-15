@@ -1,98 +1,103 @@
 "use client";
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useMemo} from 'react';
 import {Database, Loader2, AlertCircle, ChevronLeft, ChevronRight, ExternalLink, Search} from "lucide-react";
-import {useFilteredTableData} from "@/src/app/utils/tableFilterUtils";
-import {getData} from "@/src/app/components/getData";
+import Link from "next/link";
 
 const ITEMS_PER_PAGE = 50;
 
-const Resources = (
-    {
-        params,
-    }: {
-        params: {
-            slug: string;
-        }
+// Simplified NER data headers to display
+const NER_HEADERS = [
+    "Entity",
+    "Label",
+    "Paper Title",
+    "Judge Score"
+];
+
+// Helper function to get array value (first element if array, otherwise the value itself)
+const getValue = (field: any): string => {
+    if (Array.isArray(field)) {
+        return field.length > 0 ? String(field[0]) : '';
     }
-) => {
+    return field ? String(field) : '';
+};
+
+// Helper function to format date
+const formatDate = (dateString: string): string => {
+    if (!dateString) return '';
+    try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch {
+        return dateString;
+    }
+};
+
+const NER = () => {
     const [data, setData] = useState<any[]>([]);
-    const [headers, setHeaders] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
-    const [pagetitle, setPageTitle] = useState("");
-    const [pagesubtitle, setSubPageTitle] = useState("");
-    const [entityPageSlug, setEntityPageSlug] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
+    const [totalCount, setTotalCount] = useState(0);
+    const [hasMore, setHasMore] = useState(false);
 
-    const fetchData = async () => {
+    const fetchData = async (skip: number = 0) => {
         setLoading(true);
         setError(null);
-        setData([]);
-        setHeaders([]);
-        setPageTitle("");
-        setSubPageTitle("");
-        setEntityPageSlug("");
 
         try {
-            // Read YAML config directly (like old working code)
-            const page = yaml.pages.find((page) => page.slug === "default");
-            if (!page) {
-                throw new Error('Page with slug "default" not found');
-            }
+            // Use API route that handles JWT authentication server-side
+            const url = new URL('/api/ner', window.location.origin);
+            url.searchParams.set('limit', String(ITEMS_PER_PAGE));
+            url.searchParams.set('skip', String(skip));
 
-            const query_to_execute = page.sparql_query;
-            const entitypage = page.entitypageslug || "";
-            const page_title = page.page || "";
-            const page_sub_title = page.description || "";
+            console.info("NER: Fetching data from API route:", url.toString());
+            console.info("NER: Skip:", skip, "Limit:", ITEMS_PER_PAGE);
 
-            setEntityPageSlug(entitypage);
-            setPageTitle(page_title);
-            setSubPageTitle(page_sub_title);
-
-            console.info("KBpage: Reading YAML config");
-            console.info("KBpage: Query length:", query_to_execute?.length || 0);
-            console.info("KBpage: Calling API route with query (to avoid CORS)");
-
-            // Call API route with POST to send query (server-side execution avoids CORS)
-            const apiResponse = await fetch('/api/knowledge-base', {
-                method: 'POST',
+            const response = await fetch(url.toString(), {
+                method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    slug: 'default',
-                    sparqlQuery: query_to_execute
-                })
+                }
             });
 
-            if (!apiResponse.ok) {
-                const errorText = await apiResponse.text();
-                throw new Error(`API returned ${apiResponse.status}: ${errorText}`);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+                throw new Error(errorData.error || `API returned ${response.status}`);
             }
 
-            const result = await apiResponse.json();
+            const result = await response.json();
 
-            console.info("KBpage: API response received");
-            console.info("KBpage: Result success:", result.success);
-            console.info("KBpage: Result data type:", Array.isArray(result.data) ? 'array' : typeof result.data);
-            console.info("KBpage: Result data length:", Array.isArray(result.data) ? result.data.length : 'N/A');
-            console.info("KBpage: Result headers:", result.headers);
+            console.info("NER: API response received");
+            console.info("NER: Result success:", result.success);
+            console.info("NER: Result data type:", Array.isArray(result.data) ? 'array' : typeof result.data);
+            console.info("NER: Result data length:", Array.isArray(result.data) ? result.data.length : 'N/A');
+            console.info("NER: Total:", result.total);
+            console.info("NER: Has more:", result.has_more);
 
-            if (result.success) {
-                const dataArray = Array.isArray(result.data) ? result.data : [];
-                console.info(`KBpage: Setting data with ${dataArray.length} items, ${result.headers.length} headers`);
-                setHeaders(Array.isArray(result.headers) ? result.headers : []);
-                setData(dataArray);
+            if (result.success && Array.isArray(result.data)) {
+                if (skip === 0) {
+                    // First page - replace data
+                    setData(result.data);
+                } else {
+                    // Subsequent pages - append data
+                    setData(prev => [...prev, ...result.data]);
+                }
+                setTotalCount(result.total || result.data.length);
+                setHasMore(result.has_more || false);
             } else {
-                console.error("KBpage: API returned success=false:", result.error);
-                setError(result.error || "Failed to fetch data");
+                throw new Error(result.error || 'Invalid response format: data is not an array');
             }
         } catch (e) {
             const error = e as Error;
-            console.error("KBpage: Error in fetchData:", error);
-            console.error("KBpage: Error message:", error.message);
-            console.error("KBpage: Error stack:", error.stack);
+            console.error("NER: Error in fetchData:", error);
+            console.error("NER: Error message:", error.message);
             setError(error.message);
         } finally {
             setLoading(false);
@@ -100,26 +105,51 @@ const Resources = (
     };
 
     useEffect(() => {
-        fetchData();
+        fetchData(0);
     }, []);
 
-    // Calculate filtered data for pagination
-    const filteredData = useFilteredTableData(data, headers, searchQuery);
+    // Filter data based on search query
+    const filteredData = useMemo(() => {
+        const trimmedQuery = searchQuery.trim().toLowerCase();
+        if (trimmedQuery === "") {
+            return data;
+        }
+        
+        return data.filter((item) => {
+            // Search across multiple fields
+            const searchableFields = [
+                getValue(item.entity),
+                getValue(item.label),
+                getValue(item.paper_title),
+                getValue(item.doi),
+                getValue(item.paper_location),
+                getValue(item.contributed_by),
+                getValue(item.documentName)
+            ];
+            
+            return searchableFields.some(field => 
+                field.toLowerCase().includes(trimmedQuery)
+            );
+        });
+    }, [data, searchQuery]);
     
     const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+
+    // Reset to first page when search changes or when current page exceeds total pages
+    useEffect(() => {
+        if (currentPage > totalPages && totalPages > 0) {
+            setCurrentPage(1);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchQuery, totalPages]);
 
     const renderTable = () => {
         if (!data || !Array.isArray(data) || data.length === 0) return null;
 
-        // Use the filtered data from the hook
+        // Use the filtered data for pagination
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
         const endIndex = startIndex + ITEMS_PER_PAGE;
         const currentPageData = filteredData.slice(startIndex, endIndex);
-        
-        // Reset to first page when search changes
-        if (currentPage > Math.ceil(filteredData.length / ITEMS_PER_PAGE) && filteredData.length > 0) {
-            setCurrentPage(1);
-        }
 
         return (
             <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
@@ -127,7 +157,7 @@ const Resources = (
                     <table className="w-full text-sm text-left text-gray-700">
                         <thead className="bg-gradient-to-r from-sky-50 to-blue-50 border-b border-gray-200">
                             <tr>
-                                {headers.map((header, index) => (
+                                {NER_HEADERS.map((header, index) => (
                                     <th key={index} className="px-6 py-4 font-semibold text-gray-900 uppercase tracking-wider text-xs">
                                         {header}
                                     </th>
@@ -136,33 +166,41 @@ const Resources = (
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                             {currentPageData.map((item, index) => {
-                                // Use the first header's value as a unique identifier, or fallback to id if available
-                                const uniqueKey = item.id?.value || item[headers[0]]?.value || index;
+                                const uniqueKey = item._id || index;
+                                const entity = getValue(item.entity);
+                                const label = getValue(item.label);
+                                const paperTitle = getValue(item.paper_title);
+                                const judgeScore = getValue(item.judge_score);
+                                
                                 return (
                                 <tr key={uniqueKey} className="hover:bg-sky-50/50 transition-colors duration-150">
-                                    {headers.map((header, headerIndex) => {
-                                        const cellValue = item[header]?.value || '';
-                                        const displayValue = cellValue ? cellValue.substring(cellValue.lastIndexOf('/') + 1) : '';
-                                        
-                                        return (
-                                            <td key={headerIndex} className="px-6 py-4 whitespace-nowrap">
-                                                {headerIndex === 0 ? (
-                                                    <a 
-                                                        href={`knowledge-base/${entityPageSlug}/${encodeURIComponent(cellValue)}`}
-                                                        rel="noopener noreferrer"
-                                                        className="inline-flex items-center gap-2 text-sky-600 hover:text-sky-700 font-medium transition-colors group"
-                                                    >
-                                                        {displayValue}
-                                                        <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                    </a>
-                                                ) : (
-                                                    <span className="text-gray-700">
-                                                        {displayValue}
-                                                    </span>
-                                                )}
-                                            </td>
-                                        );
-                                    })}
+                                    <td className="px-6 py-4">
+                                        <Link 
+                                            href={`/ner/terms/${encodeURIComponent(uniqueKey)}`}
+                                            className="font-medium text-sky-600 hover:text-sky-700 hover:underline transition-colors"
+                                        >
+                                            {entity || '-'}
+                                        </Link>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            {label || '-'}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 max-w-md">
+                                        <span className="text-gray-700 truncate block" title={paperTitle}>
+                                            {paperTitle || '-'}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        {judgeScore ? (
+                                            <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                {judgeScore}
+                                            </span>
+                                        ) : (
+                                            <span className="text-gray-500">-</span>
+                                        )}
+                                    </td>
                                 </tr>
                                 );
                             })}
@@ -175,21 +213,17 @@ const Resources = (
 
     return (
         <div className="kb-page-margin">
-
-
             {/* Hero Section */}
             <div className="grid fix-left-margin grid-cols-1 mb-8">
                 <div className="relative overflow-hidden bg-gradient-to-br from-sky-500 via-blue-500 to-emerald-500 rounded-2xl shadow-xl">
                     <div className="absolute inset-0 bg-gradient-to-r from-sky-600/20 to-transparent"></div>
                     <div className="relative px-8 py-12">
                         <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-                            {pagetitle || "Knowledge Base"}
+                            Named Entity Recognition (NER) Data
                         </h1>
-                        {pagesubtitle && (
-                            <p className="text-sky-100 text-base leading-relaxed">
-                                {pagesubtitle}
-                            </p>
-                        )}
+                        <p className="text-sky-100 text-base leading-relaxed">
+                            Browse and search extracted named entities from research papers
+                        </p>
                     </div>
                 </div>
             </div>
@@ -205,7 +239,7 @@ const Resources = (
                             </div>
                             <input
                                 type="text"
-                                placeholder="Search across all columns..."
+                                placeholder="Search entities, labels, papers, DOIs..."
                                 value={searchQuery}
                                 onChange={(e) => {
                                     setSearchQuery(e.target.value);
@@ -217,6 +251,9 @@ const Resources = (
                         {searchQuery.trim() !== "" && (
                             <p className="mt-2 text-sm text-gray-600">
                                 Showing {filteredData.length} of {data.length} results
+                                {totalCount > data.length && (
+                                    <span className="text-gray-500"> (out of {totalCount} total)</span>
+                                )}
                             </p>
                         )}
                     </div>
@@ -225,7 +262,7 @@ const Resources = (
                 {loading && (
                     <div className="flex flex-col items-center justify-center py-20">
                         <Loader2 className="w-12 h-12 text-sky-500 animate-spin mb-4" />
-                        <p className="text-gray-600">Loading knowledge base data...</p>
+                        <p className="text-gray-600">Loading NER data...</p>
                     </div>
                 )}
 
@@ -254,6 +291,9 @@ const Resources = (
                                     className="font-semibold text-gray-900">{filteredData.length}</span> entries
                                     {searchQuery.trim() !== "" && data.length !== filteredData.length && (
                                         <span className="text-gray-500"> (filtered from {data.length} total)</span>
+                                    )}
+                                    {totalCount > data.length && !searchQuery.trim() && (
+                                        <span className="text-gray-500"> (out of {totalCount} total)</span>
                                     )}
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -316,8 +356,8 @@ const Resources = (
                         {!loading && !error && data.length === 0 && (
                             <div className="text-center py-20 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
                                 <Database className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                                <p className="text-xl font-semibold text-gray-600 mb-2">No data available</p>
-                                <p className="text-gray-500">There are no entries in this knowledge base yet.</p>
+                                <p className="text-xl font-semibold text-gray-600 mb-2">No NER data available</p>
+                                <p className="text-gray-500">There are no named entity recognition entries yet.</p>
                             </div>
                         )}
                     </>
@@ -327,5 +367,5 @@ const Resources = (
     );
 };
 
-export default Resources;
+export default NER;
 
