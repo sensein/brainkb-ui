@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 
 interface TokenResponse {
   access_token: string;
@@ -87,6 +88,18 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await response.json();
+
+    // Invalidate Resources cache tags after successful save
+    try {
+        // Invalidate common tags that cover all Resources caches
+        revalidateTag('resource-all');
+        revalidateTag('resource-lists');
+        revalidateTag('resource-entities');
+        console.log('[save-structured-resource] Resources cache invalidated successfully');
+    } catch (cacheError) {
+        console.error('[save-structured-resource] Error invalidating cache:', cacheError);
+        // Don't fail the request if cache invalidation fails
+    }
 
     return NextResponse.json({
       success: true,

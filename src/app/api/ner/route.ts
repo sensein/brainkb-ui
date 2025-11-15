@@ -3,7 +3,7 @@ import { unstable_cache } from 'next/cache';
 import { getWarmedCache } from '@/src/app/utils/cache-warm';
 import { fetchPaginatedData, searchById } from '../utils/api-client';
 
-const CACHE_DURATION = 24 * 60 * 60; // 24 hours in seconds
+const CACHE_DURATION = 4 * 60 * 60; // 4 hours in seconds
 
 // Force dynamic rendering - this route uses searchParams
 export const dynamic = 'force-dynamic';
@@ -33,7 +33,7 @@ function getCachedNERById(id: string) {
         [`ner-entity-${id}`],
         {
             revalidate: CACHE_DURATION,
-            tags: [`ner-entity-${id}`]
+            tags: [`ner-entity-${id}`, 'ner-all', 'ner-entities']
         }
     );
 }
@@ -52,7 +52,7 @@ function getCachedNERData(limit: string, skip: string, search?: string) {
         [`ner-data-${limit}-${skip}-${search || ''}`],
         {
             revalidate: CACHE_DURATION,
-            tags: [`ner-list-${limit}-${skip}-${search || ''}`]
+            tags: [`ner-list-${limit}-${skip}-${search || ''}`, 'ner-all', 'ner-lists']
         }
     );
 }
