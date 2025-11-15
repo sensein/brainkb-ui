@@ -15,6 +15,37 @@ import { getValue, formatDate } from "@/src/app/components/detail/helpers";
 import { ProvenanceTimeline } from "@/src/app/components/detail/ProvenanceTimeline";
 import { ProvenancePanel } from "@/src/app/components/detail/ProvenancePanel";
 
+// Helper function to check if a string is a URL
+function isUrl(str: string): boolean {
+    if (!str || typeof str !== 'string') return false;
+    try {
+        const url = new URL(str);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch {
+        return false;
+    }
+}
+
+// Helper component to render ID as clickable link if it's a URL
+function RenderId({ id }: { id: string }) {
+    if (isUrl(id)) {
+        return (
+            <a
+                href={id}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline break-all flex items-center gap-1 mt-1"
+            >
+                {id}
+                <ExternalLink className="h-3 w-3 flex-shrink-0" />
+            </a>
+        );
+    }
+    return (
+        <div className="text-xs text-muted-foreground mt-1 break-all">{id}</div>
+    );
+}
+
 function EnhancedDetailsSection({ item }: { item: any }) {
     const [activeTab, setActiveTab] = useState<string>("overview");
 
@@ -50,7 +81,23 @@ function EnhancedDetailsSection({ item }: { item: any }) {
     const description = Array.isArray(getValue(item.description)) ? getValue(item.description) as string[] : [getValue(item.description) as string];
     const judgeScore = Array.isArray(getValue(item.judge_score)) ? getValue(item.judge_score) as string[] : [getValue(item.judge_score) as string];
     const target = Array.isArray(getValue(item.target)) ? getValue(item.target) as string[] : [getValue(item.target) as string];
-    const specificTarget = Array.isArray(getValue(item.specific_target)) ? getValue(item.specific_target) as string[] : [getValue(item.specific_target) as string];
+    
+    // Handle specific_target - can be array, comma-separated string, or single string
+    const specificTargetRaw = getValue(item.specific_target);
+    let specificTarget: string[] = [];
+    if (Array.isArray(specificTargetRaw)) {
+        specificTarget = specificTargetRaw.map(s => String(s));
+    } else if (typeof specificTargetRaw === 'string') {
+        // Check if it's a comma-separated string
+        if (specificTargetRaw.includes(',')) {
+            specificTarget = specificTargetRaw.split(',').map(s => s.trim()).filter(s => s.length > 0);
+        } else {
+            specificTarget = [specificTargetRaw];
+        }
+    } else if (specificTargetRaw) {
+        specificTarget = [String(specificTargetRaw)];
+    }
+    
     const url = Array.isArray(getValue(item.url)) ? getValue(item.url) as string[] : [getValue(item.url) as string];
     // Handle mapped_target_concept array
     const mappedTargetConcept = item.mapped_target_concept && Array.isArray(item.mapped_target_concept) && item.mapped_target_concept.length > 0
@@ -60,13 +107,12 @@ function EnhancedDetailsSection({ item }: { item: any }) {
     const mappedTargetId = mappedTargetConcept?.id;
     const ontology = mappedTargetConcept?.ontology;
     
-    // Handle mapped_specific_target_concept array
-    const mappedSpecificTargetConcept = item.mapped_specific_target_concept && Array.isArray(item.mapped_specific_target_concept) && item.mapped_specific_target_concept.length > 0
-        ? item.mapped_specific_target_concept[0]?.mapped_target_concept
-        : null;
-    const mappedSpecificTargetLabel = mappedSpecificTargetConcept?.label;
-    const mappedSpecificTargetId = mappedSpecificTargetConcept?.id;
-    const specificTargetOntology = mappedSpecificTargetConcept?.ontology;
+    // Handle mapped_specific_target_concept array - get ALL mapped targets, not just the first
+    const mappedSpecificTargetConcepts = item.mapped_specific_target_concept && Array.isArray(item.mapped_specific_target_concept)
+        ? item.mapped_specific_target_concept
+            .map((item: any) => item?.mapped_target_concept)
+            .filter((concept: any) => concept != null)
+        : [];
     
     // Handle mentions object
     const mentions = item.mentions || {};
@@ -169,7 +215,7 @@ function EnhancedDetailsSection({ item }: { item: any }) {
                         {renderCard(
                             "Target Information",
                             MapPin,
-                            (target[0] || specificTarget[0] || mappedTargetLabel || mappedSpecificTargetLabel) ? (
+                            (target[0] || specificTarget.length > 0 || mappedTargetLabel || mappedSpecificTargetConcepts.length > 0) ? (
                                 <div className="space-y-3">
                                     {target[0] && (
                                         <div className="rounded-lg border bg-card p-4">
@@ -177,10 +223,10 @@ function EnhancedDetailsSection({ item }: { item: any }) {
                                             <div className="text-sm text-foreground">{target[0]}</div>
                                         </div>
                                     )}
-                                    {specificTarget[0] && (
+                                    {specificTarget.length > 0 && (
                                         <div className="rounded-lg border bg-card p-4">
                                             <div className="text-xs font-medium text-muted-foreground mb-1.5">Specific Target</div>
-                                            <div className="text-sm text-foreground">{specificTarget[0]}</div>
+                                            <div className="text-sm text-foreground">{specificTarget.join(', ')}</div>
                                         </div>
                                     )}
                                     {mappedTargetLabel && (
@@ -188,7 +234,7 @@ function EnhancedDetailsSection({ item }: { item: any }) {
                                             <div className="text-xs font-medium text-muted-foreground mb-1.5">Mapped Target</div>
                                             <div className="text-sm text-foreground">{mappedTargetLabel}</div>
                                             {mappedTargetId && (
-                                                <div className="text-xs text-muted-foreground mt-1 break-all">{mappedTargetId}</div>
+                                                <RenderId id={mappedTargetId} />
                                             )}
                                             {ontology && (
                                                 <Badge variant="outline" className="text-xs mt-1">
@@ -197,18 +243,24 @@ function EnhancedDetailsSection({ item }: { item: any }) {
                                             )}
                                         </div>
                                     )}
-                                    {mappedSpecificTargetLabel && (
-                                        <div className="rounded-lg border bg-card p-4">
-                                            <div className="text-xs font-medium text-muted-foreground mb-1.5">Mapped Specific Target</div>
-                                            <div className="text-sm text-foreground">{mappedSpecificTargetLabel}</div>
-                                            {mappedSpecificTargetId && (
-                                                <div className="text-xs text-muted-foreground mt-1 break-all">{mappedSpecificTargetId}</div>
-                                            )}
-                                            {specificTargetOntology && (
-                                                <Badge variant="outline" className="text-xs mt-1">
-                                                    {specificTargetOntology}
-                                                </Badge>
-                                            )}
+                                    {mappedSpecificTargetConcepts.length > 0 && (
+                                        <div className="space-y-3">
+                                            {mappedSpecificTargetConcepts.map((mappedConcept: any, index: number) => (
+                                                <div key={index} className="rounded-lg border bg-card p-4">
+                                                    <div className="text-xs font-medium text-muted-foreground mb-1.5">Mapped Specific Target</div>
+                                                    {mappedConcept?.label && (
+                                                        <div className="text-sm text-foreground">{mappedConcept.label}</div>
+                                                    )}
+                                                    {mappedConcept?.id && (
+                                                        <RenderId id={mappedConcept.id} />
+                                                    )}
+                                                    {mappedConcept?.ontology && (
+                                                        <Badge variant="outline" className="text-xs mt-1">
+                                                            {mappedConcept.ontology}
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                            ))}
                                         </div>
                                     )}
                                 </div>
