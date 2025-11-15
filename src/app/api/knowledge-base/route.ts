@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
-import { getData } from '@/src/app/components/getData';
 import { getWarmedCache } from '@/src/app/utils/cache-warm';
-import yaml from '@/src/app/components/config-knowledgebases.yaml';
+import { getData } from '@/src/app/components/getData';
 
 // Force dynamic rendering - this route uses searchParams
 export const dynamic = 'force-dynamic';
@@ -10,7 +9,41 @@ export const dynamic = 'force-dynamic';
 // Cache duration: 24 hours (in seconds)
 const CACHE_DURATION = 24 * 60 * 60;
 
-async function fetchKnowledgeBaseData(slug: string) {
+// Execute SPARQL query server-side (to avoid CORS issues)
+async function executeQuery(sparqlQuery: string) {
+    const queryParameter = { sparql_query: sparqlQuery };
+    const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql";
+
+    console.info(`[KB API] Executing query (length: ${sparqlQuery.length})`);
+    const response = await getData(queryParameter, endpoint);
+
+    console.info(`[KB API] Query response status:`, response?.status);
+
+    // Handle different possible response structures
+    let bindings: any[] = [];
+    let vars: string[] = [];
+
+    if (response?.status === 'success' && response?.message?.results?.bindings) {
+        bindings = response.message.results.bindings;
+        vars = response.message.head?.vars || [];
+    } else if (response?.results?.bindings) {
+        bindings = response.results.bindings;
+        vars = response.head?.vars || [];
+    } else if (Array.isArray(response)) {
+        bindings = response;
+        vars = bindings.length > 0 ? Object.keys(bindings[0] || {}) : [];
+    }
+
+    console.info(`[KB API] Extracted ${bindings.length} bindings, ${vars.length} vars`);
+
+    return {
+        data: Array.isArray(bindings) ? bindings : [],
+        headers: Array.isArray(vars) ? vars : []
+    };
+}
+
+// Simplified: Only handle caching, data fetching moved to page component
+async function fetchKnowledgeBaseData(slug: string, sparqlQuery?: string) {
     // Check for pre-warmed cache from build time first
     const warmedCache = getWarmedCache<{
         data: any[];
@@ -20,20 +53,14 @@ async function fetchKnowledgeBaseData(slug: string) {
         entityPageSlug: string;
         timestamp?: number;
     }>(`kb-${slug}`);
-    
+
     if (warmedCache) {
-        // Extract data from cache (cache file has {data, headers, ...} structure)
         const warmedData = warmedCache.data !== undefined ? warmedCache : warmedCache;
-        
-        // Only log in development to reduce noise
-        if (process.env.NODE_ENV === 'development') {
-            const itemCount = warmedData.data?.length || (Array.isArray(warmedData) ? warmedData.length : 0);
-            console.log(`Using pre-warmed KB cache for slug: ${slug} (${itemCount} items)`);
-        }
-        
+        const itemCount = warmedData.data?.length || (Array.isArray(warmedData) ? warmedData.length : 0);
+        console.info(`[KB API] Using pre-warmed cache for slug: ${slug} (${itemCount} items)`);
+
         // Validate warmed data structure
         if (warmedData && typeof warmedData === 'object' && 'data' in warmedData) {
-            // Standard structure: {data, headers, pageTitle, ...}
             if (Array.isArray(warmedData.data) && warmedData.data.length > 0) {
                 return {
                     data: warmedData.data,
@@ -44,7 +71,6 @@ async function fetchKnowledgeBaseData(slug: string) {
                 };
             }
         } else if (Array.isArray(warmedData)) {
-            // If cache returned array directly (old format), wrap it
             return {
                 data: warmedData,
                 headers: [],
@@ -53,85 +79,96 @@ async function fetchKnowledgeBaseData(slug: string) {
                 entityPageSlug: ""
             };
         }
-        
-        // Warm cache has empty/invalid data, fetch fresh
-        if (process.env.NODE_ENV === 'development') {
-            console.log(`Warm cache for ${slug} is empty or invalid, fetching fresh data`);
-        }
+
+        console.info(`[KB API] Warm cache for ${slug} is empty or invalid`);
     }
-    
-    // If no warmed cache or warm cache is empty, fetch fresh data
-    try {
-        const page = yaml.pages.find((page) => page.slug === slug);
-        if (!page) {
-            throw new Error(`Page with slug "${slug}" not found`);
-        }
 
-        const query_to_execute = page.sparql_query;
-        const queryParameter = { sparql_query: query_to_execute };
-        const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql";
-
-        const response = await getData(queryParameter, endpoint);
-
-        if (response.status === 'success' && response.message?.results?.bindings) {
-            const bindings = response.message.results.bindings;
-            const vars = response.message.head.vars;
-
-            if (process.env.NODE_ENV === 'development') {
-                console.log(`Fetched fresh KB data for ${slug}: ${bindings.length} items`);
-            }
-
-            // Always return data, even if empty (empty might be valid)
+    // If query provided, execute it server-side (avoids CORS)
+    if (sparqlQuery) {
+        try {
+            const result = await executeQuery(sparqlQuery);
             return {
-                data: Array.isArray(bindings) ? bindings : [],
-                headers: Array.isArray(vars) ? vars : [],
-                pageTitle: page.page || "",
-                pageSubtitle: page.description || "",
-                entityPageSlug: page.entitypageslug || ""
+                data: result.data,
+                headers: result.headers,
+                pageTitle: "",
+                pageSubtitle: "",
+                entityPageSlug: ""
             };
-        } else {
-            // If API returns invalid format, return empty arrays instead of throwing
-            // This allows the page to show "No data available" gracefully
-            console.warn(`Invalid response format for ${slug}, returning empty data`);
+        } catch (error) {
+            console.error(`[KB API] Error executing query:`, error);
             return {
                 data: [],
                 headers: [],
-                pageTitle: page.page || "",
-                pageSubtitle: page.description || "",
-                entityPageSlug: page.entitypageslug || ""
+                pageTitle: "",
+                pageSubtitle: "",
+                entityPageSlug: ""
             };
         }
-    } catch (error) {
-        console.error(`Error fetching knowledge base data for slug "${slug}":`, error);
-        // Don't throw - return empty data structure so page can display gracefully
-        // This ensures we never show an error when cache fails, just fetch fresh
-        const page = yaml.pages.find((page) => page.slug === slug);
-        return {
-            data: [],
-            headers: [],
-            pageTitle: page?.page || "",
-            pageSubtitle: page?.description || "",
-            entityPageSlug: page?.entitypageslug || ""
-        };
     }
+
+    // No valid cache and no query - return empty
+    return {
+        data: [],
+        headers: [],
+        pageTitle: "",
+        pageSubtitle: "",
+        entityPageSlug: ""
+    };
 }
 
 // Create a cached version for each slug
-// Note: fetchKnowledgeBaseData already checks warm cache first, then fetches fresh if needed
-function getCachedKnowledgeBase(slug: string) {
+function getCachedKnowledgeBase(slug: string, sparqlQuery?: string) {
     return unstable_cache(
         async () => {
-            const result = await fetchKnowledgeBaseData(slug);
-            // Always return result - even if empty, it might be valid
-            // The page will handle empty data display
+            const result = await fetchKnowledgeBaseData(slug, sparqlQuery);
             return result;
         },
-        [`brainkb-kb-${slug}`],
+        [`brainkb-kb-${slug}-${sparqlQuery ? Buffer.from(sparqlQuery).toString('base64').substring(0, 20) : 'default'}`],
         {
             revalidate: CACHE_DURATION,
             tags: [`knowledge-base-${slug}`]
         }
     );
+}
+
+export async function POST(request: NextRequest) {
+    try {
+        const body = await request.json();
+        const { slug = 'default', sparqlQuery } = body;
+
+        if (!sparqlQuery) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: 'sparqlQuery is required'
+                },
+                { status: 400 }
+            );
+        }
+
+        const cachedFetch = getCachedKnowledgeBase(slug, sparqlQuery);
+        const result = await cachedFetch();
+
+        const response = {
+            success: true,
+            data: Array.isArray(result.data) ? result.data : [],
+            headers: Array.isArray(result.headers) ? result.headers : [],
+            pageTitle: result.pageTitle || "",
+            pageSubtitle: result.pageSubtitle || "",
+            entityPageSlug: result.entityPageSlug || ""
+        };
+
+        return NextResponse.json(response);
+    } catch (error: any) {
+        console.error('[KB API] Error:', error);
+        return NextResponse.json(
+            {
+                success: false,
+                error: error.message || 'Failed to fetch knowledge base data'
+            },
+            { status: 500 }
+        );
+    }
 }
 
 export async function GET(request: NextRequest) {
@@ -142,7 +179,7 @@ export async function GET(request: NextRequest) {
         const cachedFetch = getCachedKnowledgeBase(slug);
         const result = await cachedFetch();
 
-        // Ensure data and headers are always arrays
+        // Return cached data if available, otherwise empty
         const response = {
             success: true,
             data: Array.isArray(result.data) ? result.data : [],
@@ -152,20 +189,15 @@ export async function GET(request: NextRequest) {
             entityPageSlug: result.entityPageSlug || ""
         };
 
-        if (process.env.NODE_ENV === 'development') {
-            console.log(`KB API response for ${slug}: ${response.data.length} items, ${response.headers.length} headers`);
-        }
-
         return NextResponse.json(response);
     } catch (error: any) {
-        console.error('Error in knowledge-base API:', error);
+        console.error('[KB API] Error:', error);
         return NextResponse.json(
-            { 
-                success: false, 
-                error: error.message || 'Failed to fetch knowledge base data' 
+            {
+                success: false,
+                error: error.message || 'Failed to fetch knowledge base data'
             },
             { status: 500 }
         );
     }
 }
-

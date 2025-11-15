@@ -2,6 +2,8 @@
 import {useState, useEffect} from 'react';
 import {Database, Loader2, AlertCircle, ChevronLeft, ChevronRight, ExternalLink, Search} from "lucide-react";
 import {useFilteredTableData} from "@/src/app/utils/tableFilterUtils";
+import {getData} from "@/src/app/components/getData";
+import yaml from "@/src/app/components/config-knowledgebases.yaml";
 
 const ITEMS_PER_PAGE = 50;
 
@@ -27,23 +29,71 @@ const KnowledgeBase = (
     const fetchData = async () => {
         setLoading(true);
         setError(null);
-        
+        setData([]);
+        setHeaders([]);
+        setPageTitle("");
+        setSubPageTitle("");
+        setEntityPageSlug("");
+
         try {
-            // Fetch from API route which handles server-side caching
-            const response = await fetch('/api/knowledge-base?slug=default');
-            const result = await response.json();
-            
+            // Read YAML config directly (like old working code)
+            const page = yaml.pages.find((page) => page.slug === "default");
+            if (!page) {
+                throw new Error('Page with slug "default" not found');
+            }
+
+            const query_to_execute = page.sparql_query;
+            const entitypage = page.entitypageslug || "";
+            const page_title = page.page || "";
+            const page_sub_title = page.description || "";
+
+            setEntityPageSlug(entitypage);
+            setPageTitle(page_title);
+            setSubPageTitle(page_sub_title);
+
+            console.info("KBpage: Reading YAML config");
+            console.info("KBpage: Query length:", query_to_execute?.length || 0);
+            console.info("KBpage: Calling API route with query (to avoid CORS)");
+
+            // Call API route with POST to send query (server-side execution avoids CORS)
+            const apiResponse = await fetch('/api/knowledge-base', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    slug: 'default',
+                    sparqlQuery: query_to_execute
+                })
+            });
+
+            if (!apiResponse.ok) {
+                const errorText = await apiResponse.text();
+                throw new Error(`API returned ${apiResponse.status}: ${errorText}`);
+            }
+
+            const result = await apiResponse.json();
+
+            console.info("KBpage: API response received");
+            console.info("KBpage: Result success:", result.success);
+            console.info("KBpage: Result data type:", Array.isArray(result.data) ? 'array' : typeof result.data);
+            console.info("KBpage: Result data length:", Array.isArray(result.data) ? result.data.length : 'N/A');
+            console.info("KBpage: Result headers:", result.headers);
+
             if (result.success) {
-                setData(result.data || []);
-                setHeaders(result.headers || []);
-                setPageTitle(result.pageTitle || "");
-                setSubPageTitle(result.pageSubtitle || "");
-                setEntityPageSlug(result.entityPageSlug || "");
+                const dataArray = Array.isArray(result.data) ? result.data : [];
+                console.info(`KBpage: Setting data with ${dataArray.length} items, ${result.headers.length} headers`);
+                setHeaders(Array.isArray(result.headers) ? result.headers : []);
+                setData(dataArray);
             } else {
+                console.error("KBpage: API returned success=false:", result.error);
                 setError(result.error || "Failed to fetch data");
             }
         } catch (e) {
             const error = e as Error;
+            console.error("KBpage: Error in fetchData:", error);
+            console.error("KBpage: Error message:", error.message);
+            console.error("KBpage: Error stack:", error.stack);
             setError(error.message);
         } finally {
             setLoading(false);

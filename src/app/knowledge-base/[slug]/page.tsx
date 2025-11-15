@@ -1,21 +1,21 @@
 "use client";
 import {useState, useEffect} from 'react';
-import {useParams} from "next/navigation";
 import {Database, Loader2, AlertCircle, ChevronLeft, ChevronRight, ExternalLink, Search} from "lucide-react";
 import {useFilteredTableData} from "@/src/app/utils/tableFilterUtils";
-
-// Do not import this again as it has been imported in other place already
-// Re-importing will cause an error.
-// import { useParams } from "next/navigation";
+import {getData} from "@/src/app/components/getData";
+import yaml from "@/src/app/components/config-knowledgebases.yaml";
 
 const ITEMS_PER_PAGE = 50;
 
-const KbIndividualPageAllData = () => {
-    const params = useParams();
-    if (!params || !params.slug) {
-        return <div>Loading...</div>;
+const KnowledgeBase = (
+    {
+        params,
+    }: {
+        params: {
+            slug: string;
+        }
     }
-
+) => {
     const [data, setData] = useState<any[]>([]);
     const [headers, setHeaders] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
@@ -23,42 +23,91 @@ const KbIndividualPageAllData = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [pagetitle, setPageTitle] = useState("");
     const [pagesubtitle, setSubPageTitle] = useState("");
+    const [entityPageSlug, setEntityPageSlug] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
 
-    useEffect(() => {
-        const fetchData = async () => {
-            const slug = params.slug as string;
-            
-            setLoading(true);
-            setError(null);
-            
-            try {
-                // Fetch from API route which handles server-side caching
-                const response = await fetch(`/api/knowledge-base?slug=${encodeURIComponent(slug)}`);
-                const result = await response.json();
-                
-                if (result.success) {
-                    setData(result.data || []);
-                    setHeaders(result.headers || []);
-                    setPageTitle(result.pageTitle || "");
-                    setSubPageTitle(result.pageSubtitle || "");
-                } else {
-                    setError(result.error || "Failed to fetch data");
-                }
-            } catch (e) {
-                const error = e as Error;
-                setError(error.message);
-            } finally {
-                setLoading(false);
-            }
-        };
+    const fetchData = async () => {
+        setLoading(true);
+        setError(null);
+        setData([]);
+        setHeaders([]);
+        setPageTitle("");
+        setSubPageTitle("");
+        setEntityPageSlug("");
 
+        try {
+            // Read YAML config directly (like old working code)
+            const page = yaml.pages.find((page) => page.slug === params.slug);
+
+            if (!page) {
+                throw new Error('Page with slug "default" not found');
+            }
+
+            const query_to_execute = page.sparql_query;
+            const entitypage = page.entitypageslug || "";
+            const page_title = page.page || "";
+            const page_sub_title = page.description || "";
+
+            setEntityPageSlug(entitypage);
+            setPageTitle(page_title);
+            setSubPageTitle(page_sub_title);
+
+            console.info("KBpage: Reading YAML config");
+            console.info("KBpage: Query length:", query_to_execute?.length || 0);
+            console.info("KBpage: Calling API route with query (to avoid CORS)");
+
+            // Call API route with POST to send query (server-side execution avoids CORS)
+            const apiResponse = await fetch('/api/knowledge-base', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    slug: 'default',
+                    sparqlQuery: query_to_execute
+                })
+            });
+
+            if (!apiResponse.ok) {
+                const errorText = await apiResponse.text();
+                throw new Error(`API returned ${apiResponse.status}: ${errorText}`);
+            }
+
+            const result = await apiResponse.json();
+
+            console.info("KBpage: API response received");
+            console.info("KBpage: Result success:", result.success);
+            console.info("KBpage: Result data type:", Array.isArray(result.data) ? 'array' : typeof result.data);
+            console.info("KBpage: Result data length:", Array.isArray(result.data) ? result.data.length : 'N/A');
+            console.info("KBpage: Result headers:", result.headers);
+
+            if (result.success) {
+                const dataArray = Array.isArray(result.data) ? result.data : [];
+                console.info(`KBpage: Setting data with ${dataArray.length} items, ${result.headers.length} headers`);
+                setHeaders(Array.isArray(result.headers) ? result.headers : []);
+                setData(dataArray);
+            } else {
+                console.error("KBpage: API returned success=false:", result.error);
+                setError(result.error || "Failed to fetch data");
+            }
+        } catch (e) {
+            const error = e as Error;
+            console.error("KBpage: Error in fetchData:", error);
+            console.error("KBpage: Error message:", error.message);
+            console.error("KBpage: Error stack:", error.stack);
+            setError(error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchData();
     }, [params.slug]);
 
     // Calculate filtered data for pagination
     const filteredData = useFilteredTableData(data, headers, searchQuery);
-    
+
     const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
     const renderTable = () => {
@@ -68,7 +117,7 @@ const KbIndividualPageAllData = () => {
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
         const endIndex = startIndex + ITEMS_PER_PAGE;
         const currentPageData = filteredData.slice(startIndex, endIndex);
-        
+
         // Reset to first page when search changes
         if (currentPage > Math.ceil(filteredData.length / ITEMS_PER_PAGE) && filteredData.length > 0) {
             setCurrentPage(1);
@@ -92,31 +141,31 @@ const KbIndividualPageAllData = () => {
                                 // Use the first header's value as a unique identifier, or fallback to id if available
                                 const uniqueKey = item.id?.value || item[headers[0]]?.value || index;
                                 return (
-                                    <tr key={uniqueKey} className="hover:bg-sky-50/50 transition-colors duration-150">
-                                        {headers.map((header, headerIndex) => {
-                                            const cellValue = item[header]?.value || '';
-                                            const displayValue = cellValue ? cellValue.substring(cellValue.lastIndexOf('/') + 1) : '';
-                                            
-                                            return (
-                                                <td key={headerIndex} className="px-6 py-4 whitespace-nowrap">
-                                                    {headerIndex === 0 ? (
-                                                        <a 
-                                                            href={`${params.slug}/${encodeURIComponent(cellValue)}`}
-                                                            rel="noopener noreferrer"
-                                                            className="inline-flex items-center gap-2 text-sky-600 hover:text-sky-700 font-medium transition-colors group"
-                                                        >
-                                                            {displayValue}
-                                                            <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                        </a>
-                                                    ) : (
-                                                        <span className="text-gray-700">
-                                                            {displayValue}
-                                                        </span>
-                                                    )}
-                                                </td>
-                                            );
-                                        })}
-                                    </tr>
+                                <tr key={uniqueKey} className="hover:bg-sky-50/50 transition-colors duration-150">
+                                    {headers.map((header, headerIndex) => {
+                                        const cellValue = item[header]?.value || '';
+                                        const displayValue = cellValue ? cellValue.substring(cellValue.lastIndexOf('/') + 1) : '';
+
+                                        return (
+                                            <td key={headerIndex} className="px-6 py-4 whitespace-nowrap">
+                                                {headerIndex === 0 ? (
+                                                    <a
+                                                        href={`/knowledge-base/${entityPageSlug}/${encodeURIComponent(cellValue)}`}
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-2 text-sky-600 hover:text-sky-700 font-medium transition-colors group"
+                                                    >
+                                                        {displayValue}
+                                                        <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    </a>
+                                                ) : (
+                                                    <span className="text-gray-700">
+                                                        {displayValue}
+                                                    </span>
+                                                )}
+                                            </td>
+                                        );
+                                    })}
+                                </tr>
                                 );
                             })}
                         </tbody>
@@ -128,6 +177,7 @@ const KbIndividualPageAllData = () => {
 
     return (
         <div className="kb-page-margin">
+
 
             {/* Hero Section */}
             <div className="grid fix-left-margin grid-cols-1 mb-8">
@@ -279,4 +329,5 @@ const KbIndividualPageAllData = () => {
     );
 };
 
-export default KbIndividualPageAllData;
+export default KnowledgeBase;
+
