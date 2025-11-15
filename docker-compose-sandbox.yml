@@ -3,7 +3,7 @@ services:
   sandbox_web:
     build: .
     ports:
-      - '4000:3000' # Maps host:container port
+      - '80:3000' # Maps host:container port
     env_file:
       - .env.local
     environment:
