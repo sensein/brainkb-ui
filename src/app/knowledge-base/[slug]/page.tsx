@@ -103,7 +103,7 @@ const KnowledgeBase = (
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [params.slug]);
 
     // Calculate filtered data for pagination
     const filteredData = useFilteredTableData(data, headers, searchQuery);
