@@ -8,11 +8,7 @@ export const metadata: Metadata = {
     title: "Privacy Policy",
 };
 
-export default async function PrivacyPolicy() {
-    const current_session = await getServerSession(authOptions);
-
-    // Redirect logged-in users to the admin page
-    if (current_session) return redirect("/admin");
+export default async function PrivacyPolicy() { 
 
     const sections = yaml.sections;
     const page_meta = yaml.page_meta;
