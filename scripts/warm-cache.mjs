@@ -301,200 +301,12 @@ async function warmCache() {
     // Taxonomy is cached at runtime when user clicks/navigates (not during build)
     console.log('Skipping taxonomy cache warming (will be cached at runtime when accessed)');
     
-    // Warm entity pages cache (sample entities from each KB)
-    console.log('Warming entity pages cache...');
-    let entitySuccessCount = 0;
-    let entityTotalCount = 0;
-    
-    try {
-      // Load entity card mapper config
-      const entityMapperPath = path.join(process.cwd(), 'src', 'app', 'components', 'enititycardmapper.yaml');
-      const entityMapper = loadYamlFile(entityMapperPath);
-      
-      // For each knowledge base page, get sample entities (first 5 entities)
-      const MAX_ENTITIES_PER_SLUG = 5;
-      
-      for (const kbPage of yamlKB.pages) {
-        if (!kbPage.entitypageslug) continue;
-        
-        const slug = kbPage.entitypageslug;
-        const entityConfig = entityMapper.EntityViewCardsMaper?.find((e) => e.slug === slug);
-        
-        if (!entityConfig) {
-          console.log(`No entity config found for slug: ${slug}, skipping`);
-          continue;
-        }
-        
-        // Get entity IDs from the knowledge base data we already fetched
-        const kbCacheFile = path.join(CACHE_DIR, `kb-${kbPage.slug}.json`);
-        if (!fs.existsSync(kbCacheFile)) {
-          console.log(`KB cache file not found for ${kbPage.slug}, skipping entity warming`);
-          continue;
-        }
-        
-        const kbData = JSON.parse(fs.readFileSync(kbCacheFile, 'utf8'));
-        const entities = kbData.data || [];
-        const headers = kbData.headers || [];
-        
-        if (entities.length === 0 || headers.length === 0) {
-          console.log(`No entities found for ${kbPage.slug}, skipping`);
-          continue;
-        }
-        
-        // Get entity IDs from the first column (usually the entity ID)
-        const entityIdHeader = headers[0];
-        const sampleEntities = entities
-          .slice(0, MAX_ENTITIES_PER_SLUG)
-          .map((entity) => {
-            const idValue = entity[entityIdHeader]?.value;
-            return idValue ? decodeURIComponent(idValue) : null;
-          })
-          .filter((id) => id !== null);
-        
-        if (sampleEntities.length === 0) {
-          console.log(`No valid entity IDs found for ${kbPage.slug}, skipping`);
-          continue;
-        }
-        
-        console.log(`Warming ${sampleEntities.length} entities for slug: ${slug}`);
-        
-        // Load entity card YAML config
-        const entityCardPath = path.join(process.cwd(), 'src', 'app', 'components', entityConfig.filename);
-        if (!fs.existsSync(entityCardPath)) {
-          console.log(`Entity card config not found: ${entityCardPath}, skipping`);
-          continue;
-        }
-        
-        const entityCardConfig = loadYamlFile(entityCardPath);
-        const boxes = entityCardConfig?.boxes || [];
-        
-        // For each sample entity, execute all queries and cache them
-        for (const entityId of sampleEntities) {
-          entityTotalCount++;
-          
-          try {
-            // Execute queries for each box
-            for (const box of boxes) {
-              if (box.cardtype !== 'card') continue;
-              
-              // Main box query
-              if (box.sparql_query) {
-                const query = box.sparql_query.replace(/\{0\}/g, entityId);
-                try {
-                  const queryParameter = { sparql_query: query };
-                  const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql";
-                  
-                  const response = await fetchData(queryParameter, endpoint);
-                  
-                  // Store in warm cache
-                  if (response && response.status === "success" && response.message?.results?.bindings) {
-                    const bindings = response.message.results.bindings;
-                    if (Array.isArray(bindings) && bindings.length > 0) {
-                      const queryHash = createHash('sha256').update(query).digest('hex').slice(0, 16);
-                      const cacheFile = path.join(CACHE_DIR, `entity-query-${queryHash}.json`);
-                      fs.writeFileSync(
-                        cacheFile,
-                        JSON.stringify({
-                          data: bindings,
-                          timestamp: Date.now()
-                        }, null, 2)
-                      );
-                      console.log(`  Cached query for entity ${entityId} (${bindings.length} results)`);
-                    } else {
-                      console.warn(`  Query for entity ${entityId} returned empty results`);
-                    }
-                  } else {
-                    console.warn(`  Query for entity ${entityId} failed or returned invalid response`);
-                  }
-                } catch (error) {
-                  console.warn(`Failed to execute query for entity ${entityId}:`, error.message);
-                }
-              }
-              
-              // Additional info queries
-              if (box.box_additional_info) {
-                const add = box.box_additional_info;
-                
-                if (add.sparql_query) {
-                  const query = add.sparql_query.replace(/\{0\}/g, entityId);
-                  try {
-                    const queryParameter = { sparql_query: query };
-                    const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql";
-                    
-                    const response = await fetchData(queryParameter, endpoint);
-                    
-                    // Store in warm cache
-                    if (response && response.status === "success" && response.message?.results?.bindings) {
-                      const bindings = response.message.results.bindings;
-                      if (Array.isArray(bindings) && bindings.length > 0) {
-                        const queryHash = createHash('sha256').update(query).digest('hex').slice(0, 16);
-                        const cacheFile = path.join(CACHE_DIR, `entity-query-${queryHash}.json`);
-                        fs.writeFileSync(
-                          cacheFile,
-                          JSON.stringify({
-                            data: bindings,
-                            timestamp: Date.now()
-                          }, null, 2)
-                        );
-                      }
-                    }
-                  } catch (error) {
-                    console.warn(`Failed to execute additional query for entity ${entityId}:`, error.message);
-                  }
-                }
-                
-                // Property queries
-                if (Array.isArray(add.properties)) {
-                  for (const prop of add.properties) {
-                    if (prop.sparql_query) {
-                      const query = prop.sparql_query.replace(/\{0\}/g, entityId);
-                      try {
-                        const queryParameter = { sparql_query: query };
-                        const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql";
-                        
-                        const response = await fetchData(queryParameter, endpoint);
-                        
-                        // Store in warm cache
-                        if (response && response.status === "success" && response.message?.results?.bindings) {
-                          const bindings = response.message.results.bindings;
-                          if (Array.isArray(bindings) && bindings.length > 0) {
-                            const queryHash = createHash('sha256').update(query).digest('hex').slice(0, 16);
-                            const cacheFile = path.join(CACHE_DIR, `entity-query-${queryHash}.json`);
-                            fs.writeFileSync(
-                              cacheFile,
-                              JSON.stringify({
-                                data: bindings,
-                                timestamp: Date.now()
-                              }, null, 2)
-                            );
-                          }
-                        }
-                      } catch (error) {
-                        console.warn(`Failed to execute property query for entity ${entityId}:`, error.message);
-                      }
-                    }
-                  }
-                }
-              }
-            }
-            
-            entitySuccessCount++;
-          } catch (error) {
-            console.warn(`Failed to warm cache for entity ${entityId}:`, error.message);
-          }
-        }
-      }
-      
-      console.log(`Entity cache warming: ${entitySuccessCount}/${entityTotalCount} entities processed`);
-    } catch (error) {
-      console.warn('Entity cache warming failed:', error.message);
-      console.error(error.stack);
-    }
+    // Entity-level caching removed - only list caching is used
+    console.log('Skipping entity pages cache warming (entity-level caching removed)');
     
     // Warm NER cache
     console.log('\nWarming NER cache...');
     let nerListSuccess = false;
-    let nerEntitySuccessCount = 0;
     try {
       const nerEndpoint = process.env.NEXT_PUBLIC_NER_GET_ENDPOINT;
       if (nerEndpoint) {
@@ -520,28 +332,7 @@ async function warmCache() {
             nerListSuccess = true;
           }
           
-          // Warm first 500 NER entities (cache them directly from the list data)
-          const MAX_NER_ENTITIES = 500;
-          const sampleNerEntities = nerResponse.data.slice(0, MAX_NER_ENTITIES);
-          
-          for (const entity of sampleNerEntities) {
-            if (entity._id) {
-              try {
-                // Cache individual entity (it's already in the list response)
-                const nerEntityFile = path.join(CACHE_DIR, `ner-entity-${entity._id}.json`);
-                fs.writeFileSync(
-                  nerEntityFile,
-                  JSON.stringify({
-                    data: entity,
-                    timestamp: Date.now()
-                  }, null, 2)
-                );
-                nerEntitySuccessCount++;
-              } catch (error) {
-                console.warn(`Failed to warm NER entity ${entity._id}:`, error.message);
-              }
-            }
-          }
+          // Entity-level caching removed - only list caching is used
         } else {
           console.warn('NER endpoint returned invalid response');
         }
@@ -556,7 +347,6 @@ async function warmCache() {
     // Warm Resources cache
     console.log('\nWarming Resources cache...');
     let resourcesListSuccess = false;
-    let resourcesEntitySuccessCount = 0;
     try {
       const resourcesEndpoint = process.env.NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT;
       if (resourcesEndpoint) {
@@ -582,28 +372,7 @@ async function warmCache() {
             resourcesListSuccess = true;
           }
           
-          // Warm first 500 Resources entities (cache them directly from the list data)
-          const MAX_RESOURCES_ENTITIES = 500;
-          const sampleResourcesEntities = resourcesResponse.data.slice(0, MAX_RESOURCES_ENTITIES);
-          
-          for (const resource of sampleResourcesEntities) {
-            if (resource._id) {
-              try {
-                // Cache individual resource (it's already in the list response)
-                const resourceEntityFile = path.join(CACHE_DIR, `resource-entity-${resource._id}.json`);
-                fs.writeFileSync(
-                  resourceEntityFile,
-                  JSON.stringify({
-                    data: resource,
-                    timestamp: Date.now()
-                  }, null, 2)
-                );
-                resourcesEntitySuccessCount++;
-              } catch (error) {
-                console.warn(`Failed to warm Resource entity ${resource._id}:`, error.message);
-              }
-            }
-          }
+          // Entity-level caching removed - only list caching is used
         } else {
           console.warn('Resources endpoint returned invalid response');
         }
@@ -632,9 +401,9 @@ async function warmCache() {
     console.log(`  Statistics: ${statsSuccess ? 'success' : 'failed'}`);
     console.log(`  KB pages: ${kbSuccessCount}/${yamlKB.pages.length}`);
     console.log(`  Taxonomy: skipped (cached at runtime when accessed)`);
-    console.log(`  Entities: ${entitySuccessCount}/${entityTotalCount} entities warmed`);
-    console.log(`  NER: ${nerListSuccess ? 'success' : 'failed'} (${nerEntitySuccessCount} entities)`);
-    console.log(`  Resources: ${resourcesListSuccess ? 'success' : 'failed'} (${resourcesEntitySuccessCount} entities)`);
+    console.log(`  Entities: skipped (entity-level caching removed)`);
+    console.log(`  NER: ${nerListSuccess ? 'success' : 'failed'}`);
+    console.log(`  Resources: ${resourcesListSuccess ? 'success' : 'failed'}`);
   } catch (error) {
     console.error('Cache warming failed:', error.message);
     console.error(error.stack);
