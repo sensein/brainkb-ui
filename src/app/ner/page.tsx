@@ -248,18 +248,15 @@ const NER = () => {
                     <>
                         {renderTable()}
 
-                        {filteredData.length > 0 && (
+                        {data.length > 0 && (
                             <nav className="flex items-center flex-wrap md:flex-row justify-between pt-6 gap-4"
                                  aria-label="Table navigation">
                                 <div className="text-sm text-gray-600">
                                     Showing <span className="font-semibold text-gray-900">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span
-                                    className="font-semibold text-gray-900">{Math.min(currentPage * ITEMS_PER_PAGE, filteredData.length)}</span> of <span
-                                    className="font-semibold text-gray-900">{filteredData.length}</span> entries
-                                    {searchQuery.trim() !== "" && data.length !== filteredData.length && (
-                                        <span className="text-gray-500"> (filtered from {data.length} total)</span>
-                                    )}
-                                    {totalCount > data.length && !searchQuery.trim() && (
-                                        <span className="text-gray-500"> (out of {totalCount} total)</span>
+                                    className="font-semibold text-gray-900">{Math.min(currentPage * ITEMS_PER_PAGE, totalCount)}</span> of <span
+                                    className="font-semibold text-gray-900">{totalCount}</span> entries
+                                    {searchQuery.trim() && (
+                                        <span className="text-gray-500"> (filtered by: "{searchQuery}")</span>
                                     )}
                                 </div>
                                 <div className="flex items-center gap-2">
@@ -311,20 +308,22 @@ const NER = () => {
                             </nav>
                         )}
 
-                        {!loading && !error && filteredData.length === 0 && searchQuery.trim() !== "" && (
-                            <div className="text-center py-20 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
-                                <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                                <p className="text-xl font-semibold text-gray-600 mb-2">No results found</p>
-                                <p className="text-gray-500">Try adjusting your search query.</p>
-                            </div>
-                        )}
-
                         {!loading && !error && data.length === 0 && (
-                            <div className="text-center py-20 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
-                                <Database className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                                <p className="text-xl font-semibold text-gray-600 mb-2">No NER data available</p>
-                                <p className="text-gray-500">There are no named entity recognition entries yet.</p>
-                            </div>
+                            <>
+                                {searchQuery.trim() !== "" ? (
+                                    <div className="text-center py-20 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                                        <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                                        <p className="text-xl font-semibold text-gray-600 mb-2">No results found</p>
+                                        <p className="text-gray-500">Try adjusting your search query.</p>
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-20 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                                        <Database className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                                        <p className="text-xl font-semibold text-gray-600 mb-2">No NER data available</p>
+                                        <p className="text-gray-500">There are no named entity recognition entries yet.</p>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </>
                 )}
