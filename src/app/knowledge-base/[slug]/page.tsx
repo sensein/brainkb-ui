@@ -150,7 +150,7 @@ const KnowledgeBase = (
                                             <td key={headerIndex} className="px-6 py-4 whitespace-nowrap">
                                                 {headerIndex === 0 ? (
                                                     <a
-                                                        href={`knowledge-base/${entityPageSlug}/${encodeURIComponent(cellValue)}`}
+                                                        href={`/knowledge-base/${entityPageSlug}/${encodeURIComponent(cellValue)}`}
                                                         rel="noopener noreferrer"
                                                         className="inline-flex items-center gap-2 text-sky-600 hover:text-sky-700 font-medium transition-colors group"
                                                     >
