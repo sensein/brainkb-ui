@@ -1,4 +1,4 @@
-const CACHE_DURATION = 24 * 60 * 60; // 24 hours in seconds
+const CACHE_DURATION = 4 * 60 * 60; // 4 hours in seconds
 
 export interface FetchOptionsWithoutToken {
     endpoint: string;
