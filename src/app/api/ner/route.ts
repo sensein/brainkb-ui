@@ -39,7 +39,7 @@ function getCachedNERById(id: string) {
 }
 
 // Cached version of NER data fetch
-function getCachedNERData(limit: string, skip: string) {
+function getCachedNERData(limit: string, skip: string, search?: string) {
     return unstable_cache(
         async () => {
             const endpoint = process.env.NEXT_PUBLIC_NER_GET_ENDPOINT;
@@ -47,12 +47,12 @@ function getCachedNERData(limit: string, skip: string) {
                 throw new Error('NEXT_PUBLIC_NER_GET_ENDPOINT environment variable is not set');
             }
 
-            return await fetchPaginatedData({ endpoint, limit, skip });
+            return await fetchPaginatedData({ endpoint, limit, skip, search });
         },
-        [`ner-data-${limit}-${skip}`],
+        [`ner-data-${limit}-${skip}-${search || ''}`],
         {
             revalidate: CACHE_DURATION,
-            tags: [`ner-list-${limit}-${skip}`]
+            tags: [`ner-list-${limit}-${skip}-${search || ''}`]
         }
     );
 }
@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
         const id = searchParams.get('id');
         const limit = searchParams.get('limit') || '50';
         const skip = searchParams.get('skip') || '0';
+        const search = searchParams.get('search') || undefined;
 
         const endpoint = process.env.NEXT_PUBLIC_NER_GET_ENDPOINT;
         if (!endpoint) {
@@ -164,7 +165,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Use cached fetch function
-        const cachedFetch = getCachedNERData(limit, skip);
+        const cachedFetch = getCachedNERData(limit, skip, search);
         const result = await cachedFetch();
 
         console.info('[NER API] Response received');

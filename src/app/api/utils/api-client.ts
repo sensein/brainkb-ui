@@ -6,6 +6,7 @@ export interface FetchOptions {
     endpoint: string;
     limit?: string;
     skip?: string;
+    search?: string;
     id?: string;
     baseUrl?: string;
 }
@@ -13,7 +14,7 @@ export interface FetchOptions {
 export async function fetchPaginatedData(
     options: FetchOptions
 ): Promise<any> {
-    const { endpoint, limit = '50', skip = '0', baseUrl } = options;
+    const { endpoint, limit = '50', skip = '0', search, baseUrl } = options;
     
     let url: URL;
     try {
@@ -25,6 +26,9 @@ export async function fetchPaginatedData(
 
     url.searchParams.set('limit', limit);
     url.searchParams.set('skip', skip);
+    if (search && search.trim()) {
+        url.searchParams.set('search', search.trim());
+    }
 
     const headers = await withAuthHeaders();
 
@@ -42,6 +46,23 @@ export async function fetchPaginatedData(
     return await response.json();
 }
 
+/**
+ * Search for an entity by ID by paginating through the list endpoint.
+ * 
+ * ⚠️ PERFORMANCE WARNING: This function simulates a direct ID lookup by paginating
+ * through the list endpoint. This is highly inefficient and will lead to poor performance
+ * as the number of entities grows, potentially making up to 50 API calls to find a single entity.
+ * 
+ * The backend should ideally provide a dedicated endpoint for fetching an entity by its ID
+ * (e.g., /api/ner/{id} or /api/resources/{id}). If that's not possible, this workaround
+ * should be used with caution and only for small datasets or when caching is properly implemented.
+ * 
+ * @param endpoint - The API endpoint to search
+ * @param id - The ID of the entity to find
+ * @param baseUrl - Optional base URL if endpoint is relative
+ * @returns The found entity
+ * @throws Error if entity is not found
+ */
 export async function searchById(
     endpoint: string,
     id: string,

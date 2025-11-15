@@ -47,7 +47,7 @@ const NER = () => {
     const [totalCount, setTotalCount] = useState(0);
     const [hasMore, setHasMore] = useState(false);
 
-    const fetchData = async (skip: number = 0) => {
+    const fetchData = async (skip: number = 0, search: string = '') => {
         setLoading(true);
         setError(null);
 
@@ -56,9 +56,12 @@ const NER = () => {
             const url = new URL('/api/ner', window.location.origin);
             url.searchParams.set('limit', String(ITEMS_PER_PAGE));
             url.searchParams.set('skip', String(skip));
+            if (search.trim()) {
+                url.searchParams.set('search', search.trim());
+            }
 
             console.info("NER: Fetching data from API route:", url.toString());
-            console.info("NER: Skip:", skip, "Limit:", ITEMS_PER_PAGE);
+            console.info("NER: Skip:", skip, "Limit:", ITEMS_PER_PAGE, "Search:", search);
 
             const response = await fetch(url.toString(), {
                 method: 'GET',
@@ -82,13 +85,8 @@ const NER = () => {
             console.info("NER: Has more:", result.has_more);
 
             if (result.success && Array.isArray(result.data)) {
-                if (skip === 0) {
-                    // First page - replace data
-                    setData(result.data);
-                } else {
-                    // Subsequent pages - append data
-                    setData(prev => [...prev, ...result.data]);
-                }
+                // Always replace data for pagination (don't append)
+                setData(result.data);
                 setTotalCount(result.total || result.data.length);
                 setHasMore(result.has_more || false);
             } else {
@@ -104,52 +102,28 @@ const NER = () => {
         }
     };
 
+    // Fetch data when page or search changes
     useEffect(() => {
-        fetchData(0);
-    }, []);
+        const skip = (currentPage - 1) * ITEMS_PER_PAGE;
+        fetchData(skip, searchQuery);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage, searchQuery]);
 
-    // Filter data based on search query
-    const filteredData = useMemo(() => {
-        const trimmedQuery = searchQuery.trim().toLowerCase();
-        if (trimmedQuery === "") {
-            return data;
-        }
-        
-        return data.filter((item) => {
-            // Search across multiple fields
-            const searchableFields = [
-                getValue(item.entity),
-                getValue(item.label),
-                getValue(item.paper_title),
-                getValue(item.doi),
-                getValue(item.paper_location),
-                getValue(item.contributed_by),
-                getValue(item.documentName)
-            ];
-            
-            return searchableFields.some(field => 
-                field.toLowerCase().includes(trimmedQuery)
-            );
-        });
-    }, [data, searchQuery]);
-    
-    const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
-
-    // Reset to first page when search changes or when current page exceeds total pages
+    // Reset to page 1 when search changes
     useEffect(() => {
-        if (currentPage > totalPages && totalPages > 0) {
+        if (currentPage !== 1) {
             setCurrentPage(1);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchQuery, totalPages]);
+    }, [searchQuery]);
+    
+    const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
     const renderTable = () => {
         if (!data || !Array.isArray(data) || data.length === 0) return null;
 
-        // Use the filtered data for pagination
-        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-        const endIndex = startIndex + ITEMS_PER_PAGE;
-        const currentPageData = filteredData.slice(startIndex, endIndex);
+        // Data is already paginated from the server
+        const currentPageData = data;
 
         return (
             <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
@@ -248,14 +222,6 @@ const NER = () => {
                                 className="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 text-sm"
                             />
                         </div>
-                        {searchQuery.trim() !== "" && (
-                            <p className="mt-2 text-sm text-gray-600">
-                                Showing {filteredData.length} of {data.length} results
-                                {totalCount > data.length && (
-                                    <span className="text-gray-500"> (out of {totalCount} total)</span>
-                                )}
-                            </p>
-                        )}
                     </div>
                 )}
 

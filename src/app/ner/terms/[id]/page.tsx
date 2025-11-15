@@ -11,163 +11,9 @@ import {
 } from "@/src/app/components/ui/card";
 import { Button } from "@/src/app/components/ui/button";
 import { Badge } from "@/src/app/components/ui/badge";
-
-// Helper function to get array value (first element if array, otherwise the value itself)
-const getValue = (field: any): string | string[] => {
-    if (Array.isArray(field)) {
-        return field.length > 0 ? field.map(String) : [];
-    }
-    return field ? String(field) : '';
-};
-
-// Helper function to format date
-const formatDate = (dateString: string): string => {
-    if (!dateString) return '';
-    try {
-        const date = new Date(dateString);
-        return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "2-digit" });
-    } catch {
-        return dateString;
-    }
-};
-
-function ProvenanceTimeline({ history }: { history: any[] }) {
-    if (!history || history.length === 0) return null;
-    
-    const versions = [...history].sort(
-        (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-    );
-
-    const shouldShowAll = versions.length <= 4;
-    const displayVersions = shouldShowAll
-        ? versions
-        : [
-            versions[0],
-            ...versions.slice(1, -1).filter((_, i) => i % 2 === 0),
-            versions[versions.length - 1]
-        ];
-
-    const svgWidth = Math.max(400, displayVersions.length * 120);
-    const lineWidth = svgWidth - 80;
-
-    return (
-        <div className="w-full rounded-xl border p-3">
-            <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                History
-            </div>
-            <div className="mt-3">
-                <svg viewBox={`0 0 ${svgWidth} 80`} className="w-full">
-                    <line x1="40" y1="35" x2={lineWidth + 40} y2="35" stroke="#c4b5fd" strokeWidth="3" strokeLinecap="round" />
-                    {displayVersions.map((v, i) => {
-                        const x = 40 + (i * (lineWidth / Math.max(displayVersions.length - 1, 1)));
-                        const isCurrent = i === displayVersions.length - 1;
-                        const isFirst = i === 0;
-                        const isLast = i === displayVersions.length - 1;
-                        const showLabel = isFirst || isLast || isCurrent || shouldShowAll;
-
-                        return (
-                            <g key={i}>
-                                <circle cx={x} cy={35} r={isCurrent ? 10 : 7} fill={isCurrent ? "#7c3aed" : "#a78bfa"} />
-                                {showLabel && (
-                                    <text x={x} y={60} fontSize="9" textAnchor="middle" fill="#6b7280" className="font-medium">
-                                        v{versions.indexOf(v) + 1}
-                                    </text>
-                                )}
-                            </g>
-                        );
-                    })}
-                </svg>
-            </div>
-        </div>
-    );
-}
-
-function ProvenancePanel({ history }: { history: any[] }) {
-    const sortedVersions = history ? [...history].sort(
-        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    ) : [];
-
-    const [selectedId, setSelectedId] = useState<number>(0);
-    const selected = sortedVersions[selectedId];
-
-    if (!history || sortedVersions.length === 0) return null;
-
-    return (
-        <div className="rounded-xl border p-3">
-            <div className="flex flex-wrap items-center gap-2">
-                <label className="text-xs text-muted-foreground">Version</label>
-                <select
-                    className="rounded-md border px-2 py-1 text-sm min-w-[200px]"
-                    value={selectedId}
-                    onChange={(e) => setSelectedId(Number(e.target.value))}
-                >
-                    {sortedVersions.map((v, idx) => (
-                        <option key={idx} value={idx}>
-                            v{idx + 1} — {formatDate(v.timestamp)}
-                        </option>
-                    ))}
-                </select>
-            </div>
-
-            {selected && (
-                <div className="mt-3 rounded-lg border bg-muted/30 p-2">
-                    <div className="mb-1 text-xs text-muted-foreground">
-                        Changes in <strong>v{sortedVersions.indexOf(selected) + 1}</strong>
-                        {selected.updated_fields?.contributed_by && (
-                            <> by <span className="font-medium">{getValue(selected.updated_fields.contributed_by)}</span></>
-                        )}
-                        , {formatDate(selected.timestamp)}
-                    </div>
-                    {selected.updated_fields && (
-                        <ul className="space-y-1 text-sm">
-                            {Object.entries(selected.updated_fields).map(([key, value]: [string, any]) => {
-                                if (key === 'contributed_by' || key === 'documentName' || key === 'processedAt') return null;
-                                
-                                // Helper to render value properly
-                                const renderValue = (val: any): React.ReactNode => {
-                                    if (val === null || val === undefined) return <span className="text-xs text-muted-foreground">null</span>;
-                                    if (typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean') {
-                                        return <span className="text-xs text-muted-foreground">{String(val)}</span>;
-                                    }
-                                    if (Array.isArray(val)) {
-                                        return (
-                                            <div className="text-xs text-muted-foreground mt-1">
-                                                {val.map((v, i) => (
-                                                    <div key={i}>{renderValue(v)}</div>
-                                                ))}
-                                            </div>
-                                        );
-                                    }
-                                    if (typeof val === 'object') {
-                                        // For nested objects, show a summary or skip complex nested structures
-                                        if (key === 'judged_structured_information' || key === 'entity' || key === 'label') {
-                                            return <span className="text-xs text-muted-foreground italic">Entity information updated</span>;
-                                        }
-                                        // For other objects, show a generic message
-                                        return <span className="text-xs text-muted-foreground italic">Object (see details)</span>;
-                                    }
-                                    return <span className="text-xs text-muted-foreground">{String(val)}</span>;
-                                };
-                                
-                                return (
-                                    <li key={key} className="flex items-start gap-2">
-                                        <span className="mt-0.5 inline-flex h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
-                                        <div>
-                                            <span className="font-medium">{key}</span>
-                                            <div className="text-xs text-muted-foreground ml-2 mt-1">
-                                                {renderValue(value)}
-                                            </div>
-                                        </div>
-                                    </li>
-                                );
-                            })}
-                        </ul>
-                    )}
-                </div>
-            )}
-        </div>
-    );
-}
+import { getValue, formatDate } from "@/src/app/components/detail/helpers";
+import { ProvenanceTimeline } from "@/src/app/components/detail/ProvenanceTimeline";
+import { ProvenancePanel } from "@/src/app/components/detail/ProvenancePanel";
 
 function EnhancedDetailsSection({ item }: { item: any }) {
     const [activeTab, setActiveTab] = useState<string>("overview");
@@ -606,7 +452,7 @@ export default function NERDetailPage({ params }: NERDetailPageProps) {
                 {data.history && Array.isArray(data.history) && data.history.length > 0 && (
                     <div className="space-y-4">
                         <ProvenanceTimeline history={data.history} />
-                        <ProvenancePanel history={data.history} />
+                        <ProvenancePanel history={data.history} entityType="ner" />
                     </div>
                 )}
 

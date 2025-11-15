@@ -58,7 +58,7 @@ const Resources = () => {
     const [totalCount, setTotalCount] = useState(0);
     const [hasMore, setHasMore] = useState(false);
 
-    const fetchData = async (skip: number = 0) => {
+    const fetchData = async (skip: number = 0, search: string = '') => {
         setLoading(true);
         setError(null);
 
@@ -67,9 +67,12 @@ const Resources = () => {
             const url = new URL('/api/resources', window.location.origin);
             url.searchParams.set('limit', String(ITEMS_PER_PAGE));
             url.searchParams.set('skip', String(skip));
+            if (search.trim()) {
+                url.searchParams.set('search', search.trim());
+            }
 
             console.info("Resources: Fetching data from API route:", url.toString());
-            console.info("Resources: Skip:", skip, "Limit:", ITEMS_PER_PAGE);
+            console.info("Resources: Skip:", skip, "Limit:", ITEMS_PER_PAGE, "Search:", search);
 
             const response = await fetch(url.toString(), {
                 method: 'GET',
@@ -98,11 +101,8 @@ const Resources = () => {
                     .map(extractResourceData)
                     .filter((item: any) => item !== null);
                 
-                if (skip === 0) {
-                    setData(extractedData);
-                } else {
-                    setData(prev => [...prev, ...extractedData]);
-                }
+                // Always replace data for pagination (don't append)
+                setData(extractedData);
                 setTotalCount(result.total || extractedData.length);
                 setHasMore(result.has_more || false);
             } else {
@@ -117,48 +117,28 @@ const Resources = () => {
         }
     };
 
+    // Fetch data when page or search changes
     useEffect(() => {
-        fetchData(0);
-    }, []);
+        const skip = (currentPage - 1) * ITEMS_PER_PAGE;
+        fetchData(skip, searchQuery);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage, searchQuery]);
 
-    // Filter data based on search query
-    const filteredData = useMemo(() => {
-        const trimmedQuery = searchQuery.trim().toLowerCase();
-        if (trimmedQuery === "") {
-            return data;
-        }
-        
-        return data.filter((item) => {
-            const searchableFields = [
-                getValue(item.name),
-                getValue(item.category),
-                getValue(item.type),
-                getValue(item.description),
-                getValue(item.target),
-                getValue(item.url)
-            ];
-            
-            return searchableFields.some(field => 
-                field.toLowerCase().includes(trimmedQuery)
-            );
-        });
-    }, [data, searchQuery]);
-    
-    const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
-
+    // Reset to page 1 when search changes
     useEffect(() => {
-        if (currentPage > totalPages && totalPages > 0) {
+        if (currentPage !== 1) {
             setCurrentPage(1);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchQuery, totalPages]);
+    }, [searchQuery]);
+    
+    const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
     const renderTable = () => {
         if (!data || !Array.isArray(data) || data.length === 0) return null;
 
-        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-        const endIndex = startIndex + ITEMS_PER_PAGE;
-        const paginatedData = filteredData.slice(startIndex, endIndex);
+        // Data is already paginated from the server
+        const paginatedData = data;
 
         return (
             <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm">
@@ -274,11 +254,11 @@ const Resources = () => {
                 )}
 
                 {/* Pagination */}
-                {!loading && !error && filteredData.length > 0 && (
+                {!loading && !error && data.length > 0 && (
                     <div className="mt-6 flex items-center justify-between">
                         <div className="text-sm text-gray-700">
-                            Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredData.length)} of {filteredData.length} resources
-                            {totalCount > filteredData.length && ` (${totalCount} total)`}
+                            Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} of {totalCount} resources
+                            {searchQuery.trim() && ` (filtered by: "${searchQuery}")`}
                         </div>
                         <div className="flex items-center gap-2">
                             <button
