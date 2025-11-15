@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
 import { createHash } from 'crypto';
 import { getData } from '@/src/app/components/getData';
-import { getWarmedCache } from '@/src/app/utils/cache-warm';
 
 // Force dynamic rendering - this route fetches external data
 export const dynamic = 'force-dynamic';
@@ -16,32 +15,7 @@ function getQueryHash(sparqlQuery: string): string {
 }
 
 async function fetchEntityQueryData(sparqlQuery: string) {
-    // Check for pre-warmed cache from build time first (only for sample entities)
-    const queryHash = getQueryHash(sparqlQuery);
-    const warmedCache = getWarmedCache<{ data: any[]; timestamp?: number }>(`entity-query-${queryHash}`);
-    
-    if (warmedCache) {
-        // Extract data from cache (cache file has {data, timestamp} structure)
-        const warmedData = warmedCache.data !== undefined ? warmedCache.data : (Array.isArray(warmedCache) ? warmedCache : []);
-        
-        // Only log in development
-        if (process.env.NODE_ENV === 'development') {
-            const itemCount = Array.isArray(warmedData) ? warmedData.length : 0;
-            console.log(`Using pre-warmed entity query cache for hash: ${queryHash} (${itemCount} items)`);
-        }
-        
-        // Validate warmed data - if empty, fetch fresh
-        if (Array.isArray(warmedData) && warmedData.length > 0) {
-            return warmedData;
-        } else {
-            // Warm cache has empty data, fetch fresh
-            if (process.env.NODE_ENV === 'development') {
-                console.log(`Warm cache for entity query ${queryHash} is empty, fetching fresh data`);
-            }
-        }
-    }
-    
-    // If no warmed cache or warm cache is empty, fetch fresh data
+    // Fetch fresh data (entity-level warm caching removed)
     try {
         const queryParameter = { sparql_query: sparqlQuery };
         const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql";
