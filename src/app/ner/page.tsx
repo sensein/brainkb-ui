@@ -52,8 +52,14 @@ const NER = () => {
         setError(null);
 
         try {
-            // Use API route that handles JWT authentication server-side
-            const url = new URL('/api/ner', window.location.origin);
+            // Use API route without token authentication
+            const endpoint = process.env.NEXT_PUBLIC_NER_GET_ENDPOINT;
+            if (!endpoint) {
+                throw new Error('NEXT_PUBLIC_NER_GET_ENDPOINT environment variable is not set');
+            }
+            
+            const url = new URL('/api/ner/withouttoken', window.location.origin);
+            url.searchParams.set('endpoint', endpoint);
             url.searchParams.set('limit', String(ITEMS_PER_PAGE));
             url.searchParams.set('skip', String(skip));
             if (search.trim()) {
