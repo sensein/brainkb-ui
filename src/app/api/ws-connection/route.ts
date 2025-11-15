@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import WebSocket from 'ws';
 
 interface TokenResponse {
@@ -249,6 +250,30 @@ export async function POST(request: NextRequest) {
                   if (message.data || message.result) {
                     result = message.data || message.result || message;
                     isComplete = true;
+                    
+                    // Check if this is a pdf2reproschema endpoint and invalidate cache on successful completion
+                    const isPdf2Reproschema = endpoint && (
+                      endpoint.includes('pdf2reproschema') || 
+                      endpoint.includes('reproschema') ||
+                      endpoint === process.env.NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT
+                    );
+                    
+                    if (isPdf2Reproschema && result) {
+                      try {
+                        // Invalidate both NER and Resources caches as pdf2reproschema might create either
+                        revalidateTag('ner-all');
+                        revalidateTag('ner-lists');
+                        revalidateTag('ner-entities');
+                        revalidateTag('resource-all');
+                        revalidateTag('resource-lists');
+                        revalidateTag('resource-entities');
+                        console.log('[ws-connection] Cache invalidated after pdf2reproschema conversion');
+                      } catch (cacheError) {
+                        console.error('[ws-connection] Error invalidating cache:', cacheError);
+                        // Don't fail the request if cache invalidation fails
+                      }
+                    }
+                    
                     safeEnqueue(`data: ${JSON.stringify({ type: 'result', data: result })}\n\n`);
                     safeEnqueue(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
                     safeClose();
@@ -257,6 +282,30 @@ export async function POST(request: NextRequest) {
               } else if (message.type === 'result' || message.type === 'complete' || message.type === 'finished') {
                 result = message.data || message.result || message;
                 isComplete = true;
+                
+                // Check if this is a pdf2reproschema endpoint and invalidate cache on successful completion
+                const isPdf2Reproschema = endpoint && (
+                  endpoint.includes('pdf2reproschema') || 
+                  endpoint.includes('reproschema') ||
+                  endpoint === process.env.NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT
+                );
+                
+                if (isPdf2Reproschema && result) {
+                  try {
+                    // Invalidate both NER and Resources caches as pdf2reproschema might create either
+                    revalidateTag('ner-all');
+                    revalidateTag('ner-lists');
+                    revalidateTag('ner-entities');
+                    revalidateTag('resource-all');
+                    revalidateTag('resource-lists');
+                    revalidateTag('resource-entities');
+                    console.log('[ws-connection] Cache invalidated after pdf2reproschema conversion');
+                  } catch (cacheError) {
+                    console.error('[ws-connection] Error invalidating cache:', cacheError);
+                    // Don't fail the request if cache invalidation fails
+                  }
+                }
+                
                 safeEnqueue(`data: ${JSON.stringify({ type: 'result', data: result })}\n\n`);
                 safeEnqueue(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
                 safeClose();
@@ -274,6 +323,30 @@ export async function POST(request: NextRequest) {
                 if (message.data || message.result || (message.status && (message.status === 'completed' || message.status === 'done'))) {
                   result = message.data || message.result || message;
                   isComplete = true;
+                  
+                  // Check if this is a pdf2reproschema endpoint and invalidate cache on successful completion
+                  const isPdf2Reproschema = endpoint && (
+                    endpoint.includes('pdf2reproschema') || 
+                    endpoint.includes('reproschema') ||
+                    endpoint === process.env.NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT
+                  );
+                  
+                  if (isPdf2Reproschema && result) {
+                    try {
+                      // Invalidate both NER and Resources caches as pdf2reproschema might create either
+                      revalidateTag('ner-all');
+                      revalidateTag('ner-lists');
+                      revalidateTag('ner-entities');
+                      revalidateTag('resource-all');
+                      revalidateTag('resource-lists');
+                      revalidateTag('resource-entities');
+                      console.log('[ws-connection] Cache invalidated after pdf2reproschema conversion');
+                    } catch (cacheError) {
+                      console.error('[ws-connection] Error invalidating cache:', cacheError);
+                      // Don't fail the request if cache invalidation fails
+                    }
+                  }
+                  
                   safeEnqueue(`data: ${JSON.stringify({ type: 'result', data: result })}\n\n`);
                   safeEnqueue(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
                   safeClose();

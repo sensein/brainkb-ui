@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 
 export async function POST(request: NextRequest) {
     try {
@@ -101,6 +102,18 @@ export async function POST(request: NextRequest) {
 
         console.log('External API call successful');
         const data = await externalResponse.json();
+
+        // Invalidate NER cache tags after successful save
+        try {
+            // Invalidate common tags that cover all NER caches
+            revalidateTag('ner-all');
+            revalidateTag('ner-lists');
+            revalidateTag('ner-entities');
+            console.log('[save-ner-result] NER cache invalidated successfully');
+        } catch (cacheError) {
+            console.error('[save-ner-result] Error invalidating cache:', cacheError);
+            // Don't fail the request if cache invalidation fails
+        }
 
         return NextResponse.json({
             success: true,

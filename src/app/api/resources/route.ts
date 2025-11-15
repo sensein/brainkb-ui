@@ -3,7 +3,7 @@ import { unstable_cache } from 'next/cache';
 import { getWarmedCache } from '@/src/app/utils/cache-warm';
 import { fetchPaginatedData, searchById, FetchOptions } from '../utils/api-client';
 
-const CACHE_DURATION = 24 * 60 * 60; // 24 hours in seconds
+const CACHE_DURATION = 4 * 60 * 60; // 4 hours in seconds
 
 // Force dynamic rendering - this route uses searchParams
 export const dynamic = 'force-dynamic';
@@ -33,7 +33,7 @@ function getCachedResourceById(id: string) {
         [`resource-entity-${id}`],
         {
             revalidate: CACHE_DURATION,
-            tags: [`resource-entity-${id}`]
+            tags: [`resource-entity-${id}`, 'resource-all', 'resource-entities']
         }
     );
 }
@@ -52,7 +52,7 @@ function getCachedResourceData(limit: string, skip: string, search?: string) {
         [`resource-data-${limit}-${skip}-${search || ''}`],
         {
             revalidate: CACHE_DURATION,
-            tags: [`resource-list-${limit}-${skip}-${search || ''}`]
+            tags: [`resource-list-${limit}-${skip}-${search || ''}`, 'resource-all', 'resource-lists']
         }
     );
 }
