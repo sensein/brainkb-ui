@@ -16,6 +16,8 @@ function getQueryHash(sparqlQuery: string): string {
 
 async function fetchEntityQueryData(sparqlQuery: string) {
     // Fetch fresh data (entity-level warm caching removed)
+    const queryHash = getQueryHash(sparqlQuery);
+    
     try {
         const queryParameter = { sparql_query: sparqlQuery };
         const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql";
