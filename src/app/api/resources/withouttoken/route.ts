@@ -10,14 +10,6 @@ export const dynamic = 'force-dynamic';
 
 // Search for a specific resource by ID (without token)
 async function searchResourceByIdWithoutToken(id: string, endpoint: string): Promise<any> {
-    // Check for pre-warmed cache first
-    const warmedCache = getWarmedCache<{ data: any; timestamp?: number }>(`resource-entity-${id}`);
-    
-    if (warmedCache && warmedCache.data) {
-        console.info(`[Resources API WithoutToken] Using pre-warmed cache for resource ID: ${id}`);
-        return warmedCache.data;
-    }
-
     if (!endpoint) {
         throw new Error('Endpoint is required');
     }
@@ -77,17 +69,6 @@ export async function GET(request: NextRequest) {
         // If ID is provided, search for that specific item
         if (id) {
             try {
-                // Check for pre-warmed cache first
-                const warmedCache = getWarmedCache<{ data: any; timestamp?: number }>(`resource-entity-${id}`);
-                
-                if (warmedCache && warmedCache.data) {
-                    console.info(`[Resources API WithoutToken] Using pre-warmed cache for resource ID: ${id}`);
-                    return NextResponse.json({
-                        success: true,
-                        data: warmedCache.data,
-                    });
-                }
-
                 // Use cached search function
                 const cachedSearch = getCachedResourceByIdWithoutToken(id, endpoint);
                 const foundItem = await cachedSearch();

@@ -494,7 +494,6 @@ async function warmCache() {
     // Warm NER cache
     console.log('\nWarming NER cache...');
     let nerListSuccess = false;
-    let nerEntitySuccessCount = 0;
     try {
       const nerEndpoint = process.env.NEXT_PUBLIC_NER_GET_ENDPOINT;
       if (nerEndpoint) {
@@ -520,28 +519,7 @@ async function warmCache() {
             nerListSuccess = true;
           }
           
-          // Warm first 500 NER entities (cache them directly from the list data)
-          const MAX_NER_ENTITIES = 500;
-          const sampleNerEntities = nerResponse.data.slice(0, MAX_NER_ENTITIES);
-          
-          for (const entity of sampleNerEntities) {
-            if (entity._id) {
-              try {
-                // Cache individual entity (it's already in the list response)
-                const nerEntityFile = path.join(CACHE_DIR, `ner-entity-${entity._id}.json`);
-                fs.writeFileSync(
-                  nerEntityFile,
-                  JSON.stringify({
-                    data: entity,
-                    timestamp: Date.now()
-                  }, null, 2)
-                );
-                nerEntitySuccessCount++;
-              } catch (error) {
-                console.warn(`Failed to warm NER entity ${entity._id}:`, error.message);
-              }
-            }
-          }
+          // Entity-level caching removed - only list caching is used
         } else {
           console.warn('NER endpoint returned invalid response');
         }
@@ -556,7 +534,6 @@ async function warmCache() {
     // Warm Resources cache
     console.log('\nWarming Resources cache...');
     let resourcesListSuccess = false;
-    let resourcesEntitySuccessCount = 0;
     try {
       const resourcesEndpoint = process.env.NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT;
       if (resourcesEndpoint) {
@@ -582,28 +559,7 @@ async function warmCache() {
             resourcesListSuccess = true;
           }
           
-          // Warm first 500 Resources entities (cache them directly from the list data)
-          const MAX_RESOURCES_ENTITIES = 500;
-          const sampleResourcesEntities = resourcesResponse.data.slice(0, MAX_RESOURCES_ENTITIES);
-          
-          for (const resource of sampleResourcesEntities) {
-            if (resource._id) {
-              try {
-                // Cache individual resource (it's already in the list response)
-                const resourceEntityFile = path.join(CACHE_DIR, `resource-entity-${resource._id}.json`);
-                fs.writeFileSync(
-                  resourceEntityFile,
-                  JSON.stringify({
-                    data: resource,
-                    timestamp: Date.now()
-                  }, null, 2)
-                );
-                resourcesEntitySuccessCount++;
-              } catch (error) {
-                console.warn(`Failed to warm Resource entity ${resource._id}:`, error.message);
-              }
-            }
-          }
+          // Entity-level caching removed - only list caching is used
         } else {
           console.warn('Resources endpoint returned invalid response');
         }
@@ -633,8 +589,8 @@ async function warmCache() {
     console.log(`  KB pages: ${kbSuccessCount}/${yamlKB.pages.length}`);
     console.log(`  Taxonomy: skipped (cached at runtime when accessed)`);
     console.log(`  Entities: ${entitySuccessCount}/${entityTotalCount} entities warmed`);
-    console.log(`  NER: ${nerListSuccess ? 'success' : 'failed'} (${nerEntitySuccessCount} entities)`);
-    console.log(`  Resources: ${resourcesListSuccess ? 'success' : 'failed'} (${resourcesEntitySuccessCount} entities)`);
+    console.log(`  NER: ${nerListSuccess ? 'success' : 'failed'}`);
+    console.log(`  Resources: ${resourcesListSuccess ? 'success' : 'failed'}`);
   } catch (error) {
     console.error('Cache warming failed:', error.message);
     console.error(error.stack);
