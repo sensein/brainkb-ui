@@ -68,11 +68,13 @@ const Navbar: React.FC = () => {
     const [isResourcesOpen, setIsResourcesOpen] = useState(false);
     const [isKnowledgeBaseOpen, setIsKnowledgeBaseOpen] = useState(false);
     const [isSubmitDataOpen, setIsSubmitDataOpen] = useState(false);
+    const [isExtractedKnowledgeOpen, setIsExtractedKnowledgeOpen] = useState(false);
     const { data: session } = useSession();
     const router = useRouter();
     const dropdownRef = useRef<HTMLDivElement>(null);
     const ResourcesRef = useRef<HTMLDivElement>(null);
     const knowledgeBaseRef = useRef<HTMLDivElement>(null);
+    const extractedKnowledgeRef = useRef<HTMLDivElement>(null);
     const submitDataRef = useRef<HTMLDivElement>(null);
 
     const handleLogout = async () => {
@@ -151,13 +153,17 @@ const Navbar: React.FC = () => {
                         <ClickableDropdown
                             label="Knowledge Base"
                             items={[
-                                { href: "/knowledge-base", label: "Library Generation" }
+                                { href: "/knowledge-base", label: "Library Generation" },
+                                { href: "/ner", label: "Neuroscientific NER" },
+                                { href: "/resources", label: "Structured Resources" }
                             ]}
                             isOpen={isKnowledgeBaseOpen}
                             onToggle={() => setIsKnowledgeBaseOpen(!isKnowledgeBaseOpen)}
                             onClose={() => setIsKnowledgeBaseOpen(false)}
                             dropdownRef={knowledgeBaseRef}
                         />
+
+
                         <li className="flex items-center">
                             <Link href="/hmba-taxonomy"
                                   className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">
