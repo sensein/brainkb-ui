@@ -89,7 +89,6 @@ const Navbar: React.FC = () => {
             { ref: dropdownRef, isOpen, setIsOpen: setIsOpen },
             { ref: ResourcesRef, isOpen: isResourcesOpen, setIsOpen: setIsResourcesOpen },
             { ref: knowledgeBaseRef, isOpen: isKnowledgeBaseOpen, setIsOpen: setIsKnowledgeBaseOpen },
-            { ref: extractedKnowledgeRef, isOpen: isExtractedKnowledgeOpen, setIsOpen: setIsExtractedKnowledgeOpen },
             { ref: submitDataRef, isOpen: isSubmitDataOpen, setIsOpen: setIsSubmitDataOpen }
         ];
 
@@ -154,7 +153,9 @@ const Navbar: React.FC = () => {
                         <ClickableDropdown
                             label="Knowledge Base"
                             items={[
-                                { href: "/knowledge-base", label: "Library Generation" }
+                                { href: "/knowledge-base", label: "Library Generation" },
+                                { href: "/ner", label: "Neuroscientific NER" },
+                                { href: "/resources", label: "Structured Resources" }
                             ]}
                             isOpen={isKnowledgeBaseOpen}
                             onToggle={() => setIsKnowledgeBaseOpen(!isKnowledgeBaseOpen)}
@@ -162,17 +163,7 @@ const Navbar: React.FC = () => {
                             dropdownRef={knowledgeBaseRef}
                         />
 
-                        <ClickableDropdown
-                            label="Extracted Knowledge"
-                            items={[
-                                { href: "/ner", label: "Neuroscientific NER" },
-                                { href: "/resources", label: "Structured Resources" }
-                            ]}
-                            isOpen={isExtractedKnowledgeOpen}
-                            onToggle={() => setIsExtractedKnowledgeOpen(!isExtractedKnowledgeOpen)}
-                            onClose={() => setIsExtractedKnowledgeOpen(false)}
-                            dropdownRef={extractedKnowledgeRef}
-                        />
+
                         <li className="flex items-center">
                             <Link href="/hmba-taxonomy"
                                   className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">

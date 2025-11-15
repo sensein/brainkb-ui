@@ -213,7 +213,7 @@ const Resources = () => {
                     <div className="absolute inset-0 bg-gradient-to-r from-sky-600/20 to-transparent"></div>
                     <div className="relative px-8 py-12">
                         <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-                            Resources
+                            Structured Resources
                         </h1>
                         <p className="text-sky-100 text-base leading-relaxed">
                             Browse extracted resources from neuroscience publications, including models, code, datasets, and benchmarks.

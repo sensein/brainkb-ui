@@ -97,11 +97,30 @@ async function getToken() {
 }
 
 async function getHeaders() {
-  const headers = { 'Accept': 'application/json' };
+  const headers = { 'Accept': 'application/json', 'Content-Type': 'application/json' };
   const useBearerToken = process.env.NEXT_PUBLIC_USE_BEARER_TOKEN !== 'false';
   
   if (useBearerToken) {
     try {
+      // Try ML service token endpoint first (for NER/Resources)
+      const mlTokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE;
+      if (mlTokenEndpoint) {
+        const jwtUser = process.env.NEXT_PUBLIC_JWT_USER;
+        const jwtPassword = process.env.NEXT_PUBLIC_JWT_PASSWORD;
+        if (jwtUser && jwtPassword) {
+          const response = await fetch(mlTokenEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: jwtUser, password: jwtPassword })
+          });
+          if (response.ok) {
+            const tokenData = await response.json();
+            headers['Authorization'] = `Bearer ${tokenData.access_token}`;
+            return headers;
+          }
+        }
+      }
+      // Fallback to query service token
       const token = await getToken();
       headers['Authorization'] = `Bearer ${token}`;
     } catch (error) {
@@ -110,6 +129,32 @@ async function getHeaders() {
   }
   
   return headers;
+}
+
+// Fetch paginated data from NER or Resources endpoint
+async function fetchPaginatedData(endpoint, limit = 50, skip = 0) {
+  const headers = await getHeaders();
+  let url;
+  try {
+    url = new URL(endpoint);
+  } catch {
+    // If it's a relative URL, use the base URL
+    const baseUrl = process.env.NEXT_PUBLIC_API_ADMIN_HOST || 'https://queryservice.brainkb.org';
+    url = new URL(endpoint, baseUrl);
+  }
+  url.searchParams.set('limit', String(limit));
+  url.searchParams.set('skip', String(skip));
+  
+  const response = await fetch(url.toString(), {
+    method: 'GET',
+    headers,
+  });
+  
+  if (!response.ok) {
+    throw new Error(`API returned ${response.status}`);
+  }
+  
+  return await response.json();
 }
 
 async function fetchData(queryParameter, endpoint) {
@@ -446,6 +491,130 @@ async function warmCache() {
       console.error(error.stack);
     }
     
+    // Warm NER cache
+    console.log('\nWarming NER cache...');
+    let nerListSuccess = false;
+    let nerEntitySuccessCount = 0;
+    try {
+      const nerEndpoint = process.env.NEXT_PUBLIC_NER_GET_ENDPOINT;
+      if (nerEndpoint) {
+        // Warm first page of NER list (fetch up to 500 items)
+        const nerResponse = await fetchPaginatedData(nerEndpoint, 500, 0);
+        if (nerResponse && Array.isArray(nerResponse.data) && nerResponse.data.length > 0) {
+          const nerListFile = path.join(CACHE_DIR, 'ner-list-500-0.json');
+          fs.writeFileSync(
+            nerListFile,
+            JSON.stringify({
+              data: nerResponse.data,
+              total: nerResponse.total || 0,
+              limit: nerResponse.limit || 500,
+              skip: nerResponse.skip || 0,
+              has_more: nerResponse.has_more || false,
+              timestamp: Date.now()
+            }, null, 2)
+          );
+          
+          if (fs.existsSync(nerListFile)) {
+            const fileStats = fs.statSync(nerListFile);
+            console.log(`NER list cache warmed (${fileStats.size} bytes, ${nerResponse.data.length} items)`);
+            nerListSuccess = true;
+          }
+          
+          // Warm first 500 NER entities (cache them directly from the list data)
+          const MAX_NER_ENTITIES = 500;
+          const sampleNerEntities = nerResponse.data.slice(0, MAX_NER_ENTITIES);
+          
+          for (const entity of sampleNerEntities) {
+            if (entity._id) {
+              try {
+                // Cache individual entity (it's already in the list response)
+                const nerEntityFile = path.join(CACHE_DIR, `ner-entity-${entity._id}.json`);
+                fs.writeFileSync(
+                  nerEntityFile,
+                  JSON.stringify({
+                    data: entity,
+                    timestamp: Date.now()
+                  }, null, 2)
+                );
+                nerEntitySuccessCount++;
+              } catch (error) {
+                console.warn(`Failed to warm NER entity ${entity._id}:`, error.message);
+              }
+            }
+          }
+        } else {
+          console.warn('NER endpoint returned invalid response');
+        }
+      } else {
+        console.log('NEXT_PUBLIC_NER_GET_ENDPOINT not configured, skipping NER cache warming');
+      }
+    } catch (error) {
+      console.warn('NER cache warming failed:', error.message);
+      console.error(error.stack);
+    }
+    
+    // Warm Resources cache
+    console.log('\nWarming Resources cache...');
+    let resourcesListSuccess = false;
+    let resourcesEntitySuccessCount = 0;
+    try {
+      const resourcesEndpoint = process.env.NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT;
+      if (resourcesEndpoint) {
+        // Warm first page of Resources list (fetch up to 500 items)
+        const resourcesResponse = await fetchPaginatedData(resourcesEndpoint, 500, 0);
+        if (resourcesResponse && Array.isArray(resourcesResponse.data) && resourcesResponse.data.length > 0) {
+          const resourcesListFile = path.join(CACHE_DIR, 'resource-list-500-0.json');
+          fs.writeFileSync(
+            resourcesListFile,
+            JSON.stringify({
+              data: resourcesResponse.data,
+              total: resourcesResponse.total || 0,
+              limit: resourcesResponse.limit || 500,
+              skip: resourcesResponse.skip || 0,
+              has_more: resourcesResponse.has_more || false,
+              timestamp: Date.now()
+            }, null, 2)
+          );
+          
+          if (fs.existsSync(resourcesListFile)) {
+            const fileStats = fs.statSync(resourcesListFile);
+            console.log(`Resources list cache warmed (${fileStats.size} bytes, ${resourcesResponse.data.length} items)`);
+            resourcesListSuccess = true;
+          }
+          
+          // Warm first 500 Resources entities (cache them directly from the list data)
+          const MAX_RESOURCES_ENTITIES = 500;
+          const sampleResourcesEntities = resourcesResponse.data.slice(0, MAX_RESOURCES_ENTITIES);
+          
+          for (const resource of sampleResourcesEntities) {
+            if (resource._id) {
+              try {
+                // Cache individual resource (it's already in the list response)
+                const resourceEntityFile = path.join(CACHE_DIR, `resource-entity-${resource._id}.json`);
+                fs.writeFileSync(
+                  resourceEntityFile,
+                  JSON.stringify({
+                    data: resource,
+                    timestamp: Date.now()
+                  }, null, 2)
+                );
+                resourcesEntitySuccessCount++;
+              } catch (error) {
+                console.warn(`Failed to warm Resource entity ${resource._id}:`, error.message);
+              }
+            }
+          }
+        } else {
+          console.warn('Resources endpoint returned invalid response');
+        }
+      } else {
+        console.log('NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT not configured, skipping Resources cache warming');
+      }
+    } catch (error) {
+      console.warn('Resources cache warming failed:', error.message);
+      console.error(error.stack);
+    }
+    
     // List all cache files created
     console.log('\nCache files created:');
     try {
@@ -464,6 +633,8 @@ async function warmCache() {
     console.log(`  KB pages: ${kbSuccessCount}/${yamlKB.pages.length}`);
     console.log(`  Taxonomy: skipped (cached at runtime when accessed)`);
     console.log(`  Entities: ${entitySuccessCount}/${entityTotalCount} entities warmed`);
+    console.log(`  NER: ${nerListSuccess ? 'success' : 'failed'} (${nerEntitySuccessCount} entities)`);
+    console.log(`  Resources: ${resourcesListSuccess ? 'success' : 'failed'} (${resourcesEntitySuccessCount} entities)`);
   } catch (error) {
     console.error('Cache warming failed:', error.message);
     console.error(error.stack);

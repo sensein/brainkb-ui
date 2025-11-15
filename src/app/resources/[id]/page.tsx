@@ -683,13 +683,6 @@ export default function ResourceDetailPage({ params }: { params: { id: string } 
                             >
                                 <Flag className="h-4 w-4" /> Suggest correction
                             </Button>
-                            {url[0] && (
-                                <Button asChild size="sm" className="gap-2">
-                                    <a href={url[0]} target="_blank" rel="noopener noreferrer">
-                                        <ExternalLink className="h-4 w-4" /> Open URL
-                                    </a>
-                                </Button>
-                            )}
                         </div>
                     </div>
                 </div>

@@ -112,8 +112,9 @@ export async function GET(request: NextRequest) {
         }
 
         // List view - check for pre-warmed cache
+        // First try exact match, then try warm cache with limit 500 (build-time cache)
         const cacheKey = `ner-list-${limit}-${skip}`;
-        const warmedCache = getWarmedCache<{
+        let warmedCache = getWarmedCache<{
             data: any[];
             total?: number;
             limit?: number;
@@ -121,6 +122,34 @@ export async function GET(request: NextRequest) {
             has_more?: boolean;
             timestamp?: number;
         }>(cacheKey);
+
+        // If exact match not found and skip is 0, try warm cache with limit 500
+        if (!warmedCache && skip === '0') {
+            const warmCacheKey = `ner-list-500-0`;
+            warmedCache = getWarmedCache<{
+                data: any[];
+                total?: number;
+                limit?: number;
+                skip?: number;
+                has_more?: boolean;
+                timestamp?: number;
+            }>(warmCacheKey);
+            
+            // If we have warm cache with 500 items, slice it to match requested limit
+            if (warmedCache && Array.isArray(warmedCache.data)) {
+                const requestedLimit = parseInt(limit);
+                const slicedData = warmedCache.data.slice(0, requestedLimit);
+                console.info(`[NER API] Using pre-warmed cache (500 items) sliced to limit: ${limit}, skip: ${skip}`);
+                return NextResponse.json({
+                    success: true,
+                    data: slicedData,
+                    total: warmedCache.total || 0,
+                    limit: requestedLimit,
+                    skip: parseInt(skip),
+                    has_more: warmedCache.data.length > requestedLimit || (warmedCache.has_more || false),
+                });
+            }
+        }
 
         if (warmedCache && Array.isArray(warmedCache.data)) {
             console.info(`[NER API] Using pre-warmed cache for list (limit: ${limit}, skip: ${skip})`);

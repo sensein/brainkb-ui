@@ -623,13 +623,7 @@ export default function NERDetailPage({ params }: NERDetailPageProps) {
                         >
                             <Flag className="h-4 w-4" /> Suggest correction
                         </Button>
-                        {doi[0] && (
-                            <Button asChild size="sm" className="gap-2">
-                                <a href={`https://doi.org/${doi[0]}`} target="_blank" rel="noopener noreferrer">
-                                    <ExternalLink className="h-4 w-4" /> Open DOI
-                                </a>
-                            </Button>
-                        )}
+
                     </div>
                 </div>
             </div>

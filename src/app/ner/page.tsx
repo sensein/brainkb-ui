@@ -219,10 +219,10 @@ const NER = () => {
                     <div className="absolute inset-0 bg-gradient-to-r from-sky-600/20 to-transparent"></div>
                     <div className="relative px-8 py-12">
                         <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-                            Named Entity Recognition (NER) Data
+                            Neuroscientific Named Entity Recognition (NER) Terms
                         </h1>
                         <p className="text-sky-100 text-base leading-relaxed">
-                            Browse and search extracted named entities from research papers
+                            Browse and search extracted neuroscientific named entities from research papers.
                         </p>
                     </div>
                 </div>
