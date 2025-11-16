@@ -89,6 +89,7 @@ export default function HMBATaxonomyPage() {
   }, []);
 
   // Measure text panel height
+  // todo: review this logic
   useEffect(() => {
     const updateTextPanelHeight = () => {
       if (textPanelRef.current) {
@@ -176,12 +177,12 @@ export default function HMBATaxonomyPage() {
     const scaleX = cw / (bbox.width + pad * 2);
     const scaleY = ch / (bbox.height + pad * 2);
 
-    console.log('Fit debug:', {
-      bbox: { width: bbox.width, height: bbox.height },
-      container: { width: cw, height: ch },
-      scales: { scaleX, scaleY },
-      pad
-    });
+    // console.log('Fit debug:', {
+    //   bbox: { width: bbox.width, height: bbox.height },
+    //   container: { width: cw, height: ch },
+    //   scales: { scaleX, scaleY },
+    //   pad
+    // });
 
     // Use the actual calculated scale to fit the wide tree
     const scale = Math.min(1.0, Math.min(scaleX, scaleY));
