@@ -477,8 +477,7 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => {
               </a>.
               </p>
               <p className="text-sky-100 text-xs italic">
-              You can click on any node to expand the taxonomy and explore deeper hierarchical levels.
-Hover over a node's name to view metadata associated with that specific cell-type node.
+              You can click on any node to expand the taxonomy and explore deeper hierarchical levels. Hover over a node's name to view metadata associated with that specific cell-type node.
               </p>
             </div>
           </div>
