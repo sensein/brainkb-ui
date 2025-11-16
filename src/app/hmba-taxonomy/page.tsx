@@ -15,7 +15,9 @@ export default function HMBATaxonomyPage() {
   // Fullscreen container + size
   const containerRef = useRef<HTMLDivElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
+  const textPanelRef = useRef<HTMLDivElement | null>(null);
   const [size, setSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
+  const [textPanelHeight, setTextPanelHeight] = useState<number>(0);
 
   // Camera
   const [translate, setTranslate] = useState<{ x: number; y: number }>({ x: 160, y: 300 });
@@ -86,6 +88,37 @@ export default function HMBATaxonomyPage() {
     };
   }, []);
 
+  // Measure text panel height
+  useEffect(() => {
+    const updateTextPanelHeight = () => {
+      if (textPanelRef.current) {
+        const height = textPanelRef.current.offsetHeight;
+        setTextPanelHeight(height);
+        console.log('Text panel height updated:', height);
+      }
+    };
+
+    // Initial measurement
+    updateTextPanelHeight();
+
+    // Re-measure on resize
+    window.addEventListener('resize', updateTextPanelHeight);
+
+    // Use ResizeObserver for more accurate measurements
+    const resizeObserver = new ResizeObserver(() => {
+      updateTextPanelHeight();
+    });
+
+    if (textPanelRef.current) {
+      resizeObserver.observe(textPanelRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateTextPanelHeight);
+      resizeObserver.disconnect();
+    };
+  }, [data]);
+
   // Tooltip helpers - HOVER POSITIONING
   const getClampedPos = (rawX: number, rawY: number) => {  // Calculates tooltip position based on mouse coordinates
     const pad = 10;
@@ -115,6 +148,16 @@ export default function HMBATaxonomyPage() {
     if (!rect) return;
     setMousePos({ x: evt.clientX - rect.left, y: evt.clientY - rect.top });  // Convert to relative coordinates
   };
+
+  // Zoom controls - simple zoom in/out like double-click
+   const handleZoomIn = useCallback(() => {
+    setZoom(prevZoom => Math.min(prevZoom * 1.5, 3)); // Max zoom 3x
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    setZoom(prevZoom => Math.max(prevZoom / 1.5, 0.05)); // Min zoom 0.05x (allows zooming out more)
+  }, []);
+
 
   // --- Fit to content ---
   const fitToContent = useCallback(() => {
@@ -186,7 +229,7 @@ export default function HMBATaxonomyPage() {
 
   if (!data) return (
     <div className="p-4">
-      <div className="bg-red-600 text-white px-5 py-5 text-xl font-semibold">
+      <div className="bg-blue-600 text-white px-5 py-5 text-xl font-semibold">
         LOADING - DATA NOT READY
       </div>
     </div>
@@ -215,7 +258,7 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => {
     >
     {/* Circle */}
     <circle
-      r={35}
+      r={90}
       fill={nodeDatum.nodeColor || 'lightgray'}
       stroke="#1f2937"
       strokeWidth={1.25}
@@ -236,11 +279,16 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => {
 
         if (name.length <= maxLength) {
           // Single line for short names
+          // Position text below circle: circle radius (90) + spacing (20)
+          // Using absolute y position - zoom transform scales everything proportionally
+          const circleRadius = 90;
+          const textSpacing = 20;
           return (
             <text
               x={0}
-              dy={25 / zoom}
+              y={circleRadius + textSpacing}
               textAnchor="middle"
+              dominantBaseline="hanging"
               onClick={handleNameClick}
               onMouseEnter={() => setHoverNode(nodeDatum)}  // HOVER: Show tooltip when mouse enters text
               onMouseLeave={() => setHoverNode(null)}       // HOVER: Hide tooltip when mouse leaves text
@@ -287,12 +335,19 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => {
             line2 = name.substring(mid);
           }
 
+          // Position text below circle: circle radius (90) + spacing
+          // Using absolute y positions - zoom transform scales everything proportionally
+          const circleRadius = 90;
+          const textSpacing = 20;
+          const lineSpacing = 12;
+          const fontSize = 60; // Approximate font size for line spacing
           return (
             <>
               <text
                 x={0}
-                dy={20 / zoom}
+                y={circleRadius + textSpacing}
                 textAnchor="middle"
+                dominantBaseline="hanging"
                 onClick={handleNameClick}
                 onMouseEnter={() => setHoverNode(nodeDatum)}  // HOVER: Show tooltip when mouse enters text
                 onMouseLeave={() => setHoverNode(null)}       // HOVER: Hide tooltip when mouse leaves text
@@ -310,8 +365,9 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => {
               </text>
               <text
                 x={0}
-                dy={32 / zoom}
+                y={circleRadius + textSpacing + fontSize + lineSpacing}
                 textAnchor="middle"
+                dominantBaseline="hanging"
                 onClick={handleNameClick}
                 onMouseEnter={() => setHoverNode(nodeDatum)}  // HOVER: Show tooltip when mouse enters text
                 onMouseLeave={() => setHoverNode(null)}       // HOVER: Hide tooltip when mouse leaves text
@@ -400,7 +456,44 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => {
 
   return (
     <div>
-      <div ref={containerRef} className="fixed inset-0 m-0 p-0 overflow-hidden">
+      <div 
+        ref={textPanelRef} 
+        className="fixed top-0 left-0 right-0 z-30 bg-white"
+        style={{ paddingTop: '120px' }} // Move blue box lower
+      >
+        <div className="container mx-auto px-2 py-2">
+          <div className="relative overflow-hidden bg-gradient-to-br from-sky-500 via-blue-500 to-emerald-500 rounded-2xl shadow-xl">
+            <div className="absolute inset-0 bg-gradient-to-r from-sky-600/20 to-transparent"></div>
+            <div className="relative px-6 py-4">
+              <p className="text-sky-100 text-sm leading-relaxed mb-2">
+              The Human and Mammalian Brain Atlas (HMBA) aims to build a highly granular, cross-mammalian cell atlas that links brain structure, function, and cellular architecture across humans, macaques, and marmosets. A central component is the consensus basal ganglia taxonomy, generated through iterative clustering and cross-species integration of single-nucleus multiomic data. You can find more about the taxonomy{' '}
+              <a 
+                href="https://alleninstitute.github.io/HMBA_BasalGanglia_Consensus_Taxonomy/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="underline hover:text-sky-50"
+              >
+                here
+              </a>.
+              </p>
+              <p className="text-sky-100 text-xs italic">
+              You can click on any node to expand the taxonomy and explore deeper hierarchical levels.
+Hover over a node's name to view metadata associated with that specific cell-type node.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div 
+        ref={containerRef} 
+        className="fixed left-0 right-0 bottom-0 m-0 p-0 overflow-hidden border-2 border-gray-300 bg-white shadow-lg z-20"
+        style={{ 
+          top: textPanelHeight > 0 ? `${textPanelHeight + 5}px` : '200px', // Start 5px below text panel or fallback to 200px
+          height: textPanelHeight > 0 
+            ? `calc(100vh - ${textPanelHeight + 5}px)` 
+            : 'calc(100vh - 200px)'
+        }}
+      >
         {/* ⭐ global SVG crispness tweaks */}
         <style jsx global>{`
           .rd3t-svg {
@@ -426,30 +519,38 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => {
           initialDepth={2}
           dimensions={{
             width: size.width || (typeof window !== 'undefined' ? window.innerWidth : 1200),
-            height: size.height || (typeof window !== 'undefined' ? window.innerHeight : 800),
+            height: textPanelHeight > 0 
+              ? (size.height || (typeof window !== 'undefined' ? window.innerHeight : 800)) - (textPanelHeight + 5)
+              : size.height || (typeof window !== 'undefined' ? window.innerHeight : 800),
           }}
           translate={translate}
           zoom={zoom}
           renderCustomNodeElement={renderCustomNode}
           separation={{ siblings: 2.5, nonSiblings: 3.0 }}
-          nodeSize={{ x: 200, y: 500 }}
+          nodeSize={{ x: 220, y: 700 }}
           pathFunc={"curveStep" as any}
         />
-      </div>
-
-      {/* FIT BUTTON - SEPARATE OVERLAY LAYER */}
-      <div className="fixed inset-0 pointer-events-none z-[10000]">
-        <button
-          onClick={() => {
-            console.log('Fit button clicked!');
-            fitToContent();
-          }}
-          className="absolute top-28 right-5 pointer-events-auto rounded-md border border-blue-900 bg-blue-500 px-4 py-2 text-xs font-bold text-white shadow-lg transition hover:bg-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400"
-          aria-label="Fit the taxonomy tree to the available content area"
-          title="Fit to content"
-        >
-          Fit to Content
-        </button>
+        {/* Zoom Control Panel */}
+        <div className="absolute top-4 right-4 z-50">
+          <div className="flex flex-col gap-2 bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-lg border border-gray-300">
+            <button
+              onClick={handleZoomIn}
+              className="w-7 h-7 flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors font-bold text-lg"
+              title="Zoom In"
+              aria-label="Zoom In"
+            >
+              +
+            </button>
+            <button
+              onClick={handleZoomOut}
+              className="w-7 h-7 flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors font-bold text-lg"
+              title="Zoom Out"
+              aria-label="Zoom Out"
+            >
+              −
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
