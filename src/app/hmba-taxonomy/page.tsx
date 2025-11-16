@@ -94,7 +94,7 @@ export default function HMBATaxonomyPage() {
       if (textPanelRef.current) {
         const height = textPanelRef.current.offsetHeight;
         setTextPanelHeight(height);
-        console.log('Text panel height updated:', height);
+        
       }
     };
 
