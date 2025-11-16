@@ -226,7 +226,7 @@ const KnowledgeBase = (
                 {loading && (
                     <div className="flex flex-col items-center justify-center py-20">
                         <Loader2 className="w-12 h-12 text-sky-500 animate-spin mb-4" />
-                        <p className="text-gray-600">"Searching relevant data in the knowledge base..."</p>
+                        <p className="text-gray-600">Loading knowledge base data...</p>
                     </div>
                 )}
 
