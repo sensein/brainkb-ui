@@ -37,15 +37,12 @@ pages:
           ?id biolink:category "bican:BarcodedCellSample"^^<http://www.w3.org/2001/XMLSchema#anyURI>;
               rdfs:label ?label;
         }
-      }
-    # TODO: this is not used
-    # display_column_first: "id"
-    # display_column_second: "label"
+      } 
 
   - page: "Library Aliquot"
     title: "Library Aliquot"
     description: "One library in the library pool. Each library aliquot in a library pool will have a unique R1/R2 index to allow for sequencing together then separating the sequencing output by originating library aliquot through the process of demultiplexing. The resulting demultiplexed fastq files will include the library aliquot name.  A given library may produce multiple library aliquots, which is done in the case of resequencing.  Each library aliquot will produce a set of fastq files."
-    slug: "LibraryAliquot"
+    slug: "libraryaliquot"
     sparql_query: |-
       PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
       PREFIX NIMP: <http://example.org/NIMP/>
@@ -62,27 +59,4 @@ pages:
         }
       }
     default_kb: false
-    # TODO: this is not used
-    #display_column_first: "id"
-    #display_column_second: "label"
-    #display_column_third: "category"
 
-#  - page: "Resources"
-#    title: "Resources"
-#    description: "This page consists the extracted resources available in neuroscience publications, e.g., models, code and so on."
-#    slug: "resource"
-#    sparql_query: |-
-#      PREFIX res: <https://brainkb.org/ohbm-australia/structured-resource/>
-#
-#      SELECT ?id ?target ?category
-#      WHERE {
-#        GRAPH <https://brainkb.org/ohbm-australia/structured-resource/> {
-#          ?id res:target ?target ;
-#              res:category ?category .
-#        }
-#      }
-#
-#    default_kb: false
-#    display_column_first: "id"
-#    display_column_second: "target"
-#    display_column_third: "category"

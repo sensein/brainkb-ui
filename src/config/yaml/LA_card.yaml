@@ -2,7 +2,7 @@
 #EntityView:
 id: ui:1
 name: LA_card
-slug: LibraryAliquot
+slug: libraryaliquot
 description: a view of a library aliquot
 boxes:
   - box:
