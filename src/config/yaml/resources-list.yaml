@@ -1,0 +1,29 @@
+type: "list"
+route: "/knowledge-base/resources"
+slug: "resources"
+title: "Structured Resources"
+description: "Browse extracted resources from neuroscience publications, including models, code, datasets, and benchmarks."
+dataSource:
+  type: "api-get"
+  endpoint: "NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT"
+  apiRoute: "/api/resources/withouttoken"
+  dataExtractor: "extractResourceData"
+columns:
+  - key: "name"
+    label: "Name"
+    type: "link"
+    linkPath: "/knowledge-base/resources"
+  - key: "category"
+    label: "Category"
+    type: "text"
+  - key: "type"
+    label: "Type"
+    type: "text"
+  - key: "judge_score"
+    label: "Judge Score"
+    type: "text"
+itemsPerPage: 50
+search:
+  enabled: true
+  placeholder: "Search resources by name, category, type, description..."
+

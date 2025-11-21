@@ -1,0 +1,219 @@
+/**
+ * Utility to load and parse page configurations from YAML
+ */
+import pageConfigsYaml from '@/src/config/yaml/page-configs.yaml';
+import { pageMapperConfig } from '@/src/app/components/pageMapperConfig';
+import { ListPageConfig, DetailPageConfig } from '@/src/types/page-config';
+import { Network, Database, BookOpen, Activity, FileText, MessageSquare, MapPin, User, Calendar, Tag as TagIcon, Package, Link as LinkIcon } from "lucide-react";
+
+// Icon mapping
+const iconMap: Record<string, any> = {
+  Network,
+  Database,
+  BookOpen,
+  Activity,
+  FileText,
+  MessageSquare,
+  MapPin,
+  User,
+  Calendar,
+  Tag: TagIcon,
+  Package,
+  Link: LinkIcon,
+};
+
+// Helper function to extract resource data from nested structure
+function extractResourceData(item: any) {
+  const resourceData = item?.judged_structured_information?.judge_resource?.["1"]?.[0];
+  if (!resourceData) return null;
+  
+  return {
+    _id: item._id,
+    name: resourceData.name,
+    description: resourceData.description,
+    type: resourceData.type,
+    category: resourceData.category,
+    target: resourceData.target,
+    specific_target: resourceData.specific_target,
+    mapped_target_concept: resourceData.mapped_target_concept,
+    mapped_specific_target_concept: resourceData.mapped_specific_target_concept,
+    url: resourceData.url,
+    judge_score: resourceData.judge_score,
+    mentions: resourceData.mentions,
+    documentName: item.documentName,
+    contributed_by: item.contributed_by,
+    created_at: item.created_at,
+    updated_at: item.updated_at,
+    processedAt: item.processedAt,
+    history: item.history,
+    version: item.version
+  };
+}
+
+// Data extractor mapping
+const dataExtractors: Record<string, (item: any) => any> = {
+  extractResourceData,
+};
+
+export async function getListPageConfig(route: string, slug?: string): Promise<ListPageConfig | null> {
+  // First try to find in mapper for modular YAML files
+  if (slug) {
+    const mapperEntry = pageMapperConfig.PageMapper?.find(
+      (m) => m.type === 'list' && m.slug === slug
+    );
+    
+    if (mapperEntry && mapperEntry.filename) {
+      try {
+        const moduleData = await import(`@/src/config/yaml/${mapperEntry.filename}`);
+        const pageConfig = moduleData.default;
+        return buildListPageConfig(pageConfig);
+      } catch (err) {
+        console.error(`Failed to load ${mapperEntry.filename}:`, err);
+      }
+    }
+  }
+  
+  // Fallback to page-configs.yaml
+  let pageConfig = slug 
+    ? pageConfigsYaml.pages?.find((p: any) => p.type === 'list' && p.slug === slug)
+    : null;
+  
+  if (!pageConfig) {
+    pageConfig = pageConfigsYaml.pages?.find((p: any) => p.type === 'list' && p.route === route);
+  }
+  
+  if (!pageConfig) return null;
+  
+  return buildListPageConfig(pageConfig);
+}
+
+function buildListPageConfig(pageConfig: any): ListPageConfig {
+
+  return {
+    title: pageConfig.title,
+    description: pageConfig.description,
+    route: pageConfig.route,
+    slug: pageConfig.slug,
+    dataSource: {
+      type: pageConfig.dataSource.type as 'api-get' | 'api-post' | 'sparql',
+      endpoint: pageConfig.dataSource.apiRoute || pageConfig.dataSource.endpoint, // Use API route, fallback to endpoint
+      method: pageConfig.dataSource.method || 'GET',
+      params: {
+        ...pageConfig.dataSource.params,
+        envVarName: pageConfig.dataSource.endpoint, // Store env var name for backend URL lookup
+      },
+      dataExtractor: pageConfig.dataSource.dataExtractor 
+        ? dataExtractors[pageConfig.dataSource.dataExtractor]
+        : undefined,
+    },
+    columns: (pageConfig.columns || []).map((col: any) => {
+      // If linkPath is provided, use it; otherwise construct from route
+      let linkBasePath = col.linkPath;
+      if (!linkBasePath && pageConfig.slug) {
+        linkBasePath = `/knowledge-base/${pageConfig.slug}`;
+      } else if (!linkBasePath && pageConfig.route) {
+        linkBasePath = pageConfig.route;
+      }
+      
+      return {
+        key: col.key,
+        label: col.label,
+        link: linkBasePath ? {
+          basePath: linkBasePath,
+        } : undefined,
+        type: col.type,
+        badgeVariant: col.badgeVariant,
+      };
+    }),
+    itemsPerPage: pageConfig.itemsPerPage || 50,
+    search: {
+      enabled: pageConfig.search?.enabled !== false,
+      placeholder: pageConfig.search?.placeholder,
+    },
+  };
+}
+
+export async function getDetailPageConfig(route: string, slug?: string): Promise<DetailPageConfig | null> {
+  // First try to find in mapper for modular YAML files
+  if (slug) {
+    const mapperEntry = pageMapperConfig.PageMapper?.find(
+      (m) => m.type === 'detail' && m.slug === slug
+    );
+    
+    if (mapperEntry && mapperEntry.filename) {
+      try {
+        const moduleData = await import(`@/src/config/yaml/${mapperEntry.filename}`);
+        const pageConfig = moduleData.default;
+        return buildDetailPageConfig(pageConfig);
+      } catch (err) {
+        console.error(`Failed to load ${mapperEntry.filename}:`, err);
+      }
+    }
+  }
+  
+  // Fallback to page-configs.yaml
+  let pageConfig = slug 
+    ? pageConfigsYaml.pages?.find((p: any) => p.type === 'detail' && p.slug === slug)
+    : null;
+  
+  if (!pageConfig) {
+    pageConfig = pageConfigsYaml.pages?.find((p: any) => p.type === 'detail' && p.route === route);
+  }
+  
+  if (!pageConfig) return null;
+  
+  return buildDetailPageConfig(pageConfig);
+}
+
+function buildDetailPageConfig(pageConfig: any): DetailPageConfig {
+  return {
+    title: pageConfig.title,
+    route: pageConfig.route,
+    slug: pageConfig.slug,
+    backLink: pageConfig.backLink,
+    dataSource: {
+      type: pageConfig.dataSource.type as 'api-get' | 'api-post' | 'sparql',
+      endpoint: pageConfig.dataSource.apiRoute || pageConfig.dataSource.endpoint, // Use API route, fallback to endpoint
+      method: pageConfig.dataSource.method || 'GET',
+      idParam: pageConfig.dataSource.idParam || 'id',
+      params: {
+        envVarName: pageConfig.dataSource.endpoint, // Store env var name for backend URL lookup
+      },
+      dataExtractor: pageConfig.dataSource.dataExtractor
+        ? (rawData: any) => {
+            const extractor = dataExtractors[pageConfig.dataSource.dataExtractor];
+            if (extractor) {
+              const resourceData = rawData?.judged_structured_information?.judge_resource?.["1"]?.[0];
+              if (!resourceData) return null;
+              return extractor(rawData);
+            }
+            return rawData;
+          }
+        : undefined,
+    },
+    tabs: pageConfig.tabs.map((tab: any) => ({
+      id: tab.id,
+      label: tab.label,
+      icon: tab.icon ? iconMap[tab.icon] : undefined,
+      type: tab.type || 'default',
+      sections: tab.sections ? tab.sections.map((section: any) => ({
+        title: section.title,
+        icon: section.icon ? iconMap[section.icon] : undefined,
+        layout: section.layout || 'default',
+        fields: section.fields.map((field: any) => ({
+          key: field.key,
+          label: field.label,
+          type: field.type as any,
+          badgeVariant: field.badgeVariant,
+          linkBasePath: field.linkBasePath,
+        })),
+      })) : undefined,
+    })),
+    showProvenance: pageConfig.showProvenance !== false,
+    showRelated: pageConfig.showRelated !== false,
+    relatedConfig: pageConfig.relatedConfig ? {
+      title: pageConfig.relatedConfig.title,
+    } : undefined,
+  };
+}
+

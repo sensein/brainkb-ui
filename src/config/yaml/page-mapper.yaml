@@ -1,0 +1,31 @@
+PageMapper:
+  # SPARQL-based entity detail pages (using card YAML files)
+  - type: "entity-detail"
+    slug: "libraryaliquot" 
+    filename: "LA_card.yaml"
+  
+  - type: "entity-detail"
+    slug: "barcodedcellsample" 
+    filename: "barcodedcellsample_card.yaml"
+
+
+  - type: "entity-detail"
+    slug: "celltaxon"
+    filename: "celltaxon_card.yaml"
+ 
+  - type: "list"
+    slug: "ner"
+    filename: "ner-list.yaml"
+  
+  - type: "detail"
+    slug: "ner"
+    filename: "ner-detail.yaml"
+
+  - type: "list"
+    slug: "resources"
+    filename: "resources-list.yaml"
+  
+  - type: "detail"
+    slug: "resources"
+    filename: "resources-detail.yaml"
+
