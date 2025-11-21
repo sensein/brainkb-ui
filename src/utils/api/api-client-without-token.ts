@@ -17,12 +17,26 @@ export async function fetchPaginatedDataWithoutToken(
   try {
     url = new URL(endpoint);
   } catch {
-    const defaultBaseUrl = baseUrl || (typeof window !== 'undefined' ? window.location.origin : env.apiHost);
-    url = new URL(endpoint, defaultBaseUrl);
+    // For Next.js API routes (starting with /api/), use current origin
+    // Otherwise, use the provided baseUrl or env.apiHost
+    if (endpoint.startsWith('/api/')) {
+      // In browser, use window.location.origin; in server, use baseUrl or env.apiHost
+      const origin = typeof window !== 'undefined' 
+        ? window.location.origin 
+        : (baseUrl || (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_APP_URL) || env.apiHost);
+      url = new URL(endpoint, origin);
+    } else {
+      const defaultBaseUrl = baseUrl || (typeof window !== 'undefined' ? window.location.origin : env.apiHost);
+      url = new URL(endpoint, defaultBaseUrl);
+    }
   }
 
-  url.searchParams.set('limit', String(limit));
-  url.searchParams.set('skip', String(skip));
+  // Convert to strings if they're numbers (for backward compatibility)
+  const limitStr = typeof limit === 'number' ? String(limit) : limit;
+  const skipStr = typeof skip === 'number' ? String(skip) : skip;
+  
+  url.searchParams.set('limit', limitStr);
+  url.searchParams.set('skip', skipStr);
   if (search && search.trim()) {
     url.searchParams.set('search', search.trim());
   }

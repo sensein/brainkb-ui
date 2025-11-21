@@ -65,11 +65,11 @@ const NER = () => {
 
             const result = await fetchPaginatedDataWithoutToken({
                 endpoint: '/api/ner/withouttoken',
-                limit: ITEMS_PER_PAGE,
-                skip,
+                limit: String(ITEMS_PER_PAGE),
+                skip: String(skip),
                 search: search.trim() || undefined,
                 params: { endpoint }, // Pass endpoint as query param
-            });
+            }) as { success: boolean; data?: any[]; total?: number; has_more?: boolean; error?: string };
 
             console.info("NER: API response received");
             console.info("NER: Result success:", result.success);

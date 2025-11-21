@@ -449,10 +449,10 @@ export default function ResourceDetailPage({ params }: { params: { id: string } 
                 
                 const result = await fetchPaginatedDataWithoutToken({
                     endpoint: '/api/resources/withouttoken',
-                    limit: 1,
-                    skip: 0,
+                    limit: '1',
+                    skip: '0',
                     params: { endpoint, id: decodedId },
-                });
+                }) as { success: boolean; data?: any; error?: string };
 
                 if (result.success) {
                     let rawData;

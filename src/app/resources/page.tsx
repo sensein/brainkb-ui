@@ -76,11 +76,11 @@ const Resources = () => {
 
             const result = await fetchPaginatedDataWithoutToken({
                 endpoint: '/api/resources/withouttoken',
-                limit: ITEMS_PER_PAGE,
-                skip,
+                limit: String(ITEMS_PER_PAGE),
+                skip: String(skip),
                 search: search.trim() || undefined,
                 params: { endpoint }, // Pass endpoint as query param
-            });
+            }) as { success: boolean; data?: any[]; total?: number; has_more?: boolean; error?: string };
 
             console.info("Resources: API response received");
             console.info("Resources: Result success:", result.success);
