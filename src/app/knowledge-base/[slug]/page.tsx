@@ -2,7 +2,7 @@
 import {useState, useEffect} from 'react';
 import {Database, Loader2, AlertCircle, ChevronLeft, ChevronRight, ExternalLink, Search} from "lucide-react";
 import {useFilteredTableData} from "@/src/utils/hooks/use-filtered-table-data";
-import {getData} from "@/src/app/components/getData";
+import {getData} from "@/src/app/components/utils/getData";
 import yaml from "@/src/config/yaml/config-knowledgebases.yaml";
 
 const ITEMS_PER_PAGE = 50;
@@ -57,23 +57,15 @@ const KnowledgeBase = (
             console.info("KBpage: Calling API route with query (to avoid CORS)");
 
             // Call API route with POST to send query (server-side execution avoids CORS)
-            const apiResponse = await fetch('/api/knowledge-base', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    slug: 'default',
-                    sparqlQuery: query_to_execute
-                })
+            const { postData } = await import('@/src/utils/api/api-client');
+            const result = await postData<{ success: boolean; data: any }>('/api/knowledge-base', {
+                slug: 'default',
+                sparqlQuery: query_to_execute
+            }, {
+                useAuth: false, // API route handles auth internally
             });
 
-            if (!apiResponse.ok) {
-                const errorText = await apiResponse.text();
-                throw new Error(`API returned ${apiResponse.status}: ${errorText}`);
-            }
-
-            const result = await apiResponse.json();
+            // Result is already parsed from postData
 
             console.info("KBpage: API response received");
             console.info("KBpage: Result success:", result.success);

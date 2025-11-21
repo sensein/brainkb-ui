@@ -42,7 +42,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import {Activity} from "@/src/types";
-import KeyValueBlock from "@/src/app/components/KeyValueBlock";
+import KeyValueBlock from "@/src/app/components/data-display/KeyValueBlock";
 
 export default function ActivityList({ userActivity }: { userActivity: Activity[] }) {
   const [showAll, setShowAll] = useState(false);

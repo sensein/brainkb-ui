@@ -445,23 +445,14 @@ export default function ResourceDetailPage({ params }: { params: { id: string } 
                     throw new Error('NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT environment variable is not set');
                 }
                 
-                const url = new URL('/api/resources/withouttoken', window.location.origin);
-                url.searchParams.set('endpoint', endpoint);
-                url.searchParams.set('id', decodedId);
-
-                const response = await fetch(url.toString(), {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
+                const { fetchPaginatedDataWithoutToken } = await import('@/src/utils/api/api-client-without-token');
+                
+                const result = await fetchPaginatedDataWithoutToken({
+                    endpoint: '/api/resources/withouttoken',
+                    limit: 1,
+                    skip: 0,
+                    params: { endpoint, id: decodedId },
                 });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-                    throw new Error(errorData.error || `API returned ${response.status}`);
-                }
-
-                const result = await response.json();
 
                 if (result.success) {
                     let rawData;

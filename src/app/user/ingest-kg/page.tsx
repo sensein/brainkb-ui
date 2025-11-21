@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { getData } from "../../components/getData";
-import StatusIndicator, { StatusType } from "../../components/StatusIndicator";
+import { getData } from "../../components/utils/getData";
+import StatusIndicator, { StatusType } from "../../components/ui/StatusIndicator";
 import { clientEnv } from "../../../config/env";
 
 interface NamedGraph {

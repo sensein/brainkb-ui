@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
 import { createHash } from 'crypto';
-import { getData } from '@/src/app/components/getData';
+import { getData } from '@/src/app/components/utils/getData';
 import { env } from '../../../config/env';
 
 // Force dynamic rendering - this route fetches external data

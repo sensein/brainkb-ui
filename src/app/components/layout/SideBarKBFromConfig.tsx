@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Link from "next/link";
 
-import {getData} from "@/src/app/components/getData";
+import {getData} from "@/src/app/components/utils/getData";
 import yaml from "@/src/config/yaml/config-knowledgebases.yaml";
 export default function SideBarKBFromConfig() {
 

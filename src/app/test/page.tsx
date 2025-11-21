@@ -2,7 +2,7 @@
 
 import yaml from "@/src/config/yaml/pages-config-test.yaml";
 import {useState, useEffect} from 'react';
-import {getData} from "@/src/app/components/getData";
+import {getData} from "@/src/app/components/utils/getData";
 
 
 const ITEMS_PER_PAGE = 50;

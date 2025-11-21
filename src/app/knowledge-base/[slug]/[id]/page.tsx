@@ -1,8 +1,8 @@
 "use client";
 import {useEffect, useState} from "react";
 import { entityCardMapperConfig } from "../../../components/entityCardMapperConfig";
-import {getData} from "../../../components/getData";
-import { normalizeSparqlBindings, processSparqlQueryResult } from "../../../components/helper";
+import {getData} from "../../../components/utils/getData";
+import { normalizeSparqlBindings, processSparqlQueryResult } from "../../../components/utils/helper";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {FileText, Loader2, AlertCircle, Info, Database} from "lucide-react";
@@ -69,17 +69,12 @@ function replaceEntityIdInQuery(query: string, rawId: string) {
 async function fetchBindings(queryParameter: QueryParameter) {
   try {
     // Use the cached API route instead of direct getData call
-    const response = await fetch('/api/entity-query', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        sparql_query: queryParameter.sparql_query
-      })
+    const { postData } = await import('@/src/utils/api/api-client');
+    const result = await postData<{ success: boolean; data: any[] }>('/api/entity-query', {
+      sparql_query: queryParameter.sparql_query
+    }, {
+      useAuth: false, // API route handles auth internally
     });
-
-    const result = await response.json();
     
     if (result.success && Array.isArray(result.data)) {
       return result.data;

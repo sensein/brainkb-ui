@@ -2,9 +2,9 @@
 
 
 import yaml from "@/src/config/yaml/config-data-release.yaml";
-import {getData} from "@/src/app/components/getData";
+import {getData} from "@/src/app/components/utils/getData";
 import {useEffect, useRef, useState} from "react";
-import {get_rapid_release_file} from "@/src/app/components/helper";
+import {get_rapid_release_file} from "@/src/app/components/utils/helper";
 import {
     CloudArrowDownIcon,
     CheckCircleIcon,

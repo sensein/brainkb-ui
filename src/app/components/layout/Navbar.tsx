@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { ChevronDown, ExternalLink } from "lucide-react";
-import SignInButtons from "./SignInButtons"; // Import the client-side sign-in buttons
+import SignInButtons from "../auth/SignInButtons"; // Import the client-side sign-in buttons
 
 interface DropdownItem {
     href: string;

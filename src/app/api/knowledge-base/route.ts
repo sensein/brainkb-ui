@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
 import { getWarmedCache } from '@/src/utils/cache/cache-warm';
-import { getData } from '@/src/app/components/getData';
+import { getData } from '@/src/app/components/utils/getData';
 import { env } from '../../../config/env';
 
 // Force dynamic rendering - this route uses searchParams

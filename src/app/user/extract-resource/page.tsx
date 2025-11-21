@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { StatusType } from "../../components/StatusIndicator";
-import ExtractedResourceResultTableMapping from "../../components/ExtractedResourceResultTableMapping";
+import { StatusType } from "../../components/ui/StatusIndicator";
+import ExtractedResourceResultTableMapping from "../../components/data-display/ExtractedResourceResultTableMapping";
 import { useSseStream } from "../../../utils/hooks/use-sse-stream";
 import { clientEnv } from "../../../config/env";
 import InputTypeSelector, { InputType } from "../../components/user/InputTypeSelector";

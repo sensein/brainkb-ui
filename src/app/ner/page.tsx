@@ -58,30 +58,18 @@ const NER = () => {
                 throw new Error('NEXT_PUBLIC_NER_GET_ENDPOINT environment variable is not set');
             }
             
-            const url = new URL('/api/ner/withouttoken', window.location.origin);
-            url.searchParams.set('endpoint', endpoint);
-            url.searchParams.set('limit', String(ITEMS_PER_PAGE));
-            url.searchParams.set('skip', String(skip));
-            if (search.trim()) {
-                url.searchParams.set('search', search.trim());
-            }
-
-            console.info("NER: Fetching data from API route:", url.toString());
+            const { fetchPaginatedDataWithoutToken } = await import('@/src/utils/api/api-client-without-token');
+            
+            console.info("NER: Fetching data from API route");
             console.info("NER: Skip:", skip, "Limit:", ITEMS_PER_PAGE, "Search:", search);
 
-            const response = await fetch(url.toString(), {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
+            const result = await fetchPaginatedDataWithoutToken({
+                endpoint: '/api/ner/withouttoken',
+                limit: ITEMS_PER_PAGE,
+                skip,
+                search: search.trim() || undefined,
+                params: { endpoint }, // Pass endpoint as query param
             });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-                throw new Error(errorData.error || `API returned ${response.status}`);
-            }
-
-            const result = await response.json();
 
             console.info("NER: API response received");
             console.info("NER: Result success:", result.success);

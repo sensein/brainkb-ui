@@ -2,7 +2,7 @@
 
 import React from 'react';
 import dynamic from 'next/dynamic';
-import { clientEnv } from '../../config/env';
+import { clientEnv } from '../../../config/env';
 
 // Dynamic import to avoid SSR issues with loading indicator
 const BrainKBAssistant = dynamic(() => import('brainkb-assistant'), { 

@@ -143,3 +143,99 @@ export async function searchById(
 ): Promise<unknown> {
   return paginatedApiService.searchById(endpoint, id, baseUrl);
 }
+
+/**
+ * POST data to an endpoint with authentication
+ */
+export async function postData<T = unknown>(
+  endpoint: string,
+  data: unknown,
+  options: {
+    useAuth?: boolean;
+    tokenEndpointType?: 'ml' | 'query' | 'default';
+    headers?: Record<string, string>;
+    baseUrl?: string;
+  } = {}
+): Promise<T> {
+  const { useAuth = true, tokenEndpointType = 'default', headers = {}, baseUrl } = options;
+
+  let url: URL;
+  try {
+    url = new URL(endpoint);
+  } catch {
+    const defaultBaseUrl = baseUrl || env.apiHost;
+    url = new URL(endpoint, defaultBaseUrl);
+  }
+
+  const requestHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    ...headers,
+  };
+
+  if (useAuth) {
+    const authHeaders = await withAuthHeaders(tokenEndpointType);
+    Object.assign(requestHeaders, authHeaders);
+  }
+
+  const response = await fetch(url.toString(), {
+    method: 'POST',
+    headers: requestHeaders,
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`API returned ${response.status}: ${errorText}`);
+  }
+
+  return await response.json();
+}
+
+/**
+ * PUT data to an endpoint with authentication
+ */
+export async function putData<T = unknown>(
+  endpoint: string,
+  data: unknown,
+  options: {
+    useAuth?: boolean;
+    tokenEndpointType?: 'ml' | 'query' | 'default';
+    headers?: Record<string, string>;
+    baseUrl?: string;
+  } = {}
+): Promise<T> {
+  const { useAuth = true, tokenEndpointType = 'default', headers = {}, baseUrl } = options;
+
+  let url: URL;
+  try {
+    url = new URL(endpoint);
+  } catch {
+    const defaultBaseUrl = baseUrl || env.apiHost;
+    url = new URL(endpoint, defaultBaseUrl);
+  }
+
+  const requestHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    ...headers,
+  };
+
+  if (useAuth) {
+    const authHeaders = await withAuthHeaders(tokenEndpointType);
+    Object.assign(requestHeaders, authHeaders);
+  }
+
+  const response = await fetch(url.toString(), {
+    method: 'PUT',
+    headers: requestHeaders,
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`API returned ${response.status}: ${errorText}`);
+  }
+
+  return await response.json();
+}

@@ -9,22 +9,31 @@ import { FetchOptionsWithoutToken } from '@/src/types/api';
  * Fetch paginated data from an endpoint without authentication
  */
 export async function fetchPaginatedDataWithoutToken(
-  options: FetchOptionsWithoutToken
+  options: FetchOptionsWithoutToken & { params?: Record<string, string> }
 ): Promise<unknown> {
-  const { endpoint, limit = DEFAULT_PAGINATION.LIMIT, skip = DEFAULT_PAGINATION.SKIP, search, baseUrl } = options;
+  const { endpoint, limit = DEFAULT_PAGINATION.LIMIT, skip = DEFAULT_PAGINATION.SKIP, search, baseUrl, params } = options;
   
   let url: URL;
   try {
     url = new URL(endpoint);
   } catch {
-    const defaultBaseUrl = baseUrl || env.apiHost;
+    const defaultBaseUrl = baseUrl || (typeof window !== 'undefined' ? window.location.origin : env.apiHost);
     url = new URL(endpoint, defaultBaseUrl);
   }
 
-  url.searchParams.set('limit', limit);
-  url.searchParams.set('skip', skip);
+  url.searchParams.set('limit', String(limit));
+  url.searchParams.set('skip', String(skip));
   if (search && search.trim()) {
     url.searchParams.set('search', search.trim());
+  }
+  
+  // Add additional query params if provided
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        url.searchParams.set(key, String(value));
+      }
+    });
   }
 
   // No authentication headers

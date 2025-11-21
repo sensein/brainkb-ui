@@ -1,6 +1,6 @@
 "use client";
 
-import StatusIndicator, { StatusType } from "../StatusIndicator";
+import StatusIndicator, { StatusType } from "../ui/StatusIndicator";
 
 interface ProcessingStatusHeaderProps {
     currentStatus: StatusType;

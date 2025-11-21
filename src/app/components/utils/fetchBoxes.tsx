@@ -1,4 +1,4 @@
-import {getData} from "@/src/app/components/getData";
+import {getData} from "@/src/app/components/utils/getData";
 export async function fetchBoxes(query_parameter) {
    const formattedQueryParameter = {sparql_query: query_parameter};
    console.log("Fetch boxes: " + formattedQueryParameter);
