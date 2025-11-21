@@ -1,5 +1,6 @@
 import {NextRequest, NextResponse} from 'next/server';
 import { Client } from 'undici';
+import { env } from '../../../config/env';
 
 export async function POST(request: NextRequest) {
     console.log('[process-document] POST handler invoked');
@@ -7,19 +8,19 @@ export async function POST(request: NextRequest) {
         console.log('[process-document] Starting document processing...');
 
         // Check if API key is configured
-        if (!process.env.NER_API_KEY) {
+        if (!env.nerApiKey) {
             console.warn('NER_API_KEY environment variable is not set.');
         }
 
         // Check if NEXT_PUBLIC_TOKEN_ENDPOINT is defined
-        if (!process.env.NEXT_PUBLIC_TOKEN_ENDPOINT) {
+        const tokenEndpoint = env.tokenEndpoint;
+        if (!tokenEndpoint) {
             console.error('NEXT_PUBLIC_TOKEN_ENDPOINT environment variable is not set.');
             return NextResponse.json(
                 {error: 'NEXT_PUBLIC_TOKEN_ENDPOINT environment variable is not set.'},
                 {status: 500}
             );
         }
-        const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT!;
 
         // Get the form data from the request
         const formData = await request.formData();
@@ -152,7 +153,7 @@ export async function POST(request: NextRequest) {
 
         while (retryCount < maxRetries) {
             try {
-                const endpoint = process.env.NEXT_PUBLIC_STRUCTSENSE_ENDPOINT;
+                const endpoint = env.structsenseEndpoint;
                 if (!endpoint) {
                     throw new Error("NEXT_PUBLIC_STRUCTSENSE_ENDPOINT is not defined in the environment variables.");
                 }

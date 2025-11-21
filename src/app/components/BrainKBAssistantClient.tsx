@@ -2,6 +2,7 @@
 
 import React from 'react';
 import dynamic from 'next/dynamic';
+import { clientEnv } from '../../config/env';
 
 // Dynamic import to avoid SSR issues with loading indicator
 const BrainKBAssistant = dynamic(() => import('brainkb-assistant'), { 
@@ -18,7 +19,7 @@ const config = {
     primaryColor: 'from-purple-600 to-blue-600'
   },
   api: {
-    endpoint: process.env.NEXT_PUBLIC_CHAT_SERVICE_API_ENDPOINT,
+    endpoint: clientEnv.chatServiceEndpoint,
     type: 'rest' as const,
     streaming: false, // Set to true if your API supports streaming
     timeout: 30000,
@@ -28,9 +29,9 @@ const config = {
     auth: {
       enabled: true,
       type: 'jwt' as const,
-      jwtEndpoint: process.env.NEXT_PUBLIC_TOKEN_ENDPOINT,
-      username: process.env.NEXT_PUBLIC_JWT_USER,
-      password: process.env.NEXT_PUBLIC_JWT_PASSWORD,
+      jwtEndpoint: clientEnv.tokenEndpoint,
+      username: clientEnv.jwtUser,
+      password: clientEnv.jwtPassword,
       autoRefresh: true,
       refreshThreshold: 300, // Refresh 5 minutes before expiry
     },

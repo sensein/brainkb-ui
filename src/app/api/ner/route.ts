@@ -40,7 +40,7 @@ function getCachedNERById(id: string) {
 function getCachedNERData(limit: string, skip: string, search?: string) {
     return CacheService.createCache(
         async () => {
-            const endpoint = env.nerEndpoint;
+            const endpoint = env.nerGetEndpoint;
             if (!endpoint) {
                 throw new Error('NEXT_PUBLIC_API_ADMIN_GET_NER_ENDPOINT environment variable is not set');
             }
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
         const skip = searchParams.get('skip') || '0';
         const search = searchParams.get('search') || undefined;
 
-        const endpoint = process.env.NEXT_PUBLIC_NER_GET_ENDPOINT;
+        const endpoint = env.nerGetEndpoint;
         if (!endpoint) {
             return NextResponse.json(
                 {

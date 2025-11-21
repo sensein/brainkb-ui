@@ -7,6 +7,7 @@ import { FileText, Link as LinkIcon, Type } from "lucide-react";
 import StatusIndicator, { StatusType } from "../../components/StatusIndicator";
 import ExtractedResourceResultTableMapping from "../../components/ExtractedResourceResultTableMapping";
 import { useSseStream } from "../../utils/useSseStream";
+import { clientEnv } from "../../../config/env";
 
 type InputType = 'doi' | 'pdf' | 'text';
 
@@ -172,7 +173,7 @@ export default function IngestStructuredResourcePage() {
             
             const prefix = "ws-client-id-";
             const client_id = (crypto.randomUUID?.() || `${prefix}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-            const endpoint = process.env.NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT;
+            const endpoint = clientEnv.extractStructuredResourceEndpoint;
             formData.append("endpoint", endpoint || '');
             formData.append("clientId", client_id);
             
@@ -368,7 +369,7 @@ export default function IngestStructuredResourcePage() {
         setError(null);
 
         try {
-            const saveEndpoint = process.env.NEXT_PUBLIC_API_ADMIN_SAVE_STRUCTURED_RESOURCE_ENDPOINT;
+            const saveEndpoint = clientEnv.saveStructuredResourceEndpoint;
             if (!saveEndpoint) {
                 throw new Error("Save endpoint not configured.");
             }

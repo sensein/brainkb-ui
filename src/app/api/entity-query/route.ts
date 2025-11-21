@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
 import { createHash } from 'crypto';
 import { getData } from '@/src/app/components/getData';
+import { env } from '../../../config/env';
 
 // Force dynamic rendering - this route fetches external data
 export const dynamic = 'force-dynamic';
@@ -20,7 +21,7 @@ async function fetchEntityQueryData(sparqlQuery: string) {
     
     try {
         const queryParameter = { sparql_query: sparqlQuery };
-        const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql";
+        const endpoint = env.get('NEXT_PUBLIC_API_QUERY_ENDPOINT') || "query/sparql";
         
         const response = await getData(queryParameter, endpoint);
         

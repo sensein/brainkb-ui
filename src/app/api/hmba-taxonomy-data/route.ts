@@ -1,18 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { env } from '../../../config/env';
+import { TokenResponse } from '../../../types/api';
 
 // Force dynamic rendering - this route fetches external data
 export const dynamic = 'force-dynamic';
 
-interface TokenResponse {
-    access_token: string;
-    token_type: string;
-    expires_in: number;
-}
-
 async function getAuthToken(): Promise<string> {
-    const jwtUser = process.env.NEXT_PUBLIC_JWT_USER;
-    const jwtPassword = process.env.NEXT_PUBLIC_JWT_PASSWORD;
-    const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE;
+    const jwtUser = env.jwtUser;
+    const jwtPassword = env.jwtPassword;
+    const tokenEndpoint = env.tokenEndpointQueryService;
   
     if (!jwtUser || !jwtPassword || !tokenEndpoint) {
       throw new Error('JWT credentials not configured');
@@ -46,7 +42,7 @@ async function fetchTaxonomyData() {
     // Taxonomy tree is NOT cached - it's fetched fresh each time
     // Individual taxonomy node queries (when users click) are cached via entity-query API
     try {
-        const queryServiceUrl = process.env.NEXT_PUBLIC_API_QUERY_TAXONOMY_ENDPOINT;
+        const queryServiceUrl = env.taxonomyEndpoint;
         
         if (!queryServiceUrl || queryServiceUrl.trim() === '') {
             // If URL is not configured, return null (will be handled by the GET handler)

@@ -1,3 +1,5 @@
+import { env } from '../../../config/env';
+
 const CACHE_DURATION = 4 * 60 * 60; // 4 hours in seconds
 
 export interface FetchOptionsWithoutToken {
@@ -21,7 +23,7 @@ export async function fetchPaginatedDataWithoutToken(
     try {
         url = new URL(endpoint);
     } catch {
-        const defaultBaseUrl = baseUrl || process.env.NEXT_PUBLIC_API_ADMIN_HOST || 'https://queryservice.brainkb.org';
+        const defaultBaseUrl = baseUrl || env.apiHost;
         url = new URL(endpoint, defaultBaseUrl);
     }
 
@@ -86,7 +88,7 @@ export async function searchByIdWithoutToken(
         try {
             url = new URL(endpoint);
         } catch {
-            const defaultBaseUrl = baseUrl || process.env.NEXT_PUBLIC_API_ADMIN_HOST || 'https://queryservice.brainkb.org';
+            const defaultBaseUrl = baseUrl || env.apiHost;
             url = new URL(endpoint, defaultBaseUrl);
         }
 

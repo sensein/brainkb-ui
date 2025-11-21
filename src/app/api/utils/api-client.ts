@@ -1,4 +1,5 @@
 import { withAuthHeaders } from './auth';
+import { env } from '../../../config/env';
 
 const CACHE_DURATION = 24 * 60 * 60; // 24 hours in seconds
 
@@ -20,7 +21,7 @@ export async function fetchPaginatedData(
     try {
         url = new URL(endpoint);
     } catch {
-        const defaultBaseUrl = baseUrl || process.env.NEXT_PUBLIC_API_ADMIN_HOST || 'https://queryservice.brainkb.org';
+        const defaultBaseUrl = baseUrl || env.apiHost;
         url = new URL(endpoint, defaultBaseUrl);
     }
 
@@ -78,7 +79,7 @@ export async function searchById(
         try {
             url = new URL(endpoint);
         } catch {
-            const defaultBaseUrl = baseUrl || process.env.NEXT_PUBLIC_API_ADMIN_HOST || 'https://queryservice.brainkb.org';
+            const defaultBaseUrl = baseUrl || env.apiHost;
             url = new URL(endpoint, defaultBaseUrl);
         }
 

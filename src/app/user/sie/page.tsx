@@ -8,6 +8,7 @@ import StatusIndicator, { StatusType } from "../../components/StatusIndicator";
 import NERResultsDisplay from "../../components/NERResultsDisplay";
 import { parseSSEResult } from "./utils/parseSSEResult";
 import { useSseStream } from "../../utils/useSseStream";
+import { clientEnv } from "../../../config/env";
 
 // Define types for our entities and results
 interface Entity {
@@ -193,7 +194,7 @@ export default function NamedEntityRecognition() {
             
             const prefix = "ws-client-id-";
             const client_id = (crypto.randomUUID?.() || `${prefix}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-            const endpoint = process.env.NEXT_PUBLIC_API_NER_ENDPOINT;
+            const endpoint = clientEnv.nerEndpoint;
             formData.append("endpoint", endpoint || '');
             formData.append("clientId", client_id);
             
@@ -394,11 +395,11 @@ export default function NamedEntityRecognition() {
 
 
                 const formData = new FormData();
-                if (process.env.NEXT_PUBLIC_JWT_USER) {
-                    formData.append("email", process.env.NEXT_PUBLIC_JWT_USER);
+                if (clientEnv.jwtUser) {
+                    formData.append("email", clientEnv.jwtUser);
                 }
-                if (process.env.NEXT_PUBLIC_JWT_PASSWORD) {
-                    formData.append("password", process.env.NEXT_PUBLIC_JWT_PASSWORD);
+                if (clientEnv.jwtPassword) {
+                    formData.append("password", clientEnv.jwtPassword);
                 }
 
                 const resultsJson = JSON.stringify(dataToSave);
@@ -485,11 +486,11 @@ export default function NamedEntityRecognition() {
             const formData = new FormData();
 
             // Add credentials if available
-            if (process.env.NEXT_PUBLIC_JWT_USER) {
-                formData.append("email", process.env.NEXT_PUBLIC_JWT_USER);
+            if (clientEnv.jwtUser) {
+                formData.append("email", clientEnv.jwtUser);
             }
-            if (process.env.NEXT_PUBLIC_JWT_PASSWORD) {
-                formData.append("password", process.env.NEXT_PUBLIC_JWT_PASSWORD);
+            if (clientEnv.jwtPassword) {
+                formData.append("password", clientEnv.jwtPassword);
             }
 
             // Convert results to JSON string before appending

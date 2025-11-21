@@ -1,6 +1,9 @@
 /**
  * Centralized environment variable configuration
  * Provides type-safe access to environment variables
+ * 
+ * Note: Only NEXT_PUBLIC_* variables are available in client components.
+ * Server-only variables (like NER_API_KEY) will be undefined on the client.
  */
 
 interface EnvConfig {
@@ -9,6 +12,15 @@ interface EnvConfig {
   NEXT_PUBLIC_API_QUERY_ENDPOINT: string;
   NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT?: string;
   NEXT_PUBLIC_API_ADMIN_GET_NER_ENDPOINT?: string;
+  NEXT_PUBLIC_API_ADMIN_SAVE_STRUCTURED_RESOURCE_ENDPOINT?: string;
+  NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT?: string;
+  NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT?: string;
+  NEXT_PUBLIC_API_NAMED_GRAPH_QUERY_ENDPOINT?: string;
+  NEXT_PUBLIC_API_NER_ENDPOINT?: string;
+  NEXT_PUBLIC_CHAT_SERVICE_API_ENDPOINT?: string;
+  NEXT_PUBLIC_NER_SAVE_ENDPOINT?: string;
+  NEXT_PUBLIC_STRUCTSENSE_ENDPOINT?: string;
+  NEXT_PUBLIC_API_QUERY_TAXONOMY_ENDPOINT?: string;
   NEXT_PUBLIC_TOKEN_ENDPOINT?: string;
   NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE?: string;
   NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE?: string;
@@ -18,7 +30,7 @@ interface EnvConfig {
   NEXT_PUBLIC_JWT_PASSWORD?: string;
   NEXT_PUBLIC_USE_BEARER_TOKEN?: string;
 
-  // Feature flags and API keys
+  // Server-only (will be undefined on client)
   NER_API_KEY?: string;
 }
 
@@ -37,6 +49,24 @@ class EnvConfigManager {
         process.env.NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT,
       NEXT_PUBLIC_API_ADMIN_GET_NER_ENDPOINT:
         process.env.NEXT_PUBLIC_API_ADMIN_GET_NER_ENDPOINT,
+      NEXT_PUBLIC_API_ADMIN_SAVE_STRUCTURED_RESOURCE_ENDPOINT:
+        process.env.NEXT_PUBLIC_API_ADMIN_SAVE_STRUCTURED_RESOURCE_ENDPOINT,
+      NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT:
+        process.env.NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT,
+      NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT:
+        process.env.NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT,
+      NEXT_PUBLIC_API_NAMED_GRAPH_QUERY_ENDPOINT:
+        process.env.NEXT_PUBLIC_API_NAMED_GRAPH_QUERY_ENDPOINT,
+      NEXT_PUBLIC_API_NER_ENDPOINT:
+        process.env.NEXT_PUBLIC_API_NER_ENDPOINT,
+      NEXT_PUBLIC_CHAT_SERVICE_API_ENDPOINT:
+        process.env.NEXT_PUBLIC_CHAT_SERVICE_API_ENDPOINT,
+      NEXT_PUBLIC_NER_SAVE_ENDPOINT:
+        process.env.NEXT_PUBLIC_NER_SAVE_ENDPOINT,
+      NEXT_PUBLIC_STRUCTSENSE_ENDPOINT:
+        process.env.NEXT_PUBLIC_STRUCTSENSE_ENDPOINT,
+      NEXT_PUBLIC_API_QUERY_TAXONOMY_ENDPOINT:
+        process.env.NEXT_PUBLIC_API_QUERY_TAXONOMY_ENDPOINT,
       NEXT_PUBLIC_TOKEN_ENDPOINT: process.env.NEXT_PUBLIC_TOKEN_ENDPOINT,
       NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE:
         process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE,
@@ -97,10 +127,49 @@ class EnvConfigManager {
     return this.config.NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT;
   }
 
-  public get nerEndpoint(): string | undefined {
+  public get nerGetEndpoint(): string | undefined {
     return this.config.NEXT_PUBLIC_API_ADMIN_GET_NER_ENDPOINT;
   }
+
+  public get saveStructuredResourceEndpoint(): string | undefined {
+    return this.config.NEXT_PUBLIC_API_ADMIN_SAVE_STRUCTURED_RESOURCE_ENDPOINT;
+  }
+
+  public get nerSaveEndpoint(): string | undefined {
+    return this.config.NEXT_PUBLIC_NER_SAVE_ENDPOINT;
+  }
+
+  public get structsenseEndpoint(): string | undefined {
+    return this.config.NEXT_PUBLIC_STRUCTSENSE_ENDPOINT;
+  }
+
+  public get taxonomyEndpoint(): string | undefined {
+    return this.config.NEXT_PUBLIC_API_QUERY_TAXONOMY_ENDPOINT;
+  }
+
+  public get pdf2ReproschemaEndpoint(): string | undefined {
+    return this.config.NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT;
+  }
+
+  public get extractStructuredResourceEndpoint(): string | undefined {
+    return this.config.NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT;
+  }
+
+  public get namedGraphQueryEndpoint(): string | undefined {
+    return this.config.NEXT_PUBLIC_API_NAMED_GRAPH_QUERY_ENDPOINT;
+  }
+
+  public get nerEndpoint(): string | undefined {
+    return this.config.NEXT_PUBLIC_API_NER_ENDPOINT;
+  }
+
+  public get chatServiceEndpoint(): string | undefined {
+    return this.config.NEXT_PUBLIC_CHAT_SERVICE_API_ENDPOINT;
+  }
 }
+
+// Export client-safe alias (same instance, but makes it clear it's for client use)
+export const clientEnv = EnvConfigManager.getInstance();
 
 export const env = EnvConfigManager.getInstance();
 export type { EnvConfig };

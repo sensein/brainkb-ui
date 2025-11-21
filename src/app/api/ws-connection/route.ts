@@ -1,17 +1,13 @@
 import { NextRequest } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import WebSocket from 'ws';
-
-interface TokenResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-}
+import { env } from '../../../config/env';
+import { TokenResponse } from '../../../types/api';
 
 async function getAuthToken(): Promise<string> {
-  const jwtUser = process.env.NEXT_PUBLIC_JWT_USER;
-  const jwtPassword = process.env.NEXT_PUBLIC_JWT_PASSWORD;
-  const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE;
+  const jwtUser = env.jwtUser;
+  const jwtPassword = env.jwtPassword;
+  const tokenEndpoint = env.tokenEndpointMLService;
 
   if (!jwtUser || !jwtPassword || !tokenEndpoint) {
     throw new Error('JWT credentials not configured');
@@ -255,7 +251,7 @@ export async function POST(request: NextRequest) {
                     const isPdf2Reproschema = endpoint && (
                       endpoint.includes('pdf2reproschema') || 
                       endpoint.includes('reproschema') ||
-                      endpoint === process.env.NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT
+                      endpoint === env.pdf2ReproschemaEndpoint
                     );
                     
                     if (isPdf2Reproschema && result) {
@@ -287,7 +283,7 @@ export async function POST(request: NextRequest) {
                 const isPdf2Reproschema = endpoint && (
                   endpoint.includes('pdf2reproschema') || 
                   endpoint.includes('reproschema') ||
-                  endpoint === process.env.NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT
+                  endpoint === env.pdf2ReproschemaEndpoint
                 );
                 
                 if (isPdf2Reproschema && result) {
@@ -328,7 +324,7 @@ export async function POST(request: NextRequest) {
                   const isPdf2Reproschema = endpoint && (
                     endpoint.includes('pdf2reproschema') || 
                     endpoint.includes('reproschema') ||
-                    endpoint === process.env.NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT
+                    endpoint === env.pdf2ReproschemaEndpoint
                   );
                   
                   if (isPdf2Reproschema && result) {

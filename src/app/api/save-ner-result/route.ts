@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
+import { env } from '../../../config/env';
 
 export async function POST(request: NextRequest) {
     try {
@@ -30,7 +31,8 @@ export async function POST(request: NextRequest) {
 
         console.log('Getting token from /api/token...');
         // Get token from /api/token with credentials
-        const tokenResponse = await fetch(process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE || 'http://localhost:8009/api/token', {
+        const tokenEndpoint = env.tokenEndpointMLService || 'http://localhost:8009/api/token';
+        const tokenResponse = await fetch(tokenEndpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -67,7 +69,8 @@ export async function POST(request: NextRequest) {
         while (retryCount < maxRetries) {
             try {
                 console.log(`Calling external API with token (attempt ${retryCount + 1}/${maxRetries})...`);
-                externalResponse = await fetch(process.env.NEXT_PUBLIC_NER_SAVE_ENDPOINT || 'http://localhost:8009/api/save/ner', {
+                const nerSaveEndpoint = env.nerSaveEndpoint || 'http://localhost:8009/api/save/ner';
+                externalResponse = await fetch(nerSaveEndpoint, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { FileText, Link as LinkIcon, Type } from "lucide-react";
 import StatusIndicator, { StatusType } from "../../components/StatusIndicator";
 import { useSseStream } from "../../utils/useSseStream";
+import { clientEnv } from "../../../config/env";
 
 type InputType = 'doi' | 'pdf' | 'text';
 
@@ -168,7 +169,7 @@ export default function Pdf2ReproschemaPage() {
 
             const prefix = "ws-client-id-";
             const client_id = (crypto.randomUUID?.() || `${prefix}${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-            const endpoint = process.env.NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT;
+            const endpoint = clientEnv.pdf2ReproschemaEndpoint;
             if (endpoint) {
                 formData.append("endpoint", endpoint);
             }
