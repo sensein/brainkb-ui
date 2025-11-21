@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { sanitizeErrorMessage } from './errorUtils';
+import { sanitizeErrorMessage } from '../error/error-utils';
 
 /**
  * Status types for SSE stream processing

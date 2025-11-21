@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getWarmedCache } from '@/src/app/utils/cache-warm';
+import { getWarmedCache } from '@/src/utils/cache/cache-warm';
 import { fetchPaginatedDataWithoutToken, searchByIdWithoutToken } from '@/src/utils/api/api-client-without-token';
 import { CacheService } from '@/src/services/cache/cache-service';
 import { CACHE_DURATIONS } from '@/src/config/constants';

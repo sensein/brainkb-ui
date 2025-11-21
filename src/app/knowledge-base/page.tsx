@@ -1,7 +1,7 @@
 "use client";
 import {useState, useEffect} from 'react';
 import {Database, Loader2, AlertCircle, ChevronLeft, ChevronRight, ExternalLink, Search} from "lucide-react";
-import {useFilteredTableData} from "@/src/app/utils/tableFilterUtils";
+import {useFilteredTableData} from "@/src/utils/hooks/use-filtered-table-data";
 import {getData} from "@/src/app/components/getData";
 import yaml from "@/src/config/yaml/config-knowledgebases.yaml";
 

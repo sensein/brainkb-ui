@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
-import { getWarmedCache } from '@/src/app/utils/cache-warm';
+import { getWarmedCache } from '@/src/utils/cache/cache-warm';
 import { getData } from '@/src/app/components/getData';
 import { env } from '../../../config/env';
 

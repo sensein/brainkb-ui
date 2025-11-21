@@ -7,7 +7,7 @@ import {FileText, Link as LinkIcon, Type} from "lucide-react";
 import StatusIndicator, { StatusType } from "../../components/StatusIndicator";
 import NERResultsDisplay from "../../components/NERResultsDisplay";
 import { parseSSEResult } from "./utils/parseSSEResult";
-import { useSseStream } from "../../utils/useSseStream";
+import { useSseStream } from "../../../utils/hooks/use-sse-stream";
 import { clientEnv } from "../../../config/env";
 
 // Define types for our entities and results
