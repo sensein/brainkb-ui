@@ -18,6 +18,7 @@ interface EnvConfig {
   NEXT_PUBLIC_API_NAMED_GRAPH_QUERY_ENDPOINT?: string;
   NEXT_PUBLIC_API_NER_ENDPOINT?: string;
   NEXT_PUBLIC_CHAT_SERVICE_API_ENDPOINT?: string;
+  NEXT_PUBLIC_NER_GET_ENDPOINT?: string;
   NEXT_PUBLIC_NER_SAVE_ENDPOINT?: string;
   NEXT_PUBLIC_STRUCTSENSE_ENDPOINT?: string;
   NEXT_PUBLIC_API_QUERY_TAXONOMY_ENDPOINT?: string;
@@ -62,6 +63,8 @@ class EnvConfigManager {
         process.env.NEXT_PUBLIC_API_NER_ENDPOINT,
       NEXT_PUBLIC_CHAT_SERVICE_API_ENDPOINT:
         process.env.NEXT_PUBLIC_CHAT_SERVICE_API_ENDPOINT,
+      NEXT_PUBLIC_NER_GET_ENDPOINT:
+        process.env.NEXT_PUBLIC_NER_GET_ENDPOINT,
       NEXT_PUBLIC_NER_SAVE_ENDPOINT:
         process.env.NEXT_PUBLIC_NER_SAVE_ENDPOINT,
       NEXT_PUBLIC_STRUCTSENSE_ENDPOINT:
@@ -172,6 +175,64 @@ class EnvConfigManager {
 
   public get chatServiceEndpoint(): string | undefined {
     return this.config.NEXT_PUBLIC_CHAT_SERVICE_API_ENDPOINT;
+  }
+
+  /**
+   * Resolves an environment variable by its name (string)
+   * This is useful when the env var name comes from configuration (e.g., YAML)
+   * @param envVarName - The name of the environment variable (e.g., "NEXT_PUBLIC_API_ADMIN_GET_NER_ENDPOINT")
+   * @returns The value of the environment variable, or undefined if not found
+   */
+  public resolveEnvVar(envVarName: string): string | undefined {
+    // Map of env var names to their getter methods
+    const envVarMap: Record<string, () => string | undefined> = {
+      'NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT': () => this.resourceEndpoint,
+      'NEXT_PUBLIC_API_ADMIN_GET_NER_ENDPOINT': () => this.nerGetEndpoint,
+      'NEXT_PUBLIC_NER_GET_ENDPOINT': () => this.config.NEXT_PUBLIC_NER_GET_ENDPOINT,
+      'NEXT_PUBLIC_API_ADMIN_SAVE_STRUCTURED_RESOURCE_ENDPOINT': () => this.saveStructuredResourceEndpoint,
+      'NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT': () => this.extractStructuredResourceEndpoint,
+      'NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT': () => this.pdf2ReproschemaEndpoint,
+      'NEXT_PUBLIC_API_NAMED_GRAPH_QUERY_ENDPOINT': () => this.namedGraphQueryEndpoint,
+      'NEXT_PUBLIC_API_NER_ENDPOINT': () => this.nerEndpoint,
+      'NEXT_PUBLIC_CHAT_SERVICE_API_ENDPOINT': () => this.chatServiceEndpoint,
+      'NEXT_PUBLIC_NER_SAVE_ENDPOINT': () => this.nerSaveEndpoint,
+      'NEXT_PUBLIC_STRUCTSENSE_ENDPOINT': () => this.structsenseEndpoint,
+      'NEXT_PUBLIC_API_QUERY_TAXONOMY_ENDPOINT': () => this.taxonomyEndpoint,
+      'NEXT_PUBLIC_TOKEN_ENDPOINT': () => this.tokenEndpoint,
+      'NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE': () => this.tokenEndpointMLService,
+      'NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE': () => this.tokenEndpointQueryService,
+      'NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE': () => this.tokenEndpointUserManagementService,
+      'NEXT_PUBLIC_JWT_USER': () => this.jwtUser,
+      'NEXT_PUBLIC_JWT_PASSWORD': () => this.jwtPassword,
+      'NEXT_PUBLIC_API_ADMIN_HOST': () => this.apiHost,
+      'NEXT_PUBLIC_API_QUERY_ENDPOINT': () => this.config.NEXT_PUBLIC_API_QUERY_ENDPOINT,
+    };
+
+    // Try the mapping first (preferred method - type-safe)
+    const getter = envVarMap[envVarName];
+    if (getter) {
+      const value = getter();
+      // If value is undefined, also try direct process.env access as fallback
+      // (useful if env var was added after build but before runtime)
+      if (value === undefined && typeof window !== 'undefined') {
+        // Client-side: try direct access (Next.js embeds NEXT_PUBLIC_* at build time)
+        return (process.env as any)[envVarName] as string | undefined;
+      }
+      return value;
+    }
+
+    // Fallback to direct config access
+    const configValue = this.config[envVarName as keyof EnvConfig] as string | undefined;
+    if (configValue !== undefined) {
+      return configValue;
+    }
+
+    // Last resort: try direct process.env access (for any unmapped vars)
+    if (typeof window !== 'undefined') {
+      return (process.env as any)[envVarName] as string | undefined;
+    }
+    
+    return undefined;
   }
 }
 
