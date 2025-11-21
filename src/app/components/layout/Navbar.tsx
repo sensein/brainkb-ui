@@ -165,9 +165,10 @@ const Navbar: React.FC = () => {
                         <ClickableDropdown
                             label="Knowledge Base"
                             items={[
-                                { href: "/knowledge-base", label: "Library Generation" },
-                                { href: "/ner", label: "Neuroscientific NER" },
-                                { href: "/resources", label: "Structured Resources" }
+                              { href: "/knowledge-base/barcodedcellsample", label: "Barcoded Cell Sample" },
+                                { href: "/knowledge-base/LibraryAliquot", label: "Library Generation" },
+                                { href: "/knowledge-base/ner", label: "Neuroscientific NER" },
+                                { href: "/knowledge-base/resources", label: "Structured Resources" }
                             ]}
                             isOpen={isKnowledgeBaseOpen}
                             onToggle={() => setIsKnowledgeBaseOpen(!isKnowledgeBaseOpen)}
