@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { unstable_cache } from 'next/cache';
 import { getWarmedCache } from '@/src/app/utils/cache-warm';
-import { fetchPaginatedData, searchById, FetchOptions } from '../utils/api-client';
-
-const CACHE_DURATION = 4 * 60 * 60; // 4 hours in seconds
+import { fetchPaginatedData, searchById } from '@/src/utils/api/api-client';
+import { CacheService } from '@/src/services/cache/cache-service';
+import { CACHE_DURATIONS } from '@/src/config/constants';
+import { env } from '@/src/config/env';
 
 // Force dynamic rendering - this route uses searchParams
 export const dynamic = 'force-dynamic';
@@ -18,7 +18,7 @@ async function searchResourceById(id: string): Promise<any> {
         return warmedCache.data;
     }
 
-    const endpoint = process.env.NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT;
+    const endpoint = env.resourceEndpoint;
     if (!endpoint) {
         throw new Error('NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT environment variable is not set');
     }
@@ -28,32 +28,28 @@ async function searchResourceById(id: string): Promise<any> {
 
 // Cached version of search by ID
 function getCachedResourceById(id: string) {
-    return unstable_cache(
+    return CacheService.createCache(
         async () => searchResourceById(id),
-        [`resource-entity-${id}`],
-        {
-            revalidate: CACHE_DURATION,
-            tags: [`resource-entity-${id}`, 'resource-all', 'resource-entities']
-        }
+        `resource-entity-${id}`,
+        [`resource-entity-${id}`, 'resource-all', 'resource-entities'],
+        CACHE_DURATIONS.MEDIUM
     );
 }
 
 // Cached version of resource data fetch
 function getCachedResourceData(limit: string, skip: string, search?: string) {
-    return unstable_cache(
+    return CacheService.createCache(
         async () => {
-            const endpoint = process.env.NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT;
+            const endpoint = env.resourceEndpoint;
             if (!endpoint) {
                 throw new Error('NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT environment variable is not set');
             }
 
             return await fetchPaginatedData({ endpoint, limit, skip, search });
         },
-        [`resource-data-${limit}-${skip}-${search || ''}`],
-        {
-            revalidate: CACHE_DURATION,
-            tags: [`resource-list-${limit}-${skip}-${search || ''}`, 'resource-all', 'resource-lists']
-        }
+        `resource-data-${limit}-${skip}-${search || ''}`,
+        [`resource-list-${limit}-${skip}-${search || ''}`, 'resource-all', 'resource-lists'],
+        CACHE_DURATIONS.MEDIUM
     );
 }
 
@@ -65,7 +61,7 @@ export async function GET(request: NextRequest) {
         const skip = searchParams.get('skip') || '0';
         const search = searchParams.get('search') || undefined;
 
-        const endpoint = process.env.NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT;
+        const endpoint = env.resourceEndpoint;
         if (!endpoint) {
             return NextResponse.json(
                 {
@@ -166,7 +162,13 @@ export async function GET(request: NextRequest) {
 
         // Use cached fetch function
         const cachedFetch = getCachedResourceData(limit, skip, search);
-        const result = await cachedFetch();
+        const result = await cachedFetch() as {
+          data?: unknown[];
+          total?: number;
+          limit?: number;
+          skip?: number;
+          has_more?: boolean;
+        };
 
         console.info('[Resources API] Response received');
         console.info('[Resources API] Data type:', Array.isArray(result.data) ? 'array' : typeof result.data);

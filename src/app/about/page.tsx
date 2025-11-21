@@ -1,7 +1,7 @@
 "use client";
 
 import { Target, Zap, CheckCircle } from "lucide-react";
-import yaml from "@/src/app/components/about.yaml";
+import yaml from "@/src/config/yaml/about.yaml";
 
 export default function About() {
   const sections = yaml.sections;

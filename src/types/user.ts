@@ -1,3 +1,7 @@
+/**
+ * User-related type definitions
+ */
+
 export interface Activity {
   id: number;
   profile_id: number;
@@ -12,14 +16,9 @@ export interface Activity {
   as_info?: string | null;
 }
 
-export interface TokenResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-}
-
 export interface UserProfile {
   email: string;
   orcid_id: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
+

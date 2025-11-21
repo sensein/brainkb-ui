@@ -3,7 +3,7 @@ import {useState, useEffect} from 'react';
 import {Database, Loader2, AlertCircle, ChevronLeft, ChevronRight, ExternalLink, Search} from "lucide-react";
 import {useFilteredTableData} from "@/src/app/utils/tableFilterUtils";
 import {getData} from "@/src/app/components/getData";
-import yaml from "@/src/app/components/config-knowledgebases.yaml";
+import yaml from "@/src/config/yaml/config-knowledgebases.yaml";
 
 const ITEMS_PER_PAGE = 50;
 

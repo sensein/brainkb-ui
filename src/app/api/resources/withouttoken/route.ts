@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { unstable_cache } from 'next/cache';
 import { getWarmedCache } from '@/src/app/utils/cache-warm';
-import { fetchPaginatedDataWithoutToken, searchByIdWithoutToken } from '../../utils/api-client-without-token';
-
-const CACHE_DURATION = 4 * 60 * 60; // 4 hours in seconds
+import { fetchPaginatedDataWithoutToken, searchByIdWithoutToken } from '@/src/utils/api/api-client-without-token';
+import { CacheService } from '@/src/services/cache/cache-service';
+import { CACHE_DURATIONS } from '@/src/config/constants';
 
 // Force dynamic rendering - this route uses searchParams
 export const dynamic = 'force-dynamic';
@@ -19,19 +18,17 @@ async function searchResourceByIdWithoutToken(id: string, endpoint: string): Pro
 
 // Cached version of search by ID
 function getCachedResourceByIdWithoutToken(id: string, endpoint: string) {
-    return unstable_cache(
+    return CacheService.createCache(
         async () => searchResourceByIdWithoutToken(id, endpoint),
-        [`resource-entity-${id}-notoken`],
-        {
-            revalidate: CACHE_DURATION,
-            tags: [`resource-entity-${id}`, 'resource-all', 'resource-entities']
-        }
+        `resource-entity-${id}-notoken`,
+        [`resource-entity-${id}`, 'resource-all', 'resource-entities'],
+        CACHE_DURATIONS.MEDIUM
     );
 }
 
 // Cached version of resource data fetch
 function getCachedResourceDataWithoutToken(endpoint: string, limit: string, skip: string, search?: string) {
-    return unstable_cache(
+    return CacheService.createCache(
         async () => {
             if (!endpoint) {
                 throw new Error('Endpoint is required');
@@ -39,11 +36,9 @@ function getCachedResourceDataWithoutToken(endpoint: string, limit: string, skip
 
             return await fetchPaginatedDataWithoutToken({ endpoint, limit, skip, search });
         },
-        [`resource-data-${limit}-${skip}-${search || ''}-notoken`],
-        {
-            revalidate: CACHE_DURATION,
-            tags: [`resource-list-${limit}-${skip}-${search || ''}`, 'resource-all', 'resource-lists']
-        }
+        `resource-data-${limit}-${skip}-${search || ''}-notoken`,
+        [`resource-list-${limit}-${skip}-${search || ''}`, 'resource-all', 'resource-lists'],
+        CACHE_DURATIONS.MEDIUM
     );
 }
 
@@ -144,7 +139,13 @@ export async function GET(request: NextRequest) {
 
         // Use cached fetch function
         const cachedFetch = getCachedResourceDataWithoutToken(endpoint, limit, skip, search);
-        const result = await cachedFetch();
+        const result = await cachedFetch() as {
+          data?: unknown[];
+          total?: number;
+          limit?: number;
+          skip?: number;
+          has_more?: boolean;
+        };
 
         console.info('[Resources API WithoutToken] Response received');
         console.info('[Resources API WithoutToken] Data type:', Array.isArray(result.data) ? 'array' : typeof result.data);

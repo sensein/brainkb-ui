@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
 import { getData } from '@/src/app/components/getData';
 import { getWarmedCache } from '@/src/app/utils/cache-warm';
-import yaml from '@/src/app/components/config-home.yaml';
+import yaml from '@/src/config/yaml/config-home.yaml';
 
 // Force dynamic rendering - this route fetches external data
 export const dynamic = 'force-dynamic';

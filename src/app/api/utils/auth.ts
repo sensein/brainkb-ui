@@ -1,17 +1,12 @@
 import { unstable_cache } from 'next/cache';
-
-const TOKEN_CACHE_DURATION = 60 * 60; // 1 hour in seconds
-
-interface TokenResponse {
-    access_token: string;
-    token_type: string;
-    expires_in: number;
-}
+import { env } from '@/src/config/env';
+import { TOKEN_CACHE_DURATION } from '@/src/config/constants';
+import { TokenResponse } from '@/src/types/api';
 
 async function fetchAuthToken(): Promise<string> {
-    const jwtUser = process.env.NEXT_PUBLIC_JWT_USER;
-    const jwtPassword = process.env.NEXT_PUBLIC_JWT_PASSWORD;
-    const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE;
+    const jwtUser = env.jwtUser;
+    const jwtPassword = env.jwtPassword;
+    const tokenEndpoint = env.tokenEndpointMLService;
 
     if (!tokenEndpoint || !jwtUser || !jwtPassword) {
         throw new Error('JWT authentication credentials not configured');
@@ -67,9 +62,7 @@ export async function withAuthHeaders(): Promise<Record<string, string>> {
         'Accept': 'application/json',
     };
 
-    const useBearerToken = process.env.NEXT_PUBLIC_USE_BEARER_TOKEN !== 'false';
-    
-    if (useBearerToken) {
+    if (env.useBearerToken) {
         try {
             const token = await getAuthToken();
             headers['Authorization'] = `Bearer ${token}`;

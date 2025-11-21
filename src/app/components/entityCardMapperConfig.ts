@@ -1,4 +1,4 @@
-import rawEntityCardMapperConfig from "./enititycardmapper.yaml";
+import rawEntityCardMapperConfig from "@/src/config/yaml/enititycardmapper.yaml";
 
 export type EntityCardMapperEntry = {
   card: string;

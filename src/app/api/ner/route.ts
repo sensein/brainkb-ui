@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { unstable_cache } from 'next/cache';
 import { getWarmedCache } from '@/src/app/utils/cache-warm';
-import { fetchPaginatedData, searchById } from '../utils/api-client';
-
-const CACHE_DURATION = 4 * 60 * 60; // 4 hours in seconds
+import { fetchPaginatedData, searchById } from '@/src/utils/api/api-client';
+import { CacheService } from '@/src/services/cache/cache-service';
+import { CACHE_DURATIONS } from '@/src/config/constants';
+import { env } from '@/src/config/env';
 
 // Force dynamic rendering - this route uses searchParams
 export const dynamic = 'force-dynamic';
@@ -18,9 +18,9 @@ async function searchNERById(id: string): Promise<any> {
         return warmedCache.data;
     }
 
-    const endpoint = process.env.NEXT_PUBLIC_NER_GET_ENDPOINT;
+    const endpoint = env.nerEndpoint;
     if (!endpoint) {
-        throw new Error('NEXT_PUBLIC_NER_GET_ENDPOINT environment variable is not set');
+        throw new Error('NEXT_PUBLIC_API_ADMIN_GET_NER_ENDPOINT environment variable is not set');
     }
 
     return await searchById(endpoint, id);
@@ -28,32 +28,28 @@ async function searchNERById(id: string): Promise<any> {
 
 // Cached version of search by ID
 function getCachedNERById(id: string) {
-    return unstable_cache(
+    return CacheService.createCache(
         async () => searchNERById(id),
-        [`ner-entity-${id}`],
-        {
-            revalidate: CACHE_DURATION,
-            tags: [`ner-entity-${id}`, 'ner-all', 'ner-entities']
-        }
+        `ner-entity-${id}`,
+        [`ner-entity-${id}`, 'ner-all', 'ner-entities'],
+        CACHE_DURATIONS.MEDIUM
     );
 }
 
 // Cached version of NER data fetch
 function getCachedNERData(limit: string, skip: string, search?: string) {
-    return unstable_cache(
+    return CacheService.createCache(
         async () => {
-            const endpoint = process.env.NEXT_PUBLIC_NER_GET_ENDPOINT;
+            const endpoint = env.nerEndpoint;
             if (!endpoint) {
-                throw new Error('NEXT_PUBLIC_NER_GET_ENDPOINT environment variable is not set');
+                throw new Error('NEXT_PUBLIC_API_ADMIN_GET_NER_ENDPOINT environment variable is not set');
             }
 
             return await fetchPaginatedData({ endpoint, limit, skip, search });
         },
-        [`ner-data-${limit}-${skip}-${search || ''}`],
-        {
-            revalidate: CACHE_DURATION,
-            tags: [`ner-list-${limit}-${skip}-${search || ''}`, 'ner-all', 'ner-lists']
-        }
+        `ner-data-${limit}-${skip}-${search || ''}`,
+        [`ner-list-${limit}-${skip}-${search || ''}`, 'ner-all', 'ner-lists'],
+        CACHE_DURATIONS.MEDIUM
     );
 }
 
@@ -166,7 +162,13 @@ export async function GET(request: NextRequest) {
 
         // Use cached fetch function
         const cachedFetch = getCachedNERData(limit, skip, search);
-        const result = await cachedFetch();
+        const result = await cachedFetch() as {
+          data?: unknown[];
+          total?: number;
+          limit?: number;
+          skip?: number;
+          has_more?: boolean;
+        };
 
         console.info('[NER API] Response received');
         console.info('[NER API] Data type:', Array.isArray(result.data) ? 'array' : typeof result.data);

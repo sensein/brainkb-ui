@@ -1,6 +1,6 @@
 "use client";
 
-import yaml from "@/src/app/components/config-home.yaml";
+import yaml from "@/src/config/yaml/config-home.yaml";
 import {useEffect, useState} from "react";
 import {Brain, Database, FileText, Users, Sparkles, ExternalLink, Upload, Network, CheckCircle, FileCheck, Code, Layers, BookOpen, Search, UsersRound, Globe, FolderTree, FileSearch, FileJson, Tag, MessageSquare, Eye, AlertCircle} from "lucide-react";
 

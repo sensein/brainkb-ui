@@ -1,7 +1,7 @@
 "use client";
 import {useState, useEffect} from 'react';
 import {getData} from "@/src/app/components/getData";
-import yaml from "@/src/app/components/config-knowledgebases.yaml";
+import yaml from "@/src/config/yaml/config-knowledgebases.yaml";
 import SideBarKBFromConfig from "@/src/app/components/SideBarKBFromConfig";
 
 const ITEMS_PER_PAGE = 50;

@@ -1,37 +1,16 @@
-interface ApiConfig {
-  jwtUser: string;
-  jwtPassword: string;
-  tokenEndpoint: string;
-  useBearerToken: boolean;
-  queryEndpoint: string;
-}
-
-interface TokenResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-}
+import { env } from '@/src/config/env';
+import { TokenResponse } from '@/src/types/api';
 
 class ApiService {
   private static instance: ApiService;
   private token: string | null = null;
   private tokenExpiry: number = 0;
-  private config: ApiConfig;
 
   private constructor() {
-    this.config = {
-      jwtUser: process.env.NEXT_PUBLIC_JWT_USER || "",
-      jwtPassword: process.env.NEXT_PUBLIC_JWT_PASSWORD || "",
-      tokenEndpoint: process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE || "",
-      useBearerToken: process.env.NEXT_PUBLIC_USE_BEARER_TOKEN !== "false", // Default false (disabled) - matches old working code
-      queryEndpoint:
-        process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT ||
-        "https://queryservice.brainkb.org/query/sparql",
-    };
     console.info("=====================ApiService Constructor ==================");
-    console.info("Token Endpoint:", this.config.tokenEndpoint);
-    console.info("Use Bearer Token:", this.config.useBearerToken);
-    console.info("Query Endpoint:", this.config.queryEndpoint);
+    console.info("Token Endpoint:", env.tokenEndpointQueryService);
+    console.info("Use Bearer Token:", env.useBearerToken);
+    console.info("Query Endpoint:", env.get('NEXT_PUBLIC_API_QUERY_ENDPOINT'));
     console.info("=====================ApiService Constructor ==================");
   }
 
@@ -47,18 +26,25 @@ class ApiService {
       return this.token;
     }
 
+    const tokenEndpoint = env.tokenEndpointQueryService;
+    const jwtUser = env.jwtUser;
+    const jwtPassword = env.jwtPassword;
+
+    if (!tokenEndpoint || !jwtUser || !jwtPassword) {
+      throw new Error("JWT authentication credentials not configured");
+    }
+
     try {
-      const response = await fetch(this.config.tokenEndpoint, {
+      const response = await fetch(tokenEndpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email: this.config.jwtUser,
-          password: this.config.jwtPassword,
+          email: jwtUser,
+          password: jwtPassword,
         }),
       });
-
 
       if (!response.ok) {
         throw new Error(`Token request failed: ${response.status}`);
@@ -67,9 +53,9 @@ class ApiService {
       const tokenData: TokenResponse = await response.json();
       this.token = tokenData.access_token;
       this.tokenExpiry = Date.now() + (tokenData.expires_in - 300) * 1000; // refresh 5 min early
-    console.info("=====================Token issue token==================");
-    console.info(this.token);
-    console.info("=====================Token issue token==================");
+      console.info("=====================Token issue token==================");
+      console.info(this.token);
+      console.info("=====================Token issue token==================");
 
       return this.token;
     } catch (error) {
@@ -83,7 +69,7 @@ class ApiService {
       Accept: "application/json",
     };
 
-    if (this.config.useBearerToken && this.config.tokenEndpoint) {
+    if (env.useBearerToken && env.tokenEndpointQueryService) {
       try {
         const token = await this.getToken();
         headers["Authorization"] = `Bearer ${token}`;
@@ -104,12 +90,13 @@ class ApiService {
       console.info("=====================ApiService.query called ==================");
       console.info("Query parameters keys:", Object.keys(queryParameter));
       console.info("SPARQL Query (from parameters):", queryParameter.sparql_query);
-      console.info("Endpoint:", endpoint || this.config.queryEndpoint);
+      const defaultEndpoint = env.get('NEXT_PUBLIC_API_QUERY_ENDPOINT') || 'https://queryservice.brainkb.org/query/sparql';
+      console.info("Endpoint:", endpoint || defaultEndpoint);
 
       const headers = await this.getHeaders();
       console.info("Headers:", Object.keys(headers));
 
-      const apiEndpoint = endpoint || this.config.queryEndpoint;
+      const apiEndpoint = endpoint || env.get('NEXT_PUBLIC_API_QUERY_ENDPOINT') || 'https://queryservice.brainkb.org/query/sparql';
 
       const queryString = new URLSearchParams(queryParameter).toString();
       const urlWithQuery = queryString
@@ -157,7 +144,7 @@ class ApiService {
   ): Promise<any> {
     try {
       const headers = await this.getHeaders();
-      const apiEndpoint = endpoint || this.config.queryEndpoint;
+      const apiEndpoint = endpoint || env.get('NEXT_PUBLIC_API_QUERY_ENDPOINT') || 'https://queryservice.brainkb.org/query/sparql';
 
       const queryString = new URLSearchParams(queryParameter).toString();
       const urlWithQuery = queryString

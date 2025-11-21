@@ -2,7 +2,7 @@ import type {Metadata} from "next";
 import {getServerSession} from "next-auth";
 import {authOptions} from "@/lib/auth";
 import {redirect} from "next/navigation";
-import yaml from "@/src/app/components/privacy-policy.yaml";
+import yaml from "@/src/config/yaml/privacy-policy.yaml";
 
 export const metadata: Metadata = {
     title: "Privacy Policy",

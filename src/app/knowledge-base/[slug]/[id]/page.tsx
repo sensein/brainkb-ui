@@ -216,7 +216,7 @@ const IndividualEntityPage = () => {
           return;
         }
 
-        const model_data = await import(`../../../components/${filename}`);
+        const model_data = await import(`../../../../config/yaml/${filename}`);
         const extracted_data = model_data.default;
 
         setMainCardTitle(extracted_data?.name || "");

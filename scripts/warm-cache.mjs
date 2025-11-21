@@ -210,8 +210,8 @@ async function warmCache() {
   
   try {
     // Load and parse YAML configs
-    const yamlHomePath = path.join(process.cwd(), 'src', 'app', 'components', 'config-home.yaml');
-    const yamlKBPath = path.join(process.cwd(), 'src', 'app', 'components', 'config-knowledgebases.yaml');
+    const yamlHomePath = path.join(process.cwd(), 'src', 'config', 'yaml', 'config-home.yaml');
+    const yamlKBPath = path.join(process.cwd(), 'src', 'config', 'yaml', 'config-knowledgebases.yaml');
     
     const yamlHome = loadYamlFile(yamlHomePath);
     const yamlKB = loadYamlFile(yamlKBPath);

@@ -5,7 +5,7 @@ import {useSession} from "next-auth/react";
 import {format} from "date-fns";
 import ActivityList from "../../components/userProfileActivity";
 import {extractApiData, isValidActivityData} from "../../utils/apiHelpers";
-import { Activity } from "@/src/types/types";
+import { Activity } from "@/src/types";
 
 // Extended session user interface to include custom properties
 interface ExtendedUser {

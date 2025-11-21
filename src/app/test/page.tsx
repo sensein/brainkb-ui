@@ -1,6 +1,6 @@
 "use client";
 
-import yaml from "@/src/app/components/pages-config-test.yaml";
+import yaml from "@/src/config/yaml/pages-config-test.yaml";
 import {useState, useEffect} from 'react';
 import {getData} from "@/src/app/components/getData";
 

@@ -2,7 +2,7 @@
 
 import type { Metadata } from "next";
 import { useState } from "react";
-import yaml from "@/src/app/components/contact.yaml";
+import yaml from "@/src/config/yaml/contact.yaml";
 import { EnvelopeIcon, PhoneIcon, MapPinIcon } from "@heroicons/react/24/solid";
 
 export default function ContactPage() {
