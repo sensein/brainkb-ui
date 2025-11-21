@@ -1,4 +1,4 @@
-import ApiService from '../services/query_service/apiService';
+import ApiService from '@/src/services/query-service/apiService';
 
 export async function getData(
   query_parameter = {}, 

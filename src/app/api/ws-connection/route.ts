@@ -2,40 +2,7 @@ import { NextRequest } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import WebSocket from 'ws';
 import { env } from '../../../config/env';
-import { TokenResponse } from '../../../types/api';
-
-async function getAuthToken(): Promise<string> {
-  const jwtUser = env.jwtUser;
-  const jwtPassword = env.jwtPassword;
-  const tokenEndpoint = env.tokenEndpointMLService;
-
-  if (!jwtUser || !jwtPassword || !tokenEndpoint) {
-    throw new Error('JWT credentials not configured');
-  }
-
-  try {
-    const response = await fetch(tokenEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: jwtUser,
-        password: jwtPassword
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Token request failed: ${response.status}`);
-    }
-
-    const tokenData: TokenResponse = await response.json();
-    return tokenData.access_token;
-  } catch (error) {
-    console.error('Failed to get JWT token:', error);
-    throw new Error('Authentication failed');
-  }
-}
+import { getAuthTokenForService } from '../../../utils/api/auth';
 
 function getWebSocketUrl(endpoint: string, clientId: string, token: string, apiKey?: string): string {
   // Endpoint format: ws://localhost:8009/api/ws/extract-resources
@@ -95,9 +62,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Get authentication token
-    let token: string;
+    let token: string | null = null;
     try {
-      token = await getAuthToken();
+      token = await getAuthTokenForService('ml');
+      if (!token) {
+        throw new Error('Failed to get authentication token');
+      }
       console.log('Authentication successful');
     } catch (error) {
       console.error('Failed to get bearer token:', error);

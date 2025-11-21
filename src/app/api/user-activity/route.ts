@@ -1,45 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Activity, TokenResponse, UserProfile } from '@/src/types';
+import { Activity, UserProfile } from '@/src/types';
+import { withAuthHeaders } from '@/src/utils/api/auth';
 
 // Force dynamic rendering - this route uses request.url
 export const dynamic = 'force-dynamic';
-
-
-
-async function getAuthToken(): Promise<string> {
-  const {
-    NEXT_PUBLIC_JWT_USER: jwtUser,
-    NEXT_PUBLIC_JWT_PASSWORD: jwtPassword,
-    NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE: tokenEndpoint,
-  } = process.env;
-
-  if (!jwtUser || !jwtPassword || !tokenEndpoint) {
-    throw new Error('JWT credentials not configured');
-  }
-
-  const response = await fetch(tokenEndpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: jwtUser, password: jwtPassword }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Token request failed: ${response.status}`);
-  }
-
-  const tokenData: TokenResponse = await response.json();
-  return tokenData.access_token;
-}
-
-async function withAuthHeaders(): Promise<Record<string, string>> {
-  try {
-    const token = await getAuthToken();
-    return { Authorization: `Bearer ${token}` };
-  } catch (error) {
-    console.warn('Failed to get bearer token, proceeding without authentication');
-    return {};
-  }
-}
 
 
 async function getUserActivity(
@@ -84,7 +48,7 @@ export async function GET(request: NextRequest) {
     }
 
     const params = new URLSearchParams({ email, orcid_id });
-    const headers = await withAuthHeaders();
+    const headers = await withAuthHeaders('user-management');
     const userActivities = await getUserActivity(getEndpoint, params, headers);
 
     if (!userActivities) {

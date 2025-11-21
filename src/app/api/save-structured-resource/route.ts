@@ -1,40 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
-import { env } from '../../../config/env';
-import { TokenResponse } from '../../../types/api';
-
-async function getAuthToken(): Promise<string> {
-  const jwtUser = env.jwtUser;
-  const jwtPassword = env.jwtPassword;
-  const tokenEndpoint = env.tokenEndpointMLService;
-
-  if (!jwtUser || !jwtPassword || !tokenEndpoint) {
-    throw new Error('JWT credentials not configured');
-  }
-
-  try {
-    const response = await fetch(tokenEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: jwtUser,
-        password: jwtPassword
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Token request failed: ${response.status}`);
-    }
-
-    const tokenData: TokenResponse = await response.json();
-    return tokenData.access_token;
-  } catch (error) {
-    console.error('Failed to get JWT token:', error);
-    throw new Error('Authentication failed');
-  }
-}
+import { withAuthHeaders } from '../../../utils/api/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,18 +21,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get authentication token
-    let authHeaders: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    try {
-      const token = await getAuthToken();
-      authHeaders['Authorization'] = `Bearer ${token}`;
-      console.log('[save-structured-resource] Authentication token obtained successfully');
-    } catch (error) {
-      console.warn('[save-structured-resource] Failed to get bearer token, proceeding without authentication');
-    }
+    // Get authentication headers
+    const authHeaders = await withAuthHeaders('ml');
+    console.log('[save-structured-resource] Authentication headers obtained');
     
     console.log('[save-structured-resource] Forwarding request to endpoint:', endpoint);
     // Forward the request to the ML service

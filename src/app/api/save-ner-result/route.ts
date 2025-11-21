@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import { env } from '../../../config/env';
+import { getAuthTokenWithCredentials } from '../../../utils/api/auth';
 
 export async function POST(request: NextRequest) {
     try {
@@ -30,36 +31,10 @@ export async function POST(request: NextRequest) {
         }
 
         console.log('Getting token from /api/token...');
-        // Get token from /api/token with credentials
+        // Get token using shared auth function with credentials from form data
         const tokenEndpoint = env.tokenEndpointMLService || 'http://localhost:8009/api/token';
-        const tokenResponse = await fetch(tokenEndpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                email,
-                password
-            }),
-            // Add timeout
-            signal: AbortSignal.timeout(3600000) // 30 seconds timeout
-        });
-
-        if (!tokenResponse.ok) {
-            console.error('Token request failed:', tokenResponse.status, await tokenResponse.text());
-            throw new Error('Failed to get token');
-        }
-
-        const tokenData = await tokenResponse.json();
-        console.log('Token response:', tokenData);
-
-        if (!tokenData.access_token) {
-            console.error('No access token in response:', tokenData);
-            throw new Error('Invalid token response');
-        }
-
-        const token = tokenData.access_token;
-        console.log('Token received successfully:', token);
+        const token = await getAuthTokenWithCredentials(tokenEndpoint, email, password, 'ML');
+        console.log('Token received successfully');
 
         // Add retry logic for the external API call
         const maxRetries = 3;

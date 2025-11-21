@@ -1,42 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { env } from '../../../config/env';
-import { TokenResponse } from '../../../types/api';
+import { withAuthHeaders } from '../../../utils/api/auth';
 
 // Force dynamic rendering - this route fetches external data
 export const dynamic = 'force-dynamic';
-
-async function getAuthToken(): Promise<string> {
-    const jwtUser = env.jwtUser;
-    const jwtPassword = env.jwtPassword;
-    const tokenEndpoint = env.tokenEndpointQueryService;
-  
-    if (!jwtUser || !jwtPassword || !tokenEndpoint) {
-      throw new Error('JWT credentials not configured');
-    }
-  
-    try {
-      const response = await fetch(tokenEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: jwtUser,
-          password: jwtPassword
-        })
-      });
-  
-      if (!response.ok) {
-        throw new Error(`Token request failed: ${response.status}`);
-      }
-  
-      const tokenData: TokenResponse = await response.json();
-      return tokenData.access_token;
-    } catch (error) {
-      console.error('Failed to get JWT token:', error);
-      throw new Error('Authentication failed');
-    }
-}
 
 async function fetchTaxonomyData() {
     // Taxonomy tree is NOT cached - it's fetched fresh each time
@@ -53,14 +20,7 @@ async function fetchTaxonomyData() {
             return null;
         }
 
-        let authHeaders: Record<string, string> = {};
-
-        try {
-            const token = await getAuthToken();
-            authHeaders['Authorization'] = `Bearer ${token}`;
-        } catch (error) {
-            console.warn('Failed to get bearer token, proceeding without authentication');
-        }
+        const authHeaders = await withAuthHeaders('query');
 
         // Forward the request to the query service
         const response = await fetch(queryServiceUrl, {

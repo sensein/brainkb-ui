@@ -24,6 +24,7 @@ interface EnvConfig {
   NEXT_PUBLIC_TOKEN_ENDPOINT?: string;
   NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE?: string;
   NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE?: string;
+  NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE?: string;
 
   // Auth Configuration
   NEXT_PUBLIC_JWT_USER?: string;
@@ -72,6 +73,8 @@ class EnvConfigManager {
         process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE,
       NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE:
         process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE,
+      NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE:
+        process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE,
       NEXT_PUBLIC_JWT_USER: process.env.NEXT_PUBLIC_JWT_USER,
       NEXT_PUBLIC_JWT_PASSWORD: process.env.NEXT_PUBLIC_JWT_PASSWORD,
       NEXT_PUBLIC_USE_BEARER_TOKEN: process.env.NEXT_PUBLIC_USE_BEARER_TOKEN,
@@ -117,6 +120,10 @@ class EnvConfigManager {
 
   public get tokenEndpointQueryService(): string | undefined {
     return this.config.NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE;
+  }
+
+  public get tokenEndpointUserManagementService(): string | undefined {
+    return this.config.NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE;
   }
 
   public get nerApiKey(): string | undefined {
