@@ -387,6 +387,7 @@ export default function IngestStructuredResourcePage() {
                 }];
 
             console.log('JSON being sent for saving:', JSON.stringify(dataToSave, null, 2));
+             console.log('JSON being sent for saving:', JSON.stringify(saveEndpoint));
 
             const response = await fetch("/api/save-structured-resource", {
                 method: "POST",

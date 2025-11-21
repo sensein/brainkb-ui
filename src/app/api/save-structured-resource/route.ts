@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
-
-interface TokenResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-}
+import { env } from '../../../config/env';
+import { TokenResponse } from '../../../types/api';
 
 async function getAuthToken(): Promise<string> {
-  const jwtUser = process.env.NEXT_PUBLIC_JWT_USER;
-  const jwtPassword = process.env.NEXT_PUBLIC_JWT_PASSWORD;
-  const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE;
+  const jwtUser = env.jwtUser;
+  const jwtPassword = env.jwtPassword;
+  const tokenEndpoint = env.tokenEndpointMLService;
 
   if (!jwtUser || !jwtPassword || !tokenEndpoint) {
     throw new Error('JWT credentials not configured');
@@ -67,10 +63,12 @@ export async function POST(request: NextRequest) {
     try {
       const token = await getAuthToken();
       authHeaders['Authorization'] = `Bearer ${token}`;
+      console.log('[save-structured-resource] Authentication token obtained successfully');
     } catch (error) {
-      console.warn('Failed to get bearer token, proceeding without authentication');
+      console.warn('[save-structured-resource] Failed to get bearer token, proceeding without authentication');
     }
-
+    
+    console.log('[save-structured-resource] Forwarding request to endpoint:', endpoint);
     // Forward the request to the ML service
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -108,6 +106,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
+
     console.error('Error saving data:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
