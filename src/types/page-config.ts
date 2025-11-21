@@ -88,6 +88,8 @@ export interface DetailPageConfig {
     method?: 'GET' | 'POST';
     idParam?: string; // Query param name for ID (default: 'id')
     dataExtractor?: (data: any) => any; // Function to extract/transform data
+    cardConfigFile?: string; // For SPARQL-based pages: path to card YAML file (e.g., "barcodedcellsample_card.yaml")
+    params?: Record<string, any>; // Additional params for API calls (e.g., sparqlQuery for SPARQL)
   };
   
   // Detail view configuration

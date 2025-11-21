@@ -13,17 +13,67 @@ export default function KnowledgeBaseDetailPage() {
   const [config, setConfig] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   
+  const [isSparqlBased, setIsSparqlBased] = useState<boolean | null>(null);
+  
   useEffect(() => {
-    const loadConfig = async () => {
+    const determinePageType = async () => {
       setLoading(true);
-      const loadedConfig = await getDetailPageConfig(`/knowledge-base/${slug}`, slug);
-      setConfig(loadedConfig);
-      setLoading(false);
+      try {
+        // First, check if it's an API-based page (NER, Resources) with detail config
+        const detailMapperEntry = pageMapperConfig.PageMapper?.find(
+          (m) => m.type === 'detail' && m.slug === slug
+        );
+        
+        if (detailMapperEntry) {
+          // Check if it's SPARQL-based by looking at the config
+          const loadedConfig = await getDetailPageConfig(`/knowledge-base/${slug}`, slug);
+          if (loadedConfig) {
+            // If config has cardConfigFile, it's SPARQL-based
+            if (loadedConfig.dataSource?.cardConfigFile) {
+              setIsSparqlBased(true);
+            } else {
+              // API-based (NER, Resources)
+              setIsSparqlBased(false);
+              setConfig(loadedConfig);
+            }
+          } else {
+            // Try to find card YAML file directly (SPARQL-based)
+            const cardFiles = ['celltaxon_card.yaml', 'barcodedcellsample_card.yaml', 'LA_card.yaml'];
+            const cardFile = cardFiles.find(f => f.includes(slug.replace('libraryaliquot', 'LA').replace('barcodedcellsample', 'barcodedcellsample').replace('celltaxon', 'celltaxon')));
+            if (cardFile) {
+              setIsSparqlBased(true);
+            } else {
+              setIsSparqlBased(false);
+            }
+          }
+        } else {
+          // Check for card YAML files (SPARQL-based entities)
+          const cardSlugMap: Record<string, string> = {
+            'celltaxon': 'celltaxon_card.yaml',
+            'barcodedcellsample': 'barcodedcellsample_card.yaml',
+            'libraryaliquot': 'LA_card.yaml',
+          };
+          
+          if (cardSlugMap[slug]) {
+            setIsSparqlBased(true);
+          } else {
+            setIsSparqlBased(false);
+          }
+        }
+      } catch (err) {
+        console.error(`Error determining page type for slug ${slug}:`, err);
+        setIsSparqlBased(false);
+      } finally {
+        setLoading(false);
+      }
     };
-    loadConfig();
+    
+    if (slug) {
+      determinePageType();
+    }
   }, [slug]);
   
-  if (loading) {
+  if (loading || isSparqlBased === null) {
     return (
       <div className="kb-page-margin">
         <div className="flex flex-col items-center justify-center py-20">
@@ -34,19 +84,14 @@ export default function KnowledgeBaseDetailPage() {
     );
   }
   
-  // If found in modular YAML files, use DynamicDetailPage
-  if (config) {
-    return <DynamicDetailPage config={config} />;
+  // For SPARQL-based pages, use IndividualEntityPage
+  if (isSparqlBased) {
+    return <IndividualEntityPage />;
   }
   
-  // Check if slug exists in pageMapperConfig (for SPARQL-based entity detail pages)
-  const entityDetailConfig = pageMapperConfig.PageMapper?.find(
-    (entry) => (entry.type === 'entity-detail' || entry.type === 'entity-list') && entry.slug === slug
-  );
-  
-  // If found in pageMapperConfig, use IndividualEntityPage
-  if (entityDetailConfig) {
-    return <IndividualEntityPage />;
+  // For API-based pages (NER, Resources), use DynamicDetailPage
+  if (config) {
+    return <DynamicDetailPage config={config} />;
   }
   
   // Otherwise, show error

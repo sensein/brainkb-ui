@@ -177,15 +177,29 @@ export default function IndividualEntityPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const page = pageMapperConfig.PageMapper?.find(
-          (entry) => (entry.type === 'entity-detail' || entry.type === 'entity-list') && entry.slug === slug
-        );
-        const filename = page ? page.filename : "";
+        // Map slug to card YAML filename
+        const cardSlugMap: Record<string, string> = {
+          'celltaxon': 'celltaxon_card.yaml',
+          'barcodedcellsample': 'barcodedcellsample_card.yaml',
+          'libraryaliquot': 'LA_card.yaml',
+        };
+        
+        // First try the slug map
+        let filename = cardSlugMap[slug];
+        
+        // If not found, try pageMapperConfig
+        if (!filename) {
+          const page = pageMapperConfig.PageMapper?.find(
+            (entry) => (entry.type === 'entity-detail' || entry.type === 'entity-list') && entry.slug === slug
+          );
+          filename = page ? page.filename : "";
+        }
 
         if (!filename) {
           setMainCardTitle("");
           setMainCardDescription("");
           setExtractedBoxes([]);
+          setError(`No card configuration found for slug: ${slug}`);
           return;
         }
 
@@ -197,11 +211,13 @@ export default function IndividualEntityPage() {
         setExtractedBoxes(extracted_data?.boxes || []);
       } catch (err) {
         console.error("Failed to fetch YAML data:", err);
-        setError("Failed to load entity configuration.");
+        setError(`Failed to load entity configuration for slug: ${slug}`);
       }
     };
 
-    loadData();
+    if (slug) {
+      loadData();
+    }
   }, [slug]);
 
   useEffect(() => {

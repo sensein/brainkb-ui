@@ -5,6 +5,7 @@ import pageConfigsYaml from '@/src/config/yaml/page-configs.yaml';
 import { pageMapperConfig } from '@/src/app/components/pageMapperConfig';
 import { ListPageConfig, DetailPageConfig } from '@/src/types/page-config';
 import { Network, Database, BookOpen, Activity, FileText, MessageSquare, MapPin, User, Calendar, Tag as TagIcon, Package, Link as LinkIcon } from "lucide-react";
+import { detailConfigMap } from './detail-config-imports';
 
 // Icon mapping
 const iconMap: Record<string, any> = {
@@ -142,11 +143,27 @@ export async function getDetailPageConfig(route: string, slug?: string): Promise
     
     if (mapperEntry && mapperEntry.filename) {
       try {
-        const moduleData = await import(`@/src/config/yaml/${mapperEntry.filename}`);
-        const pageConfig = moduleData.default;
-        return buildDetailPageConfig(pageConfig);
+        // Try static import map first
+        let pageConfig = detailConfigMap[mapperEntry.filename];
+        
+        // If not in static map, try dynamic import
+        if (!pageConfig) {
+          const moduleData = await import(`@/src/config/yaml/${mapperEntry.filename}`);
+          pageConfig = moduleData.default;
+        }
+        
+        if (pageConfig) {
+          return buildDetailPageConfig(pageConfig);
+        } else {
+          console.error(`No default export found in ${mapperEntry.filename}`);
+        }
       } catch (err) {
         console.error(`Failed to load ${mapperEntry.filename}:`, err);
+        // Log more details about the error
+        if (err instanceof Error) {
+          console.error(`Error message: ${err.message}`);
+          console.error(`Error stack: ${err.stack}`);
+        }
       }
     }
   }
@@ -166,31 +183,43 @@ export async function getDetailPageConfig(route: string, slug?: string): Promise
 }
 
 function buildDetailPageConfig(pageConfig: any): DetailPageConfig {
+  const dataSourceType = pageConfig.dataSource.type as 'api-get' | 'api-post' | 'sparql';
+  
+  // Build dataSource config based on type
+  const dataSource: any = {
+    type: dataSourceType,
+    endpoint: pageConfig.dataSource.apiRoute || pageConfig.dataSource.endpoint,
+    method: pageConfig.dataSource.method || 'GET',
+    idParam: pageConfig.dataSource.idParam || 'id',
+  };
+
+  // For SPARQL with card config files
+  if (dataSourceType === 'sparql' && pageConfig.dataSource.cardConfigFile) {
+    dataSource.cardConfigFile = pageConfig.dataSource.cardConfigFile;
+  } else {
+    // For API-based sources, add params for env var lookup
+    dataSource.params = {
+      envVarName: pageConfig.dataSource.endpoint,
+    };
+    dataSource.dataExtractor = pageConfig.dataSource.dataExtractor
+      ? (rawData: any) => {
+          const extractor = dataExtractors[pageConfig.dataSource.dataExtractor];
+          if (extractor) {
+            const resourceData = rawData?.judged_structured_information?.judge_resource?.["1"]?.[0];
+            if (!resourceData) return null;
+            return extractor(rawData);
+          }
+          return rawData;
+        }
+      : undefined;
+  }
+
   return {
     title: pageConfig.title,
     route: pageConfig.route,
     slug: pageConfig.slug,
     backLink: pageConfig.backLink,
-    dataSource: {
-      type: pageConfig.dataSource.type as 'api-get' | 'api-post' | 'sparql',
-      endpoint: pageConfig.dataSource.apiRoute || pageConfig.dataSource.endpoint, // Use API route, fallback to endpoint
-      method: pageConfig.dataSource.method || 'GET',
-      idParam: pageConfig.dataSource.idParam || 'id',
-      params: {
-        envVarName: pageConfig.dataSource.endpoint, // Store env var name for backend URL lookup
-      },
-      dataExtractor: pageConfig.dataSource.dataExtractor
-        ? (rawData: any) => {
-            const extractor = dataExtractors[pageConfig.dataSource.dataExtractor];
-            if (extractor) {
-              const resourceData = rawData?.judged_structured_information?.judge_resource?.["1"]?.[0];
-              if (!resourceData) return null;
-              return extractor(rawData);
-            }
-            return rawData;
-          }
-        : undefined,
-    },
+    dataSource,
     tabs: pageConfig.tabs.map((tab: any) => ({
       id: tab.id,
       label: tab.label,

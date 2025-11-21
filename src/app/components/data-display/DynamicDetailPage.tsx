@@ -46,6 +46,95 @@ function isUrl(str: string): boolean {
   }
 }
 
+// Render value similar to IndividualEntityPage's RenderValue
+function RenderValue({ value }: { value: any }) {
+  const isIri = (s: any) => typeof s === 'string' && /^https?:\/\//i.test(s);
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) return <em className="text-muted-foreground">none</em>;
+    if (value.every(v => typeof v !== "object" || v === null)) {
+      return <span>{value.join(", ")}</span>;
+    }
+    return (
+      <div className="space-y-2">
+        {value.map((row, i) => (
+          <div key={i} className="rounded-md border p-3 bg-muted/20">
+            {Object.entries(row).map(([k, v]) => (
+              <div key={k} className="text-sm">
+                <span className="font-medium">{k.replace(/_/g, ' ')}:</span>{" "}
+                <RenderValue value={v} />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (value && typeof value === "object") {
+    return (
+      <div className="ml-2 space-y-1">
+        {Object.entries(value).map(([k, v]) => (
+          <div key={k}>
+            <span className="font-medium">{k.replace(/_/g, ' ')}:</span>{" "}
+            <RenderValue value={v} />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (isIri(value)) {
+    return (
+      <a
+        className="underline text-primary break-all hover:text-primary/80"
+        href={value}
+        target="_blank"
+        rel="noreferrer"
+      >
+        {value}
+      </a>
+    );
+  }
+
+  return <span>{String(value)}</span>;
+}
+
+// Auto-generate fields from data object
+function generateFieldsFromData(data: any, excludeKeys: string[] = ['id', 'description']): any[] {
+  if (!data || typeof data !== 'object') return [];
+  
+  return Object.entries(data)
+    .filter(([key]) => !excludeKeys.includes(key))
+    .filter(([_, value]) => {
+      // Filter out null, undefined, empty strings, and empty arrays
+      if (value == null) return false;
+      if (typeof value === "string" && value.trim() === "") return false;
+      if (Array.isArray(value) && value.length === 0) return false;
+      if (Array.isArray(value) && value.length === 1 && value[0] && typeof value[0] === "object" && Object.keys(value[0]).length === 0) return false;
+      return true;
+    })
+    .map(([key, value]) => {
+      // Determine field type based on value
+      let fieldType: 'text' | 'object' | 'array' | 'url' = 'text';
+      if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
+        fieldType = 'object';
+      } else if (Array.isArray(value)) {
+        fieldType = 'array';
+      } else if (typeof value === 'object' && value !== null) {
+        fieldType = 'object';
+      } else if (typeof value === 'string' && isUrl(value)) {
+        fieldType = 'url';
+      }
+
+      return {
+        key,
+        label: key.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+        type: fieldType,
+      };
+    });
+}
+
 // Helper component to render ID as clickable link if it's a URL
 function RenderId({ id }: { id: string }) {
   if (isUrl(id)) {
@@ -205,82 +294,7 @@ function EnhancedDetailsSection({ item, config, data }: { item: any; config: Det
         }
 
       case 'object':
-        if (typeof value === 'object' && !Array.isArray(value)) {
-          return (
-            <div className="space-y-2">
-              {Object.entries(value).map(([k, v]: [string, any]) => {
-                // Format key to be more readable (e.g., "mapped_target_concept" -> "Mapped Target Concept")
-                const formattedKey = k
-                  .replace(/_/g, ' ')
-                  .replace(/\b\w/g, (l) => l.toUpperCase());
-                
-                // Check if value is a URL
-                const isUrlValue = typeof v === 'string' && (v.startsWith('http://') || v.startsWith('https://') || v.startsWith('http://purl.obolibrary.org/'));
-                
-                return (
-                  <div key={k} className="text-sm">
-                    <span className="font-medium text-muted-foreground">{formattedKey}:</span>{' '}
-                    {isUrlValue ? (
-                      <a
-                        href={v}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline flex items-center gap-1.5 inline-flex"
-                      >
-                        {v}
-                        <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" />
-                      </a>
-                    ) : (
-                      <span className="text-foreground">{String(v)}</span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          );
-        }
-        // For arrays of objects, render each object
-        if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
-          return (
-            <div className="space-y-3">
-              {value.map((obj: any, idx: number) => (
-                <div key={idx} className="border rounded p-3 bg-muted/20">
-                  {typeof obj === 'object' && !Array.isArray(obj) ? (
-                    <div className="space-y-2">
-                      {Object.entries(obj).map(([k, v]: [string, any]) => {
-                        const formattedKey = k
-                          .replace(/_/g, ' ')
-                          .replace(/\b\w/g, (l) => l.toUpperCase());
-                        const isUrlValue = typeof v === 'string' && (v.startsWith('http://') || v.startsWith('https://') || v.startsWith('http://purl.obolibrary.org/'));
-                        return (
-                          <div key={k} className="text-sm">
-                            <span className="font-medium text-muted-foreground">{formattedKey}:</span>{' '}
-                            {isUrlValue ? (
-                              <a
-                                href={v}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-primary hover:underline flex items-center gap-1.5 inline-flex"
-                              >
-                                {v}
-                                <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" />
-                              </a>
-                            ) : (
-                              <span className="text-foreground">{String(v)}</span>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <span className="text-sm text-foreground">{String(obj)}</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          );
-        }
-        return <div className="text-sm text-foreground">{JSON.stringify(value)}</div>;
+        return <RenderValue value={value} />;
 
       default:
         const textValue = String(value);
@@ -385,7 +399,14 @@ function EnhancedDetailsSection({ item, config, data }: { item: any; config: Det
             ) : (
               <div className="space-y-6">
                 {activeTabConfig.sections?.map((section, sectionIdx) => {
-                  const sectionFields = section.fields
+                  // If no fields defined, auto-generate from data
+                  let fieldsToRender = section.fields;
+                  if (!fieldsToRender || fieldsToRender.length === 0) {
+                    // Auto-generate fields from all data, excluding common metadata
+                    fieldsToRender = generateFieldsFromData(data, ['id', 'description', 'contributed_by', 'created_at', 'updated_at', 'processedAt', 'history', 'version']);
+                  }
+
+                  const sectionFields = fieldsToRender
                     .map(field => ({
                       field,
                       content: renderField(field, item)
@@ -501,7 +522,137 @@ export default function DynamicDetailPage({ config }: DynamicDetailPageProps) {
         const { dataSource } = config;
         let result: any;
 
-        if (dataSource.type === 'api-get') {
+        if (dataSource.type === 'sparql' && dataSource.cardConfigFile) {
+          // Handle SPARQL-based pages with card config files
+          const { postData } = await import('@/src/utils/api/api-client');
+          const { normalizeSparqlBindings, processSparqlQueryResult } = await import('@/src/utils/data/sparql-bindings');
+          
+          // Load the card YAML file
+          const cardConfigModule = await import(`@/src/config/yaml/${dataSource.cardConfigFile}`);
+          const cardConfig = cardConfigModule.default;
+          
+          if (!cardConfig || !cardConfig.boxes) {
+            throw new Error(`Invalid card config file: ${dataSource.cardConfigFile}`);
+          }
+
+          // Helper function to replace entity ID in SPARQL query
+          const replaceEntityIdInQuery = (query: string, rawId: string): string => {
+            const decodedId = decodeURIComponent(rawId);
+            let q = query;
+            if (q.includes('VALUES') && q.includes('<{0}>')) {
+              const uri = decodedId.startsWith('<') && decodedId.endsWith('>') ? decodedId : `<${decodedId}>`;
+              q = q.replace(/<\{0\}>/g, uri);
+              return q;
+            }
+            return q.replace(/\{0\}/g, decodedId);
+          };
+
+          // Helper function to fetch SPARQL bindings
+          const fetchBindings = async (sparqlQuery: string) => {
+            try {
+              const result = await postData<{ success: boolean; data: any[] }>(
+                dataSource.endpoint || '/api/entity-query',
+                { sparql_query: sparqlQuery },
+                { useAuth: false }
+              );
+              
+              if (result.success && Array.isArray(result.data)) {
+                return result.data;
+              }
+              return [];
+            } catch (err) {
+              console.error("Error fetching SPARQL bindings:", err);
+              return [];
+            }
+          };
+
+          // Process all boxes and collect data (similar to IndividualEntityPage structure)
+          const transformedData: Record<string, any> = {
+            id: decodedId,
+            description: cardConfig.description || '',
+          };
+
+          for (const boxItem of cardConfig.boxes || []) {
+            // Handle nested box structure (box.box) or direct box structure
+            const box = boxItem.box || boxItem;
+            const slugKey = box.slug || 'summarybox';
+            const nextBucket: Record<string, any> = {};
+            
+            if (box.sparql_query) {
+              const mainQuery = replaceEntityIdInQuery(box.sparql_query, id);
+              const mainBindings = await fetchBindings(mainQuery);
+              const formatted = await processSparqlQueryResult(mainBindings);
+              Object.assign(nextBucket, formatted);
+            }
+
+            // Process additional info if present
+            const add = box.box_additional_info;
+            if (add) {
+              const resolveRows = async (query: string) => {
+                const q = replaceEntityIdInQuery(query, id);
+                const bindings = await fetchBindings(q);
+                return normalizeSparqlBindings(bindings, { shape: 'rows' }) as Record<string, string>[];
+              };
+
+              if (add.sparql_query && add.is_iterable) {
+                const sharedRows = await resolveRows(add.sparql_query);
+                if (Array.isArray(add.properties) && add.properties.length === 1 && add.properties[0].key) {
+                  transformedData[add.properties[0].key] = sharedRows;
+                } else if (add.header) {
+                  const keyFromHeader = add.header.toLowerCase().replace(/\s+/g, "_");
+                  transformedData[keyFromHeader] = sharedRows;
+                }
+              }
+
+              if (Array.isArray(add.properties)) {
+                for (const prop of add.properties) {
+                  // Handle YAML folded scalar syntax (key: >) - the key will be the actual string value
+                  const propKey = typeof prop.key === 'string' ? prop.key.trim() : String(prop.key || '');
+                  
+                  let rows: Record<string, string>[] | null = null;
+
+                  if (prop.sqrl_query || prop.sparql_query) {
+                    rows = await resolveRows(prop.sqrl_query || prop.sparql_query || '');
+                  } else if (sharedRows) {
+                    rows = sharedRows;
+                  }
+
+                  if (!rows || rows.length === 0) continue;
+
+                  if (add.is_iterable) {
+                    // For iterable properties, store as array of row objects
+                    nextBucket[propKey] = rows;
+                  } else {
+                    // For non-iterable properties, collapse to single object or value
+                    if (rows.length === 1) {
+                      const singleRow = rows[0];
+                      const keys = Object.keys(singleRow);
+                      // If only one key, use its value directly; otherwise use the whole object
+                      nextBucket[propKey] = keys.length === 1 ? singleRow[keys[0]] : singleRow;
+                    } else {
+                      // Multiple rows - merge into single object (flatten)
+                      const merged: Record<string, any> = {};
+                      rows.forEach(row => {
+                        Object.assign(merged, row);
+                      });
+                      nextBucket[propKey] = merged;
+                    }
+                  }
+                }
+              }
+            }
+
+            // Merge bucket data into transformedData (flatten structure for easier access)
+            Object.assign(transformedData, nextBucket);
+          }
+
+          // Apply data extractor if provided
+          const extractedData = dataSource.dataExtractor 
+            ? dataSource.dataExtractor(transformedData)
+            : transformedData;
+
+          setData(extractedData);
+        } else if (dataSource.type === 'api-get') {
           // Get the API route (e.g., "/api/ner/withouttoken")
           const apiRoute = dataSource.endpoint.startsWith('/api/') 
             ? dataSource.endpoint 
@@ -640,9 +791,12 @@ export default function DynamicDetailPage({ config }: DynamicDetailPageProps) {
   }
 
   // Get title and description from data
-  const titleField = config.tabs[0]?.sections[0]?.fields[0]?.key || 'name';
+  const firstTab = config.tabs[0];
+  const firstSection = firstTab?.sections?.[0];
+  const firstField = firstSection?.fields?.[0];
+  const titleField = firstField?.key || 'name';
   const title = getValue(getNestedValue(data, titleField));
-  const descriptionField = config.tabs[0]?.sections[0]?.fields.find(f => f.key === 'description')?.key;
+  const descriptionField = firstSection?.fields?.find(f => f.key === 'description')?.key;
   const description = descriptionField ? getValue(getNestedValue(data, descriptionField)) : title;
 
   return (
