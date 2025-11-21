@@ -58,7 +58,7 @@ const KnowledgeBase = (
 
             // Call API route with POST to send query (server-side execution avoids CORS)
             const { postData } = await import('@/src/utils/api/api-client');
-            const result = await postData<{ success: boolean; data: any }>('/api/knowledge-base', {
+            const result = await postData<{ success: boolean; data: any; headers?: any[]; error?: string }>('/api/knowledge-base', {
                 slug: 'default',
                 sparqlQuery: query_to_execute
             }, {
@@ -75,7 +75,7 @@ const KnowledgeBase = (
 
             if (result.success) {
                 const dataArray = Array.isArray(result.data) ? result.data : [];
-                console.info(`KBpage: Setting data with ${dataArray.length} items, ${result.headers.length} headers`);
+                console.info(`KBpage: Setting data with ${dataArray.length} items, ${result.headers?.length || 0} headers`);
                 setHeaders(Array.isArray(result.headers) ? result.headers : []);
                 setData(dataArray);
             } else {
