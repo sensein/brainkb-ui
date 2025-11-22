@@ -594,8 +594,10 @@ export default function DynamicDetailPage({ config }: DynamicDetailPageProps) {
                 return normalizeSparqlBindings(bindings, { shape: 'rows' }) as Record<string, string>[];
               };
 
+              let sharedRows: Record<string, string>[] | null = null;
+              
               if (add.sparql_query && add.is_iterable) {
-                const sharedRows = await resolveRows(add.sparql_query);
+                sharedRows = await resolveRows(add.sparql_query);
                 if (Array.isArray(add.properties) && add.properties.length === 1 && add.properties[0].key) {
                   transformedData[add.properties[0].key] = sharedRows;
                 } else if (add.header) {

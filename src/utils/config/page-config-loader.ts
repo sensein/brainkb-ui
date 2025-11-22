@@ -1,7 +1,6 @@
 /**
  * Utility to load and parse page configurations from YAML
  */
-import pageConfigsYaml from '@/src/config/yaml/page-configs.yaml';
 import { pageMapperConfig } from '@/src/app/components/pageMapperConfig';
 import { ListPageConfig, DetailPageConfig } from '@/src/types/page-config';
 import { Network, Database, BookOpen, Activity, FileText, MessageSquare, MapPin, User, Calendar, Tag as TagIcon, Package, Link as LinkIcon } from "lucide-react";
@@ -74,18 +73,8 @@ export async function getListPageConfig(route: string, slug?: string): Promise<L
     }
   }
   
-  // Fallback to page-configs.yaml
-  let pageConfig = slug 
-    ? pageConfigsYaml.pages?.find((p: any) => p.type === 'list' && p.slug === slug)
-    : null;
-  
-  if (!pageConfig) {
-    pageConfig = pageConfigsYaml.pages?.find((p: any) => p.type === 'list' && p.route === route);
-  }
-  
-  if (!pageConfig) return null;
-  
-  return buildListPageConfig(pageConfig);
+  // No fallback - all pages should be in page-mapper.yaml
+  return null;
 }
 
 function buildListPageConfig(pageConfig: any): ListPageConfig {
@@ -96,7 +85,7 @@ function buildListPageConfig(pageConfig: any): ListPageConfig {
     route: pageConfig.route,
     slug: pageConfig.slug,
     dataSource: {
-      type: pageConfig.dataSource.type as 'api-get' | 'api-post' | 'sparql',
+      type: pageConfig.dataSource.type as 'api-get' | 'sparql',
       endpoint: pageConfig.dataSource.apiRoute || pageConfig.dataSource.endpoint, // Use API route, fallback to endpoint
       method: pageConfig.dataSource.method || 'GET',
       params: {
@@ -168,22 +157,12 @@ export async function getDetailPageConfig(route: string, slug?: string): Promise
     }
   }
   
-  // Fallback to page-configs.yaml
-  let pageConfig = slug 
-    ? pageConfigsYaml.pages?.find((p: any) => p.type === 'detail' && p.slug === slug)
-    : null;
-  
-  if (!pageConfig) {
-    pageConfig = pageConfigsYaml.pages?.find((p: any) => p.type === 'detail' && p.route === route);
-  }
-  
-  if (!pageConfig) return null;
-  
-  return buildDetailPageConfig(pageConfig);
+  // No fallback - all pages should be in page-mapper.yaml
+  return null;
 }
 
 function buildDetailPageConfig(pageConfig: any): DetailPageConfig {
-  const dataSourceType = pageConfig.dataSource.type as 'api-get' | 'api-post' | 'sparql';
+  const dataSourceType = pageConfig.dataSource.type as 'api-get' | 'sparql';
   
   // Build dataSource config based on type
   const dataSource: any = {

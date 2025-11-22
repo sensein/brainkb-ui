@@ -2,7 +2,7 @@
  * Configuration types for dynamic list and detail pages
  */
 
-export type DataSourceType = 'api-get' | 'api-post' | 'sparql';
+export type DataSourceType = 'api-get' | 'sparql';
 
 export interface ColumnConfig {
   key: string;

@@ -79,38 +79,6 @@ export default function DynamicListPage({ config }: DynamicListPageProps) {
         } else {
           throw new Error(result.error || 'Invalid response format: data is not an array');
         }
-      } else if (dataSource.type === 'api-post') {
-        const { postData } = await import('@/src/utils/api/api-client');
-        
-        result = await postData<{ success: boolean; data: any; headers?: any[]; error?: string }>(
-          dataSource.endpoint.startsWith('/api/') 
-            ? dataSource.endpoint 
-            : `/api/${dataSource.endpoint}`,
-          {
-            ...dataSource.params,
-            search: search.trim() || undefined,
-          },
-          {
-            useAuth: false,
-          }
-        );
-
-        if (result.success) {
-          const dataArray = Array.isArray(result.data) ? result.data : [];
-          setData(dataArray);
-          
-          // Extract headers if available (for SPARQL results)
-          if (dataSource.headersExtractor) {
-            setHeaders(dataSource.headersExtractor(result));
-          } else if (result.headers) {
-            setHeaders(Array.isArray(result.headers) ? result.headers : []);
-          }
-          
-          setTotalCount(dataArray.length);
-          setHasMore(false);
-        } else {
-          throw new Error(result.error || "Failed to fetch data");
-        }
       } else if (dataSource.type === 'sparql') {
         // SPARQL queries are handled via POST to knowledge-base API
         const sparqlQuery = dataSource.params?.sparqlQuery;

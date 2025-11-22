@@ -89,7 +89,7 @@ export default function NamedEntityRecognition() {
         setApiKey,
         validateApiKey,
         handleClear: clearApiKey
-    } = useApiKeyValidator('ner_api_key'); // Use sessionStorage key for NER
+    } = useApiKeyValidator({ storageKey: 'ner_api_key' }); // Use sessionStorage key for NER
 
     // Check if user is logged in
     useEffect(() => {
