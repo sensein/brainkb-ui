@@ -155,9 +155,77 @@ export async function getDetailPageConfig(route: string, slug?: string): Promise
         }
       }
     }
+    
+    // Fallback: Check for SPARQL-based card YAML files (for entities not in mapper)
+    // This handles legacy SPARQL entities that might not have detail YAML configs yet
+    const cardSlugMap: Record<string, string> = {
+      'celltaxon': 'celltaxon_card.yaml',
+      'barcodedcellsample': 'barcodedcellsample_card.yaml',
+      'libraryaliquot': 'LA_card.yaml',
+    };
+    
+    const cardFileName = cardSlugMap[slug];
+    if (cardFileName) {
+      try {
+        // Try to load the card YAML to verify it exists
+        const cardModule = await import(`@/src/config/yaml/${cardFileName}`);
+        const cardConfig = cardModule.default;
+        
+        if (cardConfig) {
+          // Create a default detail config for this SPARQL-based entity
+          const defaultConfig: DetailPageConfig = {
+            title: cardConfig.name || slug.charAt(0).toUpperCase() + slug.slice(1),
+            route: `/knowledge-base/${slug}`,
+            slug: slug,
+            backLink: `/knowledge-base/${slug}`,
+            dataSource: {
+              type: 'sparql',
+              endpoint: '/api/entity-query',
+              idParam: 'id',
+              cardConfigFile: cardFileName,
+            },
+            tabs: [
+              {
+                id: 'summary',
+                label: 'Summary',
+                sections: [
+                  {
+                    title: 'Summary',
+                    layout: 'default',
+                    // Fields will be auto-generated from data
+                  }
+                ]
+              },
+              {
+                id: 'related-info',
+                label: 'Related Info',
+                type: 'related'
+              },
+              {
+                id: 'contributors',
+                label: 'Contributors',
+                type: 'provenance'
+              },
+              {
+                id: 'revision-history',
+                label: 'Revision History',
+                type: 'provenance'
+              }
+            ],
+            showProvenance: false,
+            showRelated: true,
+          };
+          
+          return defaultConfig;
+        }
+      } catch (err) {
+        // Card file doesn't exist, continue to return null
+        console.error(`Card file ${cardFileName} not found for slug ${slug}:`, err);
+      }
+    }
   }
   
-  // No fallback - all pages should be in page-mapper.yaml
+  // No config found
   return null;
 }
 

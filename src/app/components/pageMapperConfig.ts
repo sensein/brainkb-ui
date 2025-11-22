@@ -1,7 +1,7 @@
 import rawPageMapperConfig from "@/src/config/yaml/page-mapper.yaml";
 
 export type PageMapperEntry = {
-  type: "entity-detail" | "entity-list" | "list" | "detail";
+  type: "list" | "detail";
   slug: string;
   filename: string;
 };

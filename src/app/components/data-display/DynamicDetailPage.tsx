@@ -5,7 +5,6 @@ import { Loader2, AlertCircle, ArrowLeft, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import {
   Card,
-  CardHeader,
   CardContent,
 } from "@/src/app/components/ui/card";
 import { Button } from "@/src/app/components/ui/button";
@@ -46,9 +45,10 @@ function isUrl(str: string): boolean {
   }
 }
 
-// Render value similar to IndividualEntityPage's RenderValue
-function RenderValue({ value }: { value: any }) {
+// Render value with URN link handling for SPARQL-based entities
+function RenderValue({ value, currentId, currentSlug }: { value: any; currentId?: string; currentSlug?: string }) {
   const isIri = (s: any) => typeof s === 'string' && /^https?:\/\//i.test(s);
+  const isUrn = (s: any) => typeof s === 'string' && (s.startsWith('urn:bkbit:') || s.startsWith('urn:'));
 
   if (Array.isArray(value)) {
     if (value.length === 0) return <em className="text-muted-foreground">none</em>;
@@ -62,7 +62,7 @@ function RenderValue({ value }: { value: any }) {
             {Object.entries(row).map(([k, v]) => (
               <div key={k} className="text-sm">
                 <span className="font-medium">{k.replace(/_/g, ' ')}:</span>{" "}
-                <RenderValue value={v} />
+                <RenderValue value={v} currentId={currentId} currentSlug={currentSlug} />
               </div>
             ))}
           </div>
@@ -77,11 +77,41 @@ function RenderValue({ value }: { value: any }) {
         {Object.entries(value).map(([k, v]) => (
           <div key={k}>
             <span className="font-medium">{k.replace(/_/g, ' ')}:</span>{" "}
-            <RenderValue value={v} />
+            <RenderValue value={v} currentId={currentId} currentSlug={currentSlug} />
           </div>
         ))}
       </div>
     );
+  }
+
+  // Check if it's a URN that should be clickable (parent node, etc.)
+  if (isUrn(value)) {
+    const valueStr = String(value);
+    const decodedId = currentId ? decodeURIComponent(currentId) : '';
+    const isEntityLink = valueStr !== decodedId;
+    
+    if (isEntityLink) {
+      // Determine entity type from value or current slug
+      let entitySlug = currentSlug || 'celltaxon';
+      if (valueStr.startsWith('urn:bkbit:')) {
+        entitySlug = 'celltaxon';
+      } else if (valueStr.includes('http://example.org/NIMP/')) {
+        if (valueStr.includes('BC-')) {
+          entitySlug = 'barcodedcellsample';
+        } else if (valueStr.includes('LI-')) {
+          entitySlug = 'libraryaliquot';
+        }
+      }
+      
+      return (
+        <Link
+          href={`/knowledge-base/${entitySlug}/${encodeURIComponent(valueStr)}`}
+          className="underline text-primary break-all hover:text-primary/80"
+        >
+          {valueStr}
+        </Link>
+      );
+    }
   }
 
   if (isIri(value)) {
@@ -104,6 +134,8 @@ function RenderValue({ value }: { value: any }) {
 function generateFieldsFromData(data: any, excludeKeys: string[] = ['id', 'description']): any[] {
   if (!data || typeof data !== 'object') return [];
   
+  const isUrn = (s: string) => s.startsWith('urn:bkbit:') || s.startsWith('urn:');
+  
   return Object.entries(data)
     .filter(([key]) => !excludeKeys.includes(key))
     .filter(([_, value]) => {
@@ -123,8 +155,13 @@ function generateFieldsFromData(data: any, excludeKeys: string[] = ['id', 'descr
         fieldType = 'array';
       } else if (typeof value === 'object' && value !== null) {
         fieldType = 'object';
-      } else if (typeof value === 'string' && isUrl(value)) {
-        fieldType = 'url';
+      } else if (typeof value === 'string') {
+        if (isUrl(value)) {
+          fieldType = 'url';
+        } else if (isUrn(value)) {
+          // Keep as 'text' type - URN detection will happen in renderField default case
+          fieldType = 'text';
+        }
       }
 
       return {
@@ -135,27 +172,8 @@ function generateFieldsFromData(data: any, excludeKeys: string[] = ['id', 'descr
     });
 }
 
-// Helper component to render ID as clickable link if it's a URL
-function RenderId({ id }: { id: string }) {
-  if (isUrl(id)) {
-    return (
-      <a
-        href={id}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-xs text-primary hover:underline break-all flex items-center gap-1 mt-1"
-      >
-        {id}
-        <ExternalLink className="h-3 w-3 flex-shrink-0" />
-      </a>
-    );
-  }
-  return (
-    <div className="text-xs text-muted-foreground mt-1 break-all">{id}</div>
-  );
-}
 
-function EnhancedDetailsSection({ item, config, data }: { item: any; config: DetailPageConfig; data: any }) {
+function EnhancedDetailsSection({ item, config, data, currentId, currentSlug }: { item: any; config: DetailPageConfig; data: any; currentId?: string; currentSlug?: string }) {
   const [activeTab, setActiveTab] = useState<string>(config.tabs[0]?.id || "summary");
 
   const renderCard = (title: string, icon: any, content: React.ReactNode, layout: string = 'default') => {
@@ -294,10 +312,42 @@ function EnhancedDetailsSection({ item, config, data }: { item: any; config: Det
         }
 
       case 'object':
-        return <RenderValue value={value} />;
+        return <RenderValue value={value} currentId={currentId} currentSlug={currentSlug} />;
 
       default:
         const textValue = String(value);
+        
+        // Check if it's a URN that should be clickable (parent node, etc.)
+        const isUrn = (s: string) => s.startsWith('urn:bkbit:') || s.startsWith('urn:');
+        if (isUrn(textValue)) {
+          const decodedId = currentId ? decodeURIComponent(currentId) : '';
+          const isEntityLink = textValue !== decodedId;
+          
+          if (isEntityLink) {
+            // Determine entity type from value or current slug
+            let entitySlug = currentSlug || 'celltaxon';
+            if (textValue.startsWith('urn:bkbit:')) {
+              entitySlug = 'celltaxon';
+            } else if (textValue.includes('http://example.org/NIMP/')) {
+              if (textValue.includes('BC-')) {
+                entitySlug = 'barcodedcellsample';
+              } else if (textValue.includes('LI-')) {
+                entitySlug = 'libraryaliquot';
+              }
+            }
+            
+            return (
+              <Link
+                href={`/knowledge-base/${entitySlug}/${encodeURIComponent(textValue)}`}
+                className="text-sm text-primary hover:underline flex items-center gap-1.5 break-all"
+              >
+                {textValue}
+                <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" />
+              </Link>
+            );
+          }
+        }
+        
         // Check if it's a URL
         if (isUrl(textValue)) {
           return (
@@ -566,7 +616,7 @@ export default function DynamicDetailPage({ config }: DynamicDetailPageProps) {
             }
           };
 
-          // Process all boxes and collect data (similar to IndividualEntityPage structure)
+          // Process all boxes and collect data from SPARQL queries
           const transformedData: Record<string, any> = {
             id: decodedId,
             description: cardConfig.description || '',
@@ -703,46 +753,8 @@ export default function DynamicDetailPage({ config }: DynamicDetailPageProps) {
             throw new Error(result.error || 'Invalid response format');
           }
         } else {
-          // For other types, use direct fetch
-          const url = new URL(dataSource.endpoint.startsWith('/api/') 
-            ? dataSource.endpoint 
-            : `/api/${dataSource.endpoint}`, 
-            typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'
-          );
-          url.searchParams.set(dataSource.idParam || 'id', decodedId);
-
-          const response = await fetch(url.toString(), {
-            method: dataSource.method || 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            }
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-            throw new Error(errorData.error || `API returned ${response.status}`);
-          }
-
-          result = await response.json();
-
-          if (result.success) {
-            let rawData;
-            if (result.data && !Array.isArray(result.data)) {
-              rawData = result.data;
-            } else if (Array.isArray(result.data) && result.data.length > 0) {
-              rawData = result.data[0];
-            } else {
-              throw new Error('Item not found');
-            }
-
-            const extractedData = dataSource.dataExtractor 
-              ? dataSource.dataExtractor(rawData)
-              : rawData;
-
-            setData(extractedData);
-          } else {
-            throw new Error(result.error || 'Invalid response format');
-          }
+          // Unsupported data source type
+          throw new Error(`Unsupported data source type: ${dataSource.type}. Only 'api-get' and 'sparql' are supported.`);
         }
       } catch (e) {
         const err = e as Error;
@@ -831,7 +843,13 @@ export default function DynamicDetailPage({ config }: DynamicDetailPageProps) {
         <div className="space-y-6">
           {/* Tabbed Details Section - Full Width */}
           <div className="min-w-0">
-            <EnhancedDetailsSection item={data} config={config} data={data} />
+            <EnhancedDetailsSection 
+              item={data} 
+              config={config} 
+              data={data} 
+              currentId={Array.isArray(params.id) ? params.id[0] : params.id}
+              currentSlug={config.slug}
+            />
           </div>
 
           {/* Footer */}
