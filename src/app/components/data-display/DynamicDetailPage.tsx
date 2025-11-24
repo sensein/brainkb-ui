@@ -890,7 +890,9 @@ export default function DynamicDetailPage({ config }: DynamicDetailPageProps) {
                 return String(binding);
               };
               
+              // Dynamically detect query result structure
               // Check if bindings have subject/predicate/object structure (SPARQL triple pattern)
+              // This is a common pattern for knowledge graph queries
               const hasSubjectPredicateObject = mainBindings.length > 0 && 
                 (mainBindings[0].subject || mainBindings[0].predicate || mainBindings[0].object);
               
@@ -1005,9 +1007,40 @@ export default function DynamicDetailPage({ config }: DynamicDetailPageProps) {
                 if (mainCategoryType && !predicateMap['category_type']) {
                   nextBucket.category_type = mainCategoryType;
                 }
+              } else if (mainBindings.length > 0) {
+                // Handle any SPARQL query result structure dynamically
+                // Extract all fields from bindings, regardless of their names (?entity, ?label, ?x, ?y, etc.)
+                const mergedData: Record<string, any> = {};
                 
+                mainBindings.forEach((binding: any) => {
+                  if (!binding || typeof binding !== 'object') return;
+                  
+                  Object.keys(binding).forEach(key => {
+                    const value = extractBindingValue(binding[key]);
+                    if (value != null && value !== '') {
+                      // If field already exists and is different, convert to array
+                      if (mergedData[key]) {
+                        if (Array.isArray(mergedData[key])) {
+                          // Add to array if not already present
+                          const valueStr = String(value);
+                          if (!mergedData[key].some((v: any) => String(v) === valueStr)) {
+                            mergedData[key].push(value);
+                          }
+                        } else if (String(mergedData[key]) !== String(value)) {
+                          // Convert to array if values differ
+                          mergedData[key] = [mergedData[key], value];
+                        }
+                      } else {
+                        // First occurrence of this field
+                        mergedData[key] = value;
+                      }
+                    }
+                  });
+                });
+                
+                Object.assign(nextBucket, mergedData);
               } else {
-                // Use standard processing for other SPARQL result formats
+                // No bindings returned - use standard processing (might return empty object)
                 const formatted = await processSparqlQueryResult(mainBindings);
                 Object.assign(nextBucket, formatted);
               }

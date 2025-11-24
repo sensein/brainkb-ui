@@ -12,10 +12,10 @@ pages:
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-      SELECT DISTINCT ?id ?label
+      SELECT DISTINCT ?entity ?label
       WHERE {
       GRAPH <https://www.portal.brain-bican.org/grapidreleasev01> {
-          ?id biolink:category "bican:BarcodedCellSample"^^<http://www.w3.org/2001/XMLSchema#anyURI>;
+          ?entity biolink:category "bican:BarcodedCellSample"^^<http://www.w3.org/2001/XMLSchema#anyURI>;
               rdfs:label ?label;
         }
       }
@@ -31,10 +31,10 @@ pages:
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-      SELECT DISTINCT ?id ?label
+      SELECT DISTINCT ?entity ?label
       WHERE {
       GRAPH <https://www.portal.brain-bican.org/grapidreleasev01> {
-          ?id biolink:category "bican:BarcodedCellSample"^^<http://www.w3.org/2001/XMLSchema#anyURI>;
+          ?entity biolink:category "bican:BarcodedCellSample"^^<http://www.w3.org/2001/XMLSchema#anyURI>;
               rdfs:label ?label;
         }
       } 
@@ -51,10 +51,10 @@ pages:
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-      SELECT DISTINCT ?id ?label
+      SELECT DISTINCT ?entity ?label
       WHERE {
       GRAPH <https://www.portal.brain-bican.org/grapidreleasev01> {
-          ?id biolink:category "bican:Library"^^<http://www.w3.org/2001/XMLSchema#anyURI>;
+          ?entity biolink:category "bican:Library"^^<http://www.w3.org/2001/XMLSchema#anyURI>;
               rdfs:label ?label;
         }
       }

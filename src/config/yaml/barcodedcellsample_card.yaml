@@ -35,4 +35,49 @@ boxes:
                       }
                   }
               }
-    description: Barcoded cell sample.
+    box_additional_info:
+      is_iterable: true
+      properties:
+        - key: Without Recursion
+          sparql_query: |-
+            PREFIX NIMP:   <http://example.org/NIMP/>
+            PREFIX prov:   <http://www.w3.org/ns/prov#>
+            PREFIX biolink: <https://w3id.org/biolink/vocab/>
+            
+            SELECT DISTINCT ?subject ?predicate ?object ?category_type
+            WHERE {
+              GRAPH <https://www.brainkb.org/version01> {
+            
+                # focus_id is either the root itself or any *direct* wasDerivedFrom target
+                #{
+                #  VALUES ?focus_id { <{0}> }
+                #}
+                #UNION
+                {
+                  <{0}> prov:wasDerivedFrom ?focus_id .
+                }
+            
+                # Neighborhood of each focus_id
+                {
+                  # ... as object
+                  ?subject ?predicate ?focus_id .
+                }
+                UNION
+                {
+                  # ... as subject (but do NOT follow its own wasDerivedFrom further)
+                  ?focus_id ?predicate ?object .
+                  FILTER (?predicate != prov:wasDerivedFrom)
+                }
+                UNION
+                {
+                  # ... as predicate
+                  ?subject ?focus_id ?object .
+                }
+            
+                # Category of the focus node itself
+                OPTIONAL {
+                  ?focus_id biolink:category ?category_type .
+                }
+              }
+            }
+
