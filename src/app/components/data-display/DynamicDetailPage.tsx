@@ -28,6 +28,11 @@ function normalizeToArray(value: any): any[] {
 
 // Helper function to get nested value from object
 function getNestedValue(obj: any, path: string | string[]): any {
+  // If path is a URI (starts with http:// or https://), access directly
+  if (typeof path === 'string' && (path.startsWith('http://') || path.startsWith('https://'))) {
+    return obj?.[path];
+  }
+  
   if (typeof path === 'string') {
     path = path.split('.');
   }
@@ -79,9 +84,56 @@ function RenderValue({ value, currentId, currentSlug }: { value: any; currentId?
 
   if (Array.isArray(value)) {
     if (value.length === 0) return <em className="text-muted-foreground">none</em>;
+    // If array contains simple values (strings, numbers), render with entity link detection
     if (value.every(v => typeof v !== "object" || v === null)) {
-      return <span>{value.join(", ")}</span>;
+      return (
+        <div className="space-y-1">
+          {value.map((v, idx) => {
+            const valueStr = String(v);
+            const decodedId = currentId ? decodeURIComponent(currentId) : '';
+            
+            // Check if it's an entity identifier
+            const entityInfo = isEntityIdentifier(valueStr);
+            if (entityInfo.isEntity && valueStr !== decodedId) {
+              const entitySlug = entityInfo.entitySlug || currentSlug || 'celltaxon';
+              const friendlyText = getFriendlyTextFromUrl(valueStr);
+              return (
+                <div key={idx}>
+                  <Link
+                    href={`/knowledge-base/${entitySlug}/${encodeURIComponent(valueStr)}`}
+                    className="underline text-primary hover:text-primary/80"
+                    title={valueStr}
+                  >
+                    {friendlyText}
+                  </Link>
+                </div>
+              );
+            }
+            
+            // Check if it's a regular URL
+            if (isIri(valueStr)) {
+              const friendlyText = getFriendlyTextFromUrl(valueStr);
+              return (
+                <div key={idx}>
+                  <a
+                    className="underline text-primary hover:text-primary/80"
+                    href={valueStr}
+                    target="_blank"
+                    rel="noreferrer"
+                    title={valueStr}
+                  >
+                    {friendlyText}
+                  </a>
+                </div>
+              );
+            }
+            
+            return <div key={idx}>{valueStr}</div>;
+          })}
+        </div>
+      );
     }
+    // If array contains objects, render each as a structured block
     return (
       <div className="space-y-2">
         {value.map((row, i) => (
@@ -119,26 +171,30 @@ function RenderValue({ value, currentId, currentSlug }: { value: any; currentId?
   const entityInfo = isEntityIdentifier(valueStr);
   if (entityInfo.isEntity && valueStr !== decodedId) {
     const entitySlug = entityInfo.entitySlug || currentSlug || 'celltaxon';
+    const friendlyText = getFriendlyTextFromUrl(valueStr);
     return (
       <Link
         href={`/knowledge-base/${entitySlug}/${encodeURIComponent(valueStr)}`}
-        className="underline text-primary break-all hover:text-primary/80"
+        className="underline text-primary hover:text-primary/80"
+        title={valueStr}
       >
-        {valueStr}
+        {friendlyText}
       </Link>
     );
   }
 
   // Check if it's a regular HTTP/HTTPS URL (external link)
   if (isIri(value)) {
+    const friendlyText = getFriendlyTextFromUrl(valueStr);
     return (
       <a
-        className="underline text-primary break-all hover:text-primary/80"
+        className="underline text-primary hover:text-primary/80"
         href={value}
         target="_blank"
         rel="noreferrer"
+        title={valueStr}
       >
-        {value}
+        {friendlyText}
       </a>
     );
   }
@@ -146,13 +202,113 @@ function RenderValue({ value, currentId, currentSlug }: { value: any; currentId?
   return <span>{String(value)}</span>;
 }
 
+// Helper function to convert predicate URI to human-friendly label
+function humanizePredicate(uri: string): string {
+  if (!uri || typeof uri !== 'string') return uri;
+  
+  // Common predicate mappings
+  const predicateMap: Record<string, string> = {
+    'http://www.w3.org/ns/prov#wasDerivedFrom': 'Was Derived From',
+    'http://www.w3.org/2000/01/rdf-schema#label': 'Label',
+    'https://w3id.org/biolink/vocab/category': 'Category',
+    'https://identifiers.org/brain-bican/vocab/number_of_expected_cells': 'Number of Expected Cells',
+  };
+  
+  if (predicateMap[uri]) {
+    return predicateMap[uri];
+  }
+  
+  // Extract from URI patterns
+  if (uri.includes('#')) {
+    const fragment = uri.split('#').pop() || '';
+    // Convert camelCase to Title Case
+    return fragment
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase())
+      .trim();
+  }
+  
+  if (uri.includes('/')) {
+    const lastPart = uri.split('/').pop() || '';
+    // Remove common prefixes
+    const cleaned = lastPart
+      .replace(/^bican:/, '')
+      .replace(/^prov:/, '')
+      .replace(/^rdfs:/, '');
+    
+    // Convert snake_case or camelCase to Title Case
+    return cleaned
+      .replace(/_/g, ' ')
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase())
+      .trim();
+  }
+  
+  // Fallback: just capitalize first letter
+  return uri.replace(/^./, str => str.toUpperCase());
+}
+
+// Helper function to extract human-friendly display text from a URL/URI
+function getFriendlyTextFromUrl(url: string): string {
+  if (!url || typeof url !== 'string') return url;
+  
+  // For NIMP URIs (entity identifiers): extract the ID part
+  // e.g., http://example.org/NIMP/EC-TSKONG488712 -> EC-TSKONG488712
+  if (url.includes('http://example.org/NIMP/')) {
+    const idPart = url.split('http://example.org/NIMP/').pop() || '';
+    return idPart || url;
+  }
+  
+  // For URNs: show the full URN but shortened if too long
+  if (url.startsWith('urn:')) {
+    if (url.length > 50) {
+      return url.substring(0, 47) + '...';
+    }
+    return url;
+  }
+  
+  // For URLs with fragments (e.g., http://www.w3.org/ns/prov#wasDerivedFrom)
+  if (url.includes('#')) {
+    const fragment = url.split('#').pop() || '';
+    // Convert camelCase to readable text
+    return fragment
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase())
+      .trim() || url;
+  }
+  
+  // For URLs ending with identifiers (e.g., .../vocab/BarcodedCellSample)
+  if (url.includes('/')) {
+    const lastPart = url.split('/').pop() || '';
+    // If it's a meaningful identifier (not empty, not just a path segment)
+    if (lastPart && lastPart.length > 1 && !lastPart.match(/^\d+$/)) {
+      // Convert snake_case or camelCase to readable text
+      return lastPart
+        .replace(/_/g, ' ')
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/^./, str => str.toUpperCase())
+        .trim() || url;
+    }
+  }
+  
+  // Fallback: return as is (but could be shortened if too long)
+  if (url.length > 60) {
+    return url.substring(0, 57) + '...';
+  }
+  return url;
+}
+
 // Auto-generate fields from data object
 function generateFieldsFromData(data: any, excludeKeys: string[] = ['id', 'description']): any[] {
   if (!data || typeof data !== 'object') return [];
   
   const isUrn = (s: string) => s.startsWith('urn:bkbit:') || s.startsWith('urn:');
+  const isUrl = (s: string) => /^https?:\/\//i.test(s);
   
-  return Object.entries(data)
+  // Define preferred field order (subject should come first)
+  const preferredOrder = ['subject', 'category_type'];
+  
+  const fields = Object.entries(data)
     .filter(([key]) => !excludeKeys.includes(key))
     .filter(([_, value]) => {
       // Filter out null, undefined, empty strings, and empty arrays
@@ -180,12 +336,51 @@ function generateFieldsFromData(data: any, excludeKeys: string[] = ['id', 'descr
         }
       }
 
+      // Generate human-friendly label
+      let label: string;
+      if (isUrl(key)) {
+        // If key is a URI (predicate), convert to human-friendly format
+        label = humanizePredicate(key);
+      } else {
+        // Regular field name formatting
+        label = key.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+      }
+
+      // Determine order: subject first, then category_type, then predicates (by label), then others
+      let order = 999;
+      if (key === 'subject') {
+        order = 0;
+      } else if (key === 'category_type') {
+        order = 1;
+      } else if (isUrl(key)) {
+        // Predicates come after subject and category_type, sorted by label
+        order = 100 + label.localeCompare(''); // Will be sorted by label later
+      } else {
+        order = 200; // Other fields come last
+      }
+
       return {
         key,
-        label: key.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+        label,
         type: fieldType,
+        order,
       };
-    });
+    })
+    .sort((a, b) => {
+      // Sort by order first
+      if (a.order !== b.order) {
+        return a.order - b.order;
+      }
+      // For predicates (order 100+), sort by label alphabetically
+      if (a.order >= 100 && a.order < 200) {
+        return a.label.localeCompare(b.label);
+      }
+      // For other fields, sort by key
+      return a.key.localeCompare(b.key);
+    })
+    .map(({ order, ...field }) => field); // Remove order property from final result
+  
+  return fields;
 }
 
 
@@ -272,6 +467,7 @@ function EnhancedDetailsSection({ item, config, data, currentId, currentSlug }: 
           <div className="space-y-2">
             {urlValues.map((v: any, idx: number) => {
               const urlStr = String(v);
+              const friendlyText = getFriendlyTextFromUrl(urlStr);
               // Handle DOI links specially
               if (field.linkBasePath && urlStr && !urlStr.startsWith('http')) {
                 const fullUrl = `${field.linkBasePath}/${urlStr}`;
@@ -281,9 +477,10 @@ function EnhancedDetailsSection({ item, config, data, currentId, currentSlug }: 
                     href={fullUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-primary hover:underline flex items-center gap-1.5 break-all"
+                    className="text-sm text-primary hover:underline flex items-center gap-1.5"
+                    title={urlStr}
                   >
-                    {urlStr}
+                    {friendlyText}
                     <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" />
                   </a>
                 );
@@ -294,9 +491,10 @@ function EnhancedDetailsSection({ item, config, data, currentId, currentSlug }: 
                   href={urlStr}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-primary hover:underline flex items-center gap-1.5 break-all"
+                  className="text-sm text-primary hover:underline flex items-center gap-1.5"
+                  title={urlStr}
                 >
-                  {urlStr}
+                  {friendlyText}
                   <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" />
                 </a>
               );
@@ -308,9 +506,53 @@ function EnhancedDetailsSection({ item, config, data, currentId, currentSlug }: 
         const arrayValues = normalizeToArray(value);
         return (
           <div className="space-y-1">
-            {arrayValues.map((v: any, idx: number) => (
-              <div key={idx} className="text-sm text-foreground">• {String(v)}</div>
-            ))}
+            {arrayValues.map((v: any, idx: number) => {
+              const valueStr = String(v);
+              const decodedId = currentId ? decodeURIComponent(currentId) : '';
+              
+              // Check if it's an entity identifier (URN or entity URI) that should be clickable
+              const entityInfo = isEntityIdentifier(valueStr);
+              if (entityInfo.isEntity && valueStr !== decodedId) {
+                const entitySlug = entityInfo.entitySlug || currentSlug || 'celltaxon';
+                const friendlyText = getFriendlyTextFromUrl(valueStr);
+                return (
+                  <div key={idx} className="text-sm text-foreground">
+                    <Link
+                      href={`/knowledge-base/${entitySlug}/${encodeURIComponent(valueStr)}`}
+                      className="text-primary hover:underline flex items-center gap-1.5 inline"
+                      title={valueStr}
+                    >
+                      {friendlyText}
+                      <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" />
+                    </Link>
+                  </div>
+                );
+              }
+              
+              // Check if it's a regular HTTP/HTTPS URL (external link)
+              if (isUrl(valueStr)) {
+                const friendlyText = getFriendlyTextFromUrl(valueStr);
+                return (
+                  <div key={idx} className="text-sm text-foreground">
+                    <a
+                      href={valueStr}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline flex items-center gap-1.5 inline"
+                      title={valueStr}
+                    >
+                      {friendlyText}
+                      <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" />
+                    </a>
+                  </div>
+                );
+              }
+              
+              // Plain text
+              return (
+                <div key={idx} className="text-sm text-foreground">• {valueStr}</div>
+              );
+            })}
           </div>
         );
 
@@ -339,12 +581,14 @@ function EnhancedDetailsSection({ item, config, data, currentId, currentSlug }: 
         const entityInfo = isEntityIdentifier(textValue);
         if (entityInfo.isEntity && textValue !== decodedId) {
           const entitySlug = entityInfo.entitySlug || currentSlug || 'celltaxon';
+          const friendlyText = getFriendlyTextFromUrl(textValue);
           return (
             <Link
               href={`/knowledge-base/${entitySlug}/${encodeURIComponent(textValue)}`}
-              className="text-sm text-primary hover:underline flex items-center gap-1.5 break-all"
+              className="text-sm text-primary hover:underline flex items-center gap-1.5"
+              title={textValue}
             >
-              {textValue}
+              {friendlyText}
               <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" />
             </Link>
           );
@@ -352,14 +596,16 @@ function EnhancedDetailsSection({ item, config, data, currentId, currentSlug }: 
         
         // Check if it's a regular HTTP/HTTPS URL (external link, not entity identifier)
         if (isUrl(textValue)) {
+          const friendlyText = getFriendlyTextFromUrl(textValue);
           return (
             <a
               href={textValue}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-primary hover:underline flex items-center gap-1.5 break-all"
+              className="text-sm text-primary hover:underline flex items-center gap-1.5"
+              title={textValue}
             >
-              {textValue}
+              {friendlyText}
               <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" />
             </a>
           );
@@ -702,23 +948,64 @@ export default function DynamicDetailPage({ config }: DynamicDetailPageProps) {
                   }
                 });
                 
-                // Collect all unique values for each field across all rows
-                allFields.forEach(field => {
-                  const values = processedRows
-                    .map(row => row[field])
-                    .filter(v => v != null && v !== '');
+                // Restructure data: Group by predicate, showing objects as values
+                // This creates a structure similar to celltaxon where predicates become field names
+                const predicateMap: Record<string, Set<string>> = {};
+                let mainSubject: string | undefined;
+                let mainCategoryType: string | undefined;
+                
+                processedRows.forEach(row => {
+                  // Collect subject (should be the entity ID) - take first non-empty subject
+                  if (row.subject && !mainSubject) {
+                    mainSubject = row.subject;
+                  }
                   
-                  if (values.length > 0) {
-                    // Remove duplicates but preserve order
-                    const uniqueValues = Array.from(new Set(values.map(String)));
-                    // If all values are the same, store as single value; otherwise as array
-                    if (uniqueValues.length === 1) {
-                      nextBucket[field] = uniqueValues[0];
-                    } else {
-                      nextBucket[field] = uniqueValues;
+                  // Group predicates and their objects
+                  if (row.predicate && row.object) {
+                    const predicate = String(row.predicate);
+                    const object = String(row.object);
+                    
+                    if (!predicateMap[predicate]) {
+                      predicateMap[predicate] = new Set();
+                    }
+                    predicateMap[predicate].add(object);
+                  }
+                  
+                  // Collect category_type (can appear in any row)
+                  if (row.category_type) {
+                    const catType = String(row.category_type);
+                    if (!mainCategoryType) {
+                      mainCategoryType = catType;
+                    } else if (mainCategoryType !== catType) {
+                      // If multiple category types, collect all unique ones
+                      if (!predicateMap['category_type']) {
+                        predicateMap['category_type'] = new Set([mainCategoryType]);
+                      }
+                      predicateMap['category_type'].add(catType);
                     }
                   }
                 });
+                
+                // Add subject first
+                if (mainSubject) {
+                  nextBucket.subject = mainSubject;
+                }
+                
+                // Add each predicate as a field with its objects as values
+                Object.entries(predicateMap).forEach(([predicate, objects]) => {
+                  const uniqueObjects = Array.from(objects);
+                  if (uniqueObjects.length === 1) {
+                    nextBucket[predicate] = uniqueObjects[0];
+                  } else {
+                    nextBucket[predicate] = uniqueObjects;
+                  }
+                });
+                
+                // Add category_type if found (only if not already in predicateMap)
+                if (mainCategoryType && !predicateMap['category_type']) {
+                  nextBucket.category_type = mainCategoryType;
+                }
+                
               } else {
                 // Use standard processing for other SPARQL result formats
                 const formatted = await processSparqlQueryResult(mainBindings);
@@ -794,6 +1081,10 @@ export default function DynamicDetailPage({ config }: DynamicDetailPageProps) {
             ? dataSource.dataExtractor(transformedData)
             : transformedData;
 
+          // Debug: Log final data
+          console.log('Final extractedData:', extractedData);
+          console.log('Fields that will be generated:', Object.keys(extractedData));
+          
           setData(extractedData);
         } else if (dataSource.type === 'api-get') {
           // Get the API route (e.g., "/api/ner/withouttoken")
