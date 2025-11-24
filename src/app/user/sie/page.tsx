@@ -191,7 +191,7 @@ export default function NamedEntityRecognition() {
                     setCurrentStatus('done');
                     
                     // Clear inputs on success
-                    setFile(null);
+                    setFiles([]);
                     setDoiInput('');
                     setTextInput('');
                 } else if (parsedData && parsedData.entities) {
@@ -231,7 +231,7 @@ export default function NamedEntityRecognition() {
                     setCurrentStatus('done');
                     
                     // Clear inputs on success
-                    setFile(null);
+                    setFiles([]);
                     setDoiInput('');
                     setTextInput('');
                 } else if (result) {

@@ -61,7 +61,7 @@ export interface DetailSectionConfig {
   title: string;
   icon?: any; // Lucide icon component
   layout?: 'default' | 'two-column' | 'table' | 'inline'; // Layout type for the section
-  fields: DetailFieldConfig[];
+  fields?: DetailFieldConfig[]; // Optional: if omitted, fields are auto-generated from data
 }
 
 export interface DetailFieldConfig {
