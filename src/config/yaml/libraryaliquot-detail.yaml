@@ -1,0 +1,28 @@
+type: "detail"
+route: "/knowledge-base/libraryaliquot"
+slug: "libraryaliquot"
+backLink: "/knowledge-base/libraryaliquot"
+title: "Library Aliquot"
+dataSource:
+  type: "sparql"
+  endpoint: "/api/entity-query"
+  idParam: "id"
+  cardConfigFile: "LA_card.yaml"
+tabs:
+  - id: "summary"
+    label: "Summary"
+    sections:
+      - title: "Summary"
+        layout: "default"
+        # Fields will be auto-generated from data
+  - id: "related-info"
+    label: "Related Info"
+    type: "related"
+  - id: "contributors"
+    label: "Contributors"
+    type: "provenance"
+  - id: "revision-history"
+    label: "Revision History"
+    type: "provenance"
+showProvenance: false
+showRelated: true

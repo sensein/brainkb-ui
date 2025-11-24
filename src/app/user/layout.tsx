@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 const inter = Inter({ subsets: ["latin"] });
 
 // Dynamically import the sidebar component (client component)
-const UserSideBar = dynamic(() => import("../components/UserSideBar"), { ssr: false });
+const UserSideBar = dynamic(() => import("../components/layout/UserSideBar"), { ssr: false });
 
 export default async function UserRootLayout({
   children,

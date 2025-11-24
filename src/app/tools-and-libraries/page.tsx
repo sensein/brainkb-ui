@@ -1,7 +1,7 @@
 "use client";
 
 import { Wrench, ExternalLink, Code, Network, Database, Sparkles, CheckCircle } from "lucide-react";
-import yaml from "@/src/app/components/tools-libraries.yaml";
+import yaml from "@/src/config/yaml/tools-libraries.yaml";
 
 export default function ToolsLibraries() {
     const libraries = yaml.libraries;

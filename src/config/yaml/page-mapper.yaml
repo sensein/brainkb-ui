@@ -1,0 +1,30 @@
+PageMapper:
+  # SPARQL-based entity detail pages (using detail YAML configs with tabbed interface)
+  - type: "detail"
+    slug: "libraryaliquot"
+    filename: "libraryaliquot-detail.yaml"
+  
+  - type: "detail"
+    slug: "barcodedcellsample"
+    filename: "barcodedcellsample-detail.yaml"
+
+  - type: "detail"
+    slug: "celltaxon"
+    filename: "celltaxon-detail.yaml"
+ 
+  - type: "list"
+    slug: "ner"
+    filename: "ner-list.yaml"
+  
+  - type: "detail"
+    slug: "ner"
+    filename: "ner-detail.yaml"
+
+  - type: "list"
+    slug: "resources"
+    filename: "resources-list.yaml"
+  
+  - type: "detail"
+    slug: "resources"
+    filename: "resources-detail.yaml"
+

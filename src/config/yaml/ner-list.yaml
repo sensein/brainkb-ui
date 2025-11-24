@@ -1,0 +1,30 @@
+type: "list"
+route: "/knowledge-base/ner"
+slug: "ner"
+title: "Neuroscientific Named Entity Recognition (NER) Terms"
+description: "Browse and search extracted neuroscientific named entities from research papers."
+dataSource:
+  type: "api-get"
+  endpoint: "NEXT_PUBLIC_NER_GET_ENDPOINT"
+  apiRoute: "/api/ner/withouttoken"
+columns:
+  - key: "entity"
+    label: "Entity"
+    type: "link"
+    linkPath: "/knowledge-base/ner"
+  - key: "label"
+    label: "Label"
+    type: "badge"
+    badgeVariant: "secondary"
+  - key: "paper_title"
+    label: "Paper Title"
+    type: "text"
+  - key: "judge_score"
+    label: "Judge Score"
+    type: "badge"
+    badgeVariant: "default"
+itemsPerPage: 50
+search:
+  enabled: true
+  placeholder: "Search entities, labels, papers, DOIs..."
+

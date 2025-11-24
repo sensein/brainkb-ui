@@ -3,9 +3,9 @@ import {useState, useEffect, useCallback} from "react";
 import {useRouter} from "next/navigation";
 import {useSession} from "next-auth/react";
 import {format} from "date-fns";
-import ActivityList from "../../components/userProfileActivity";
-import {extractApiData, isValidActivityData} from "../../utils/apiHelpers";
-import { Activity } from "@/src/types/types";
+import ActivityList from "../../components/data-display/userProfileActivity";
+import {extractApiData, isValidActivityData} from "../../../utils/api/api-helpers";
+import { Activity } from "@/src/types";
 
 // Extended session user interface to include custom properties
 interface ExtendedUser {

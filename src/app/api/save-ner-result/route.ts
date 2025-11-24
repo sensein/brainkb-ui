@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
+import { env } from '../../../config/env';
+import { getAuthTokenWithCredentials } from '../../../utils/api/auth';
 
 export async function POST(request: NextRequest) {
     try {
@@ -29,35 +31,10 @@ export async function POST(request: NextRequest) {
         }
 
         console.log('Getting token from /api/token...');
-        // Get token from /api/token with credentials
-        const tokenResponse = await fetch(process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE || 'http://localhost:8009/api/token', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                email,
-                password
-            }),
-            // Add timeout
-            signal: AbortSignal.timeout(3600000) // 30 seconds timeout
-        });
-
-        if (!tokenResponse.ok) {
-            console.error('Token request failed:', tokenResponse.status, await tokenResponse.text());
-            throw new Error('Failed to get token');
-        }
-
-        const tokenData = await tokenResponse.json();
-        console.log('Token response:', tokenData);
-
-        if (!tokenData.access_token) {
-            console.error('No access token in response:', tokenData);
-            throw new Error('Invalid token response');
-        }
-
-        const token = tokenData.access_token;
-        console.log('Token received successfully:', token);
+        // Get token using shared auth function with credentials from form data
+        const tokenEndpoint = env.tokenEndpointMLService || 'http://localhost:8009/api/token';
+        const token = await getAuthTokenWithCredentials(tokenEndpoint, email, password, 'ML');
+        console.log('Token received successfully');
 
         // Add retry logic for the external API call
         const maxRetries = 3;
@@ -67,7 +44,8 @@ export async function POST(request: NextRequest) {
         while (retryCount < maxRetries) {
             try {
                 console.log(`Calling external API with token (attempt ${retryCount + 1}/${maxRetries})...`);
-                externalResponse = await fetch(process.env.NEXT_PUBLIC_NER_SAVE_ENDPOINT || 'http://localhost:8009/api/save/ner', {
+                const nerSaveEndpoint = env.nerSaveEndpoint || 'http://localhost:8009/api/save/ner';
+                externalResponse = await fetch(nerSaveEndpoint, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,

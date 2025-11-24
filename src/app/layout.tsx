@@ -2,18 +2,18 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { getServerSession } from "next-auth";
-import SessionProvider from "./components/SessionProvider";
+import SessionProvider from "./components/auth/SessionProvider";
 import Footer from "./Footer";
 import dynamic from "next/dynamic"; // Required for Client Component import
 // Dynamically import the BrainKB Assistant client component
-// import BrainKBAssistantClient from "./components/BrainKBAssistantClient";
-import BrainKBAssistantWrapper from "./components/BrainKBAssistantClient";
-import AssistantInitializer from "./components/AssistantInitializer";
+// import BrainKBAssistantClient from "./components/assistant/BrainKBAssistantClient";
+import BrainKBAssistantWrapper from "./components/assistant/BrainKBAssistantClient";
+import AssistantInitializer from "./components/assistant/AssistantInitializer";
 
 // Dynamically import the ConditionalNavbar (client component)
-const ConditionalNavbar = dynamic(() => import("./components/ConditionalNavbar"), { ssr: false });
+const ConditionalNavbar = dynamic(() => import("./components/layout/ConditionalNavbar"), { ssr: false });
 // Dynamically import the CookieConsentBanner (client component)
-const CookieConsentBanner = dynamic(() => import("./components/CookieConsent"), { ssr: false
+const CookieConsentBanner = dynamic(() => import("./components/layout/CookieConsent"), { ssr: false
 });
 
 const inter = Inter({ subsets: ["latin"] });

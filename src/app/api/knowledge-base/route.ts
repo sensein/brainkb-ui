@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
-import { getWarmedCache } from '@/src/app/utils/cache-warm';
-import { getData } from '@/src/app/components/getData';
+import { getWarmedCache } from '@/src/utils/cache/cache-warm';
+import { getData } from '@/src/app/components/utils/getData';
+import { env } from '../../../config/env';
 
 // Force dynamic rendering - this route uses searchParams
 export const dynamic = 'force-dynamic';
@@ -12,7 +13,7 @@ const CACHE_DURATION = 24 * 60 * 60;
 // Execute SPARQL query server-side (to avoid CORS issues)
 async function executeQuery(sparqlQuery: string) {
     const queryParameter = { sparql_query: sparqlQuery };
-    const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql";
+    const endpoint = env.get('NEXT_PUBLIC_API_QUERY_ENDPOINT') || "query/sparql";
 
     console.info(`[KB API] Executing query (length: ${sparqlQuery.length})`);
     const response = await getData(queryParameter, endpoint);

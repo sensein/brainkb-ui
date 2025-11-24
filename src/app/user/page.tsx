@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 export default  async function AdminIndex(){
   const session = await getServerSession();
   if (!session || !session.user) {
-    redirect("/login");
+    redirect("/");
   }
     return (
         redirect("/user/profile")

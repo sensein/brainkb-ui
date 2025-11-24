@@ -1,52 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { env } from '../../../config/env';
+import { withAuthHeaders } from '../../../utils/api/auth';
 
 // Force dynamic rendering - this route fetches external data
 export const dynamic = 'force-dynamic';
-
-interface TokenResponse {
-    access_token: string;
-    token_type: string;
-    expires_in: number;
-}
-
-async function getAuthToken(): Promise<string> {
-    const jwtUser = process.env.NEXT_PUBLIC_JWT_USER;
-    const jwtPassword = process.env.NEXT_PUBLIC_JWT_PASSWORD;
-    const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE;
-  
-    if (!jwtUser || !jwtPassword || !tokenEndpoint) {
-      throw new Error('JWT credentials not configured');
-    }
-  
-    try {
-      const response = await fetch(tokenEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: jwtUser,
-          password: jwtPassword
-        })
-      });
-  
-      if (!response.ok) {
-        throw new Error(`Token request failed: ${response.status}`);
-      }
-  
-      const tokenData: TokenResponse = await response.json();
-      return tokenData.access_token;
-    } catch (error) {
-      console.error('Failed to get JWT token:', error);
-      throw new Error('Authentication failed');
-    }
-}
 
 async function fetchTaxonomyData() {
     // Taxonomy tree is NOT cached - it's fetched fresh each time
     // Individual taxonomy node queries (when users click) are cached via entity-query API
     try {
-        const queryServiceUrl = process.env.NEXT_PUBLIC_API_QUERY_TAXONOMY_ENDPOINT;
+        const queryServiceUrl = env.taxonomyEndpoint;
         
         if (!queryServiceUrl || queryServiceUrl.trim() === '') {
             // If URL is not configured, return null (will be handled by the GET handler)
@@ -57,14 +20,7 @@ async function fetchTaxonomyData() {
             return null;
         }
 
-        let authHeaders: Record<string, string> = {};
-
-        try {
-            const token = await getAuthToken();
-            authHeaders['Authorization'] = `Bearer ${token}`;
-        } catch (error) {
-            console.warn('Failed to get bearer token, proceeding without authentication');
-        }
+        const authHeaders = await withAuthHeaders('query');
 
         // Forward the request to the query service
         const response = await fetch(queryServiceUrl, {

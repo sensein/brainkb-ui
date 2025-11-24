@@ -1,50 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-interface TokenResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-}
+import { withAuthHeaders } from '@/src/utils/api/auth';
 
 interface UserProfile {
   email: string;
   orcid_id: string;
   [key: string]: any;
-}
-
-async function getAuthToken(): Promise<string> {
-  const {
-    NEXT_PUBLIC_JWT_USER: jwtUser,
-    NEXT_PUBLIC_JWT_PASSWORD: jwtPassword,
-    NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE: tokenEndpoint,
-  } = process.env;
-
-  if (!jwtUser || !jwtPassword || !tokenEndpoint) {
-    throw new Error('JWT credentials not configured');
-  }
-
-  const response = await fetch(tokenEndpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: jwtUser, password: jwtPassword }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Token request failed: ${response.status}`);
-  }
-
-  const tokenData: TokenResponse = await response.json();
-  return tokenData.access_token;
-}
-
-async function withAuthHeaders(): Promise<Record<string, string>> {
-  try {
-    const token = await getAuthToken();
-    return { Authorization: `Bearer ${token}` };
-  } catch (error) {
-    console.warn('Failed to get bearer token, proceeding without authentication');
-    return {};
-  }
 }
 
 
@@ -112,7 +72,7 @@ export async function GET(request: NextRequest) {
     }
 
     const params = new URLSearchParams({ email, orcid_id });
-    const headers = await withAuthHeaders();
+    const headers = await withAuthHeaders('user-management');
     const existingProfile = await getUser(getEndpoint, params, headers);
 
     if (!existingProfile) {
@@ -159,7 +119,7 @@ export async function POST(request: NextRequest) {
     // safe check just in case
     if (existingProfile?.email === email || existingProfile?.orcid_id === orcid_id) {
       // Step 2: Update existing profile
-      const updateResponse = await updateUser(updateEndpoint, params, userData, await withAuthHeaders());
+      const updateResponse = await updateUser(updateEndpoint, params, userData, await withAuthHeaders('user-management'));
 
       if (!updateResponse.ok) {
         const errorData = await updateResponse.text();
@@ -173,7 +133,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 3: Create new profile
-    const createResponse = await createUser(createEndpoint, userData, await withAuthHeaders());
+    const createResponse = await createUser(createEndpoint, userData, await withAuthHeaders('user-management'));
 
     if (!createResponse.ok) {
       const errorData = await createResponse.text();

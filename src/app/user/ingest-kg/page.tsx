@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { getData } from "../../components/getData";
-import StatusIndicator, { StatusType } from "../../components/StatusIndicator";
+import { getData } from "../../components/utils/getData";
+import StatusIndicator, { StatusType } from "../../components/ui/StatusIndicator";
+import { clientEnv } from "../../../config/env";
 
 interface NamedGraph {
     graph: string;
@@ -35,7 +36,7 @@ export default function IngestKnowledgeGraphPage() {
     useEffect(() => {
         const fetchNamedGraphs = async () => {
             try {
-                const endpoint = process.env.NEXT_PUBLIC_API_NAMED_GRAPH_QUERY_ENDPOINT;
+                const endpoint = clientEnv.namedGraphQueryEndpoint;
                 if (!endpoint) {
                     setError("Named graph endpoint is not configured.");
                     return;

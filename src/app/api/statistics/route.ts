@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
-import { getData } from '@/src/app/components/getData';
-import { getWarmedCache } from '@/src/app/utils/cache-warm';
-import yaml from '@/src/app/components/config-home.yaml';
+import { getData } from '@/src/app/components/utils/getData';
+import { getWarmedCache } from '@/src/utils/cache/cache-warm';
+import yaml from '@/src/config/yaml/config-home.yaml';
+import { env } from '../../../config/env';
 
 // Force dynamic rendering - this route fetches external data
 export const dynamic = 'force-dynamic';
@@ -32,7 +33,7 @@ async function fetchStatisticsData(): Promise<number[]> {
         const updatedDataCount = await Promise.all(
             yaml.boxiconsstatisticscount.map(async (page) => {
                 const queryParameter = { sparql_query: page.sparql_query };
-                const endpoint = process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || "query/sparql";
+                const endpoint = env.get('NEXT_PUBLIC_API_QUERY_ENDPOINT') || "query/sparql";
                 
                 const response = await getData(queryParameter, endpoint);
                 return response && response.status === "success" && response.message?.results?.bindings

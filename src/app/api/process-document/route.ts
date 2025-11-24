@@ -1,5 +1,7 @@
 import {NextRequest, NextResponse} from 'next/server';
 import { Client } from 'undici';
+import { env } from '../../../config/env';
+import { getAuthTokenWithCredentials } from '../../../utils/api/auth';
 
 export async function POST(request: NextRequest) {
     console.log('[process-document] POST handler invoked');
@@ -7,19 +9,19 @@ export async function POST(request: NextRequest) {
         console.log('[process-document] Starting document processing...');
 
         // Check if API key is configured
-        if (!process.env.NER_API_KEY) {
+        if (!env.nerApiKey) {
             console.warn('NER_API_KEY environment variable is not set.');
         }
 
         // Check if NEXT_PUBLIC_TOKEN_ENDPOINT is defined
-        if (!process.env.NEXT_PUBLIC_TOKEN_ENDPOINT) {
+        const tokenEndpoint = env.tokenEndpoint;
+        if (!tokenEndpoint) {
             console.error('NEXT_PUBLIC_TOKEN_ENDPOINT environment variable is not set.');
             return NextResponse.json(
                 {error: 'NEXT_PUBLIC_TOKEN_ENDPOINT environment variable is not set.'},
                 {status: 500}
             );
         }
-        const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT!;
 
         // Get the form data from the request
         const formData = await request.formData();
@@ -78,37 +80,10 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('Getting token from /api/token...');
-        // Get token from /api/token with credentials
-        const tokenResponse = await fetch(tokenEndpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                email,
-                password
-            }),
-            // Add timeout
-            signal: AbortSignal.timeout(30000) // 30 seconds timeout
-        });
-        console.log('[process-document] Token endpoint response received');
-
-        if (!tokenResponse.ok) {
-            console.error('[process-document] Token request failed:', tokenResponse.status, await tokenResponse.text());
-            throw new Error('Failed to get token');
-        }
-
-        const tokenData = await tokenResponse.json();
-        console.log('[process-document] Token response:', tokenData);
-
-        if (!tokenData.access_token) {
-            console.error('[process-document] No access token in response:', tokenData);
-            throw new Error('Invalid token response');
-        }
-
-        const token = tokenData.access_token;
-        console.log('[process-document] Token received successfully:', token);
+        console.log('[process-document] Getting token from /api/token...');
+        // Get token using shared auth function with credentials from form data
+        const token = await getAuthTokenWithCredentials(tokenEndpoint, email, password, 'ML');
+        console.log('[process-document] Token received successfully');
 
         // Create a new FormData without email and password
         const pdfFormData = new FormData();
@@ -152,7 +127,7 @@ export async function POST(request: NextRequest) {
 
         while (retryCount < maxRetries) {
             try {
-                const endpoint = process.env.NEXT_PUBLIC_STRUCTSENSE_ENDPOINT;
+                const endpoint = env.structsenseEndpoint;
                 if (!endpoint) {
                     throw new Error("NEXT_PUBLIC_STRUCTSENSE_ENDPOINT is not defined in the environment variables.");
                 }

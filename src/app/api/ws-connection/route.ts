@@ -1,45 +1,8 @@
 import { NextRequest } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import WebSocket from 'ws';
-
-interface TokenResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-}
-
-async function getAuthToken(): Promise<string> {
-  const jwtUser = process.env.NEXT_PUBLIC_JWT_USER;
-  const jwtPassword = process.env.NEXT_PUBLIC_JWT_PASSWORD;
-  const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE;
-
-  if (!jwtUser || !jwtPassword || !tokenEndpoint) {
-    throw new Error('JWT credentials not configured');
-  }
-
-  try {
-    const response = await fetch(tokenEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: jwtUser,
-        password: jwtPassword
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Token request failed: ${response.status}`);
-    }
-
-    const tokenData: TokenResponse = await response.json();
-    return tokenData.access_token;
-  } catch (error) {
-    console.error('Failed to get JWT token:', error);
-    throw new Error('Authentication failed');
-  }
-}
+import { env } from '../../../config/env';
+import { getAuthTokenForService } from '../../../utils/api/auth';
 
 function getWebSocketUrl(endpoint: string, clientId: string, token: string, apiKey?: string): string {
   // Endpoint format: ws://localhost:8009/api/ws/extract-resources
@@ -99,9 +62,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Get authentication token
-    let token: string;
+    let token: string | null = null;
     try {
-      token = await getAuthToken();
+      token = await getAuthTokenForService('ml');
+      if (!token) {
+        throw new Error('Failed to get authentication token');
+      }
       console.log('Authentication successful');
     } catch (error) {
       console.error('Failed to get bearer token:', error);
@@ -255,7 +221,7 @@ export async function POST(request: NextRequest) {
                     const isPdf2Reproschema = endpoint && (
                       endpoint.includes('pdf2reproschema') || 
                       endpoint.includes('reproschema') ||
-                      endpoint === process.env.NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT
+                      endpoint === env.pdf2ReproschemaEndpoint
                     );
                     
                     if (isPdf2Reproschema && result) {
@@ -287,7 +253,7 @@ export async function POST(request: NextRequest) {
                 const isPdf2Reproschema = endpoint && (
                   endpoint.includes('pdf2reproschema') || 
                   endpoint.includes('reproschema') ||
-                  endpoint === process.env.NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT
+                  endpoint === env.pdf2ReproschemaEndpoint
                 );
                 
                 if (isPdf2Reproschema && result) {
@@ -328,7 +294,7 @@ export async function POST(request: NextRequest) {
                   const isPdf2Reproschema = endpoint && (
                     endpoint.includes('pdf2reproschema') || 
                     endpoint.includes('reproschema') ||
-                    endpoint === process.env.NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT
+                    endpoint === env.pdf2ReproschemaEndpoint
                   );
                   
                   if (isPdf2Reproschema && result) {

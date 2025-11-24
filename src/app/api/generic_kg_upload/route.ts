@@ -1,43 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-interface TokenResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-}
-
-async function getAuthToken(): Promise<string> {
-  const jwtUser = process.env.NEXT_PUBLIC_JWT_USER;
-  const jwtPassword = process.env.NEXT_PUBLIC_JWT_PASSWORD;
-  const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE;
-
-  if (!jwtUser || !jwtPassword || !tokenEndpoint) {
-    throw new Error('JWT credentials not configured');
-  }
-
-  try {
-    const response = await fetch(tokenEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: jwtUser,
-        password: jwtPassword
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Token request failed: ${response.status}`);
-    }
-
-    const tokenData: TokenResponse = await response.json();
-    return tokenData.access_token;
-  } catch (error) {
-    console.error('Failed to get JWT token:', error);
-    throw new Error('Authentication failed');
-  }
-}
+import { withAuthHeaders } from '../../../utils/api/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -112,15 +74,8 @@ export async function POST(request: NextRequest) {
 
     const queryServiceUrl = endpoint;
 
-    // Get authentication token
-    let authHeaders: Record<string, string> = {};
-
-    try {
-      const token = await getAuthToken();
-      authHeaders['Authorization'] = `Bearer ${token}`;
-    } catch (error) {
-      console.warn('Failed to get bearer token, proceeding without authentication');
-    }
+    // Get authentication headers
+    const authHeaders = await withAuthHeaders('query');
 
     console.log('Making request to:', queryServiceUrl);
     console.log('Headers:', authHeaders);

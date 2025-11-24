@@ -1,10 +1,10 @@
 "use client";
 
 
-import yaml from "@/src/app/components/config-data-release.yaml";
-import {getData} from "@/src/app/components/getData";
+import yaml from "@/src/config/yaml/config-data-release.yaml";
+import {getData} from "@/src/app/components/utils/getData";
 import {useEffect, useRef, useState} from "react";
-import {get_rapid_release_file} from "@/src/app/components/helper";
+import {get_rapid_release_file} from "@/src/app/components/utils/helper";
 import {
     CloudArrowDownIcon,
     CheckCircleIcon,
@@ -13,7 +13,7 @@ import {
     LockOpenIcon,
 } from "@heroicons/react/24/solid";
 
-type AwsDataType = {
+type AwsDataType = Array<{
     date: string;
     folders: {
         [folderName: string]: {
@@ -27,7 +27,7 @@ type AwsDataType = {
             };
         };
     };
-}
+}>
 
 export default function BrainKBDataReleases() {
     const releaseTypes = [
