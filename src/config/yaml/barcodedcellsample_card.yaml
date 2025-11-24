@@ -38,7 +38,7 @@ boxes:
     box_additional_info:
       is_iterable: true
       properties:
-        - key: Without Recursion
+        - key: Source Derived From
           sparql_query: |-
             PREFIX NIMP:   <http://example.org/NIMP/>
             PREFIX prov:   <http://www.w3.org/ns/prov#>
