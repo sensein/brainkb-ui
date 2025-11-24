@@ -45,6 +45,33 @@ function isUrl(str: string): boolean {
   }
 }
 
+// Helper function to determine if a URI/URN is an entity identifier (clickable to entity detail page)
+function isEntityIdentifier(value: string): { isEntity: boolean; entitySlug?: string } {
+  const valueStr = String(value);
+  
+  // Check for URNs
+  if (valueStr.startsWith('urn:bkbit:') || valueStr.startsWith('urn:')) {
+    if (valueStr.startsWith('urn:bkbit:')) {
+      return { isEntity: true, entitySlug: 'celltaxon' };
+    }
+    // For other URNs, default to celltaxon
+    return { isEntity: true, entitySlug: 'celltaxon' };
+  }
+  
+  // Check for NIMP URIs (entity identifiers)
+  if (valueStr.includes('http://example.org/NIMP/')) {
+    if (valueStr.includes('BC-')) {
+      return { isEntity: true, entitySlug: 'barcodedcellsample' };
+    } else if (valueStr.includes('LI-')) {
+      return { isEntity: true, entitySlug: 'libraryaliquot' };
+    }
+    // For other NIMP URIs, try to determine from pattern or default
+    return { isEntity: true, entitySlug: 'barcodedcellsample' }; // Default fallback
+  }
+  
+  return { isEntity: false };
+}
+
 // Render value with URN link handling for SPARQL-based entities
 function RenderValue({ value, currentId, currentSlug }: { value: any; currentId?: string; currentSlug?: string }) {
   const isIri = (s: any) => typeof s === 'string' && /^https?:\/\//i.test(s);
@@ -84,36 +111,25 @@ function RenderValue({ value, currentId, currentSlug }: { value: any; currentId?
     );
   }
 
-  // Check if it's a URN that should be clickable (parent node, etc.)
-  if (isUrn(value)) {
-    const valueStr = String(value);
-    const decodedId = currentId ? decodeURIComponent(currentId) : '';
-    const isEntityLink = valueStr !== decodedId;
-    
-    if (isEntityLink) {
-      // Determine entity type from value or current slug
-      let entitySlug = currentSlug || 'celltaxon';
-      if (valueStr.startsWith('urn:bkbit:')) {
-        entitySlug = 'celltaxon';
-      } else if (valueStr.includes('http://example.org/NIMP/')) {
-        if (valueStr.includes('BC-')) {
-          entitySlug = 'barcodedcellsample';
-        } else if (valueStr.includes('LI-')) {
-          entitySlug = 'libraryaliquot';
-        }
-      }
-      
-      return (
-        <Link
-          href={`/knowledge-base/${entitySlug}/${encodeURIComponent(valueStr)}`}
-          className="underline text-primary break-all hover:text-primary/80"
-        >
-          {valueStr}
-        </Link>
-      );
-    }
+  const valueStr = String(value);
+  const decodedId = currentId ? decodeURIComponent(currentId) : '';
+  
+  // Check if it's an entity identifier (URN or entity URI) that should be clickable
+  // This handles parent node, wasDerivedFrom, and other entity references
+  const entityInfo = isEntityIdentifier(valueStr);
+  if (entityInfo.isEntity && valueStr !== decodedId) {
+    const entitySlug = entityInfo.entitySlug || currentSlug || 'celltaxon';
+    return (
+      <Link
+        href={`/knowledge-base/${entitySlug}/${encodeURIComponent(valueStr)}`}
+        className="underline text-primary break-all hover:text-primary/80"
+      >
+        {valueStr}
+      </Link>
+    );
   }
 
+  // Check if it's a regular HTTP/HTTPS URL (external link)
   if (isIri(value)) {
     return (
       <a
@@ -316,39 +332,25 @@ function EnhancedDetailsSection({ item, config, data, currentId, currentSlug }: 
 
       default:
         const textValue = String(value);
+        const decodedId = currentId ? decodeURIComponent(currentId) : '';
         
-        // Check if it's a URN that should be clickable (parent node, etc.)
-        const isUrn = (s: string) => s.startsWith('urn:bkbit:') || s.startsWith('urn:');
-        if (isUrn(textValue)) {
-          const decodedId = currentId ? decodeURIComponent(currentId) : '';
-          const isEntityLink = textValue !== decodedId;
-          
-          if (isEntityLink) {
-            // Determine entity type from value or current slug
-            let entitySlug = currentSlug || 'celltaxon';
-            if (textValue.startsWith('urn:bkbit:')) {
-              entitySlug = 'celltaxon';
-            } else if (textValue.includes('http://example.org/NIMP/')) {
-              if (textValue.includes('BC-')) {
-                entitySlug = 'barcodedcellsample';
-              } else if (textValue.includes('LI-')) {
-                entitySlug = 'libraryaliquot';
-              }
-            }
-            
-            return (
-              <Link
-                href={`/knowledge-base/${entitySlug}/${encodeURIComponent(textValue)}`}
-                className="text-sm text-primary hover:underline flex items-center gap-1.5 break-all"
-              >
-                {textValue}
-                <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" />
-              </Link>
-            );
-          }
+        // Check if it's an entity identifier (URN or entity URI) that should be clickable
+        // This handles parent node, wasDerivedFrom (prov:wasDerivedFrom), and other entity references
+        const entityInfo = isEntityIdentifier(textValue);
+        if (entityInfo.isEntity && textValue !== decodedId) {
+          const entitySlug = entityInfo.entitySlug || currentSlug || 'celltaxon';
+          return (
+            <Link
+              href={`/knowledge-base/${entitySlug}/${encodeURIComponent(textValue)}`}
+              className="text-sm text-primary hover:underline flex items-center gap-1.5 break-all"
+            >
+              {textValue}
+              <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" />
+            </Link>
+          );
         }
         
-        // Check if it's a URL
+        // Check if it's a regular HTTP/HTTPS URL (external link, not entity identifier)
         if (isUrl(textValue)) {
           return (
             <a
@@ -631,8 +633,97 @@ export default function DynamicDetailPage({ config }: DynamicDetailPageProps) {
             if (box.sparql_query) {
               const mainQuery = replaceEntityIdInQuery(box.sparql_query, id);
               const mainBindings = await fetchBindings(mainQuery);
-              const formatted = await processSparqlQueryResult(mainBindings);
-              Object.assign(nextBucket, formatted);
+              
+              // Helper to extract value from SPARQL binding structure
+              const extractBindingValue = (binding: any): string | undefined => {
+                if (!binding) return undefined;
+                if (typeof binding === 'string') return binding;
+                if (typeof binding === 'object' && 'value' in binding) {
+                  return binding.value;
+                }
+                return String(binding);
+              };
+              
+              // Check if bindings have subject/predicate/object structure (SPARQL triple pattern)
+              const hasSubjectPredicateObject = mainBindings.length > 0 && 
+                (mainBindings[0].subject || mainBindings[0].predicate || mainBindings[0].object);
+              
+              if (hasSubjectPredicateObject) {
+                // Process each binding row and preserve all fields
+                const processedRows: Record<string, any>[] = [];
+                const allFields = new Set<string>();
+                
+                mainBindings.forEach((binding: any) => {
+                  const row: Record<string, any> = {};
+                  
+                  // Extract values from binding structure (handles {type: "uri", value: "..."} format)
+                  if (binding.subject) {
+                    const subjectValue = extractBindingValue(binding.subject);
+                    if (subjectValue) {
+                      row.subject = subjectValue;
+                      allFields.add('subject');
+                    }
+                  }
+                  if (binding.predicate) {
+                    const predicateValue = extractBindingValue(binding.predicate);
+                    if (predicateValue) {
+                      row.predicate = predicateValue;
+                      allFields.add('predicate');
+                    }
+                  }
+                  if (binding.object) {
+                    const objectValue = extractBindingValue(binding.object);
+                    if (objectValue) {
+                      row.object = objectValue;
+                      allFields.add('object');
+                    }
+                  }
+                  if (binding.category_type) {
+                    const categoryValue = extractBindingValue(binding.category_type);
+                    if (categoryValue) {
+                      row.category_type = categoryValue;
+                      allFields.add('category_type');
+                    }
+                  }
+                  
+                  // Also extract any other fields
+                  Object.keys(binding).forEach(key => {
+                    if (!['subject', 'predicate', 'object', 'category_type'].includes(key)) {
+                      const fieldValue = extractBindingValue(binding[key]);
+                      if (fieldValue != null && fieldValue !== '') {
+                        row[key] = fieldValue;
+                        allFields.add(key);
+                      }
+                    }
+                  });
+                  
+                  if (Object.keys(row).length > 0) {
+                    processedRows.push(row);
+                  }
+                });
+                
+                // Collect all unique values for each field across all rows
+                allFields.forEach(field => {
+                  const values = processedRows
+                    .map(row => row[field])
+                    .filter(v => v != null && v !== '');
+                  
+                  if (values.length > 0) {
+                    // Remove duplicates but preserve order
+                    const uniqueValues = Array.from(new Set(values.map(String)));
+                    // If all values are the same, store as single value; otherwise as array
+                    if (uniqueValues.length === 1) {
+                      nextBucket[field] = uniqueValues[0];
+                    } else {
+                      nextBucket[field] = uniqueValues;
+                    }
+                  }
+                });
+              } else {
+                // Use standard processing for other SPARQL result formats
+                const formatted = await processSparqlQueryResult(mainBindings);
+                Object.assign(nextBucket, formatted);
+              }
             }
 
             // Process additional info if present
