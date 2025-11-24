@@ -20,7 +20,7 @@ async function searchNERById(id: string): Promise<any> {
 
     const endpoint = env.nerEndpoint;
     if (!endpoint) {
-        throw new Error('NEXT_PUBLIC_API_ADMIN_GET_NER_ENDPOINT environment variable is not set');
+        throw new Error('NEXT_PUBLIC_NER_GET_ENDPOINT environment variable is not set');
     }
 
     return await searchById(endpoint, id);
@@ -42,7 +42,7 @@ function getCachedNERData(limit: string, skip: string, search?: string) {
         async () => {
             const endpoint = env.nerGetEndpoint;
             if (!endpoint) {
-                throw new Error('NEXT_PUBLIC_API_ADMIN_GET_NER_ENDPOINT environment variable is not set');
+                throw new Error('NEXT_PUBLIC_NER_GET_ENDPOINT environment variable is not set');
             }
 
             return await fetchPaginatedData({ endpoint, limit, skip, search });
