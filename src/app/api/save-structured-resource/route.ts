@@ -23,9 +23,9 @@ export async function POST(request: NextRequest) {
 
     // Get authentication headers
     const authHeaders = await withAuthHeaders('ml');
-    console.log('[save-structured-resource] Authentication headers obtained');
+    console.info('[save-structured-resource] Authentication headers obtained');
     
-    console.log('[save-structured-resource] Forwarding request to endpoint:', endpoint);
+    console.info('[save-structured-resource] Forwarding request to endpoint:', endpoint);
     // Forward the request to the ML service
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
         revalidateTag('resource-all');
         revalidateTag('resource-lists');
         revalidateTag('resource-entities');
-        console.log('[save-structured-resource] Resources cache invalidated successfully');
+        console.info('[save-structured-resource] Resources cache invalidated successfully');
     } catch (cacheError) {
         console.error('[save-structured-resource] Error invalidating cache:', cacheError);
         // Don't fail the request if cache invalidation fails
