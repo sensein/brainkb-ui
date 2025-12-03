@@ -41,10 +41,18 @@ export default function IngestKnowledgeGraphPage() {
                     setError("Named graph endpoint is not configured.");
                     return;
                 }
-                const response = await getData({}, endpoint, true);
+                
+                // Use centralized getData function for simple GET request
+                // Empty query_parameter object means no SPARQL query, just a simple GET
+                // useAuth defaults to true (with authentication)
+                const response = await getData({}, endpoint, false);
                 
                 if (response && typeof response === 'object') {
-                    const graphs: NamedGraph[] = Object.values(response);
+                    // Handle different response formats
+                    // If it's an object with keys, convert to array
+                    const graphs: NamedGraph[] = Array.isArray(response) 
+                        ? response 
+                        : Object.values(response);
                     setNamedGraphs(graphs);
                     // Don't auto-select the first graph, let user choose
                 } else {
