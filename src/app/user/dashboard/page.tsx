@@ -23,7 +23,7 @@ export default function Dashboard() {
             title: "Ingest KGs",
             description: "Upload Knowledge Graph files in JSON-LD or Turtle format to a specified named graph",
             icon: Database,
-            href: "/user/dashboard",
+            href: "/user/ingest-kg",
             color: "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
         },
         {
