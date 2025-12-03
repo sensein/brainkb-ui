@@ -35,22 +35,30 @@ class ApiService extends BaseApiService {
   }
 
   /**
-   * Execute a SPARQL query
+   * Execute a SPARQL query or simple GET request
+   * @param queryParameter - Query parameters (for SPARQL) or empty object (for simple GET)
+   * @param endpoint - Optional custom endpoint URL
+   * @param useAuth - Whether to use authentication (default: true)
+   * @param tokenEndpointType - Token endpoint type: 'ml' for ML service, 'query' for query service, 'default' for default (default: uses getTokenEndpointType() which returns 'query')
    */
   public async query(
     queryParameter: Record<string, string> = {},
-    endpoint?: string
+    endpoint?: string,
+    useAuth: boolean = true,
+    tokenEndpointType?: 'ml' | 'query' | 'default'
   ): Promise<any> {
     try {
       console.info("=====================ApiService.query called ==================");
       console.info("Query parameters keys:", Object.keys(queryParameter));
       console.info("SPARQL Query (from parameters):", queryParameter.sparql_query);
-      const defaultEndpoint = env.get('NEXT_PUBLIC_API_QUERY_ENDPOINT') || 'https://queryservice.brainkb.org/query/sparql';
+      const defaultEndpoint = env.get('NEXT_PUBLIC_API_QUERY_ENDPOINT') || 'http://localhost:8010/api/query/sparql/';
       console.info("Endpoint:", endpoint || defaultEndpoint);
+      console.info("Use Auth:", useAuth);
+      console.info("Token Endpoint Type:", tokenEndpointType || this.getTokenEndpointType());
 
-      const apiEndpoint = endpoint || env.get('NEXT_PUBLIC_API_QUERY_ENDPOINT') || 'https://queryservice.brainkb.org/query/sparql';
+      const apiEndpoint = endpoint || env.get('NEXT_PUBLIC_API_QUERY_ENDPOINT') || 'http://localhost:8010/api/query/sparql/';
 
-      // Build query string
+      // Build query string - only add if there are parameters
       const queryString = new URLSearchParams(queryParameter).toString();
       const urlWithQuery = queryString
         ? `${apiEndpoint}?${queryString}`
@@ -60,11 +68,22 @@ class ApiService extends BaseApiService {
       console.info("Full URL length:", urlWithQuery.length);
       console.info("Making GET request...");
 
-      // Use base service's requestFullUrl method
+      // Determine which token endpoint to use
+      // If explicitly provided, use it; otherwise use the service default (from getTokenEndpointType)
+      const finalTokenEndpoint = tokenEndpointType || this.getTokenEndpointType();
+      
+      // Check if auth should be enabled based on the token endpoint type
+      const shouldUseAuth = useAuth && env.useBearerToken && (
+        (finalTokenEndpoint === 'query' && !!env.tokenEndpointQueryService) ||
+        (finalTokenEndpoint === 'ml' && !!env.tokenEndpointMLService) ||
+        (finalTokenEndpoint === 'default' && !!env.tokenEndpoint)
+      );
+
+      // Use base service's requestFullUrl method with dynamic auth
       const jsonResponse = await this.requestFullUrl<any>(urlWithQuery, {
         method: 'GET',
-        useAuth: env.useBearerToken && !!env.tokenEndpointQueryService,
-        tokenEndpoint: 'query',
+        useAuth: shouldUseAuth,
+        tokenEndpoint: finalTokenEndpoint,
       });
 
       console.info("Response received, status:", jsonResponse?.status);
@@ -83,23 +102,39 @@ class ApiService extends BaseApiService {
 
   /**
    * Execute a query with custom endpoint
+   * @param queryParameter - Query parameters (for SPARQL) or empty object (for simple GET)
+   * @param endpoint - Optional custom endpoint URL
+   * @param useAuth - Whether to use authentication (default: true)
+   * @param tokenEndpointType - Token endpoint type: 'ml' for ML service, 'query' for query service, 'default' for default (default: uses getTokenEndpointType() which returns 'query')
    */
   public async queryWithCustomEndpoint(
     queryParameter: Record<string, string> = {},
-    endpoint?: string
+    endpoint?: string,
+    useAuth: boolean = true,
+    tokenEndpointType?: 'ml' | 'query' | 'default'
   ): Promise<any> {
     try {
-      const apiEndpoint = endpoint || env.get('NEXT_PUBLIC_API_QUERY_ENDPOINT') || 'https://queryservice.brainkb.org/query/sparql';
+      const apiEndpoint = endpoint || env.get('NEXT_PUBLIC_API_QUERY_ENDPOINT');
 
       const queryString = new URLSearchParams(queryParameter).toString();
       const urlWithQuery = queryString
         ? `${apiEndpoint}?${queryString}`
         : apiEndpoint;
 
+      // Determine which token endpoint to use
+      const finalTokenEndpoint = tokenEndpointType || this.getTokenEndpointType();
+      
+      // Check if auth should be enabled based on the token endpoint type
+      const shouldUseAuth = useAuth && env.useBearerToken && (
+        (finalTokenEndpoint === 'query' && !!env.tokenEndpointQueryService) ||
+        (finalTokenEndpoint === 'ml' && !!env.tokenEndpointMLService) ||
+        (finalTokenEndpoint === 'default' && !!env.tokenEndpoint)
+      );
+
       return await this.requestFullUrl<any>(urlWithQuery, {
         method: 'GET',
-        useAuth: env.useBearerToken && !!env.tokenEndpointQueryService,
-        tokenEndpoint: 'query',
+        useAuth: shouldUseAuth,
+        tokenEndpoint: finalTokenEndpoint,
       });
     } catch (error) {
       const err = error as Error;
