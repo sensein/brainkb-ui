@@ -166,6 +166,7 @@ class EnvConfigManager {
   }
 
   public get namedGraphQueryEndpoint(): string | undefined {
+      console.info(this.config.NEXT_PUBLIC_API_NAMED_GRAPH_QUERY_ENDPOINT);
     return this.config.NEXT_PUBLIC_API_NAMED_GRAPH_QUERY_ENDPOINT;
   }
 
