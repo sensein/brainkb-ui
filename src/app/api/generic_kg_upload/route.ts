@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     if (namedGraphIri) {
       url.searchParams.set('named_graph_iri', namedGraphIri);
     }
-    url.searchParams.set('max_concurrency', 8);
+    url.searchParams.set('max_concurrency', '8');
     const queryServiceUrl = url.toString();
 
     // Get authentication token (without Content-Type header for FormData)
