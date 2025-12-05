@@ -121,12 +121,7 @@ export default function JobStatusPage() {
             url.searchParams.set('limit', '100');
             url.searchParams.set('offset', '0');
 
-            console.log('Fetching all jobs from:', url.toString());
-            console.log('User ID:', userId);
-
             const response = await getData({}, url.toString(), true, 'query');
-            
-            console.log('All jobs response:', response);
 
             // Handle different response formats
             let jobsArray: Job[] = [];
