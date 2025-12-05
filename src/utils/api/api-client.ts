@@ -18,9 +18,16 @@ class PaginatedApiService {
   }
 
   /**
-   * Fetch paginated data from an endpoint with authentication
+   * Fetch paginated data from an endpoint with optional authentication
+   * @param options - Fetch options including endpoint, pagination, and auth settings
+   * @param useAuth - Whether to use authentication (default: true)
+   * @param tokenEndpointType - Token endpoint type for auth (default: 'query')
    */
-  async fetchPaginatedData(options: FetchOptions): Promise<unknown> {
+  async fetchPaginatedData(
+    options: FetchOptions,
+    useAuth: boolean = true,
+    tokenEndpointType: 'ml' | 'query' | 'default' = 'query'
+  ): Promise<unknown> {
     const { endpoint, limit = DEFAULT_PAGINATION.LIMIT, skip = DEFAULT_PAGINATION.SKIP, search, baseUrl } = options;
     
     let url: URL;
@@ -51,7 +58,16 @@ class PaginatedApiService {
       url.searchParams.set('search', search.trim());
     }
 
-    const headers = await withAuthHeaders('query');
+    // Build headers with optional authentication
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    if (useAuth) {
+      const authHeaders = await withAuthHeaders(tokenEndpointType);
+      Object.assign(headers, authHeaders);
+    }
 
     const response = await fetch(url.toString(), {
       method: 'GET',
@@ -81,15 +97,29 @@ class PaginatedApiService {
    * @param endpoint - The API endpoint to search
    * @param id - The ID of the entity to find
    * @param baseUrl - Optional base URL if endpoint is relative
+   * @param useAuth - Whether to use authentication (default: true)
+   * @param tokenEndpointType - Token endpoint type for auth (default: 'query')
    * @returns The found entity
    * @throws Error if entity is not found
    */
   async searchById(
     endpoint: string,
     id: string,
-    baseUrl?: string
+    baseUrl?: string,
+    useAuth: boolean = true,
+    tokenEndpointType: 'ml' | 'query' | 'default' = 'query'
   ): Promise<unknown> {
-    const headers = await withAuthHeaders('query');
+    // Build headers with optional authentication
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    if (useAuth) {
+      const authHeaders = await withAuthHeaders(tokenEndpointType);
+      Object.assign(headers, authHeaders);
+    }
+
     let currentSkip = 0;
     const searchLimit = DEFAULT_PAGINATION.SEARCH_LIMIT;
     const maxSearchPages = DEFAULT_PAGINATION.MAX_SEARCH_PAGES;
@@ -141,21 +171,49 @@ class PaginatedApiService {
 const paginatedApiService = new PaginatedApiService();
 
 /**
- * Fetch paginated data from an endpoint with authentication
+ * Fetch paginated data from an endpoint with optional authentication
+ * @param options - Fetch options including endpoint, pagination, etc.
+ * @param useAuth - Whether to use authentication (default: true)
+ * @param tokenEndpointType - Token endpoint type for auth (default: 'query')
+ * 
+ * @example
+ * // With auth (default)
+ * const data = await fetchPaginatedData({ endpoint: '/api/resources' });
+ * 
+ * // Without auth
+ * const publicData = await fetchPaginatedData({ endpoint: '/api/public' }, false);
  */
-export async function fetchPaginatedData(options: FetchOptions): Promise<unknown> {
-  return paginatedApiService.fetchPaginatedData(options);
+export async function fetchPaginatedData(
+  options: FetchOptions,
+  useAuth: boolean = true,
+  tokenEndpointType: 'ml' | 'query' | 'default' = 'query'
+): Promise<unknown> {
+  return paginatedApiService.fetchPaginatedData(options, useAuth, tokenEndpointType);
 }
 
 /**
  * Search for an entity by ID by paginating through the list endpoint.
+ * @param endpoint - The API endpoint to search
+ * @param id - The ID of the entity to find
+ * @param baseUrl - Optional base URL if endpoint is relative
+ * @param useAuth - Whether to use authentication (default: true)
+ * @param tokenEndpointType - Token endpoint type for auth (default: 'query')
+ * 
+ * @example
+ * // With auth (default)
+ * const entity = await searchById('/api/resources', 'entity-id');
+ * 
+ * // Without auth
+ * const publicEntity = await searchById('/api/public', 'entity-id', undefined, false);
  */
 export async function searchById(
   endpoint: string,
   id: string,
-  baseUrl?: string
+  baseUrl?: string,
+  useAuth: boolean = true,
+  tokenEndpointType: 'ml' | 'query' | 'default' = 'query'
 ): Promise<unknown> {
-  return paginatedApiService.searchById(endpoint, id, baseUrl);
+  return paginatedApiService.searchById(endpoint, id, baseUrl, useAuth, tokenEndpointType);
 }
 
 /**

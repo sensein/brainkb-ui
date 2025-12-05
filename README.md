@@ -41,48 +41,61 @@ Below is a structured overview of supported variables:
 # ORCID login is not supported in local development.
 ########################################################################################################
 GITHUB_CLIENT_ID=APP-XXXXXXXXX
-GITHUB_CLIENT_SECRET=XXXXXX
+GITHUB_CLIENT_SECRET=XXXXX
 
 ORCID_CLIENT_ID=APP-XXXXXX
-ORCID_CLIENT_SECRET=XXXXXXXX
+ORCID_CLIENT_SECRET=XXXX
 
 NEXTAUTH_SECRET=ANY_RANDOM_STRING_SECRET
 NEXTAUTH_URL=http://localhost:3000 #FOR LOCAL DEPLOYMENT
 
+########################################################################################################
+######### Ipify (Optional) ###############################################################
+#Maps  IP to Address city country...
+########################################################################################################
+
+NEXT_PUBLIC_IPIFY_KEY=
 
 ########################################################################################################
 ######### Structured Resource Extraction ##############################################################
 # Endpoints for uploading and saving structured resources.
 ########################################################################################################
-
-NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT=http://127.0.0.1:8007/api/structured-resource-extraction
+NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE=http://127.0.0.1:8007/api/token
+#websocket endpoints
+NEXT_PUBLIC_API_NER_ENDPOINT=ws://127.0.0.1:8007/api/ws/ner
+NEXT_PUBLIC_NER_SAVE_ENDPOINT=http://127.0.0.1:8007/api/save/ner
+NEXT_PUBLIC_NER_GET_ENDPOINT=http://127.0.0.1:8007/api/ner
+NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT=ws://127.0.0.1:8007/api/ws/pdf2reproschema
+NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT=ws://127.0.0.1:8007/api/ws/extract-resources
 NEXT_PUBLIC_API_ADMIN_SAVE_STRUCTURED_RESOURCE_ENDPOINT=http://127.0.0.1:8007/api/save/structured-resource
+NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT=http://127.0.0.1:8007/api/structured-resource
 
 ########################################################################################################
 ######### JWT Authentication ##########################################################################
 # Common JWT credentials for accessing backend services.
 ########################################################################################################
 
-NEXT_PUBLIC_JWT_USER=XXXXXXXX
-NEXT_PUBLIC_JWT_PASSWORD=XXXXXXX
+NEXT_PUBLIC_JWT_USER=test@test.com
+NEXT_PUBLIC_JWT_PASSWORD=test13e
 
 ########################################################################################################
 ######### User Profile Management #####################################################################
 # Endpoints for creating, fetching, and updating user profiles.
 ########################################################################################################
 
-NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE=http://127.0.0.1:8007/api/token
-NEXT_PUBLIC_CREATE_USER_PROFILE_ENDPOINT_USER_MANAGEMENT_SERVICE=http://127.0.0.1:8007/api/users/profile
-NEXT_PUBLIC_GET_ENDPOINT_USER_PROFILE_USER_MANAGEMENT_SERVICE=http://127.0.0.1:8007/api/users/profile
-NEXT_PUBLIC_UPDATE_ENDPOINT_USER_PROFILE_USER_MANAGEMENT_SERVICE=http://127.0.0.1:8007/api/users/profile
-NEXT_PUBLIC_GET_ENDPOINT_USER_ACTIVITY_USER_MANAGEMENT_SERVICE=
+NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE=http://127.0.0.1:8008/api/token
+NEXT_PUBLIC_CREATE_USER_PROFILE_ENDPOINT_USER_MANAGEMENT_SERVICE=http://127.0.0.1:8008/api/users/profile
+NEXT_PUBLIC_GET_ENDPOINT_USER_PROFILE_USER_MANAGEMENT_SERVICE=http://127.0.0.1:8009/api/users/profile
+NEXT_PUBLIC_UPDATE_ENDPOINT_USER_PROFILE_USER_MANAGEMENT_SERVICE=http://127.0.0.1:8008/api/users/profile
+NEXT_PUBLIC_GET_ENDPOINT_USER_ACTIVITY_USER_MANAGEMENT_SERVICE=http://127.0.0.1:8008/api/users/activities
+
 
 ########################################################################################################
 ######### Chat Service #################################################################################
 # Endpoints for chat-related token generation and message streaming.
 ########################################################################################################
 
-NEXT_PUBLIC_TOKEN_ENDPOINT_CHAT_SERVICE=http://127.0.0.1:8007/api/token
+NEXT_PUBLIC_TOKEN_ENDPOINT_CHAT_SERVICE=http://127.0.0.1:8011/api/token
 NEXT_PUBLIC_CHAT_SERVICE_API_ENDPOINT=http://127.0.0.1:8011/api/chat?stream=false
 
 ########################################################################################################
@@ -90,16 +103,21 @@ NEXT_PUBLIC_CHAT_SERVICE_API_ENDPOINT=http://127.0.0.1:8011/api/chat?stream=fals
 # Endpoints for querying the Knowledge Graph and uploading triples.
 ########################################################################################################
 
-NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE=http://127.0.0.1:8010/token
+NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE=http://localhost:8010/api/token
 
 # Query registered named graphs
-NEXT_PUBLIC_API_NAMED_GRAPH_QUERY_ENDPOINT=http://127.0.0.1:8010/query/registered-named-graphs
+NEXT_PUBLIC_API_NAMED_GRAPH_QUERY_ENDPOINT=http://localhost:8010/api/query/registered-named-graphs
 
 # SPARQL query endpoint (used for querying knowledge graph)
-NEXT_PUBLIC_API_QUERY_ENDPOINT=http://127.0.0.1:8010/query/sparql/
+NEXT_PUBLIC_API_QUERY_ENDPOINT=http://localhost:8010/api/query/sparql/
 
 # Upload RDF/TTL/JSON-LD files representing Knowledge Graph triples
-NEXT_PUBLIC_API_ADMIN_INSERT_KGS_JSONLD_TTL_ENDPOINT=http://127.0.0.1:8010/insert/files/knowledge-graph-triples
+NEXT_PUBLIC_API_ADMIN_INSERT_KGS_JSONLD_TTL_ENDPOINT=http://localhost:8010/api/insert/files/knowledge-graph-triples
+
+# all job status
+NEXT_PUBLIC_API_ADMIN_INSERT_KGS_JSONLD_TTL_JOB_STATUS_ENDPOINT=http://localhost:8010/api/insert/jobs
+#single job status
+NEXT_PUBLIC_API_ADMIN_INSERT_ALL_KGS_JSONLD_TTL_JOB_STATUS_ENDPOINT=http://localhost:8010/api/insert/user/jobs/detail
 ```
 
 ---

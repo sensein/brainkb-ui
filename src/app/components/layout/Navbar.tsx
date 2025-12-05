@@ -251,6 +251,10 @@ const Navbar: React.FC = () => {
                                                 setIsOpen(false);
                                                 setIsMobileMenuOpen(false);
                                             }} className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Submit Data</Link>
+                                            <Link href="/user/job-status" onClick={() => {
+                                                setIsOpen(false);
+                                                setIsMobileMenuOpen(false);
+                                            }} className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Job Status</Link>
                                             <Link href="/user/profile" onClick={() => {
                                                 setIsOpen(false);
                                                 setIsMobileMenuOpen(false);
