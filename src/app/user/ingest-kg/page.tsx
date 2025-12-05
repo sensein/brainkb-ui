@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { getData } from "../../components/utils/getData";
 import StatusIndicator, { StatusType } from "../../components/ui/StatusIndicator";
 import { clientEnv } from "../../../config/env";
@@ -11,6 +12,7 @@ interface NamedGraph {
     graph: string;
     description: string;
 }
+
 
 export default function IngestKnowledgeGraphPage() {
     const { data: session } = useSession();
@@ -136,10 +138,22 @@ export default function IngestKnowledgeGraphPage() {
         }
     };
 
+    // Helper to get user ID from session
+    const getUserId = (): string | null => {
+        if (!session?.user) return null;
+        return session.user.id || session.user.orcid_id || session.user.email || null;
+    };
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!files.length || !selectedGraph || selectedGraph === "") {
             setError("Please select a named graph and files to upload.");
+            return;
+        }
+
+        const userId = getUserId();
+        if (!userId) {
+            setError("User ID not found. Please log in again.");
             return;
         }
 
@@ -154,17 +168,17 @@ export default function IngestKnowledgeGraphPage() {
                 formData.append("files", files[i]);
             }
             formData.append("named_graph_iri", selectedGraph);
-            
+            formData.append("user_id", userId);
             // Determine file type from file extension
             const fileExtension = files[0].name.split('.').pop()?.toLowerCase();
             const fileType = fileExtension === 'ttl' ? 'ttl' : 'jsonld';
             formData.append("file_type", fileType);
 
-            // Add host and endpoint
-
-            const endpoint = process.env.NEXT_PUBLIC_API_ADMIN_INSERT_KGS_JSONLD_TTL_ENDPOINT;
-
-            formData.append("endpoint", endpoint || '');
+            const endpoint = clientEnv.get('NEXT_PUBLIC_API_ADMIN_INSERT_KGS_JSONLD_TTL_ENDPOINT');
+            if (!endpoint) {
+                throw new Error('Upload endpoint not configured');
+            }
+            formData.append("endpoint", endpoint);
 
             const response = await fetch("/api/generic_kg_upload", {
                 method: "POST",
@@ -177,9 +191,12 @@ export default function IngestKnowledgeGraphPage() {
                 throw new Error(result.error || `Error: ${response.status}`);
             }
 
-            setSuccessMessage(result.message || "Files uploaded successfully!");
-            setFiles([]); // Reset file input
+            // Upload successful - task is done
+            setSuccessMessage("Files uploaded successfully! Your job has been created and is processing in the background.");
             setCurrentStatus('done');
+            
+            // Clear the file list after successful upload
+            setFiles([]);
 
         } catch (err) {
             console.error("Error uploading files:", err);
@@ -251,7 +268,7 @@ export default function IngestKnowledgeGraphPage() {
                             {currentStatus === 'idle' && 'Ready to upload knowledge graphs'}
                             {currentStatus === 'connecting' && 'Establishing connection...'}
                             {currentStatus === 'connected' && 'Connected and ready'}
-                            {currentStatus === 'processing' && 'Uploading and processing files...'}
+                            {currentStatus === 'processing' && 'Uploading files...'}
                             {currentStatus === 'done' && 'Knowledge graph uploaded successfully'}
                             {currentStatus === 'error' && 'An error occurred during upload'}
                         </p>
@@ -334,10 +351,30 @@ export default function IngestKnowledgeGraphPage() {
                     </div>
                 </div>
 
-                {/* Messages and Submit Button */}
+                {/* Upload Status */}
+                {isUploading && (
+                    <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <h3 className="text-lg font-semibold mb-3">Uploading</h3>
+                        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-gray-700 dark:text-gray-300 border border-blue-200 dark:border-blue-800">
+                            Uploading files... Please wait.
+                        </div>
+                    </div>
+                )}
+
+            {/* Messages and Submit Button */}
                 <div className="space-y-4">
                     {error && <div className="text-red-500 text-sm p-3 bg-red-100 dark:bg-red-900/20 rounded-lg">{error}</div>}
-                    {successMessage && <div className="text-green-500 text-sm p-3 bg-green-100 dark:bg-green-900/20 rounded-lg">{successMessage}</div>}
+                    {successMessage && (
+                        <div className="text-green-500 text-sm p-3 bg-green-100 dark:bg-green-900/20 rounded-lg">
+                            <p className="mb-2">{successMessage}</p>
+                            <Link 
+                                href="/user/job-status"
+                                className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium underline"
+                            >
+                                View Job Status →
+                            </Link>
+                        </div>
+                    )}
                     
                     <button
                         type="submit"

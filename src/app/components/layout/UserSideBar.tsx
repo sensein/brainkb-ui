@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Database, Brain, FileText, Upload, User } from "lucide-react";
+import { LayoutDashboard, Database, Brain, FileText, Upload, User, Activity } from "lucide-react";
 
 const UserSideBar: React.FC = () => {
     const pathname = usePathname();
@@ -21,6 +21,11 @@ const UserSideBar: React.FC = () => {
             title: "Resource Extraction",
             href: "/user/extract-resource",
             icon: FileText,
+        },
+        {
+            title: "Job Status",
+            href: "/user/job-status",
+            icon: Activity,
         },
 //         {
 //             title: "Pdf2Reproschema",
