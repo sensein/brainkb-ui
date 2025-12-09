@@ -783,11 +783,15 @@ function EnhancedDetailsSection({ item, config, data, currentId, currentSlug }: 
                     );
                   }
 
-                  return renderCard(
-                    section.title,
-                    section.icon,
-                    sectionContent,
-                    layout
+                  return (
+                    <div key={`section-${sectionIdx}-${section.title || 'unnamed'}`}>
+                      {renderCard(
+                        section.title,
+                        section.icon,
+                        sectionContent,
+                        layout
+                      )}
+                    </div>
                   );
                 })}
               </div>

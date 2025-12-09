@@ -6,7 +6,10 @@ title: "NER Terms"
 dataSource:
   type: "api-get"
   endpoint: "NEXT_PUBLIC_NER_GET_ENDPOINT"
-  apiRoute: "/api/ner/withouttoken"
+  apiRoute: "/api/ner"
+  params:
+    tokenEndpointType: "ml"  # Options: "ml", "query", "default" (default: "query")
+    useAuth: true  # Optional: set to false to disable auth (default: true)
   idParam: "id"
 tabs:
   - id: "summary"
