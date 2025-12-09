@@ -783,11 +783,15 @@ function EnhancedDetailsSection({ item, config, data, currentId, currentSlug }: 
                     );
                   }
 
-                  return renderCard(
-                    section.title,
-                    section.icon,
-                    sectionContent,
-                    layout
+                  return (
+                    <div key={`section-${sectionIdx}-${section.title || 'unnamed'}`}>
+                      {renderCard(
+                        section.title,
+                        section.icon,
+                        sectionContent,
+                        layout
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -1120,10 +1124,20 @@ export default function DynamicDetailPage({ config }: DynamicDetailPageProps) {
           
           setData(extractedData);
         } else if (dataSource.type === 'api-get') {
-          // Get the API route (e.g., "/api/ner/withouttoken")
-          const apiRoute = dataSource.endpoint.startsWith('/api/') 
+          // Determine if we should use auth based on config or default to true
+          const useAuth = (dataSource.params as any)?.useAuth !== false;
+          const tokenEndpointType = (dataSource.params as any)?.tokenEndpointType || 'query';
+
+          // Get the API route (e.g., "/api/ner/withouttoken" or "/api/ner")
+          let apiRoute = dataSource.endpoint.startsWith('/api/') 
             ? dataSource.endpoint 
             : `/api/${dataSource.endpoint}`;
+          
+          // If auth is enabled, automatically switch from /withouttoken route to authenticated route
+          if (useAuth && apiRoute.includes('/withouttoken')) {
+            apiRoute = apiRoute.replace('/withouttoken', '');
+            console.log('[DynamicDetailPage] Switched to authenticated route:', apiRoute);
+          }
           
           // Get the backend endpoint URL from environment variable
           const envVarName = (dataSource.params as any)?.envVarName || dataSource.endpoint;
@@ -1136,17 +1150,27 @@ export default function DynamicDetailPage({ config }: DynamicDetailPageProps) {
             throw new Error(`${envVarName} environment variable is not set`);
           }
 
-          const { fetchPaginatedDataWithoutToken } = await import('@/src/utils/api/api-client-without-token');
+          // Filter out internal config params that shouldn't be sent to the API
+          const { tokenEndpointType: _, useAuth: __, envVarName: ___, ...apiParams } = (dataSource.params as any) || {};
+
+          console.log('[DynamicDetailPage] Token endpoint type:', tokenEndpointType);
+          console.log('[DynamicDetailPage] Use auth:', useAuth);
+          console.log('[DynamicDetailPage] API route:', apiRoute);
+          console.log('[DynamicDetailPage] Backend endpoint:', backendEndpoint);
+
+          const { fetchPaginatedData } = await import('@/src/utils/api/api-client');
           
-          result = await fetchPaginatedDataWithoutToken({
+          result = await fetchPaginatedData({
             endpoint: apiRoute,
             limit: '1',
             skip: '0',
             params: { 
               endpoint: backendEndpoint,
-              [dataSource.idParam || 'id']: decodedId 
+              ...(useAuth ? { tokenEndpointType } : {}), // Only pass tokenEndpointType if auth is enabled
+              [dataSource.idParam || 'id']: decodedId,
+              ...apiParams
             },
-          }) as { success: boolean; data?: any; error?: string };
+          }, useAuth, tokenEndpointType) as { success: boolean; data?: any; error?: string };
 
           if (result.success) {
             let rawData;

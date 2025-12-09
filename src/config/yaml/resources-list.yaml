@@ -6,7 +6,10 @@ description: "Browse extracted resources from neuroscience publications, includi
 dataSource:
   type: "api-get"
   endpoint: "NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT"
-  apiRoute: "/api/resources/withouttoken"
+  apiRoute: "/api/resources"
+  params:
+    tokenEndpointType: "ml"  # Options: "ml", "query", "default" (default: "query")
+    useAuth: true  # Optional: set to false to disable auth (default: true)
   dataExtractor: "extractResourceData"
 columns:
   - key: "name"

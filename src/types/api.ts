@@ -28,6 +28,7 @@ export interface FetchOptions {
   search?: string;
   id?: string;
   baseUrl?: string;
+  params?: Record<string, string>;
 }
 
 export interface FetchOptionsWithoutToken {

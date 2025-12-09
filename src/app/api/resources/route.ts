@@ -9,7 +9,11 @@ import { env } from '@/src/config/env';
 export const dynamic = 'force-dynamic';
 
 // Search for a specific resource by ID
-async function searchResourceById(id: string): Promise<any> {
+async function searchResourceById(
+    id: string, 
+    endpoint?: string,
+    tokenEndpointType: 'ml' | 'query' | 'default' = 'query'
+): Promise<any> {
     // Check for pre-warmed cache first
     const warmedCache = getWarmedCache<{ data: any; timestamp?: number }>(`resource-entity-${id}`);
     
@@ -18,36 +22,47 @@ async function searchResourceById(id: string): Promise<any> {
         return warmedCache.data;
     }
 
-    const endpoint = env.resourceEndpoint;
-    if (!endpoint) {
-        throw new Error('NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT environment variable is not set');
+    const finalEndpoint = endpoint || env.resourceEndpoint;
+    if (!finalEndpoint) {
+        throw new Error('Endpoint is required. Provide it as a parameter or set NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT environment variable');
     }
 
-    return await searchById(endpoint, id);
+    console.log('[Resources API] Searching by ID with tokenEndpointType:', tokenEndpointType, 'endpoint:', finalEndpoint);
+    return await searchById(finalEndpoint, id, undefined, true, tokenEndpointType);
 }
 
 // Cached version of search by ID
-function getCachedResourceById(id: string) {
+function getCachedResourceById(
+    id: string, 
+    endpoint?: string,
+    tokenEndpointType: 'ml' | 'query' | 'default' = 'query'
+) {
     return CacheService.createCache(
-        async () => searchResourceById(id),
-        `resource-entity-${id}`,
+        async () => searchResourceById(id, endpoint, tokenEndpointType),
+        `resource-entity-${id}-${tokenEndpointType}-${endpoint || 'default'}`,
         [`resource-entity-${id}`, 'resource-all', 'resource-entities'],
         CACHE_DURATIONS.MEDIUM
     );
 }
 
-// Cached version of resource data fetch
-function getCachedResourceData(limit: string, skip: string, search?: string) {
+// Cached version of resource data fetch (same pattern as NER route)
+function getCachedResourceData(
+    endpoint: string, 
+    limit: string, 
+    skip: string, 
+    search?: string,
+    tokenEndpointType: 'ml' | 'query' | 'default' = 'query'
+) {
     return CacheService.createCache(
         async () => {
-            const endpoint = env.resourceEndpoint;
             if (!endpoint) {
-                throw new Error('NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT environment variable is not set');
+                throw new Error('Endpoint is required');
             }
 
-            return await fetchPaginatedData({ endpoint, limit, skip, search });
+            console.log('[Resources API] Calling backend with tokenEndpointType:', tokenEndpointType);
+            return await fetchPaginatedData({ endpoint, limit, skip, search }, true, tokenEndpointType);
         },
-        `resource-data-${limit}-${skip}-${search || ''}`,
+        `resource-data-${limit}-${skip}-${search || ''}-${endpoint}-${tokenEndpointType}`,
         [`resource-list-${limit}-${skip}-${search || ''}`, 'resource-all', 'resource-lists'],
         CACHE_DURATIONS.MEDIUM
     );
@@ -60,17 +75,22 @@ export async function GET(request: NextRequest) {
         const limit = searchParams.get('limit') || '50';
         const skip = searchParams.get('skip') || '0';
         const search = searchParams.get('search') || undefined;
-
-        const endpoint = env.resourceEndpoint;
+        
+        // Accept endpoint from query params (for dynamic config) or fall back to env var
+        const endpoint = searchParams.get('endpoint') || env.resourceEndpoint;
         if (!endpoint) {
             return NextResponse.json(
                 {
                     success: false,
-                    error: 'NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT environment variable is not set'
+                    error: 'Endpoint is required. Provide it as a query parameter or set NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT environment variable'
                 },
                 { status: 500 }
             );
         }
+        
+        // Accept tokenEndpointType from query params (passed from DynamicListPage/DynamicDetailPage) or default to 'query'
+        const tokenEndpointType = (searchParams.get('tokenEndpointType') as 'ml' | 'query' | 'default') || 'query';
+        console.log('[Resources API] Received tokenEndpointType:', tokenEndpointType);
 
         // If ID is provided, search for that specific item
         if (id) {
@@ -86,8 +106,8 @@ export async function GET(request: NextRequest) {
                     });
                 }
 
-                // Use cached search function
-                const cachedSearch = getCachedResourceById(id);
+                // Use cached search function with tokenEndpointType
+                const cachedSearch = getCachedResourceById(id, endpoint, tokenEndpointType);
                 const foundItem = await cachedSearch();
 
                 return NextResponse.json({
@@ -161,7 +181,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Use cached fetch function
-        const cachedFetch = getCachedResourceData(limit, skip, search);
+        const cachedFetch = getCachedResourceData(endpoint, limit, skip, search, tokenEndpointType);
         const result = await cachedFetch() as {
           data?: unknown[];
           total?: number;
