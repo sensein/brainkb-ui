@@ -28,7 +28,7 @@ class PaginatedApiService {
     useAuth: boolean = true,
     tokenEndpointType: 'ml' | 'query' | 'default' = 'query'
   ): Promise<unknown> {
-    const { endpoint, limit = DEFAULT_PAGINATION.LIMIT, skip = DEFAULT_PAGINATION.SKIP, search, baseUrl } = options;
+    const { endpoint, limit = DEFAULT_PAGINATION.LIMIT, skip = DEFAULT_PAGINATION.SKIP, search, baseUrl, params } = options;
     
     let url: URL;
     try {
@@ -58,6 +58,15 @@ class PaginatedApiService {
       url.searchParams.set('search', search.trim());
     }
 
+    // Add additional query params if provided
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          url.searchParams.set(key, String(value));
+        }
+      });
+    }
+
     // Build headers with optional authentication
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -65,7 +74,9 @@ class PaginatedApiService {
     };
 
     if (useAuth) {
+      console.log('[fetchPaginatedData] Using auth with tokenEndpointType:', tokenEndpointType);
       const authHeaders = await withAuthHeaders(tokenEndpointType);
+      console.log('[fetchPaginatedData] Auth headers received:', authHeaders ? 'Yes' : 'No', authHeaders?.Authorization ? 'Token present' : 'No token');
       Object.assign(headers, authHeaders);
     }
 
@@ -86,7 +97,7 @@ class PaginatedApiService {
   /**
    * Search for an entity by ID by paginating through the list endpoint.
    * 
-   * ⚠️ PERFORMANCE WARNING: This function simulates a direct ID lookup by paginating
+   * PERFORMANCE WARNING: This function simulates a direct ID lookup by paginating
    * through the list endpoint. This is highly inefficient and will lead to poor performance
    * as the number of entities grows, potentially making up to 50 API calls to find a single entity.
    * 

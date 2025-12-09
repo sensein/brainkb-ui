@@ -66,6 +66,7 @@ async function fetchAuthTokenFromEndpoint(tokenEndpoint: string, serviceName: st
  */
 async function fetchMLAuthToken(): Promise<string> {
     const tokenEndpoint = env.tokenEndpointMLService;
+    console.log('[fetchMLAuthToken] ML token endpoint:', tokenEndpoint || 'NOT CONFIGURED');
     if (!tokenEndpoint) {
         throw new Error('ML service token endpoint not configured');
     }
@@ -147,13 +148,20 @@ export async function withAuthHeaders(tokenEndpoint?: TokenEndpointType): Promis
 
     if (env.useBearerToken) {
         try {
-            const token = await getAuthTokenForService(tokenEndpoint || 'default');
+            const endpointType = tokenEndpoint || 'default';
+            console.log('[withAuthHeaders] Fetching token for endpoint type:', endpointType);
+            const token = await getAuthTokenForService(endpointType);
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`;
+                console.log('[withAuthHeaders] Token successfully obtained for', endpointType);
+            } else {
+                console.warn('[withAuthHeaders] No token returned for endpoint type:', endpointType);
             }
         } catch (error) {
-            console.warn('[Auth] Failed to get bearer token, proceeding without authentication');
+            console.warn('[Auth] Failed to get bearer token, proceeding without authentication', error);
         }
+    } else {
+        console.log('[withAuthHeaders] Bearer token disabled (env.useBearerToken is false)');
     }
 
     return headers;

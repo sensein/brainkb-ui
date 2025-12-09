@@ -244,9 +244,10 @@ function buildDetailPageConfig(pageConfig: any): DetailPageConfig {
   if (dataSourceType === 'sparql' && pageConfig.dataSource.cardConfigFile) {
     dataSource.cardConfigFile = pageConfig.dataSource.cardConfigFile;
   } else {
-    // For API-based sources, add params for env var lookup
+    // For API-based sources, merge params from YAML config and add env var lookup
     dataSource.params = {
-      envVarName: pageConfig.dataSource.endpoint,
+      ...pageConfig.dataSource.params, // Merge params from YAML (tokenEndpointType, useAuth, etc.)
+      envVarName: pageConfig.dataSource.endpoint, // Store env var name for backend URL lookup
     };
     dataSource.dataExtractor = pageConfig.dataSource.dataExtractor
       ? (rawData: any) => {

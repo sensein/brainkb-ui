@@ -9,7 +9,11 @@ import { env } from '@/src/config/env';
 export const dynamic = 'force-dynamic';
 
 // Search for a specific NER entity by ID
-async function searchNERById(id: string): Promise<any> {
+async function searchNERById(
+    id: string, 
+    endpoint?: string,
+    tokenEndpointType: 'ml' | 'query' | 'default' = 'query'
+): Promise<any> {
     // Check for pre-warmed cache first
     const warmedCache = getWarmedCache<{ data: any; timestamp?: number }>(`ner-entity-${id}`);
     
@@ -18,36 +22,47 @@ async function searchNERById(id: string): Promise<any> {
         return warmedCache.data;
     }
 
-    const endpoint = env.nerEndpoint;
-    if (!endpoint) {
-        throw new Error('NEXT_PUBLIC_NER_GET_ENDPOINT environment variable is not set');
+    const finalEndpoint = endpoint || env.nerEndpoint;
+    if (!finalEndpoint) {
+        throw new Error('Endpoint is required. Provide it as a parameter or set NEXT_PUBLIC_NER_GET_ENDPOINT environment variable');
     }
 
-    return await searchById(endpoint, id);
+    console.log('[NER API] Searching by ID with tokenEndpointType:', tokenEndpointType, 'endpoint:', finalEndpoint);
+    return await searchById(finalEndpoint, id, undefined, true, tokenEndpointType);
 }
 
 // Cached version of search by ID
-function getCachedNERById(id: string) {
+function getCachedNERById(
+    id: string, 
+    endpoint?: string,
+    tokenEndpointType: 'ml' | 'query' | 'default' = 'query'
+) {
     return CacheService.createCache(
-        async () => searchNERById(id),
-        `ner-entity-${id}`,
+        async () => searchNERById(id, endpoint, tokenEndpointType),
+        `ner-entity-${id}-${tokenEndpointType}-${endpoint || 'default'}`,
         [`ner-entity-${id}`, 'ner-all', 'ner-entities'],
         CACHE_DURATIONS.MEDIUM
     );
 }
 
-// Cached version of NER data fetch
-function getCachedNERData(limit: string, skip: string, search?: string) {
+// Cached version of NER data fetch (same pattern as withouttoken route)
+function getCachedNERData(
+    endpoint: string, 
+    limit: string, 
+    skip: string, 
+    search?: string,
+    tokenEndpointType: 'ml' | 'query' | 'default' = 'query'
+) {
     return CacheService.createCache(
         async () => {
-            const endpoint = env.nerGetEndpoint;
             if (!endpoint) {
-                throw new Error('NEXT_PUBLIC_NER_GET_ENDPOINT environment variable is not set');
+                throw new Error('Endpoint is required');
             }
 
-            return await fetchPaginatedData({ endpoint, limit, skip, search });
+            console.log('[NER API] Calling backend with tokenEndpointType:', tokenEndpointType);
+            return await fetchPaginatedData({ endpoint, limit, skip, search }, true, tokenEndpointType);
         },
-        `ner-data-${limit}-${skip}-${search || ''}`,
+        `ner-data-${limit}-${skip}-${search || ''}-${endpoint}-${tokenEndpointType}`,
         [`ner-list-${limit}-${skip}-${search || ''}`, 'ner-all', 'ner-lists'],
         CACHE_DURATIONS.MEDIUM
     );
@@ -60,19 +75,24 @@ export async function GET(request: NextRequest) {
         const limit = searchParams.get('limit') || '50';
         const skip = searchParams.get('skip') || '0';
         const search = searchParams.get('search') || undefined;
-
-        const endpoint = env.nerGetEndpoint;
+        
+        // Accept endpoint from query params (for dynamic config) or fall back to env var
+        const endpoint = searchParams.get('endpoint') || env.nerGetEndpoint;
         if (!endpoint) {
             return NextResponse.json(
                 {
                     success: false,
-                    error: 'NEXT_PUBLIC_NER_GET_ENDPOINT environment variable is not set'
+                    error: 'Endpoint is required. Provide it as a query parameter or set NEXT_PUBLIC_NER_GET_ENDPOINT environment variable'
                 },
                 { status: 500 }
             );
         }
+        
+        // Accept tokenEndpointType from query params (passed from DynamicListPage) or default to 'query'
+        const tokenEndpointType = (searchParams.get('tokenEndpointType') as 'ml' | 'query' | 'default') || 'query';
+        console.log('[NER API] Received tokenEndpointType:', tokenEndpointType);
 
-        // If ID is provided, search for that specific item
+        // If ID is provided, search for that specific item (same pattern as withouttoken route)
         if (id) {
             try {
                 // Check for pre-warmed cache first
@@ -86,8 +106,8 @@ export async function GET(request: NextRequest) {
                     });
                 }
 
-                // Use cached search function
-                const cachedSearch = getCachedNERById(id);
+                // Use cached search function with tokenEndpointType (same as withouttoken pattern)
+                const cachedSearch = getCachedNERById(id, endpoint, tokenEndpointType);
                 const foundItem = await cachedSearch();
 
                 return NextResponse.json({
@@ -95,7 +115,7 @@ export async function GET(request: NextRequest) {
                     data: foundItem,
                 });
             } catch (error: any) {
-                if (error.message === 'NER entity not found') {
+                if (error.message === 'NER entity not found' || error.message === 'Entity not found') {
                     return NextResponse.json(
                         {
                             success: false,
@@ -160,8 +180,8 @@ export async function GET(request: NextRequest) {
             });
         }
 
-        // Use cached fetch function
-        const cachedFetch = getCachedNERData(limit, skip, search);
+        // Use cached fetch function (for list requests, id will be undefined)
+        const cachedFetch = getCachedNERData(endpoint, limit, skip, search, tokenEndpointType);
         const result = await cachedFetch() as {
           data?: unknown[];
           total?: number;

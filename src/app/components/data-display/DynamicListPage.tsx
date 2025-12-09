@@ -39,12 +39,23 @@ export default function DynamicListPage({ config }: DynamicListPageProps) {
       let result: any;
 
       if (dataSource.type === 'api-get') {
-        const { fetchPaginatedDataWithoutToken } = await import('@/src/utils/api/api-client-without-token');
+         //           @/src/utils/api/api-client-without-token
+        const { fetchPaginatedData } = await import('@/src/utils/api/api-client');
         
-        // Get the API route (e.g., "/api/ner/withouttoken")
-        const apiRoute = dataSource.endpoint.startsWith('/api/') 
+        // Determine if we should use auth based on config or default to true
+        const useAuth = (dataSource.params as any)?.useAuth !== false;
+        const tokenEndpointType = (dataSource.params as any)?.tokenEndpointType || 'query';
+
+        // Get the API route (e.g., "/api/ner/withouttoken" or "/api/ner")
+        let apiRoute = dataSource.endpoint.startsWith('/api/') 
           ? dataSource.endpoint 
           : `/api/${dataSource.endpoint}`;
+        
+        // If auth is enabled, automatically switch from /withouttoken route to authenticated route
+        if (useAuth && apiRoute.includes('/withouttoken')) {
+          apiRoute = apiRoute.replace('/withouttoken', '');
+          console.log('[DynamicListPage] Switched to authenticated route:', apiRoute);
+        }
         
         // Get the backend endpoint URL from environment variable
         const envVarName = (dataSource.params as any)?.envVarName || dataSource.endpoint;
@@ -57,13 +68,27 @@ export default function DynamicListPage({ config }: DynamicListPageProps) {
           throw new Error(`${envVarName} environment variable is not set`);
         }
 
-        result = await fetchPaginatedDataWithoutToken({
+        // Filter out internal config params that shouldn't be sent to the API
+        const { tokenEndpointType: _, useAuth: __, envVarName: ___, ...apiParams } = (dataSource.params as any) || {};
+
+        // Debug logging for token endpoint type
+        console.log('[DynamicListPage] Token endpoint type:', tokenEndpointType);
+        console.log('[DynamicListPage] Use auth:', useAuth);
+        console.log('[DynamicListPage] API route:', apiRoute);
+        console.log('[DynamicListPage] Backend endpoint:', backendEndpoint);
+        console.log('[DynamicListPage] API params (filtered):', apiParams);
+
+        result = await fetchPaginatedData({
           endpoint: apiRoute,
           limit: String(itemsPerPage),
           skip: String(skip),
           search: search.trim() || undefined,
-          params: { endpoint: backendEndpoint, ...dataSource.params },
-        }) as { success: boolean; data?: any[]; total?: number; has_more?: boolean; error?: string };
+          params: { 
+            endpoint: backendEndpoint, 
+            ...(useAuth ? { tokenEndpointType } : {}), // Only pass tokenEndpointType if auth is enabled
+            ...apiParams 
+          },
+        }, useAuth, tokenEndpointType) as { success: boolean; data?: any[]; total?: number; has_more?: boolean; error?: string };
 
         if (result.success && Array.isArray(result.data)) {
           let processedData = result.data;
