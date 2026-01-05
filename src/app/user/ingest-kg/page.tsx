@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getData } from "../../components/utils/getData";
 import StatusIndicator, { StatusType } from "../../components/ui/StatusIndicator";
 import { clientEnv } from "../../../config/env";
 
@@ -38,23 +37,23 @@ export default function IngestKnowledgeGraphPage() {
     useEffect(() => {
         const fetchNamedGraphs = async () => {
             try {
-                const endpoint = clientEnv.namedGraphQueryEndpoint;
-                if (!endpoint) {
-                    setError("Named graph endpoint is not configured.");
-                    return;
+                // Use Next.js API route to proxy the request (avoids CORS issues)
+                // The API route handles the server-side call to the microservice
+                const response = await fetch('/api/registered-named-graphs');
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+                    throw new Error(errorData.error || `HTTP ${response.status}`);
                 }
-                
-                // Use centralized getData function for simple GET request
-                // Empty query_parameter object means no SPARQL query, just a simple GET
-                // useAuth defaults to true (with authentication)
-                const response = await getData({}, endpoint, false);
-                
-                if (response && typeof response === 'object') {
+
+                const data = await response.json();
+
+                if (data && typeof data === 'object') {
                     // Handle different response formats
                     // If it's an object with keys, convert to array
-                    const graphs: NamedGraph[] = Array.isArray(response) 
-                        ? response 
-                        : Object.values(response);
+                    const graphs: NamedGraph[] = Array.isArray(data)
+                        ? data
+                        : Object.values(data);
                     setNamedGraphs(graphs);
                     // Don't auto-select the first graph, let user choose
                 } else {
