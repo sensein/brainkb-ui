@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { getData } from "../../components/utils/getData";
 import { clientEnv } from "../../../config/env";
 import { format } from "date-fns";
 
@@ -115,20 +114,25 @@ export default function JobStatusPage() {
 
         try {
             setRefreshing(true);
-            const url = new URL(clientEnv.kgJobStatusEndpoint);
-            // Add user_id if the endpoint supports it (some endpoints might not need it)
-            url.searchParams.set('user_id', userId);
-            url.searchParams.set('limit', '100');
-            url.searchParams.set('offset', '0');
+            // Use Next.js API route to proxy the request (avoids CORS issues)
+            const apiUrl = new URL('/api/job-status', window.location.origin);
+            apiUrl.searchParams.set('user_id', userId);
+            apiUrl.searchParams.set('limit', '100');
+            apiUrl.searchParams.set('offset', '0');
 
-            const response = await getData({}, url.toString(), true, 'query');
+            const response = await fetch(apiUrl.toString());
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            const responseData = await response.json();
 
             // Handle different response formats
             let jobsArray: Job[] = [];
-            if (Array.isArray(response)) {
-                jobsArray = response;
-            } else if (response && typeof response === 'object') {
-                jobsArray = response.data || response.jobs || response.results || response.items || [];
+            if (Array.isArray(responseData)) {
+                jobsArray = responseData;
+            } else if (responseData && typeof responseData === 'object') {
+                jobsArray = responseData.data || responseData.jobs || responseData.results || responseData.items || [];
             }
 
             // Filter by user_id if not already filtered by API
@@ -167,31 +171,36 @@ export default function JobStatusPage() {
         }
 
         try {
-            // Use the single job detail endpoint with job_id parameter
-            const url = new URL(clientEnv.kgAllJobsStatusEndpoint);
-            url.searchParams.set('user_id', userId);
-            url.searchParams.set('job_id', jobId);
+            // Use Next.js API route to proxy the request (avoids CORS issues)
+            const apiUrl = new URL('/api/job-details', window.location.origin);
+            apiUrl.searchParams.set('user_id', userId);
+            apiUrl.searchParams.set('job_id', jobId);
 
-            console.log('Fetching job details from:', url.toString());
+            console.log('Fetching job details from:', apiUrl.toString());
             console.log('Job ID:', jobId, 'User ID:', userId);
 
-            const response = await getData({}, url.toString(), true, 'query');
+            const response = await fetch(apiUrl.toString());
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+            const responseData = await response.json();
             
-            console.log('Job details response:', response);
+            console.log('Job details response:', responseData);
 
             // Handle different response formats
             let job: Job | null = null;
             
-            if (Array.isArray(response)) {
+            if (Array.isArray(responseData)) {
                 // If response is an array, find the job with matching ID
-                job = response.find(j => (j.job_id || j.id) === jobId) || response[0] || null;
-            } else if (response && typeof response === 'object') {
+                job = responseData.find(j => (j.job_id || j.id) === jobId) || responseData[0] || null;
+            } else if (responseData && typeof responseData === 'object') {
                 // Check if response is the job object directly
-                if (response.job_id || response.id) {
-                    job = response as Job;
+                if (responseData.job_id || responseData.id) {
+                    job = responseData as Job;
                 } else {
                     // Check common response wrapper keys
-                    const possibleJob = response.data || response.job || response.result || response;
+                    const possibleJob = responseData.data || responseData.job || responseData.result || responseData;
                     if (possibleJob && (possibleJob.job_id || possibleJob.id)) {
                         job = possibleJob as Job;
                     }
@@ -210,7 +219,7 @@ export default function JobStatusPage() {
                 }
                 setSelectedJob(job);
             } else {
-                console.warn('Job not found in response. Response structure:', Object.keys(response || {}));
+                console.warn('Job not found in response. Response structure:', Object.keys(responseData || {}));
                 // Try to use the job from the list if available
                 const jobFromList = jobs.find(j => (j.job_id || j.id) === jobId);
                 if (jobFromList) {
