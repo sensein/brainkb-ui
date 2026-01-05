@@ -139,6 +139,8 @@ export async function getAuthToken(): Promise<string> {
 
 /**
  * Get headers with authentication
+ * When called from client-side, uses API route to proxy token requests (avoids CORS)
+ * When called from server-side, fetches token directly
  */
 export async function withAuthHeaders(tokenEndpoint?: TokenEndpointType): Promise<Record<string, string>> {
     const headers: Record<string, string> = {
@@ -150,7 +152,36 @@ export async function withAuthHeaders(tokenEndpoint?: TokenEndpointType): Promis
         try {
             const endpointType = tokenEndpoint || 'default';
             console.log('[withAuthHeaders] Fetching token for endpoint type:', endpointType);
-            const token = await getAuthTokenForService(endpointType);
+            
+            let token: string | null = null;
+            
+            // Check if we're running on the client-side
+            if (typeof window !== 'undefined') {
+                // Client-side: use API route to proxy token request (avoids CORS)
+                try {
+                    const response = await fetch('/api/auth/token', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ tokenEndpointType: endpointType }),
+                        cache: 'no-store',
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        token = data.token || null;
+                    } else {
+                        console.warn('[withAuthHeaders] Token API route returned error:', response.status);
+                    }
+                } catch (error) {
+                    console.warn('[withAuthHeaders] Failed to fetch token via API route:', error);
+                }
+            } else {
+                // Server-side: fetch token directly
+                token = await getAuthTokenForService(endpointType);
+            }
+            
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`;
                 console.log('[withAuthHeaders] Token successfully obtained for', endpointType);

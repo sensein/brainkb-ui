@@ -159,4 +159,17 @@ bash clean_and_deploy.sh
 Once deployed, open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
- 
+### 3. Run Without Docker
+After installing node
+```bash
+npm install pm2 -g
+```
+
+#### Monitoring
+```bash
+pm2 list
+pm2 logs nextapp
+pm2 stop nextapp
+pm2 delete nextapp
+pm2 start nextapp
+```
