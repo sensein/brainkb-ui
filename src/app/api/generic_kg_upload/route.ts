@@ -52,45 +52,70 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Read all file contents
-    const fileContents: string[] = [];
-    for (const file of files) {
-      const content = await file.text();
-      fileContents.push(content);
+    // Validate endpoint URL
+    if (!endpoint) {
+      return NextResponse.json(
+        { error: 'Endpoint is required' },
+        { status: 400 }
+      );
     }
 
-    // Create FormData for the query service
-    const queryServiceFormData = new FormData();
+    let queryServiceUrl: string;
+    try {
+      // Build URL with query parameters
+      const url = new URL(endpoint);
+      url.searchParams.set('user_id', userId);
+      if (namedGraphIri) {
+        url.searchParams.set('named_graph_iri', namedGraphIri);
+      }
+      url.searchParams.set('max_concurrency', '8');
+      queryServiceUrl = url.toString();
+    } catch (error) {
+      const err = error as Error;
+      console.error('[generic_kg_upload] Invalid endpoint URL:', endpoint, err);
+      return NextResponse.json(
+        { error: `Invalid endpoint URL: ${err.message}` },
+        { status: 400 }
+      );
+    }
+
+    // Read all file contents and convert to Buffers for Node.js FormData
+    const fileBuffers: { name: string; buffer: Buffer; type: string }[] = [];
+    for (const file of files) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        fileBuffers.push({
+          name: file.name,
+          buffer: buffer,
+          type: file.type || 'application/octet-stream'
+        });
+      } catch (error) {
+        const err = error as Error;
+        console.error(`[generic_kg_upload] Failed to read file ${file.name}:`, err);
+        return NextResponse.json(
+          { error: `Failed to read file ${file.name}: ${err.message}` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Use form-data package for Node.js compatibility
+    const FormDataNode = (await import('form-data')).default;
+    const queryServiceFormData = new FormDataNode();
     
     // Add each file as a separate file field
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const content = fileContents[i];
-      
-      // Create a new file object with the content
-      const fileBlob = new Blob([content], { type: file.type || 'application/octet-stream' });
-      const newFile = new File([fileBlob], file.name, { type: file.type || 'application/octet-stream' });
-      
-      queryServiceFormData.append('files', newFile);
+    for (const fileData of fileBuffers) {
+      queryServiceFormData.append('files', fileData.buffer, {
+        filename: fileData.name,
+        contentType: fileData.type
+      });
     }
     
     queryServiceFormData.append('named_graph_iri', namedGraphIri);
     queryServiceFormData.append('file_type', fileType);
 
 
-    console.log('Sending FormData to query service with files:', files.map(f => f.name));
-    console.log('Named graph IRI:', namedGraphIri);
-    console.log('File type:', fileType);
-    console.log('User ID:', userId);
-
-    // Build URL with query parameters
-    const url = new URL(endpoint);
-    url.searchParams.set('user_id', userId);
-    if (namedGraphIri) {
-      url.searchParams.set('named_graph_iri', namedGraphIri);
-    }
-    url.searchParams.set('max_concurrency', '8');
-    const queryServiceUrl = url.toString();
 
     // Get authentication token (without Content-Type header for FormData)
     // FormData needs to set Content-Type automatically with boundary
@@ -100,45 +125,124 @@ export async function POST(request: NextRequest) {
         const token = await getAuthTokenForService('query');
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
+          console.log('[generic_kg_upload] Auth token obtained successfully');
+        } else {
+          console.warn('[generic_kg_upload] No auth token returned');
         }
       } catch (error) {
-        console.warn('[generic_kg_upload] Failed to get auth token:', error);
+        const err = error as Error;
+        console.error('[generic_kg_upload] Failed to get auth token:', err);
+        console.error('[generic_kg_upload] Token error details:', err.message, err.stack);
+        // Continue without auth - let the backend decide if it's required
       }
+    } else {
+      console.log('[generic_kg_upload] Bearer token disabled (env.useBearerToken is false)');
     }
 
-    console.log('Making request to:', queryServiceUrl);
-    console.log('Files count:', files.length);
-    console.log('Headers (Authorization only for FormData):', Object.keys(headers));
+    console.log('[generic_kg_upload] Making request to:', queryServiceUrl);
+    console.log('[generic_kg_upload] Files count:', files.length);
+    console.log('[generic_kg_upload] File names:', files.map(f => f.name));
+    console.log('[generic_kg_upload] Headers (Authorization only for FormData):', Object.keys(headers));
+    console.log('[generic_kg_upload] Named graph IRI:', namedGraphIri);
+    console.log('[generic_kg_upload] File type:', fileType);
+    console.log('[generic_kg_upload] User ID:', userId);
 
-    // Forward the request to the query service
-    // Note: Don't set Content-Type header - fetch will set it automatically with boundary for FormData
-    const response = await fetch(queryServiceUrl, {
-      method: 'POST',
-      headers: headers, // Only Authorization header, no Content-Type
-      body: queryServiceFormData,
+    // Get FormData headers (includes Content-Type with boundary)
+    const formHeaders = queryServiceFormData.getHeaders();
+    
+    // Merge headers (FormData headers + Authorization)
+    const allHeaders = {
+      ...formHeaders,
+      ...headers
+    };
+
+    // Forward the request to the query service using undici for better Node.js FormData support
+    // Note: This works in both local development and Docker environments:
+    // - Local: Can use localhost:8010 or 127.0.0.1:8010
+    // - Docker: Can use Docker service names (e.g., brainkb-unified:8010) if on same network
+    // - The endpoint URL comes from NEXT_PUBLIC_API_ADMIN_INSERT_KGS_JSONLD_TTL_ENDPOINT env var
+    const { Client } = await import('undici');
+    const url = new URL(queryServiceUrl);
+    const origin = url.origin;
+    const path = url.pathname + url.search;
+
+    const client = new Client(origin, {
+      headersTimeout: 3600000 // 1 hour timeout for large file uploads
     });
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error('Query service error:', errorData);
-      return NextResponse.json(
-        { error: 'Failed to upload file to query service' },
-        { status: response.status }
-      );
+    try {
+      const { statusCode, body } = await client.request({
+        path: path,
+        method: 'POST',
+        headers: allHeaders,
+        body: queryServiceFormData,
+        signal: AbortSignal.timeout(3600000) // 1 hour timeout
+      });
+
+      // Convert undici response to fetch-like response
+      let responseData = '';
+      for await (const chunk of body) {
+        responseData += chunk;
+      }
+
+      const response = {
+        ok: statusCode >= 200 && statusCode < 300,
+        status: statusCode,
+        async json() {
+          return JSON.parse(responseData);
+        },
+        async text() {
+          return responseData;
+        }
+      };
+
+      client.close();
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('[generic_kg_upload] Query service error:', errorData);
+        console.error('[generic_kg_upload] Response status:', response.status);
+        
+        let errorMessage = 'Failed to upload file to query service';
+        try {
+          const errorJson = JSON.parse(errorData);
+          errorMessage = errorJson.error || errorJson.message || errorMessage;
+        } catch {
+          errorMessage = errorData || errorMessage;
+        }
+        
+        return NextResponse.json(
+          { 
+            error: errorMessage,
+            status: response.status,
+            details: process.env.NODE_ENV === 'development' ? errorData : undefined
+          },
+          { status: response.status }
+        );
+      }
+
+      const result = await response.json();
+
+      return NextResponse.json({
+        success: true,
+        message: 'File uploaded successfully',
+        data: result
+      });
+    } catch (clientError) {
+      client.close();
+      throw clientError;
     }
-
-    const result = await response.json();
-
-    return NextResponse.json({
-      success: true,
-      message: 'File uploaded successfully',
-      data: result
-    });
 
   } catch (error) {
-    console.error('Error uploading file:', error);
+    const err = error as Error;
+    console.error('[generic_kg_upload] Error uploading file:', err);
+    console.error('[generic_kg_upload] Error stack:', err.stack);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        message: err.message || 'Unknown error occurred',
+        details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      },
       { status: 500 }
     );
   }
