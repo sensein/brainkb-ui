@@ -113,7 +113,18 @@ export abstract class BaseApiService {
     } = options;
 
     // Build URL with query params
+    // Preserve the original protocol (http:// or https://) from the fullUrl
     const url = new URL(fullUrl);
+    
+    // Ensure protocol is preserved (don't let URL constructor change it)
+    if (fullUrl.startsWith('http://') && url.protocol === 'https:') {
+      // If original was http:// but URL constructor changed it, fix it
+      url.protocol = 'http:';
+    } else if (fullUrl.startsWith('https://') && url.protocol === 'http:') {
+      // If original was https:// but URL constructor changed it, fix it
+      url.protocol = 'https:';
+    }
+    
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
