@@ -51,9 +51,15 @@ export default function IngestKnowledgeGraphPage() {
                 if (data && typeof data === 'object') {
                     // Handle different response formats
                     // If it's an object with keys, convert to array
-                    const graphs: NamedGraph[] = Array.isArray(data)
-                        ? data
-                        : Object.values(data);
+                    let graphs: NamedGraph[] = [];
+                    
+                    if (Array.isArray(data)) {
+                        graphs = data;
+                    } else {
+                        // Convert object to array
+                        graphs = Object.values(data) as NamedGraph[];
+                    }
+                    
                     setNamedGraphs(graphs);
                     // Don't auto-select the first graph, let user choose
                 } else {

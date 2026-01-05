@@ -125,27 +125,11 @@ export async function POST(request: NextRequest) {
         const token = await getAuthTokenForService('query');
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
-          console.log('[generic_kg_upload] Auth token obtained successfully');
-        } else {
-          console.warn('[generic_kg_upload] No auth token returned');
         }
       } catch (error) {
-        const err = error as Error;
-        console.error('[generic_kg_upload] Failed to get auth token:', err);
-        console.error('[generic_kg_upload] Token error details:', err.message, err.stack);
         // Continue without auth - let the backend decide if it's required
       }
-    } else {
-      console.log('[generic_kg_upload] Bearer token disabled (env.useBearerToken is false)');
     }
-
-    console.log('[generic_kg_upload] Making request to:', queryServiceUrl);
-    console.log('[generic_kg_upload] Files count:', files.length);
-    console.log('[generic_kg_upload] File names:', files.map(f => f.name));
-    console.log('[generic_kg_upload] Headers (Authorization only for FormData):', Object.keys(headers));
-    console.log('[generic_kg_upload] Named graph IRI:', namedGraphIri);
-    console.log('[generic_kg_upload] File type:', fileType);
-    console.log('[generic_kg_upload] User ID:', userId);
 
     // Get FormData headers (includes Content-Type with boundary)
     const formHeaders = queryServiceFormData.getHeaders();
@@ -200,8 +184,6 @@ export async function POST(request: NextRequest) {
 
       if (!response.ok) {
         const errorData = await response.text();
-        console.error('[generic_kg_upload] Query service error:', errorData);
-        console.error('[generic_kg_upload] Response status:', response.status);
         
         let errorMessage = 'Failed to upload file to query service';
         try {
@@ -235,8 +217,6 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     const err = error as Error;
-    console.error('[generic_kg_upload] Error uploading file:', err);
-    console.error('[generic_kg_upload] Error stack:', err.stack);
     return NextResponse.json(
       { 
         error: 'Internal server error',
