@@ -173,3 +173,18 @@ pm2 stop nextapp
 pm2 delete nextapp
 pm2 start nextapp
 ```
+
+## Important
+
+The value of `http://brainkb-unified` must be configured to match the deployment environment:
+
+- **Docker deployment (UI and microservices on the same machine):**  
+  Configure and reference the `brainkb-unified` Docker network. Please note there are some known issues--UI not recognizing some endpoints--and I am working on fixing this. 
+
+- **UI running outside Docker (for example, via `pm2`):**  
+  Use `http://localhost` as the endpoint.
+
+- **Distributed deployment (UI and microservices on different hosts, such as in AWS):**  
+  Update the value to the appropriate service URL or public endpoint.
+
+Failure to update this value may result in connectivity issues between the UI and the backend services.
