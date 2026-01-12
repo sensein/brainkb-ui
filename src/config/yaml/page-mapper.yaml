@@ -9,6 +9,10 @@ PageMapper:
     filename: "barcodedcellsample-detail.yaml"
 
   - type: "detail"
+    slug: "genomeannotation"
+    filename: "genomeannotation-detail.yaml"
+
+  - type: "detail"
     slug: "celltaxon"
     filename: "celltaxon-detail.yaml"
  

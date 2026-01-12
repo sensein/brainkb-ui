@@ -1,0 +1,83 @@
+
+#EntityView:
+id: ui:1
+name: GenomeAnnotation_card
+slug: genomeannotation
+description: Genome Annotation
+boxes:
+  - box:
+    slug: summarybox
+    id: ui:2
+    name: Summary
+    cardtype: card
+    box_header:
+      key: id
+    sparql_query: |-
+        PREFIX NIMP: <http://example.org/NIMP/>
+                PREFIX prov: <http://www.w3.org/ns/prov#>
+                PREFIX biolink: <https://w3id.org/biolink/vocab/>
+                
+                SELECT DISTINCT ?subject ?predicate ?object ?category_type
+                WHERE {
+                GRAPH <https://test-upload.com/> {
+                  {  BIND(<{0}> AS ?id)
+                      ?subject ?predicate ?id . }
+                      UNION
+                      { BIND(<{0}> AS ?id)
+                      ?id ?predicate ?object . }
+                      UNION
+                      { BIND(<{0}> AS ?id)
+                      ?subject ?id ?object . }
+                      
+                      OPTIONAL {
+                      ?id prov:wasDerivedFrom ?derivedFrom .
+                      ?derivedFrom biolink:category ?category_type .
+                      }
+                  }
+              }
+    box_additional_info:
+      is_iterable: true
+      properties:
+        - key: Source Derived From
+          sparql_query: |-
+            PREFIX NIMP:   <http://example.org/NIMP/>
+            PREFIX prov:   <http://www.w3.org/ns/prov#>
+            PREFIX biolink: <https://w3id.org/biolink/vocab/>
+            
+            SELECT DISTINCT ?subject ?predicate ?object ?category_type
+            WHERE {
+              GRAPH <https://test-upload.com/> {
+            
+                # focus_id is either the root itself or any *direct* wasDerivedFrom target
+                #{
+                #  VALUES ?focus_id { <{0}> }
+                #}
+                #UNION
+                {
+                  <{0}> prov:wasDerivedFrom ?focus_id .
+                }
+            
+                # Neighborhood of each focus_id
+                {
+                  # ... as object
+                  ?subject ?predicate ?focus_id .
+                }
+                UNION
+                {
+                  # ... as subject (but do NOT follow its own wasDerivedFrom further)
+                  ?focus_id ?predicate ?object .
+                  FILTER (?predicate != prov:wasDerivedFrom)
+                }
+                UNION
+                {
+                  # ... as predicate
+                  ?subject ?focus_id ?object .
+                }
+            
+                # Category of the focus node itself
+                OPTIONAL {
+                  ?focus_id biolink:category ?category_type .
+                }
+              }
+            }
+
