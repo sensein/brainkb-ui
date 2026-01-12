@@ -132,7 +132,7 @@ export default function JobStatusPage() {
         const userId = getUserId();
         if (!userId) {
             if (!silent) {
-                setError("User ID not found. Please log in again.");
+            setError("User ID not found. Please log in again.");
             }
             setLoading(false);
             return;
@@ -140,7 +140,7 @@ export default function JobStatusPage() {
 
         if (!clientEnv.kgJobStatusEndpoint) {
             if (!silent) {
-                setError("Jobs endpoint not configured. Please set NEXT_PUBLIC_API_ADMIN_INSERT_KGS_JSONLD_TTL_JOB_STATUS_ENDPOINT in your environment variables.");
+            setError("Jobs endpoint not configured. Please set NEXT_PUBLIC_API_ADMIN_INSERT_KGS_JSONLD_TTL_JOB_STATUS_ENDPOINT in your environment variables.");
             }
             setLoading(false);
             return;
@@ -148,7 +148,7 @@ export default function JobStatusPage() {
 
         try {
             if (!silent) {
-                setRefreshing(true);
+            setRefreshing(true);
             }
             // Use Next.js API route to proxy the request (avoids CORS issues)
             const apiUrl = new URL('/api/job-status', window.location.origin);
@@ -237,7 +237,7 @@ export default function JobStatusPage() {
             });
             
             if (!silent) {
-                setError(null);
+            setError(null);
             }
             
             // For running jobs, fetch details to get current activity info (without opening modal) and check recoverable status
@@ -267,12 +267,12 @@ export default function JobStatusPage() {
         } catch (err) {
             console.error("Error fetching jobs:", err);
             if (!silent) {
-                const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
-                setError(`Failed to load jobs: ${errorMessage}`);
+            const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
+            setError(`Failed to load jobs: ${errorMessage}`);
             }
         } finally {
             if (!silent) {
-                setRefreshing(false);
+            setRefreshing(false);
             }
             setLoading(false);
         }
@@ -1214,7 +1214,7 @@ export default function JobStatusPage() {
                                                             return (
                                                                 <span className={`text-sm font-medium capitalize ${getStatusColor('error')}`}>
                                                                     Stuck
-                                                                </span>
+                                                </span>
                                                             );
                                                         }
                                                         
@@ -1258,24 +1258,24 @@ export default function JobStatusPage() {
                                                         const normalizedStatus = getNormalizedStatus(job);
                                                         return (
                                                             <>
-                                                                <div 
-                                                                    className={`h-2 rounded-full transition-all ${
+                                                        <div 
+                                                            className={`h-2 rounded-full transition-all ${
                                                                         normalizedStatus === 'done' ? 'bg-green-600' :
                                                                         normalizedStatus === 'partial' ? 'bg-yellow-600' :
                                                                         normalizedStatus === 'failed' || normalizedStatus === 'error' ? 'bg-red-600' :
                                                                         normalizedStatus === 'running' ? 'bg-blue-600' :
                                                                         'bg-gray-400'
-                                                                    }`}
-                                                                    style={{ width: `${Math.min(100, progress)}%` }}
-                                                                ></div>
+                                                            }`}
+                                                            style={{ width: `${Math.min(100, progress)}%` }}
+                                                        ></div>
                                                             </>
                                                         );
                                                     })()}
-                                                </div>
+                                                    </div>
                                                 <span className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
                                                     {progress}% ({processedFiles} / {totalFiles})
-                                                </span>
-                                            </div>
+                                                    </span>
+                                                </div>
                                             {(() => {
                                                 const normalizedStatus = getNormalizedStatus(job);
                                                 return (
@@ -1283,7 +1283,7 @@ export default function JobStatusPage() {
                                                         {job.current_file && normalizedStatus === 'running' && (
                                                             <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 break-words" title={job.current_file}>
                                                                 📄 {job.current_file.split('/').pop() || job.current_file}
-                                                            </div>
+                                                </div>
                                                         )}
                                                         {(job.stage_description || job.status_message) && normalizedStatus === 'running' && (
                                                             <div className="text-xs text-gray-600 dark:text-gray-400 mt-1 break-words">
@@ -1301,15 +1301,15 @@ export default function JobStatusPage() {
                                             </td>
                                             <td className="px-6 py-4 text-sm">
                                                 <div className="flex items-center gap-2">
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            fetchJobDetails(jobId);
-                                                        }}
-                                                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                                    >
-                                                        View Details
-                                                    </button>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        fetchJobDetails(jobId);
+                                                    }}
+                                                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                                >
+                                                    View Details
+                                                </button>
                                                     {shouldShowRecovery(job) && !job.unrecoverable && (
                                                         <button
                                                             onClick={(e) => {
@@ -1379,20 +1379,20 @@ export default function JobStatusPage() {
                                             Recoverable
                                         </span>
                                     )}
-                                    <button
-                                        onClick={() => setSelectedJob(null)}
-                                        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                                    >
-                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
-                                </div>
+                                <button
+                                    onClick={() => setSelectedJob(null)}
+                                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
                             </div>
+                        </div>
                         </div>
                         <div className="flex-1 overflow-hidden flex">
                             {/* Left Column - Job Information */}
-                            <div className="flex-1 p-6 space-y-6 overflow-y-auto border-r border-gray-200 dark:border-gray-700">
+                            <div className="flex-1 p-6 space-y-6 overflow-y-auto border-r border-gray-200 dark:border-gray-700 min-w-0">
                             {/* Current Status Section */}
                             {(selectedJob.current_file || selectedJob.status === 'running' || selectedJob.current_stage) && (
                                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
@@ -1752,24 +1752,42 @@ export default function JobStatusPage() {
                                 </>
                             )}
 
-                            {/* Processing History - Moved to right column */}
-                            </div>
+                                    </div>
                             
                             {/* Right Column - Processing History Live Feed */}
-                            {selectedJob.processing_history && selectedJob.processing_history.length > 0 && (
-                                <div className="w-96 p-6 overflow-y-auto bg-gray-50 dark:bg-gray-900/50 border-l border-gray-200 dark:border-gray-700">
+                            {selectedJob.processing_history && selectedJob.processing_history.length > 0 ? (
+                                <div className="w-96 flex-shrink-0 p-6 overflow-y-auto bg-gray-50 dark:bg-gray-900/50 border-l border-gray-200 dark:border-gray-700">
                                     <div className="sticky top-0 bg-gray-50 dark:bg-gray-900/50 pb-4 mb-4 border-b border-gray-200 dark:border-gray-700 z-10">
                                         <div className="flex justify-between items-center">
                                             <h3 className="text-lg font-semibold dark:text-white">Live Processing Feed</h3>
-                                            <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded animate-pulse">
-                                                ● Live
-                                            </span>
+                                            {(() => {
+                                                const normalizedStatus = getNormalizedStatus(selectedJob);
+                                                const isLive = normalizedStatus === 'running';
+                                                return (
+                                                    <span className={`text-xs px-2 py-1 rounded ${isLive ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 animate-pulse' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}`}>
+                                                        {isLive ? '● Live' : '● Complete'}
+                                                    </span>
+                                                );
+                                            })()}
                                         </div>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                            {selectedJob.processing_history.length} entries
-                                        </p>
+                                        <div className="flex justify-between items-center mt-1">
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                {selectedJob.processing_history.length} {selectedJob.processing_history.length === 1 ? 'entry' : 'entries'}
+                                            </p>
+                                            {(() => {
+                                                const normalizedStatus = getNormalizedStatus(selectedJob);
+                                                if (normalizedStatus === 'running' && selectedJob.processed_files !== undefined && selectedJob.total_files !== undefined) {
+                                                    return (
+                                                        <p className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                                                            {selectedJob.processed_files} / {selectedJob.total_files} files
+                                                        </p>
+                                                    );
+                                                }
+                                                return null;
+                                            })()}
                                     </div>
-                                    <div className="space-y-3">
+                                </div>
+                                    <div className="space-y-3" id="processing-feed-container">
                                         {/* Sort by timestamp (most recent first) - Live feed style */}
                                         {[...selectedJob.processing_history]
                                             .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0))
@@ -1825,59 +1843,33 @@ export default function JobStatusPage() {
                                                                         <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 break-words">
                                                                             {entry.file_name}
                                                                         </span>
-                                                                    </div>
-                                                                )}
+                                </div>
+                            )}
                                                                 
                                                                 {/* Status Message */}
                                                                 {entry.status_message && (
                                                                     <div className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
                                                                         {entry.status_message}
-                                                                    </div>
-                                                                )}
-                                                            </div>
+                                </div>
+                            )}
+                        </div>
                                                         </div>
                                                     </div>
                                                 );
                                             })}
                                     </div>
                                 </div>
+                            ) : (
+                                // Empty state when no processing history
+                                <div className="w-96 flex-shrink-0 p-6 bg-gray-50 dark:bg-gray-900/50 border-l border-gray-200 dark:border-gray-700 flex items-center justify-center">
+                                    <div className="text-center">
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">No processing history available</p>
+                                    </div>
+                                </div>
                             )}
-
-                                {/* Fallback if no summary */}
-                                {!selectedJob.summary && (
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Files</label>
-                                            <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                                                {selectedJob.total_files || 0}
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Processed Files</label>
-                                            <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                                                {selectedJob.processed_files || selectedJob.completed_files || selectedJob.files_processed || 0}
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {selectedJob.message && (
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Message</label>
-                                        <p className="mt-1 text-sm text-gray-900 dark:text-gray-100 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                            {selectedJob.message}
-                                        </p>
-                                    </div>
-                                )}
-                                {selectedJob.error && (
-                                    <div>
-                                        <label className="text-sm font-medium text-red-500 dark:text-red-400">Error</label>
-                                        <p className="mt-1 text-sm text-red-700 dark:text-red-300 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                                            {selectedJob.error}
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
+                        </div>
+                        
+                        {/* Modal Footer */}
                         <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
                             <div>
                                 {shouldShowRecovery(selectedJob) && !selectedJob.unrecoverable && (
@@ -1885,7 +1877,8 @@ export default function JobStatusPage() {
                                         onClick={() => {
                                             const jobId = selectedJob.job_id || selectedJob.id;
                                             if (jobId) {
-                                                const jobInfo = `Job ${jobId.substring(0, 8)}... (${selectedJob.status || selectedJob.state || 'unknown'} status)`;
+                                                const normalizedStatus = getNormalizedStatus(selectedJob);
+                                                const jobInfo = `Job ${jobId.substring(0, 8)}... (${normalizedStatus} status)`;
                                                 setRecoveryConfirm({ jobId, jobInfo });
                                             }
                                         }}
