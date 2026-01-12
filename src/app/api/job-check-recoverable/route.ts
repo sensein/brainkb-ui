@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
             return NextResponse.json(
                 {
                     success: false,
-                    error: 'NEXT_PUBLIC_API_ADMIN_INSERT_CHECK_RECOVEABLE_JOB_ENDPOINT environment variable is not set'
+                    error: 'NEXT_PUBLIC_API_ADMIN_INSERT_CHECK_RECOVERABLE_JOB_ENDPOINT environment variable is not set'
                 },
                 { status: 500 }
             );
