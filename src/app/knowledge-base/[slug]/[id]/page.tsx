@@ -19,7 +19,7 @@ export default function KnowledgeBaseDetailPage() {
         if (loadedConfig) {
           setConfig(loadedConfig);
         } else {
-          console.warn(`No configuration found for slug: ${slug}. Make sure it's in page-mapper.yaml or has a card YAML file.`);
+          console.warn(`No configuration found for slug: ${slug}. Make sure it's configured in page-mapper.yaml with a detail YAML file.`);
         }
       } catch (err) {
         console.error(`Error loading config for slug ${slug}:`, err);
