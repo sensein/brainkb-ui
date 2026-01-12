@@ -304,7 +304,7 @@ tabs:
 showProvenance: false
 showRelated: true
 ```
-Make sure you have `*_card.ymal` page to show card, in our case `genomeannotation_card.yaml`. This will contain the SPARQL query.
+Make sure you have `*_card.yaml` page to show card, in our case `genomeannotation_card.yaml`. This will contain the SPARQL query.
 ```yaml
 
 #EntityView:
