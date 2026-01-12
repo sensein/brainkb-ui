@@ -49,7 +49,7 @@ boxiconsstatisticscount:
     sparql_query: |-
       PREFIX biolink: <https://w3id.org/biolink/vocab/> 
       select  (COUNT(DISTINCT(?o)) as ?count) where {
-        GRAPH <https://www.portal.brain-bican.org/grapidreleasev01> {
+        GRAPH <https://test-upload.com/> {
           ?s <https://identifiers.org/brain-bican/vocab/species> ?o.
       }
       }
@@ -62,7 +62,7 @@ boxiconsstatisticscount:
       PREFIX biolink: <https://w3id.org/biolink/vocab/>   
       SELECT DISTINCT (COUNT(?id) as ?count )
       WHERE {
-        GRAPH <https://www.portal.brain-bican.org/grapidreleasev01> {
+        GRAPH <https://test-upload.com/> {
           ?id biolink:category "bican:Donor"^^<http://www.w3.org/2001/XMLSchema#anyURI>; 
         }
       }
@@ -74,7 +74,7 @@ boxiconsstatisticscount:
       PREFIX bican: <https://identifiers.org/brain-bican/vocab/>  
       SELECT  (COUNT (DISTINCT(?id)) as ?count)
       WHERE {
-        GRAPH <https://www.portal.brain-bican.org/grapidreleasev01> {
+        GRAPH <https://test-upload.com/> {
           ?id bican:structure ?o; 
         }
       }
@@ -87,7 +87,7 @@ boxiconsstatisticscount:
       PREFIX biolink: <https://w3id.org/biolink/vocab/>   
       SELECT  (COUNT(DISTINCT(?id)) as ?count )
       WHERE {
-        GRAPH <https://www.portal.brain-bican.org/grapidreleasev01> {
+        GRAPH <https://test-upload.com/> {
             ?id biolink:category "bican:LibraryAliquot"^^<http://www.w3.org/2001/XMLSchema#anyURI>; 
         }
       }

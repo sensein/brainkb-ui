@@ -19,7 +19,7 @@ boxes:
                 
                 SELECT DISTINCT ?subject ?predicate ?object ?category_type
                 WHERE {
-                GRAPH <https://www.brainkb.org/version01> {
+                GRAPH <https://test-upload.com/> {
                   {  BIND(<{0}> AS ?id)
                       ?subject ?predicate ?id . }
                       UNION
@@ -46,7 +46,7 @@ boxes:
             
             SELECT DISTINCT ?subject ?predicate ?object ?category_type
             WHERE {
-              GRAPH <https://www.brainkb.org/version01> {
+              GRAPH <https://test-upload.com/> {
             
                 # focus_id is either the root itself or any *direct* wasDerivedFrom target
                 #{
