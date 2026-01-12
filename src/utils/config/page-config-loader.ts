@@ -4,7 +4,6 @@
 import { pageMapperConfig } from '@/src/app/components/pageMapperConfig';
 import { ListPageConfig, DetailPageConfig } from '@/src/types/page-config';
 import { Network, Database, BookOpen, Activity, FileText, MessageSquare, MapPin, User, Calendar, Tag as TagIcon, Package, Link as LinkIcon } from "lucide-react";
-import { detailConfigMap } from './detail-config-imports';
 
 // Icon mapping
 const iconMap: Record<string, any> = {
@@ -125,108 +124,63 @@ function buildListPageConfig(pageConfig: any): ListPageConfig {
 
 export async function getDetailPageConfig(route: string, slug?: string): Promise<DetailPageConfig | null> {
   // First try to find in mapper for modular YAML files
-  if (slug) {
-    const mapperEntry = pageMapperConfig.PageMapper?.find(
+  if (!slug) {
+    console.warn(`[getDetailPageConfig] No slug provided`);
+    return null;
+  }
+
+  try {
+    // Debug: Check if pageMapperConfig is loaded
+    if (!pageMapperConfig || !pageMapperConfig.PageMapper) {
+      console.error(`[getDetailPageConfig] pageMapperConfig is not loaded!`, pageMapperConfig);
+      return null;
+    }
+    
+    console.log(`[getDetailPageConfig] Looking for slug: ${slug}`);
+    console.log(`[getDetailPageConfig] All mapper entries:`, pageMapperConfig.PageMapper);
+    
+    const mapperEntry = pageMapperConfig.PageMapper.find(
       (m) => m.type === 'detail' && m.slug === slug
     );
     
-    if (mapperEntry && mapperEntry.filename) {
-      try {
-        // Try static import map first
-        let pageConfig = detailConfigMap[mapperEntry.filename];
-        
-        // If not in static map, try dynamic import
-        if (!pageConfig) {
-          const moduleData = await import(`@/src/config/yaml/${mapperEntry.filename}`);
-          pageConfig = moduleData.default;
-        }
-        
-        if (pageConfig) {
-          return buildDetailPageConfig(pageConfig);
-        } else {
-          console.error(`No default export found in ${mapperEntry.filename}`);
-        }
-      } catch (err) {
-        console.error(`Failed to load ${mapperEntry.filename}:`, err);
-        // Log more details about the error
-        if (err instanceof Error) {
-          console.error(`Error message: ${err.message}`);
-          console.error(`Error stack: ${err.stack}`);
-        }
-      }
+    if (!mapperEntry) {
+      console.warn(`[getDetailPageConfig] No mapper entry found for slug: ${slug}`);
+      console.warn(`[getDetailPageConfig] Available detail slugs:`, 
+        pageMapperConfig.PageMapper.filter(m => m.type === 'detail').map(m => m.slug)
+      );
+      return null;
     }
     
-    // Fallback: Check for SPARQL-based card YAML files (for entities not in mapper)
-    // This handles legacy SPARQL entities that might not have detail YAML configs yet
-    const cardSlugMap: Record<string, string> = {
-      'celltaxon': 'celltaxon_card.yaml',
-      'barcodedcellsample': 'barcodedcellsample_card.yaml',
-      'libraryaliquot': 'LA_card.yaml',
-    };
-    
-    const cardFileName = cardSlugMap[slug];
-    if (cardFileName) {
-      try {
-        // Try to load the card YAML to verify it exists
-        const cardModule = await import(`@/src/config/yaml/${cardFileName}`);
-        const cardConfig = cardModule.default;
-        
-        if (cardConfig) {
-          // Create a default detail config for this SPARQL-based entity
-          const defaultConfig: DetailPageConfig = {
-            title: cardConfig.name || slug.charAt(0).toUpperCase() + slug.slice(1),
-            route: `/knowledge-base/${slug}`,
-            slug: slug,
-            backLink: `/knowledge-base/${slug}`,
-            dataSource: {
-              type: 'sparql',
-              endpoint: '/api/entity-query',
-              idParam: 'id',
-              cardConfigFile: cardFileName,
-            },
-            tabs: [
-              {
-                id: 'summary',
-                label: 'Summary',
-                sections: [
-                  {
-                    title: 'Summary',
-                    layout: 'default',
-                    // Fields will be auto-generated from data
-                  }
-                ]
-              },
-              {
-                id: 'related-info',
-                label: 'Related Info',
-                type: 'related'
-              },
-              {
-                id: 'contributors',
-                label: 'Contributors',
-                type: 'provenance'
-              },
-              {
-                id: 'revision-history',
-                label: 'Revision History',
-                type: 'provenance'
-              }
-            ],
-            showProvenance: false,
-            showRelated: true,
-          };
-          
-          return defaultConfig;
-        }
-      } catch (err) {
-        // Card file doesn't exist, continue to return null
-        console.error(`Card file ${cardFileName} not found for slug ${slug}:`, err);
-      }
+    if (!mapperEntry.filename) {
+      console.warn(`[getDetailPageConfig] Mapper entry found but missing filename for slug: ${slug}`, mapperEntry);
+      return null;
     }
+    
+    console.log(`[getDetailPageConfig] Found mapper entry:`, mapperEntry);
+    console.log(`[getDetailPageConfig] Loading ${mapperEntry.filename} for slug: ${slug}`);
+    
+    // Dynamically import the detail YAML file based on page-mapper.yaml
+    // Use the same pattern as DynamicDetailPage which works
+    const moduleData = await import(`@/src/config/yaml/${mapperEntry.filename}`);
+    const pageConfig = moduleData.default;
+    
+    if (!pageConfig) {
+      console.error(`[getDetailPageConfig] No default export found in ${mapperEntry.filename}`);
+      return null;
+    }
+    
+    console.log(`[getDetailPageConfig] Successfully loaded config for ${slug}`, pageConfig);
+    return buildDetailPageConfig(pageConfig);
+    
+  } catch (err) {
+    console.error(`[getDetailPageConfig] Error loading config for slug ${slug}:`, err);
+    // Log more details about the error
+    if (err instanceof Error) {
+      console.error(`[getDetailPageConfig] Error message: ${err.message}`);
+      console.error(`[getDetailPageConfig] Error stack: ${err.stack}`);
+    }
+    return null;
   }
-  
-  // No config found
-  return null;
 }
 
 function buildDetailPageConfig(pageConfig: any): DetailPageConfig {
@@ -277,13 +231,13 @@ function buildDetailPageConfig(pageConfig: any): DetailPageConfig {
         title: section.title,
         icon: section.icon ? iconMap[section.icon] : undefined,
         layout: section.layout || 'default',
-        fields: section.fields.map((field: any) => ({
+        fields: section.fields ? section.fields.map((field: any) => ({
           key: field.key,
           label: field.label,
           type: field.type as any,
           badgeVariant: field.badgeVariant,
           linkBasePath: field.linkBasePath,
-        })),
+        })) : undefined,
       })) : undefined,
     })),
     showProvenance: pageConfig.showProvenance !== false,
