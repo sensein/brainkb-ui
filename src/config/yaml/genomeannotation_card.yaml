@@ -1,9 +1,9 @@
 
 #EntityView:
 id: ui:1
-name: BarcodedCellSample_card
-slug: barcodedcellsample
-description: a view of a BarcodedCellSample
+name: GenomeAnnotation_card
+slug: genomeannotation
+description: Genome Annotation
 boxes:
   - box:
     slug: summarybox
