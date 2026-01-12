@@ -173,3 +173,76 @@ pm2 stop nextapp
 pm2 delete nextapp
 pm2 start nextapp
 ```
+# Developer Documentation
+
+## Codebase Structure
+
+```
+brainkb-ui/
+├── src/
+│   ├── app/                    # Next.js App Router pages and components
+│   │   ├── api/               # API route handlers (Next.js API routes)
+│   │   ├── components/        # React components
+│   │   ├── knowledge-base/    # Knowledge base pages
+│   │   ├── user/             # User dashboard and tools e.g., KG upload, NER extraction
+│   │   └── ...
+│   ├── config/               # Configuration files
+│   │   ├── yaml/            # YAML configuration files
+│   │   ├── env.ts           # Environment variable management
+│   │   └── constants.ts     # Application constants
+│   ├── services/            # Service layer (API clients, cache)
+│   ├── types/               # TypeScript type definitions
+│   └── utils/               # Utility functions
+│       ├── api/            # API client utilities
+│       ├── config/         # Configuration loaders
+│       ├── data/           # Data transformers
+│       └── ...
+├── lib/                      # Library code (auth providers)
+├── public/                   # Static assets
+└── scripts/                  # Build and deployment scripts
+```
+
+## Key Directories and Files
+**Page behavior, routing, or page-level logic**: 
+#### **Pages (`/src/app/*/page.tsx`)** 
+- **Key Files**:
+  - `page.tsx` - Home page
+  - `knowledge-base/[slug]/page.tsx` - List pages (dynamic routing)
+  - `knowledge-base/[slug]/[id]/page.tsx` - Detail pages (dynamic routing)
+  - `user/*/page.tsx` - User dashboard and tools e.g., KG upload, NER extraction
+
+**Modifying API endpoints, add new backend integrations, or change request/response handling.**
+#### **API Routes (`/src/app/api/*/route.ts`)** 
+- **Key Files**:
+  - `api/entity-query/route.ts` - SPARQL entity queries
+  - `api/generic_kg_upload/route.ts` - Knowledge graph file uploads
+  - `api/job-status/route.ts` - Job status polling
+  - `api/resources/route.ts` - Resource CRUD operations
+  - `api/ner/route.ts` - Named Entity Recognition
+
+**Change authentication handling.**
+#### **API Clients (`/src/utils/api/`)** 
+- **Key Files**:
+  - `api-client.ts` - Main API client with pagination support
+  - `api-client-without-token.ts` - API client without authentication
+  - `api-helpers.ts` - Helper functions for API requests
+  - `auth.ts` - Authentication utilities
+
+
+**When you need to modify or add new reusable react components for UI, add new display components, or change component behavior.**
+#### **Components (`/src/app/components/`)** 
+- **Key Directories**:
+  - `components/data-display/` - Dynamic list and detail page components
+  - `components/detail/` - Detail page specific components (provenance, related items)
+  - `components/layout/` - Layout components (navbar, footer)
+  - `components/ui/` - UI primitives (buttons, cards, badges)
+  - `components/user/` - User-specific components
+
+**Configure new KB pages, modify page layouts, or change data display fields.**
+### `/src/config/` - Configuration
+#### **YAML Files (`/src/config/yaml/`)** 
+- **Key Files**:
+  - `page-mapper.yaml` - Maps page slugs to their configuration files
+  - `config-knowledgebases.yaml` - Knowledge base list configurations
+  - `*-detail.yaml` - Detail page configurations (e.g., `genomeannotation-detail.yaml`)
+  - `*-list.yaml` - List page configurations (e.g., `ner-list.yaml`)
