@@ -246,3 +246,286 @@ brainkb-ui/
   - `config-knowledgebases.yaml` - Knowledge base list configurations
   - `*-detail.yaml` - Detail page configurations (e.g., `genomeannotation-detail.yaml`)
   - `*-list.yaml` - List page configurations (e.g., `ner-list.yaml`)
+
+#### Steps to configure new KB page
+1. Update the `config-knowledgebases.yaml` to include page and sparql query. This is what you would see first when you visit on that particular page.
+Below is an example for Genome Annotation.
+```yaml
+  - page: "Genome Annotation"
+    title: "Genome Annotation"
+    description: "Genome Annotation Data."
+    slug: "genomeannotation"
+    sparql_query: |-
+      PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+      PREFIX NIMP: <http://example.org/NIMP/>
+      PREFIX biolink: <https://w3id.org/biolink/vocab/>
+      PREFIX prov: <http://www.w3.org/ns/prov#>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+      SELECT DISTINCT ?entity ?label
+      WHERE {
+      GRAPH <https://test-upload.com/> {
+          ?entity biolink:category "bican:GenomeAnnotation"^^<http://www.w3.org/2001/XMLSchema#anyURI>;
+              rdfs:label ?label;
+        }
+      }
+    default_kb: false
+
+```
+2. Create a detail YAML file (e.g., `myentity-detail.yaml`) for the detail view. Below is an example for genome annotation. See `YAML Configuration Reference` for details.
+```yaml
+type: "detail"
+route: "/knowledge-base/genomeannotation"
+slug: "genomeannotation"
+backLink: "/knowledge-base/genomeannotation"
+title: "Genome Annotation"
+dataSource:
+  type: "sparql"
+  endpoint: "/api/entity-query"
+  idParam: "id"
+  cardConfigFile: "genomeannotation_card.yaml"
+tabs:
+  - id: "summary"
+    label: "Summary"
+    sections:
+      - title: "Summary"
+        layout: "default"
+        # Fields will be auto-generated from data
+  - id: "related-info"
+    label: "Related Info"
+    type: "related"
+  - id: "contributors"
+    label: "Contributors"
+    type: "provenance"
+  - id: "revision-history"
+    label: "Revision History"
+    type: "provenance"
+showProvenance: false
+showRelated: true
+```
+Make sure you have `*_card.ymal` page to show card, in our case `genomeannotation_card.yaml`. This will contain the SPARQL query.
+```yaml
+
+#EntityView:
+id: ui:1
+name: GenomeAnnotation_card
+slug: genomeannotation
+description: Genome Annotation
+boxes:
+  - box:
+    slug: summarybox
+    id: ui:2
+    name: Summary
+    cardtype: card
+    box_header:
+      key: id
+    sparql_query: |-
+        PREFIX NIMP: <http://example.org/NIMP/>
+                PREFIX prov: <http://www.w3.org/ns/prov#>
+                PREFIX biolink: <https://w3id.org/biolink/vocab/>
+                
+                SELECT DISTINCT ?subject ?predicate ?object ?category_type
+                WHERE {
+                GRAPH <https://test-upload.com/> {
+                  {  BIND(<{0}> AS ?id)
+                      ?subject ?predicate ?id . }
+                      UNION
+                      { BIND(<{0}> AS ?id)
+                      ?id ?predicate ?object . }
+                      UNION
+                      { BIND(<{0}> AS ?id)
+                      ?subject ?id ?object . }
+                      
+                      OPTIONAL {
+                      ?id prov:wasDerivedFrom ?derivedFrom .
+                      ?derivedFrom biolink:category ?category_type .
+                      }
+                  }
+              }
+    box_additional_info:
+      is_iterable: true
+      properties:
+        - key: Source Derived From
+          sparql_query: |-
+            PREFIX NIMP:   <http://example.org/NIMP/>
+            PREFIX prov:   <http://www.w3.org/ns/prov#>
+            PREFIX biolink: <https://w3id.org/biolink/vocab/>
+            
+            SELECT DISTINCT ?subject ?predicate ?object ?category_type
+            WHERE {
+              GRAPH <https://test-upload.com/> {
+            
+                # focus_id is either the root itself or any *direct* wasDerivedFrom target
+                #{
+                #  VALUES ?focus_id { <{0}> }
+                #}
+                #UNION
+                {
+                  <{0}> prov:wasDerivedFrom ?focus_id .
+                }
+            
+                # Neighborhood of each focus_id
+                {
+                  # ... as object
+                  ?subject ?predicate ?focus_id .
+                }
+                UNION
+                {
+                  # ... as subject (but do NOT follow its own wasDerivedFrom further)
+                  ?focus_id ?predicate ?object .
+                  FILTER (?predicate != prov:wasDerivedFrom)
+                }
+                UNION
+                {
+                  # ... as predicate
+                  ?subject ?focus_id ?object .
+                }
+            
+                # Category of the focus node itself
+                OPTIONAL {
+                  ?focus_id biolink:category ?category_type .
+                }
+              }
+            }
+
+```
+3. Configure the `page-mapper.yaml` , i.e., update it to add new page information.
+```yaml
+PageMapper:
+  # List pages
+  - type: "list"
+    slug: "ner"
+    filename: "ner-list.yaml"
+  
+  # Detail pages
+  - type: "detail"
+    slug: "ner"
+    filename: "ner-detail.yaml"
+  
+  - type: "detail"
+    slug: "myentity"
+    filename: "myentity-detail.yaml"
+```
+For our genomeannotation page, we will add new entry.
+```yaml
+PageMapper:
+  # List pages
+  - type: "list"
+    slug: "ner"
+    filename: "ner-list.yaml"
+  
+  # Detail pages
+  - type: "detail"
+    slug: "ner"
+    filename: "ner-detail.yaml"
+  
+  - type: "detail"
+    slug: "myentity"
+    filename: "myentity-detail.yaml"
+    
+  - type: "detail"
+    slug: "genomeannotation"
+    filename: "genomeannotation-detail.yaml"
+```
+Finally, add it to the `NavBar`. That's it, you should have the genome annotation page added.
+
+
+### YAML Configuration Reference
+
+#### List Page Configuration for API-based e.g., NER, Resources
+
+```yaml
+type: "list"                    # Required: must be "list"
+route: "/knowledge-base/slug"  # Required: page route
+slug: "slug"                   # Required: unique identifier
+title: "Page Title"            # Required: page title
+description: "Description"     # Optional: page description
+dataSource:                    # Required: data source configuration
+  type: "api-get"              # Required: "api-get" or "api-post"
+  endpoint: "NEXT_PUBLIC_ENV_VAR_NAME"  # Required: environment variable name (e.g., "NEXT_PUBLIC_NER_GET_ENDPOINT")
+  apiRoute: "/api/route"       # Required: Next.js API route (e.g., "/api/ner")
+  params:                       # Optional: additional parameters
+    tokenEndpointType: "query"  # Optional: "ml", "query", or "default" (default: "query")
+    useAuth: true              # Optional: enable/disable auth (default: true)
+columns:                       # Required: column definitions
+  - key: "field_name"          # Required: field key from API response
+    label: "Display Label"     # Required: column header
+    type: "text"               # Required: "text", "link", "badge", "date", "array"
+    linkPath: "/knowledge-base/slug"  # Optional: for "link" type (base path for links)
+    badgeVariant: "default"    # Optional: for "badge" type
+    arraySeparator: ", "       # Optional: for "array" type
+itemsPerPage: 50              # Optional: items per page (default: 50)
+search:                       # Optional: search configuration
+  enabled: true               # Required: enable/disable search
+  placeholder: "Search..."    # Optional: search placeholder text
+```
+
+Below is an example for resources list page.
+```yaml
+type: "list"
+route: "/knowledge-base/resources"
+slug: "resources"
+title: "Structured Resources"
+description: "Browse extracted resources from neuroscience publications, including models, code, datasets, and benchmarks."
+dataSource:
+  type: "api-get"
+  endpoint: "NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT"
+  apiRoute: "/api/resources"
+  params:
+    tokenEndpointType: "ml"  # Options: "ml", "query", "default" (default: "query")
+    useAuth: true  # Optional: set to false to disable auth (default: true)
+  dataExtractor: "extractResourceData"
+columns:
+  - key: "name"
+    label: "Name"
+    type: "link"
+    linkPath: "/knowledge-base/resources"
+  - key: "category"
+    label: "Category"
+    type: "text"
+  - key: "type"
+    label: "Type"
+    type: "text"
+  - key: "judge_score"
+    label: "Judge Score"
+    type: "text"
+itemsPerPage: 50
+search:
+  enabled: true
+  placeholder: "Search resources by name, category, type, description..."
+```
+
+#### Detail Page Configuration for SPARQL-based page
+
+```yaml
+type: "detail"                 # Required: must be "detail"
+route: "/knowledge-base/slug" # Required: page route
+slug: "slug"                  # Required: unique identifier
+backLink: "/knowledge-base/slug" # Required: back navigation link
+title: "Page Title"           # Required: page title
+dataSource:                   # Required: data source configuration
+  type: "sparql"              # Required: "sparql"
+  endpoint: "/api/entity-query"  # Required: Next.js API route (no env var needed)
+  idParam: "id"               # Optional: ID parameter name (default: "id")
+  cardConfigFile: "entity_card.yaml"  # Required: card configuration file name
+tabs:                         # Required: tab definitions
+  - id: "summary"             # Required: unique tab identifier
+    label: "Summary"          # Required: tab label
+    sections:                 # Optional: field sections
+      - title: "Summary"      # Required: section title
+        layout: "default"     # Optional: layout type (default: "default")
+        # Fields will be auto-generated from card config file
+  - id: "related-info"        # Required: unique tab identifier
+    label: "Related Info"     # Required: tab label
+    type: "related"           # Required: special tab type
+  - id: "contributors"        # Required: unique tab identifier
+    label: "Contributors"     # Required: tab label
+    type: "provenance"        # Required: special tab type
+  - id: "revision-history"    # Required: unique tab identifier
+    label: "Revision History" # Required: tab label
+    type: "provenance"        # Required: special tab type
+showProvenance: false         # Optional: show provenance tab (default: true)
+showRelated: true             # Optional: show related items (default: false)
+```
+
