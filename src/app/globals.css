@@ -539,6 +539,44 @@ thead.sticky {
 .bkb .text-3xl { font-size: 32px !important; line-height: 1.1; }
 .bkb .text-2xl { font-size: 26px !important; line-height: 1.15; }
 .bkb .text-xl { font-size: 20px !important; line-height: 1.25; }
+/* Compress the top of the Tailwind type scale so legacy pages that picked
+   text-5xl/6xl for their hero (about / contact / privacy / tools-and-libs)
+   don't tower over tool pages that picked text-3xl (sie / extract / jobs)
+   or text-2xl (see / ingest-kg). With these caps, the scale runs ~26→48px
+   end to end instead of 24→60px. */
+.bkb .text-4xl { font-size: 36px !important; line-height: 1.1; }
+.bkb .text-5xl { font-size: 42px !important; line-height: 1.05; }
+.bkb .text-6xl { font-size: 48px !important; line-height: 1.0; }
+
+/* Page-title H1s are the most divergent across the codebase — every page
+   picked a different text-Nxl. Unify all H1s that carry a Tailwind size
+   utility into one editorial range (32→44px responsive) so every route has
+   the same first-impression. We match on [class*="text-…"] to win against
+   .bkb .text-3xl etc. on specificity (0,2,1 > 0,2,0). H1s with inline
+   `style={{ fontSize }}` (admin / dashboard / page-access-gate) are left
+   alone — they already use the prototype's display sizes. */
+.bkb h1[class*="text-xl"],
+.bkb h1[class*="text-2xl"],
+.bkb h1[class*="text-3xl"],
+.bkb h1[class*="text-4xl"],
+.bkb h1[class*="text-5xl"],
+.bkb h1[class*="text-6xl"] {
+  font-size: clamp(30px, 3.4vw, 40px) !important;
+  line-height: 1.1 !important;
+}
+
+/* Section H2s ("What is BrainKB?", "BrainKB Data Releases", "Graph
+   Statistics") were similarly all over the map — text-2xl through
+   text-5xl. Cap them in the 24→32px band so every section reads with the
+   same hierarchy below the page H1. */
+.bkb h2[class*="text-xl"],
+.bkb h2[class*="text-2xl"],
+.bkb h2[class*="text-3xl"],
+.bkb h2[class*="text-4xl"],
+.bkb h2[class*="text-5xl"] {
+  font-size: clamp(24px, 2.6vw, 32px) !important;
+  line-height: 1.15 !important;
+}
 
 /* Mono code / kbd / pre fall back to JetBrains Mono so technical content
    (SPARQL snippets, page_keys, prefix tags, IDs) is consistent. */
@@ -639,5 +677,42 @@ thead.sticky {
 .bkb [class*="bg-gradient-to-"][class*="from-pink-500"] .text-white,
 .bkb [class*="bg-gradient-to-"][class*="from-teal-500"] .text-white {
   color: var(--bkb-primaryInk) !important;
+}
+
+/* Same panels often nest light "100/200" text shades (text-sky-100,
+   text-blue-100, text-emerald-100, etc.) as the body copy on top of the
+   originally-saturated gradient. Our default mapping for those shades is
+   bkb-textMuted (a dim ink that's correct on the cream body bg) — but on a
+   dark teal panel that ink disappears. Force them back to primaryInk so
+   the playground / HMBA / dashboard heroes stay readable. */
+.bkb [class*="bg-gradient-to-"][class*="from-sky-500"] [class*="text-sky-1"],
+.bkb [class*="bg-gradient-to-"][class*="from-sky-500"] [class*="text-blue-1"],
+.bkb [class*="bg-gradient-to-"][class*="from-sky-500"] [class*="text-emerald-1"],
+.bkb [class*="bg-gradient-to-"][class*="from-blue-500"] [class*="text-sky-1"],
+.bkb [class*="bg-gradient-to-"][class*="from-blue-500"] [class*="text-blue-1"],
+.bkb [class*="bg-gradient-to-"][class*="from-blue-600"] [class*="text-sky-1"],
+.bkb [class*="bg-gradient-to-"][class*="from-blue-600"] [class*="text-blue-1"],
+.bkb [class*="bg-gradient-to-"][class*="from-emerald-500"] [class*="text-emerald-1"],
+.bkb [class*="bg-gradient-to-"][class*="from-emerald-500"] [class*="text-sky-1"],
+.bkb [class*="bg-gradient-to-"][class*="from-emerald-500"] [class*="text-green-1"],
+.bkb [class*="bg-gradient-to-"][class*="from-purple-500"] [class*="text-purple-1"],
+.bkb [class*="bg-gradient-to-"][class*="from-purple-500"] [class*="text-pink-1"],
+.bkb [class*="bg-gradient-to-"][class*="from-pink-500"] [class*="text-pink-1"],
+.bkb [class*="bg-gradient-to-"][class*="from-teal-500"] [class*="text-teal-1"] {
+  color: var(--bkb-primaryInk) !important;
+}
+
+/* Gradient-text headings (`text-transparent bg-clip-text bg-gradient-to-r
+   from-sky-600 via-blue-600 to-emerald-600` — used on /about, /knowledge-base
+   list pages, etc.) are a special case. The bg-gradient was meant to be
+   *clipped* to the glyphs, but our gradient-collapse rule above turns the
+   from-sky-600 into a solid dark-teal *background*, so the heading reads as a
+   big dark block with invisible (because text-transparent → bkb-primary →
+   same teal) text. Strip the bg, force the text back to bkb-primary. */
+.bkb .text-transparent.bg-clip-text[class*="bg-gradient-to-"],
+.bkb .bg-clip-text.text-transparent[class*="bg-gradient-to-"] {
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--bkb-primary) !important;
 }
 
