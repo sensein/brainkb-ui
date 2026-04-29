@@ -1,3 +1,8 @@
+/* Display + mono font faces used by the bkb design system. Loaded globally
+   so the navbar "BrainKB" wordmark and any other serif/mono text resolves
+   on every route, not just /user/* and /admin/*. */
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -143,5 +148,496 @@ thead.sticky {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+
+/* ─────────────────────────────────────────────────────────────────────
+   BrainKB design system (ported from sensein/brainkb-ui-prototype).
+   Used by /dashboard and /admin routes via the .bkb wrapper class.
+   Existing pages are unaffected — these tokens only apply inside .bkb.
+   ───────────────────────────────────────────────────────────────────── */
+
+.bkb {
+  /* Default to the light theme. <Theme theme="dark"|"teal"> overrides at runtime. */
+  --bkb-bg: oklch(0.985 0.004 85);
+  --bkb-surface: oklch(1 0 0);
+  --bkb-surfaceAlt: oklch(0.965 0.006 85);
+  --bkb-border: oklch(0.88 0.008 85);
+  --bkb-borderStrong: oklch(0.78 0.012 85);
+  --bkb-text: oklch(0.20 0.012 220);
+  --bkb-textMuted: oklch(0.48 0.010 220);
+  --bkb-textSubtle: oklch(0.62 0.008 220);
+  --bkb-primary: oklch(0.32 0.045 195);
+  --bkb-primaryInk: oklch(0.98 0.004 85);
+  --bkb-accent: oklch(0.62 0.11 170);
+  --bkb-agent: oklch(0.58 0.13 165);
+  --bkb-evidence: oklch(0.55 0.14 285);
+  --bkb-publication: oklch(0.62 0.12 65);
+  --bkb-danger: oklch(0.55 0.18 28);
+  --bkb-grid: oklch(0.20 0.012 220 / 0.05);
+
+  font-family: Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.005em;
+  background: var(--bkb-bg);
+  color: var(--bkb-text);
+}
+
+.bkb * {
+  box-sizing: border-box;
+}
+
+.bkb-serif {
+  font-family: "Instrument Serif", "Times New Roman", Georgia, serif;
+  letter-spacing: -0.015em;
+}
+
+.bkb-mono {
+  font-family: "JetBrains Mono", "SF Mono", ui-monospace, Consolas, monospace;
+}
+
+.bkb-fade-in {
+  animation: bkb-fade 0.4s ease-out;
+}
+
+@keyframes bkb-fade {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.bkb-hover-row:hover {
+  background: var(--bkb-surfaceAlt);
+}
+
+.bkb-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.bkb-scroll::-webkit-scrollbar-thumb {
+  background: var(--bkb-border);
+  border-radius: 4px;
+}
+.bkb-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.bkb-dot-grid {
+  background-image: radial-gradient(var(--bkb-grid) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.bkb-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--bkb-accent);
+  box-shadow: 0 0 0 0 var(--bkb-accent);
+  animation: bkb-pulse 2s infinite;
+  display: inline-block;
+}
+
+@keyframes bkb-pulse {
+  0%   { box-shadow: 0 0 0 0 var(--bkb-accent); }
+  70%  { box-shadow: 0 0 0 8px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+.bkb-btn {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all .15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: -0.005em;
+}
+
+.bkb-btn-primary {
+  background: var(--bkb-primary);
+  color: var(--bkb-primaryInk);
+}
+.bkb-btn-primary:hover {
+  filter: brightness(1.08);
+}
+
+.bkb-btn-ghost {
+  background: transparent;
+  color: var(--bkb-text);
+  border-color: var(--bkb-border);
+}
+.bkb-btn-ghost:hover {
+  background: var(--bkb-surfaceAlt);
+  border-color: var(--bkb-borderStrong);
+}
+
+.bkb-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.bkb-input {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 13px;
+  background: var(--bkb-surface);
+  color: var(--bkb-text);
+  border: 1px solid var(--bkb-border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  outline: none;
+  width: 100%;
+}
+.bkb-input:focus {
+  border-color: var(--bkb-primary);
+  box-shadow: 0 0 0 3px oklch(from var(--bkb-primary) l c h / 0.2);
+}
+
+.bkb-card {
+  background: var(--bkb-surface);
+  border: 1px solid var(--bkb-border);
+  border-radius: 10px;
+}
+
+.bkb-kbd {
+  font-family: "JetBrains Mono", "SF Mono", ui-monospace, Consolas, monospace;
+  font-size: 11px;
+  background: var(--bkb-surfaceAlt);
+  border: 1px solid var(--bkb-border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: var(--bkb-textMuted);
+}
+
+.bkb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--bkb-border);
+  background: var(--bkb-surfaceAlt);
+  color: var(--bkb-textMuted);
+}
+
+.bkb-link {
+  color: var(--bkb-primary);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+.bkb-link:hover {
+  border-bottom-color: var(--bkb-primary);
+}
+
+/* ─── Tailwind → bkb token overrides ──────────────────────────────────
+   Scoped to .bkb so existing routes outside the bkb Theme are unchanged.
+   These translate the most common Tailwind utility classes used by the
+   tool pages (Profile, Ingest KGs, SIE, Resource extraction, Job status)
+   into bkb design tokens — surfaces, borders, type scale, accent colors —
+   without rewriting each page body. */
+
+/* Surfaces.
+   Cards (div / button / a / li / aside) get the bkb surface white; full-
+   width section / header / main bands stay transparent so the cream body
+   bg from the root Theme shows through end-to-end. This is what stops the
+   alternating-band effect on pages like /about, /hmba-taxonomy, the home
+   feature sections, etc. */
+.bkb div.bg-white,
+.bkb article.bg-white,
+.bkb aside.bg-white,
+.bkb a.bg-white,
+.bkb button.bg-white,
+.bkb li.bg-white,
+.bkb form.bg-white,
+.bkb .dark\:bg-gray-800,
+.bkb .dark\:bg-gray-900,
+.bkb .dark\:bg-gray-700 { background-color: var(--bkb-surface) !important; }
+
+.bkb div.bg-gray-50,
+.bkb article.bg-gray-50,
+.bkb aside.bg-gray-50,
+.bkb div.bg-gray-100,
+.bkb .dark\:bg-gray-800\/50,
+.bkb .dark\:bg-gray-700\/50 { background-color: var(--bkb-surfaceAlt) !important; }
+
+/* Page-band sections (py-20 / py-16 / py-12 with a bg utility) blend
+   into the cream body so the entire page reads as a single canvas. */
+.bkb section.bg-white,
+.bkb section.bg-gray-50,
+.bkb section.bg-gray-100,
+.bkb header.bg-white,
+.bkb header.bg-gray-50,
+.bkb main > div.bg-white,
+.bkb main > div.bg-gray-50 { background-color: transparent !important; }
+
+/* Text */
+.bkb .text-gray-900,
+.bkb .text-black,
+.bkb .dark\:text-white { color: var(--bkb-text) !important; }
+.bkb .text-gray-700,
+.bkb .text-gray-600,
+.bkb .dark\:text-gray-300,
+.bkb .dark\:text-gray-200 { color: var(--bkb-textMuted) !important; }
+.bkb .text-gray-500,
+.bkb .text-gray-400,
+.bkb .dark\:text-gray-400,
+.bkb .dark\:text-gray-500 { color: var(--bkb-textSubtle) !important; }
+
+/* Borders */
+.bkb .border-gray-200,
+.bkb .border-gray-300,
+.bkb .dark\:border-gray-600,
+.bkb .dark\:border-gray-700 { border-color: var(--bkb-border) !important; }
+
+/* Primary accent (every blue / sky / cyan / indigo / teal text shade
+   resolves to the bkb-primary teal so primary text is one ink. The
+   200/300/400 light shades existed for "text on dark bg" placements; in
+   our flat-cream world they need to be readable, so we don't dim them. */
+.bkb .text-blue-400,
+.bkb .text-blue-500,
+.bkb .text-blue-600,
+.bkb .text-blue-700,
+.bkb .text-blue-800,
+.bkb .text-blue-900,
+.bkb .text-sky-400,
+.bkb .text-sky-500,
+.bkb .text-sky-600,
+.bkb .text-sky-700,
+.bkb .text-sky-800,
+.bkb .text-sky-900,
+.bkb .text-cyan-500,
+.bkb .text-cyan-600,
+.bkb .text-cyan-700,
+.bkb .text-indigo-500,
+.bkb .text-indigo-600,
+.bkb .text-indigo-700,
+.bkb .text-teal-500,
+.bkb .text-teal-600,
+.bkb .text-teal-700,
+.bkb .dark\:text-blue-300,
+.bkb .dark\:text-blue-400 { color: var(--bkb-primary) !important; }
+
+/* Light blue-200 / sky-200 / blue-100 / sky-100 are typically used as
+   subtle text-on-dark accents. On the flat cream they'd vanish; map them
+   to the bkb-textMuted so they stay visible without becoming primary. */
+.bkb .text-blue-100,
+.bkb .text-blue-200,
+.bkb .text-sky-100,
+.bkb .text-sky-200,
+.bkb .text-blue-300,
+.bkb .text-sky-300 { color: var(--bkb-textMuted) !important; }
+
+.bkb .bg-blue-600,
+.bkb .bg-blue-500,
+.bkb .bg-blue-700,
+.bkb .hover\:bg-blue-700:hover,
+.bkb .hover\:bg-blue-600:hover,
+.bkb .bg-sky-600,
+.bkb .bg-sky-500 { background-color: var(--bkb-primary) !important; color: var(--bkb-primaryInk) !important; }
+
+.bkb .bg-blue-50,
+.bkb .bg-blue-100,
+.bkb .dark\:bg-blue-900,
+.bkb .dark\:bg-blue-900\/20 {
+  background-color: color-mix(in oklch, var(--bkb-primary), transparent 92%) !important;
+}
+
+.bkb .border-blue-500,
+.bkb .border-blue-600,
+.bkb .border-sky-500 { border-color: var(--bkb-primary) !important; }
+
+/* Status accents */
+.bkb .text-green-600,
+.bkb .text-green-700,
+.bkb .text-emerald-500,
+.bkb .text-emerald-600,
+.bkb .dark\:text-green-400 { color: var(--bkb-accent) !important; }
+.bkb .bg-green-50,
+.bkb .bg-green-100,
+.bkb .dark\:bg-green-900,
+.bkb .dark\:bg-green-900\/20 {
+  background-color: color-mix(in oklch, var(--bkb-accent), transparent 92%) !important;
+}
+.bkb .bg-green-500,
+.bkb .bg-green-600 { background-color: var(--bkb-accent) !important; color: var(--bkb-primaryInk) !important; }
+
+.bkb .text-red-600,
+.bkb .text-red-700,
+.bkb .text-red-500,
+.bkb .dark\:text-red-400 { color: var(--bkb-danger) !important; }
+.bkb .bg-red-50,
+.bkb .bg-red-100,
+.bkb .dark\:bg-red-900\/20 {
+  background-color: color-mix(in oklch, var(--bkb-danger), transparent 92%) !important;
+}
+.bkb .border-red-200,
+.bkb .border-red-300 { border-color: color-mix(in oklch, var(--bkb-danger), transparent 65%) !important; }
+.bkb .bg-red-500,
+.bkb .bg-red-600 { background-color: var(--bkb-danger) !important; color: var(--bkb-primaryInk) !important; }
+
+.bkb .text-yellow-600,
+.bkb .text-yellow-700,
+.bkb .text-amber-500,
+.bkb .text-amber-600,
+.bkb .dark\:text-yellow-200,
+.bkb .dark\:text-yellow-400 { color: var(--bkb-publication) !important; }
+.bkb .bg-yellow-50,
+.bkb .bg-yellow-100,
+.bkb .dark\:bg-yellow-900\/20 {
+  background-color: color-mix(in oklch, var(--bkb-publication), transparent 92%) !important;
+}
+.bkb .border-yellow-200,
+.bkb .border-yellow-300,
+.bkb .dark\:border-yellow-800 { border-color: color-mix(in oklch, var(--bkb-publication), transparent 65%) !important; }
+
+.bkb .text-purple-500,
+.bkb .text-purple-600,
+.bkb .text-pink-500 { color: var(--bkb-evidence) !important; }
+.bkb .bg-purple-50,
+.bkb .bg-purple-100 {
+  background-color: color-mix(in oklch, var(--bkb-evidence), transparent 92%) !important;
+}
+
+/* Card-like containers — soften the shadows the prototype's flat look avoids */
+.bkb .shadow,
+.bkb .shadow-md,
+.bkb .shadow-lg,
+.bkb .shadow-xl,
+.bkb .shadow-2xl,
+.bkb .hover\:shadow-lg:hover,
+.bkb .hover\:shadow-xl:hover,
+.bkb .hover\:shadow-2xl:hover {
+  box-shadow: 0 1px 3px rgba(20, 30, 40, 0.04), 0 1px 2px rgba(20, 30, 40, 0.04) !important;
+}
+
+/* Typography — every heading inside .bkb uses the Instrument Serif display
+   face at weight 400, so page titles, section titles, and card titles
+   (e.g. "Monthly Releases", "Nightly Releases") all read with the same
+   editorial voice instead of falling back to bold sans-serif.
+   Body text stays Inter via the root <body class={inter.className}>. */
+.bkb h1,
+.bkb h2,
+.bkb h3,
+.bkb h4,
+.bkb h5,
+.bkb h6,
+.bkb .text-3xl,
+.bkb .text-4xl,
+.bkb .text-5xl,
+.bkb .text-6xl {
+  font-family: "Instrument Serif", "Times New Roman", Georgia, serif !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+.bkb .text-3xl { font-size: 32px !important; line-height: 1.1; }
+.bkb .text-2xl { font-size: 26px !important; line-height: 1.15; }
+.bkb .text-xl { font-size: 20px !important; line-height: 1.25; }
+
+/* Mono code / kbd / pre fall back to JetBrains Mono so technical content
+   (SPARQL snippets, page_keys, prefix tags, IDs) is consistent. */
+.bkb code,
+.bkb pre,
+.bkb kbd,
+.bkb samp,
+.bkb .font-mono {
+  font-family: "JetBrains Mono", "SF Mono", ui-monospace, Consolas, monospace !important;
+}
+
+/* Buttons: when a page uses a Tailwind button shape with our overridden
+   blue/green/red bg, also tighten the radius/shadow to match bkb-btn. */
+.bkb button.rounded-lg,
+.bkb a.rounded-lg {
+  border-radius: 6px;
+}
+
+/* ─── Gradient overrides ─────────────────────────────────────────────
+   The legacy About / Use Cases / Key Features pages lean heavily on
+   sky→emerald and blue→pink gradient backgrounds and gradient text. The
+   bkb prototype design is intentionally flat; collapse every gradient
+   inside .bkb to a single tone from the bkb palette. */
+
+/* Kill every Tailwind gradient inside .bkb. Pages that want a tinted
+   layer should use a flat token; otherwise content blends straight into
+   the cream body bg from the root Theme. */
+.bkb [class*="bg-gradient-to-"] {
+  background-image: none !important;
+}
+
+/* Section / page-wrapper blocks (heroes, big intros, alternating slabs)
+   become transparent so the cream body bg shows through end-to-end —
+   that's the same single tone the dashboard, admin and home pages share.
+   Cards (which carry borders / radius / shadows) override below. */
+.bkb section[class*="bg-gradient-to-"],
+.bkb header[class*="bg-gradient-to-"],
+.bkb div[class*="min-h-"][class*="bg-gradient-to-"],
+.bkb section.py-20,
+.bkb section.py-16,
+.bkb section.py-12 {
+  background-color: transparent !important;
+}
+
+/* Cards / tiles that previously used pastel gradients become flat white
+   bkb surfaces so they read consistently with the dashboard cards. */
+.bkb [class*="bg-gradient-to-br"][class*="from-sky-50"],
+.bkb [class*="bg-gradient-to-br"][class*="from-emerald-50"],
+.bkb [class*="bg-gradient-to-br"][class*="from-purple-50"],
+.bkb [class*="bg-gradient-to-br"][class*="from-amber-50"],
+.bkb [class*="bg-gradient-to-br"][class*="from-yellow-50"],
+.bkb [class*="bg-gradient-to-br"][class*="from-blue-50"],
+.bkb [class*="bg-gradient-to-br"][class*="from-gray-50"] {
+  background-color: var(--bkb-surface) !important;
+  border: 1px solid var(--bkb-border);
+}
+
+/* Gradient text used for big page titles ("About BrainKB", "BrainKB"
+   wordmark, hero numbers): kill the bg-clip and surface a flat
+   bkb-primary so the type is one consistent ink. */
+.bkb .bg-clip-text {
+  background-clip: initial !important;
+  -webkit-background-clip: initial !important;
+}
+.bkb .text-transparent {
+  color: var(--bkb-primary) !important;
+}
+
+/* Saturated gradients ("from-sky-500 to-blue-500" etc.) are typically
+   used for icon-tiles or accent panels that contain `text-white` or
+   white SVG strokes. Keep them dark by collapsing the gradient to the
+   solid bkb-primary teal so the white content inside stays visible.
+   Do this for both _-500 and _-600 stops because both shapes appear. */
+.bkb [class*="bg-gradient-to-"][class*="from-sky-500"],
+.bkb [class*="bg-gradient-to-"][class*="from-sky-600"],
+.bkb [class*="bg-gradient-to-"][class*="from-emerald-500"],
+.bkb [class*="bg-gradient-to-"][class*="from-emerald-600"],
+.bkb [class*="bg-gradient-to-"][class*="from-blue-500"],
+.bkb [class*="bg-gradient-to-"][class*="from-blue-600"],
+.bkb [class*="bg-gradient-to-"][class*="from-purple-500"],
+.bkb [class*="bg-gradient-to-"][class*="from-purple-600"],
+.bkb [class*="bg-gradient-to-"][class*="from-pink-500"],
+.bkb [class*="bg-gradient-to-"][class*="from-pink-600"],
+.bkb [class*="bg-gradient-to-"][class*="from-teal-500"] {
+  background-color: var(--bkb-primary) !important;
+  background-image: none !important;
+  color: var(--bkb-primaryInk);
+}
+
+/* When such a panel uses text-white explicitly (e.g. the HMBA hero card
+   "from-sky-500 via-blue-500 to-emerald-500"), keep the white ink intact
+   so it stays readable on the teal solid. */
+.bkb [class*="bg-gradient-to-"][class*="from-sky-500"] .text-white,
+.bkb [class*="bg-gradient-to-"][class*="from-blue-500"] .text-white,
+.bkb [class*="bg-gradient-to-"][class*="from-blue-600"] .text-white,
+.bkb [class*="bg-gradient-to-"][class*="from-emerald-500"] .text-white,
+.bkb [class*="bg-gradient-to-"][class*="from-purple-500"] .text-white,
+.bkb [class*="bg-gradient-to-"][class*="from-pink-500"] .text-white,
+.bkb [class*="bg-gradient-to-"][class*="from-teal-500"] .text-white {
+  color: var(--bkb-primaryInk) !important;
 }
 
