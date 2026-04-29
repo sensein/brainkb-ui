@@ -17,13 +17,13 @@ import { FONTS } from "./index";
 function FloatingGraph() {
   const nodes = [
     { x: 180, y: 60, r: 7, c: "oklch(0.78 0.13 170)", label: "Agent" },
-    { x: 80, y: 130, r: 5, c: "oklch(0.80 0.13 285)", label: "" },
-    { x: 280, y: 130, r: 6, c: "oklch(0.82 0.12 75)", label: "Pub" },
-    { x: 120, y: 230, r: 5, c: "oklch(0.78 0.13 170)", label: "" },
+    { x: 80, y: 130, r: 5, c: "oklch(0.80 0.13 285)", label: "Atlases" },
+    { x: 280, y: 130, r: 6, c: "oklch(0.82 0.12 75)", label: "Insights" },
+    { x: 120, y: 230, r: 5, c: "oklch(0.78 0.13 170)", label: "Datasets" },
     { x: 220, y: 240, r: 7, c: "oklch(0.80 0.13 285)", label: "Evidence" },
-    { x: 180, y: 310, r: 5, c: "oklch(0.82 0.12 75)", label: "" },
-    { x: 40, y: 260, r: 4, c: "oklch(0.78 0.13 170)", label: "" },
-    { x: 320, y: 60, r: 4, c: "oklch(0.82 0.12 75)", label: "" },
+    { x: 180, y: 310, r: 5, c: "oklch(0.82 0.12 75)", label: "Databases" },
+    { x: 40, y: 260, r: 4, c: "oklch(0.78 0.13 170)", label: "Literature" },
+    { x: 320, y: 60, r: 4, c: "oklch(0.82 0.12 75)", label: "Discovery" },
   ];
   const edges: [number, number][] = [
     [0, 1], [0, 2], [1, 3], [2, 4], [3, 4], [4, 5], [3, 6], [1, 6], [2, 7],
@@ -41,23 +41,31 @@ function FloatingGraph() {
           strokeWidth="1"
         />
       ))}
-      {nodes.map((n, i) => (
-        <g key={i}>
-          <circle cx={n.x} cy={n.y} r={n.r + 3} fill={n.c} opacity="0.2" />
-          <circle cx={n.x} cy={n.y} r={n.r} fill={n.c} />
-          {n.label && (
-            <text
-              x={n.x + n.r + 6}
-              y={n.y + 3}
-              fontSize="10"
-              fontFamily={FONTS.mono}
-              fill="oklch(0.88 0.02 170)"
-            >
-              {n.label}
-            </text>
-          )}
-        </g>
-      ))}
+      {nodes.map((n, i) => {
+        // Flip the label to the left of the circle when the node is near the
+        // right edge of the 360-wide viewBox — otherwise long labels like
+        // "Discovery" get clipped by the SVG bounds (text-anchor=start +
+        // x=320 + ~54px of text spills past x=360).
+        const flipLeft = n.x > 240;
+        return (
+          <g key={i}>
+            <circle cx={n.x} cy={n.y} r={n.r + 3} fill={n.c} opacity="0.2" />
+            <circle cx={n.x} cy={n.y} r={n.r} fill={n.c} />
+            {n.label && (
+              <text
+                x={flipLeft ? n.x - n.r - 6 : n.x + n.r + 6}
+                y={n.y + 3}
+                fontSize="10"
+                fontFamily={FONTS.mono}
+                fill="oklch(0.88 0.02 170)"
+                textAnchor={flipLeft ? "end" : "start"}
+              >
+                {n.label}
+              </text>
+            )}
+          </g>
+        );
+      })}
     </svg>
   );
 }
