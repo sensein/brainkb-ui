@@ -927,18 +927,36 @@ export default function Profile() {
                 </div>
             </section>
 
-            {/* Modal */}
-            {/* Modal */}
-            {isEditing && (() => {
-
-                return true;
-            })() && (
+            {/* Edit Profile dialog */}
+            {isEditing && (
                 <div
-                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] overflow-auto">
+                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 sm:p-6 overflow-auto"
+                    onClick={() => setIsEditing(false)}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="edit-profile-title"
+                >
                     <div
-                        className="bg-white dark:bg-gray-800 p-6 pb-20 rounded-lg shadow-lg w-3/4 max-h-[85vh] overflow-y-auto relative"
-                        style={{zIndex: 10000}}>
-                        <h3 className="text-lg font-semibold mb-4">Edit Profile</h3>
+                        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden border border-gray-200 dark:border-gray-700"
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ zIndex: 10000 }}
+                    >
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                            <h3 id="edit-profile-title" className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                                Edit Profile
+                            </h3>
+                            <button
+                                type="button"
+                                onClick={() => setIsEditing(false)}
+                                aria-label="Close edit profile"
+                                className="inline-flex items-center justify-center w-8 h-8 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500"
+                            >
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                    <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto px-6 py-5">
 
                         {/* Basic Information */}
                         <div className="grid grid-cols-3 gap-4 mb-6">
@@ -1634,17 +1652,19 @@ export default function Profile() {
                             </div>
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex justify-end pt-6 pb-4">
+                        </div>
+                        <div className="flex items-center justify-end gap-2 px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                             <button
+                                type="button"
                                 onClick={handleEditToggle}
-                                className="mr-2 px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-400"
                             >
                                 Cancel
                             </button>
                             <button
+                                type="button"
                                 onClick={handleSave}
-                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                className="px-4 py-2 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 active:bg-blue-900 rounded-md shadow-sm transition-colors focus:outline-none focus:ring-4 focus:ring-blue-300"
                             >
                                 Save Profile
                             </button>
@@ -1652,7 +1672,6 @@ export default function Profile() {
                     </div>
                 </div>
             )}
-            {/*    End model*/}
         </div>
     );
 }
