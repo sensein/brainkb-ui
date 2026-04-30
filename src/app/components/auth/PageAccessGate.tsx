@@ -44,7 +44,7 @@ export function PageAccessGate({ pageKey, label, adminOnly, children }: PageAcce
   // matters is `isAdmin`. usePageAccess is conditional via skip mode so we
   // don't burn a fetch per render on these pages.
   const { loading, allowed, reason, error } = usePageAccess(pageKey, { skip: adminOnly });
-  const { user, isAdmin, loading: userLoading } = useCurrentUser();
+  const { user, isAdmin, isSuperAdmin, loading: userLoading } = useCurrentUser();
   const { status } = useSession();
 
   // Authentication is always required, regardless of the RBAC bypass below.
@@ -77,8 +77,12 @@ export function PageAccessGate({ pageKey, label, adminOnly, children }: PageAcce
   // page-access check.
   if (!ENABLE_PAGE_ACCESS_GATE) return <>{children}</>;
 
-  // Admins can see everything regardless of per-page entries.
-  if (isAdmin) return <>{children}</>;
+  // SuperAdmin bypass only. Regular Admin goes through the page-access check
+  // like everyone else — admins can grant themselves access via
+  // /admin/page-access if they need it.
+  if (isSuperAdmin) return <>{children}</>;
+  // adminOnly pages still pass for any user with `isAdmin` (Admin or
+  // SuperAdmin) — see the adminOnly branch further down.
 
   if (adminOnly) {
     if (userLoading) {
@@ -88,6 +92,8 @@ export function PageAccessGate({ pageKey, label, adminOnly, children }: PageAcce
         </div>
       );
     }
+    // Admin (or SuperAdmin, already bypassed above) gets in.
+    if (isAdmin) return <>{children}</>;
     return (
       <div style={{ padding: "60px 36px", maxWidth: 560 }}>
         <div style={{ fontSize: 11, color: "var(--bkb-textSubtle)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>

@@ -30,7 +30,15 @@ interface State {
   user: CurrentUser | null;
   error: string | null;
   hasRole: (role: string) => boolean;
+  /** True when the user has either the `Admin` or `SuperAdmin` role.
+   *  SuperAdmin is the protected oversight tier — recognising it here means
+   *  every gate that bypasses on `isAdmin` (PageAccessGate, AdminShell,
+   *  the dashboard tile list) treats the two equivalently. */
   isAdmin: boolean;
+  /** True only when the user has the `SuperAdmin` role. Used by surfaces
+   *  that need to distinguish protected accounts (e.g. the admin users
+   *  table that disables ban/delete on SuperAdmin rows). */
+  isSuperAdmin: boolean;
   /**
    * Set when the backend returns 403 `account_suspended` from /api/users/me —
    * means an admin has banned this user. The UI surfaces a friendly
@@ -163,7 +171,8 @@ export function useCurrentUser(): State {
     error,
     banned,
     hasRole: (role: string) => !!user?.roles?.includes(role),
-    isAdmin: !!user?.roles?.includes("Admin"),
+    isAdmin: !!(user?.roles?.includes("Admin") || user?.roles?.includes("SuperAdmin")),
+    isSuperAdmin: !!user?.roles?.includes("SuperAdmin"),
     refresh,
   };
 }

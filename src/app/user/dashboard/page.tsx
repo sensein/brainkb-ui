@@ -37,9 +37,16 @@ function DashTools() {
   // The hook auto-revalidates on tab focus so an admin's grant in another tab
   // shows up here without forcing a reload; the Refresh button is an explicit
   // escape hatch for the same-tab case.
+  //
+  // SuperAdmin bypass only — that role is the platform's protected oversight
+  // tier. Regular Admin goes through the page-access check like every other
+  // role; admins can grant themselves access via /admin/page-access if they
+  // need it. Backend check_access also bypasses only for SuperAdmin (see
+  // PageAccessRepository.check_access) — this is belt-and-braces.
   const keys = TOOL_REGISTRY.map((t) => t.pageKey);
   const { loading, allowedMap, refresh } = usePageAccessBatch(keys);
-  const bypass = !ENABLE_PAGE_ACCESS_GATE;
+  const { isSuperAdmin } = useCurrentUser();
+  const bypass = !ENABLE_PAGE_ACCESS_GATE || isSuperAdmin;
 
   return (
     <div>
@@ -49,7 +56,9 @@ function DashTools() {
             Workflow tools
           </h2>
           <div style={{ fontSize: 12, color: "var(--bkb-textMuted)", marginTop: 4 }}>
-            Tools are off by default — an admin grants role- or user-level access through the page-access surface.
+            {isSuperAdmin
+              ? "SuperAdmin access — every tool is enabled regardless of page-access entries."
+              : "Tools are off by default — an admin grants role- or user-level access through the page-access surface."}
           </div>
         </div>
         <button
