@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { signIn } from "next-auth/react";
 import { fetchEntityData } from "./services/dataService";
 import { calculateStats } from "./utils/entityUtils";
 import StatsSection from "./components/StatsSection";
-import Link from "next/link";
 import EntityTypeDropdown from "@/src/app/see/components/EntityTypeDropdown";
 
 export default function NamedEntityRecognitionViewer() {
@@ -118,9 +118,13 @@ export default function NamedEntityRecognitionViewer() {
                     ))}
                 </div>
                 <div className="mt-6 flex justify-center">
-                    <Link href="/login" className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                    <button
+                        type="button"
+                        onClick={() => signIn()}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                    >
                         Get Started
-                    </Link>
+                    </button>
                 </div>
             </div>
         </div>
