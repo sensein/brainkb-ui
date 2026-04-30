@@ -89,7 +89,7 @@ export default function NamedEntityRecognition() {
         setApiKey,
         validateApiKey,
         handleClear: clearApiKey
-    } = useApiKeyValidator({ storageKey: 'ner_api_key' }); // Use sessionStorage key for NER
+    } = useApiKeyValidator(); // Shares the OpenRouter key with extract-resource + dashboard
 
     // Check if user is logged in
     useEffect(() => {
@@ -575,18 +575,21 @@ export default function NamedEntityRecognition() {
                 }}
             />
 
-            {/* OpenRouter API Key Configuration */}
-            <ApiKeyValidatorUI
-                apiKey={apiKey}
-                onApiKeyChange={setApiKey}
-                isApiKeyValid={isApiKeyValid}
-                isValidatingKey={isValidatingKey}
-                apiKeyError={apiKeyError}
-                successMessage={apiKeySuccessMessage}
-                onValidate={validateApiKey}
-                onClear={clearApiKey}
-                warningMessage="Please validate your OpenRouter API key above to enable document processing."
-            />
+            {/* OpenRouter API key — configured in Dashboard → API key. */}
+            {!isApiKeyValid && (
+                <div className="bkb-card" style={{ padding: 14, marginBottom: 20, borderLeft: "3px solid var(--bkb-publication)" }}>
+                    <div style={{ fontSize: 13, color: "var(--bkb-text)", marginBottom: 4, fontWeight: 500 }}>
+                        OpenRouter API key required
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--bkb-textMuted)" }}>
+                        Configure and validate your key in{" "}
+                        <a href="/user/dashboard" style={{ color: "var(--bkb-primary)", textDecoration: "underline" }}>
+                            Dashboard → API key
+                        </a>
+                        . The same key is reused across every workflow tool.
+                    </div>
+                </div>
+            )}
 
             {/* Input Type Selection and Content Section */}
             <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-gray-800 rounded-lg p-8 shadow-lg mb-6">
