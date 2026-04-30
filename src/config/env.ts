@@ -31,6 +31,7 @@ interface EnvConfig {
   NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE?: string;
   NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE?: string;
   NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE?: string;
+  NEXT_PUBLIC_USER_MANAGEMENT_API_BASE?: string;
 
   // Auth Configuration
   NEXT_PUBLIC_JWT_USER?: string;
@@ -93,6 +94,8 @@ class EnvConfigManager {
         process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE,
       NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE:
         process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE,
+      NEXT_PUBLIC_USER_MANAGEMENT_API_BASE:
+        process.env.NEXT_PUBLIC_USER_MANAGEMENT_API_BASE,
       NEXT_PUBLIC_JWT_USER: process.env.NEXT_PUBLIC_JWT_USER,
       NEXT_PUBLIC_JWT_PASSWORD: process.env.NEXT_PUBLIC_JWT_PASSWORD,
       NEXT_PUBLIC_USE_BEARER_TOKEN: process.env.NEXT_PUBLIC_USE_BEARER_TOKEN,
@@ -142,6 +145,25 @@ class EnvConfigManager {
 
   public get tokenEndpointUserManagementService(): string | undefined {
     return this.config.NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE;
+  }
+
+  /**
+   * Base URL of the user management backend (e.g. http://localhost:8004).
+   * Falls back to deriving from the token endpoint if the explicit var isn't set.
+   */
+  public get userManagementApiBase(): string {
+    const explicit = this.config.NEXT_PUBLIC_USER_MANAGEMENT_API_BASE;
+    if (explicit) return explicit.replace(/\/+$/, '');
+    const tokenEndpoint = this.config.NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE;
+    if (tokenEndpoint) {
+      try {
+        const u = new URL(tokenEndpoint);
+        return `${u.protocol}//${u.host}`;
+      } catch {
+        /* ignored */
+      }
+    }
+    return 'http://localhost:8004';
   }
 
   public get nerApiKey(): string | undefined {
