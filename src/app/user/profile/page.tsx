@@ -21,22 +21,6 @@ const getSessionUserProperty = (session: any, property: keyof ExtendedUser): str
     return (session?.user as ExtendedUser)?.[property] || "";
 };
 
-// Role constants
-const ROLES = {
-    SUBMITTER: "Submitter",
-    ANNOTATOR: "Annotator",
-    MAPPER: "Mapper",
-    CURATOR: "Curator",
-    REVIEWER: "Reviewer",
-    VALIDATOR: "Validator",
-    CONFLICT_RESOLVER: "Conflict Resolver",
-    KNOWLEDGE_CONTRIBUTOR: "Knowledge Contributor",
-    EVIDENCE_TRACER: "Evidence Tracer",
-    PROVENANCE_TRACKER: "Provenance Tracker",
-    MODERATOR: "Moderator",
-    AMBASSADOR: "Ambassador"
-} as const;
-
 // Validation functions
 const validateEmail = (email: string): string => {
     if (!email) return "Email is required";
@@ -458,9 +442,8 @@ export default function Profile() {
             newErrors.expertise_areas = "At least one expertise area is required";
         }
 
-        if (profileData.roles.length === 0) {
-            newErrors.roles = "At least one role is required";
-        }
+        // Roles are managed by admins via /admin/users — not validated or
+        // editable here. We never send `roles` in the profile payload.
 
         // Validate optional fields
         const websiteError = validateWebsite(profileData.website);
@@ -488,9 +471,13 @@ export default function Profile() {
     const handleSave = async () => {
         if (validateForm()) {
             try {
-                // Clean the data before sending - remove any non-serializable properties
+                // Strip `roles` from the payload. Self-service role assignment
+                // is a privilege-escalation hole — roles are managed only by
+                // admins via /admin/users. The backend ignores `roles` here too,
+                // but dropping it client-side keeps the wire payload honest.
+                const { roles: _omitRoles, ...rest } = profileData;
                 const cleanProfileData = {
-                    ...profileData,
+                    ...rest,
                     // Ensure dates are properly formatted as strings
                     organizations: profileData.organizations.map(org => ({
                         ...org,
@@ -1518,105 +1505,15 @@ export default function Profile() {
                                 <p className="text-red-500 text-xs mt-1">{errors.expertise_areas}</p>}
                         </div>
 
-                        {/* Roles Section */}
+                        {/* Roles are read-only here — see the "Active Roles"
+                            section above for what's currently assigned.
+                            Role changes are admin-only via /admin/users. */}
                         <div className="mb-6">
-                            <div className="flex justify-between items-center mb-2">
-                                <label className="block text-sm font-medium">Roles</label>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        const newRoles = [...profileData.roles, {
-                                            role: "",
-                                            is_active: true
-                                        }];
-                                        setProfileData(prev => ({...prev, roles: newRoles}));
-                                    }}
-                                    className="text-blue-500 text-sm hover:text-blue-700"
-                                >
-                                    + Add Role
-                                </button>
+                            <label className="block text-sm font-medium mb-2">Roles</label>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-3">
+                                Roles are managed by an administrator. New users start as <span className="font-mono">Curator</span>.
+                                If you need a different role, ask an admin to update it from the user-management surface.
                             </div>
-                            {profileData.roles.map((role, index) => (
-                                <div key={index} className="border border-gray-200 rounded-lg p-4 mb-3">
-                                    <div className="grid grid-cols-2 gap-4 mb-3">
-                                        <div className="relative">
-                                            <input
-                                                type="text"
-                                                placeholder="Search role..."
-                                                value={role.role}
-                                                onChange={(e) => {
-                                                    const newRoles = [...profileData.roles];
-                                                    newRoles[index].role = e.target.value;
-                                                    setProfileData(prev => ({...prev, roles: newRoles}));
-                                                }}
-                                                onFocus={(e) => {
-                                                    const dropdown = e.target.nextElementSibling as HTMLDivElement;
-                                                    if (dropdown) dropdown.style.display = 'block';
-                                                }}
-                                                onBlur={(e) => {
-                                                    setTimeout(() => {
-                                                        const dropdown = e.target.nextElementSibling as HTMLDivElement;
-                                                        if (dropdown) dropdown.style.display = 'none';
-                                                    }, 200);
-                                                }}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                                            />
-                                            <div
-                                                className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-10 hidden max-h-48 overflow-y-auto">
-                                                {Object.values(ROLES)
-                                                    .filter(roleName => roleName.toLowerCase().includes(role.role.toLowerCase()))
-                                                    .map((roleName) => (
-                                                        <div
-                                                            key={roleName}
-                                                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                                                            onClick={() => {
-                                                                const newRoles = [...profileData.roles];
-                                                                newRoles[index].role = roleName;
-                                                                setProfileData(prev => ({...prev, roles: newRoles}));
-                                                                const dropdown = document.querySelector(`[data-role-dropdown="${index}"]`) as HTMLDivElement;
-                                                                if (dropdown) dropdown.style.display = 'none';
-                                                            }}
-                                                        >
-                                                            {roleName}
-                                                        </div>
-                                                    ))}
-                                            </div>
-                                        </div>
-                                        <label className="flex items-center">
-                                            <input
-                                                type="checkbox"
-                                                checked={role.is_active}
-                                                onChange={(e) => {
-                                                    const newRoles = [...profileData.roles];
-                                                    newRoles[index].is_active = e.target.checked;
-                                                    setProfileData(prev => ({...prev, roles: newRoles}));
-                                                }}
-                                                className="mr-2"
-                                            />
-                                            Active Role
-                                        </label>
-                                    </div>
-                                    <div className="flex justify-end">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                // Prevent removing the last role
-                                                if (profileData.roles.length <= 1) {
-                                                    showNotification('error', 'At least one role is required');
-                                                    return;
-                                                }
-                                                const newRoles = profileData.roles.filter((_, i) => i !== index);
-                                                setProfileData(prev => ({...prev, roles: newRoles}));
-                                            }}
-                                            className="text-red-500 text-sm hover:text-red-700"
-                                            disabled={profileData.roles.length <= 1}
-                                        >
-                                            Remove
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                            {errors.roles && <p className="text-red-500 text-xs mt-1">{errors.roles}</p>}
                         </div>
 
                         {/* Biography and Conflict of Interest */}
