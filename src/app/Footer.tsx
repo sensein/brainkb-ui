@@ -67,7 +67,7 @@ const Footer: React.FC = () => {
               <div style={{ fontFamily: FONTS.display, fontSize: 22, letterSpacing: "-0.02em" }}>BrainKB</div>
             </div>
             <div style={{ fontSize: 12, color: "var(--bkb-textMuted)", lineHeight: 1.6, maxWidth: 320 }}>
-              An open neuroscience knowledge graph.
+              An open neuroscience knowledge graph funded by U24MH130918 (BICAN Knowledgebase).
             </div>
           </div>
           {COLUMNS.map((col) => (
