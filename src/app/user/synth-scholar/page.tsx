@@ -15,7 +15,6 @@
  *   • Search literature / search reviews tabs
  *   • Detailed visualisations of charting rubrics, narrative tables,
  *     critical-appraisal domains, GRADE assessments
- *   • Most export formats beyond markdown / json
  *   • Per-group analysis browser
  * The backend supports all of these (see core/synth_scholar/routes.py); the
  * UI is a focused subset that covers the protocol → pipeline → results
@@ -47,27 +46,65 @@ import type {
 } from "@/src/types/synthScholar";
 import { PlanConfirmDialog } from "@/src/app/components/synth-scholar/PlanConfirmDialog";
 
-const DEFAULT_MODELS = [
-  "anthropic/claude-opus-4.7",
-  "anthropic/claude-opus-4.6",
-  "anthropic/claude-sonnet-4.6",
-  "anthropic/claude-opus-4",
-  "anthropic/claude-sonnet-4",
-  "anthropic/claude-haiku-4-5",
-  "google/gemini-3.1-pro-preview",
-  "google/gemini-2.5-pro",
-  "google/gemini-2.5-flash",
-  "openai/gpt-5.4",
-  "openai/gpt-5.4-mini",
-  "openai/gpt-4.1",
-  "openai/gpt-4o",
-  "openai/gpt-4o-mini",
-  "x-ai/grok-4.20",
-  "deepseek/deepseek-chat",
-  "deepseek/deepseek-r1",
-  "qwen/qwen3-max-thinking",
-  "meta-llama/llama-4-maverick",
+// OpenRouter model catalogue. Slugs use Anthropic's API-ID format (hyphens, not
+// dots) — `anthropic/claude-opus-4.7` is NOT a valid OpenRouter slug; OpenRouter
+// returns 401 / "User not found" instead of 404 for unknown models, so dotted
+// slugs masquerade as auth failures. Keep this list trimmed to slugs we've
+// confirmed OpenRouter routes; add new models only after verifying they
+// appear on https://openrouter.ai/models.
+
+interface ModelOption {
+  id: string; // OpenRouter slug
+  label: string; // human-readable, used in dropdown + chips
+  provider: "Anthropic" | "Google" | "OpenAI" | "xAI" | "DeepSeek" | "Meta" | "Mistral";
+  tag?: "Best" | "Fast" | "New";
+}
+
+const MODEL_OPTIONS: ModelOption[] = [
+  // Anthropic — Claude 4.x family.
+  { id: "anthropic/claude-opus-4-7",    label: "Claude Opus 4.7",   provider: "Anthropic", tag: "Best" },
+  { id: "anthropic/claude-opus-4-6",    label: "Claude Opus 4.6",   provider: "Anthropic" },
+  { id: "anthropic/claude-sonnet-4-6",  label: "Claude Sonnet 4.6", provider: "Anthropic" },
+  { id: "anthropic/claude-opus-4",      label: "Claude Opus 4",     provider: "Anthropic" },
+  { id: "anthropic/claude-sonnet-4",    label: "Claude Sonnet 4",   provider: "Anthropic" },
+  { id: "anthropic/claude-haiku-4-5",   label: "Claude Haiku 4.5",  provider: "Anthropic", tag: "Fast" },
+  { id: "anthropic/claude-haiku-4",     label: "Claude Haiku 4",    provider: "Anthropic", tag: "Fast" },
+  // Google — Gemini 2.5 / 3.1.
+  { id: "google/gemini-2.5-pro",        label: "Gemini 2.5 Pro",    provider: "Google" },
+  { id: "google/gemini-2.5-flash",      label: "Gemini 2.5 Flash",  provider: "Google", tag: "Fast" },
+  // OpenAI — GPT-4.1 / 4o family (the slugs OpenRouter actually exposes).
+  { id: "openai/gpt-4.1",               label: "GPT-4.1",           provider: "OpenAI" },
+  { id: "openai/gpt-4o",                label: "GPT-4o",            provider: "OpenAI" },
+  { id: "openai/gpt-4o-mini",           label: "GPT-4o mini",       provider: "OpenAI", tag: "Fast" },
+  // xAI / DeepSeek / Meta / Mistral.
+  { id: "x-ai/grok-2-1212",             label: "Grok 2",            provider: "xAI" },
+  { id: "deepseek/deepseek-chat",       label: "DeepSeek Chat",     provider: "DeepSeek" },
+  { id: "deepseek/deepseek-r1",         label: "DeepSeek R1",       provider: "DeepSeek" },
+  { id: "meta-llama/llama-3.3-70b-instruct", label: "Llama 3.3 70B", provider: "Meta" },
+  { id: "mistralai/mistral-large-2411", label: "Mistral Large",     provider: "Mistral" },
 ];
+
+// Convenience for quick lookup (id → option) used by chip renderers.
+const MODEL_OPTIONS_BY_ID: Record<string, ModelOption> = Object.fromEntries(
+  MODEL_OPTIONS.map((m) => [m.id, m]),
+);
+
+// Provider order matches the dropdown order — keeps "Anthropic" up top.
+const PROVIDER_ORDER: ModelOption["provider"][] = [
+  "Anthropic", "Google", "OpenAI", "xAI", "DeepSeek", "Meta", "Mistral",
+];
+
+const MODELS_BY_PROVIDER: Array<{ provider: ModelOption["provider"]; models: ModelOption[] }> =
+  PROVIDER_ORDER
+    .map((provider) => ({
+      provider,
+      models: MODEL_OPTIONS.filter((m) => m.provider === provider),
+    }))
+    .filter((g) => g.models.length > 0);
+
+// Default single-model selection — Sonnet 4.6 is a sensible balance of
+// quality vs. cost vs. latency. Picking the same default in INITIAL_FORM.
+const DEFAULT_MODEL_ID = "anthropic/claude-sonnet-4-6";
 
 const ROB_TOOLS = [
   "RoB 2", "Jadad Scale", "ROBINS-I", "ROBINS-E", "Newcastle-Ottawa Scale",
@@ -93,6 +130,107 @@ const SYNTHESIS_STYLES: Array<{ id: "paragraph" | "question_answer" | "bullet_li
   { id: "question_answer", label: "Q & A" },
   { id: "bullet_list", label: "Bullet list" },
   { id: "table", label: "Table" },
+];
+
+// ── Pre-baked example protocols ────────────────────────────────────────
+//
+// Two seeded examples, both fully wired (PICO + criteria + RoB tool +
+// charting + appraisal + run config). Loading an example overlays the
+// form's *current* state with the example's fields, so the user can
+// tweak one row before starting without losing the rest of the seed.
+//
+// 1. CRISPR / monogenic disorders — straightforward single-cohort review
+//    that exercises the standard charting + appraisal defaults.
+// 2. ADHD ML biomarkers — exercises per-group analysis: groups studies
+//    by age cohort and asks tailored questions per cohort. Picks
+//    QUADAS-2 (diagnostic accuracy tool) and pauses for plan review.
+
+interface ExampleProtocol {
+  id: string;
+  label: string;
+  description: string;
+  apply: (base: StartFormState) => StartFormState;
+}
+
+const EXAMPLES: ExampleProtocol[] = [
+  {
+    id: "crispr",
+    label: "CRISPR therapies (basic review)",
+    description:
+      "Single-cohort efficacy + safety review of CRISPR gene therapies. Uses the default charting questions and appraisal domains, RoB 2, no per-group analysis.",
+    apply: (base) => ({
+      ...base,
+      title: "Efficacy and safety of CRISPR-based gene therapies in monogenic disorders",
+      objective: "Evaluate clinical outcomes of CRISPR gene editing therapies in patients with monogenic disorders",
+      pico_population: "Patients with monogenic disorders (sickle cell disease, β-thalassaemia, transthyretin amyloidosis, Leber congenital amaurosis, etc.)",
+      pico_intervention: "CRISPR-Cas9 / Cas12 gene-editing therapy (in vivo or ex vivo)",
+      pico_comparison: "Standard of care, placebo, or pre-treatment baseline",
+      pico_outcome: "Clinical efficacy, safety, adverse events, durability of response",
+      inclusion_criteria:
+        "Clinical trials in human subjects (Phase I–III); English-language; published 2019 onwards; reports primary or secondary clinical outcomes.",
+      exclusion_criteria:
+        "Animal-only studies; in-vitro / cell-line studies; narrative reviews and editorials; conference abstracts without full text.",
+      date_range_start: "2019-01-01",
+      date_range_end: "",
+      rob_tool: "RoB 2",
+      auto_confirm: false, // surface the plan-confirmation UX so the user sees how it works
+    }),
+  },
+  {
+    id: "adhd-cohort",
+    label: "ADHD ML biomarkers (per-cohort grouping)",
+    description:
+      "Diagnostic review with disorder-cohort grouping: children vs adolescents vs adults, each with tailored questions. Uses QUADAS-2 (diagnostic-accuracy tool).",
+    apply: (base) => ({
+      ...base,
+      title: "Machine learning biomarkers for ADHD diagnosis",
+      objective: "Evaluate ML-based biomarkers (EEG, fMRI, behavioural) for ADHD diagnosis across age cohorts",
+      pico_population: "Individuals with a clinical diagnosis of Attention-Deficit / Hyperactivity Disorder",
+      pico_intervention: "Machine-learning classifiers trained on neuroimaging, EEG, eye-tracking, or behavioural data",
+      pico_comparison: "Healthy controls or DSM-based clinician diagnosis",
+      pico_outcome: "Diagnostic accuracy, sensitivity, specificity, AUC; subgroup performance by age",
+      inclusion_criteria:
+        "Studies with DSM-5 / ICD-11 confirmed ADHD diagnosis; reports a quantitative ML classification result; English language; peer-reviewed.",
+      exclusion_criteria:
+        "Reviews, case reports, animal studies, theses, editorials; studies that conflate ADHD with other neurodevelopmental conditions without separating results.",
+      date_range_start: "2015-01-01",
+      date_range_end: "",
+      rob_tool: "QUADAS-2",
+      // Group studies by the chartingrubric's `disorder_cohort` attribute, then
+      // ask each group both the default cross-cohort questions and the
+      // per-cohort overrides below.
+      grouping_dimension: "disorder_cohort",
+      default_group_questions_text: [
+        "What was the sample size for this cohort?",
+        "Which ML algorithm performed best, and what was its AUC / accuracy?",
+        "Which features were most predictive of ADHD diagnosis?",
+      ].join("\n"),
+      per_group_questions: [
+        {
+          label: "Children (under 12)",
+          questions: [
+            "Were developmental and age-appropriate task designs used?",
+            "How was comorbidity (autism, learning disorders) handled in the sample?",
+          ],
+        },
+        {
+          label: "Adolescents (12-17)",
+          questions: [
+            "Was puberty / hormonal stage controlled for or reported?",
+            "What proportion of the sample was on stimulant medication during data collection?",
+          ],
+        },
+        {
+          label: "Adults (18+)",
+          questions: [
+            "How was first-time-in-adulthood diagnosis differentiated from childhood-onset persistence?",
+            "Were comorbid mood / anxiety disorders documented?",
+          ],
+        },
+      ],
+      auto_confirm: false,
+    }),
+  },
 ];
 
 // ── Status chip ─────────────────────────────────────────────────────
@@ -205,7 +343,7 @@ const INITIAL_FORM: StartFormState = {
   grouping_dimension: "disorder_cohort",
   default_group_questions_text: "",
   per_group_questions: [],
-  model: DEFAULT_MODELS[0],
+  model: DEFAULT_MODEL_ID,
   compare_mode: false,
   compare_models: [],
   consensus_model: "",
@@ -371,6 +509,78 @@ function StartReviewForm({ onCreated }: { onCreated: (id: string) => void }) {
         </div>
       </div>
 
+      {/* Load-example shortcut. Pre-fills the form with one of the seeded
+          protocols so the user can hit Start right away or tweak one field
+          without rebuilding the whole config. */}
+      <div
+        style={{
+          padding: 10,
+          border: "1px dashed var(--bkb-border)",
+          borderRadius: 6,
+          background: "var(--bkb-surfaceAlt)",
+        }}
+      >
+        <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--bkb-textSubtle)", marginBottom: 6 }}>
+          Load an example
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {EXAMPLES.map((ex) => (
+            <button
+              key={ex.id}
+              type="button"
+              onClick={() => {
+                setForm((s) => ex.apply(s));
+                // Open the sections that the example actually populates so the
+                // user can see what was filled in without hunting.
+                setOpenSections({
+                  protocol: true,
+                  search: true,
+                  metadata: false,
+                  rob: true,
+                  group: ex.id === "adhd-cohort",
+                  run: true,
+                });
+                setSubmitError(null);
+              }}
+              style={{
+                textAlign: "left",
+                padding: "8px 10px",
+                background: "var(--bkb-surface)",
+                border: "1px solid var(--bkb-border)",
+                borderRadius: 6,
+                cursor: "pointer",
+                fontFamily: FONTS.body,
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 500, color: "var(--bkb-text)" }}>{ex.label}</div>
+              <div style={{ fontSize: 11, color: "var(--bkb-textMuted)", marginTop: 2, lineHeight: 1.4 }}>
+                {ex.description}
+              </div>
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => {
+              setForm(INITIAL_FORM);
+              setOpenSections({ protocol: true, search: false, metadata: false, rob: false, group: false, run: false });
+              setSubmitError(null);
+            }}
+            style={{
+              alignSelf: "flex-start",
+              fontSize: 11,
+              color: "var(--bkb-textMuted)",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+              marginTop: 2,
+            }}
+          >
+            Reset to blank form
+          </button>
+        </div>
+      </div>
+
       {/* OpenRouter key status banner */}
       <ApiKeyBanner status={keyStatus} />
 
@@ -529,42 +739,104 @@ function StartReviewForm({ onCreated }: { onCreated: (id: string) => void }) {
         {!form.compare_mode ? (
           <Field label="Model">
             <select className="bkb-input" value={form.model} onChange={(e) => update("model", e.target.value)}>
-              {DEFAULT_MODELS.map((m) => (
-                <option key={m} value={m}>{m}</option>
+              {MODELS_BY_PROVIDER.map(({ provider, models }) => (
+                <optgroup key={provider} label={provider}>
+                  {models.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.label}
+                      {m.tag ? ` — ${m.tag}` : ""}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
           </Field>
         ) : (
           <>
             <Field label={`Compare models (pick 2 to 5 — ${form.compare_models.length} selected)`}>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                {DEFAULT_MODELS.map((m) => {
-                  const on = form.compare_models.includes(m);
-                  return (
-                    <button
-                      type="button"
-                      key={m}
-                      className="bkb-chip"
-                      onClick={() => toggleCompareModel(m)}
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {MODELS_BY_PROVIDER.map(({ provider, models }) => (
+                  <div key={provider}>
+                    <div
                       style={{
-                        cursor: "pointer",
                         fontSize: 10,
-                        borderColor: on ? "var(--bkb-primary)" : "var(--bkb-border)",
-                        color: on ? "var(--bkb-primary)" : "var(--bkb-textMuted)",
+                        fontWeight: 500,
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        color: "var(--bkb-textSubtle)",
+                        marginBottom: 4,
                       }}
                     >
-                      {on && <Icon name="check" size={9} />} {m}
-                    </button>
-                  );
-                })}
+                      {provider}
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                      {models.map((m) => {
+                        const on = form.compare_models.includes(m.id);
+                        return (
+                          <button
+                            type="button"
+                            key={m.id}
+                            className="bkb-chip"
+                            onClick={() => toggleCompareModel(m.id)}
+                            title={m.id}
+                            style={{
+                              cursor: "pointer",
+                              fontSize: 10,
+                              borderColor: on ? "var(--bkb-primary)" : "var(--bkb-border)",
+                              color: on ? "var(--bkb-primary)" : "var(--bkb-textMuted)",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 4,
+                            }}
+                          >
+                            {on && <Icon name="check" size={9} />}
+                            {m.label}
+                            {m.tag && (
+                              <span
+                                style={{
+                                  fontSize: 8,
+                                  padding: "1px 4px",
+                                  borderRadius: 3,
+                                  background:
+                                    m.tag === "Best"
+                                      ? "color-mix(in oklch, var(--bkb-accent), transparent 80%)"
+                                      : m.tag === "Fast"
+                                        ? "color-mix(in oklch, var(--bkb-publication), transparent 80%)"
+                                        : "color-mix(in oklch, var(--bkb-agent), transparent 80%)",
+                                  color:
+                                    m.tag === "Best"
+                                      ? "var(--bkb-accent)"
+                                      : m.tag === "Fast"
+                                        ? "var(--bkb-publication)"
+                                        : "var(--bkb-agent)",
+                                }}
+                              >
+                                {m.tag}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
             </Field>
             <Field label="Consensus model (defaults to first compare model)">
-              <select className="bkb-input" value={form.consensus_model} onChange={(e) => update("consensus_model", e.target.value)}>
+              <select
+                className="bkb-input"
+                value={form.consensus_model}
+                onChange={(e) => update("consensus_model", e.target.value)}
+              >
                 <option value="">— first compare model —</option>
-                {form.compare_models.map((m) => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
+                {form.compare_models.map((id) => {
+                  const opt = MODEL_OPTIONS_BY_ID[id];
+                  return (
+                    <option key={id} value={id}>
+                      {opt ? `${opt.provider} · ${opt.label}` : id}
+                    </option>
+                  );
+                })}
               </select>
             </Field>
           </>
