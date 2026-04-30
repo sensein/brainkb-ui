@@ -1,8 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { env } from "@/src/config/env";
+
+/**
+ * Fires `cb` when the tab regains focus or visibility. Used by the page-access
+ * hooks so an admin's grant in another tab takes effect on the user dashboard
+ * the moment the user switches back, instead of waiting for a manual reload.
+ */
+function useRevalidateOnFocus(cb: () => void): void {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = () => {
+      if (document.visibilityState === "visible") cb();
+    };
+    document.addEventListener("visibilitychange", handler);
+    window.addEventListener("focus", handler);
+    return () => {
+      document.removeEventListener("visibilitychange", handler);
+      window.removeEventListener("focus", handler);
+    };
+  }, [cb]);
+}
 
 export type PageAccessReason = "public" | "role" | "user_override" | "denied" | "not_found";
 
@@ -17,6 +37,7 @@ interface UsePageAccessState {
   allowed: boolean | null;
   reason: PageAccessReason | null;
   error: string | null;
+  refresh: () => void;
 }
 
 /**
@@ -34,14 +55,17 @@ export function usePageAccess(
   options?: { skip?: boolean },
 ): UsePageAccessState {
   const { data: session, status } = useSession();
+  const refreshNoop = useCallback(() => {}, []);
   // When `skip` is set (e.g. an admin-only gate that doesn't need backend
   // RBAC), short-circuit to a settled "allowed=false" state without firing a
   // request. The component using the hook is responsible for its own auth UX.
-  const [state, setState] = useState<UsePageAccessState>(() =>
+  const [state, setState] = useState<Omit<UsePageAccessState, "refresh">>(() =>
     options?.skip
       ? { loading: false, allowed: false, reason: null, error: null }
       : { loading: true, allowed: null, reason: null, error: null },
   );
+  const [bump, setBump] = useState(0);
+  const refresh = useCallback(() => setBump((n) => n + 1), []);
 
   useEffect(() => {
     if (options?.skip) {
@@ -73,9 +97,11 @@ export function usePageAccess(
     return () => {
       cancelled = true;
     };
-  }, [pageKey, status, session, options?.skip]);
+  }, [pageKey, status, session, options?.skip, bump]);
 
-  return state;
+  useRevalidateOnFocus(options?.skip ? refreshNoop : refresh);
+
+  return { ...state, refresh };
 }
 
 /**
@@ -87,11 +113,14 @@ export function usePageAccessBatch(pageKeys: string[]): {
   allowedMap: Record<string, boolean>;
   results: PageAccessCheck[];
   error: string | null;
+  refresh: () => void;
 } {
   const { data: session, status } = useSession();
   const [results, setResults] = useState<PageAccessCheck[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [bump, setBump] = useState(0);
+  const refresh = useCallback(() => setBump((n) => n + 1), []);
 
   // Stable key so we don't re-fetch when the same keys are passed in a new array.
   const serialized = pageKeys.slice().sort().join(",");
@@ -137,10 +166,12 @@ export function usePageAccessBatch(pageKeys: string[]): {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [serialized, status, session]);
+  }, [serialized, status, session, bump]);
+
+  useRevalidateOnFocus(refresh);
 
   const allowedMap: Record<string, boolean> = {};
   for (const r of results) allowedMap[r.page_key] = r.allowed;
 
-  return { loading, allowedMap, results, error };
+  return { loading, allowedMap, results, error, refresh };
 }

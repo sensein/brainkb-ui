@@ -135,6 +135,28 @@ export function useCurrentUser(): State {
     };
   }, [key, backendToken, sessionEmail, sessionName, status, bump]);
 
+  const refresh = () => {
+    cachedUser = null;
+    cacheKey = null;
+    setBump((n) => n + 1);
+  };
+
+  // Re-read /api/users/me when the tab regains focus so role / ban changes an
+  // admin makes in another tab take effect without forcing a sign-out.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+    document.addEventListener("visibilitychange", handler);
+    window.addEventListener("focus", handler);
+    return () => {
+      document.removeEventListener("visibilitychange", handler);
+      window.removeEventListener("focus", handler);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return {
     loading,
     user,
@@ -142,10 +164,6 @@ export function useCurrentUser(): State {
     banned,
     hasRole: (role: string) => !!user?.roles?.includes(role),
     isAdmin: !!user?.roles?.includes("Admin"),
-    refresh: () => {
-      cachedUser = null;
-      cacheKey = null;
-      setBump((n) => n + 1);
-    },
+    refresh,
   };
 }

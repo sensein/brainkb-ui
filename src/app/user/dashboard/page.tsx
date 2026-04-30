@@ -34,8 +34,11 @@ function DashTools() {
   // Default behaviour when no entry exists in the backend is "denied" — i.e.
   // every workflow is off until an admin enables it through /admin/page-access.
   // ENABLE_PAGE_ACCESS_GATE=false short-circuits this for local dev.
+  // The hook auto-revalidates on tab focus so an admin's grant in another tab
+  // shows up here without forcing a reload; the Refresh button is an explicit
+  // escape hatch for the same-tab case.
   const keys = TOOL_REGISTRY.map((t) => t.pageKey);
-  const { loading, allowedMap } = usePageAccessBatch(keys);
+  const { loading, allowedMap, refresh } = usePageAccessBatch(keys);
   const bypass = !ENABLE_PAGE_ACCESS_GATE;
 
   return (
@@ -49,6 +52,15 @@ function DashTools() {
             Tools are off by default — an admin grants role- or user-level access through the page-access surface.
           </div>
         </div>
+        <button
+          className="bkb-btn bkb-btn-ghost"
+          onClick={refresh}
+          disabled={loading}
+          title="Re-check tool access — useful right after an admin grants you a new tool."
+          style={{ padding: "4px 10px", fontSize: 12 }}
+        >
+          <Icon name="arrow" size={11} /> {loading ? "Refreshing…" : "Refresh"}
+        </button>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
