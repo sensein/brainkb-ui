@@ -9,6 +9,9 @@ import dynamic from "next/dynamic"; // Required for Client Component import
 // import BrainKBAssistantClient from "./components/assistant/BrainKBAssistantClient";
 import BrainKBAssistantWrapper from "./components/assistant/BrainKBAssistantClient";
 import AssistantInitializer from "./components/assistant/AssistantInitializer";
+// Site-wide bkb design tokens (cream background, --bkb-* CSS vars, and the
+// Tailwind → bkb overrides scoped by .bkb in globals.css).
+import { Theme } from "./components/design-system";
 
 // Dynamically import the ConditionalNavbar (client component)
 const ConditionalNavbar = dynamic(() => import("./components/layout/ConditionalNavbar"), { ssr: false });
@@ -51,7 +54,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <header>
               <ConditionalNavbar/>
           </header>
-          <main className="flex min-h-screen flex-col pt-16">{children}</main>
+          {/* Wrap every page in <Theme> so the bkb design tokens, cream
+              background, and Tailwind → bkb CSS overrides (scoped by .bkb in
+              globals.css) apply to every route — about, privacy, contact,
+              resources, knowledge-base, dashboards, admin, etc. */}
+          <Theme theme="light" style={{ background: "#f0eee9" }}>
+              <main className="flex min-h-screen flex-col pt-16">{children}</main>
+          </Theme>
           <footer>
               <Footer/>
           </footer>

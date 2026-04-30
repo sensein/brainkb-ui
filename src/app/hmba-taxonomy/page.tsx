@@ -506,6 +506,16 @@ const renderCustomNode = ({ nodeDatum, toggleNode }: any) => {
             vector-effect: non-scaling-stroke;      /* crisp links */
             shape-rendering: geometricPrecision;
             stroke-width: 4.25px;
+            /* react-d3-tree's default link stroke leans light gray, which on
+               the bkb cream body bg renders almost invisible (especially
+               when expanded levels add long horizontal stretches between
+               siblings). Pin to bkb-borderStrong (oklch 0.78), kill any
+               library-injected dashing, and force fill:none so the curve
+               between nodes always reads as a continuous line. */
+            stroke: oklch(0.55 0.012 220);
+            stroke-dasharray: none !important;
+            fill: none !important;
+            opacity: 0.9;
           }
         `}</style>
 
