@@ -177,9 +177,9 @@ const Navbar: React.FC = () => {
                         <ClickableDropdown
                             label="Knowledge Base"
                             items={[
-                              { href: "/knowledge-base/barcodedcellsample", label: "Barcoded Cell Sample" },
-                                { href: "/knowledge-base/libraryaliquot", label: "Library Generation" },
-                                { href: "/knowledge-base/genomeannotation", label: "Genome Annotation" },
+//                               { href: "/knowledge-base/barcodedcellsample", label: "Barcoded Cell Sample" },
+//                                 { href: "/knowledge-base/libraryaliquot", label: "Library Generation" },
+//                                 { href: "/knowledge-base/genomeannotation", label: "Genome Annotation" },
                                 { href: "/knowledge-base/ner", label: "Neuroscientific NER" },
                                 { href: "/knowledge-base/resources", label: "Structured Resources" },
                                 { href: "/knowledge-base/synth-scholar", label: "Public Reviews" }
