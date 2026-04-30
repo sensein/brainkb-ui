@@ -40,7 +40,12 @@ UI_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 BRAINKB_DIR="${BRAINKB_DIR:-$(cd "${UI_DIR}/../BrainKB" 2>/dev/null && pwd || true)}"
 NETWORK_NAME="${BRAINKB_NETWORK:-brainkb-network}"
 HEALTH_TIMEOUT_SECS="${HEALTH_TIMEOUT_SECS:-300}"
-BACKEND_HEALTH_URL="${BACKEND_HEALTH_URL:-http://localhost:${API_TOKEN_PORT:-8000}/}"
+# Probe usermanagement_service (:8004) by default — that's the supervisor
+# program the UI auth flow blocks on. Port 8000 (Django token manager) is
+# the unified container's own Docker healthcheck but doesn't tell us
+# anything about whether the UI's dependencies are actually up. Override
+# with BACKEND_HEALTH_URL=... if you want a different probe.
+BACKEND_HEALTH_URL="${BACKEND_HEALTH_URL:-http://localhost:${USERMANAGEMENT_SERVICE_PORT:-8004}/api/auth/providers}"
 
 # ── Logging helpers ──────────────────────────────────────────────────────
 log()  { printf '\033[36m[up]\033[0m %s\n' "$*"; }

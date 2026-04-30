@@ -43,6 +43,18 @@ ARG NEXTAUTH_URL=
 # Copy environment file
 COPY .env.local ./
 
+# NextAuth (next-auth/utils/parse-url.js) calls `new URL(NEXTAUTH_URL)` and
+# uses `??` for the fallback, which does NOT cover the empty-string case.
+# An empty NEXTAUTH_URL → `new URL("")` → ERR_INVALID_URL during prerender.
+# Fall back to the local-dev value here so the build never bakes "" into
+# the bundle.
+ARG _NEXTAUTH_URL_FALLBACK=http://localhost:3000
+RUN if [ -z "$NEXTAUTH_URL" ]; then \
+      echo "[build] NEXTAUTH_URL was empty; defaulting to ${_NEXTAUTH_URL_FALLBACK}"; \
+      echo "[build] override at deploy time via --build-arg or .env.deploy"; \
+    fi
+ENV NEXTAUTH_URL=${NEXTAUTH_URL:-$_NEXTAUTH_URL_FALLBACK}
+
 # Override .env.local with any non-empty build args. Skipping empty values
 # means a partial set of overrides still works — anything you don't pass
 # falls back to .env.local.
