@@ -1467,15 +1467,79 @@ function ReviewDetail({ reviewId }: { reviewId: string }) {
                 onClick={() => exportMut.mutate({ reviewId, format: "markdown" })}
                 disabled={exportMut.isPending}
               >
-                <Icon name="evidence" size={11} /> Export markdown
+                <Icon name="evidence" size={11} /> Markdown
               </button>
               <button
                 className="bkb-btn bkb-btn-ghost"
                 onClick={() => exportMut.mutate({ reviewId, format: "json" })}
                 disabled={exportMut.isPending}
               >
-                <Icon name="evidence" size={11} /> Export JSON
+                <Icon name="evidence" size={11} /> JSON
               </button>
+              <button
+                className="bkb-btn bkb-btn-ghost"
+                onClick={() => exportMut.mutate({ reviewId, format: "bibtex" })}
+                disabled={exportMut.isPending}
+              >
+                <Icon name="evidence" size={11} /> BibTeX
+              </button>
+              <button
+                className="bkb-btn bkb-btn-ghost"
+                onClick={() => exportMut.mutate({ reviewId, format: "ttl" })}
+                disabled={exportMut.isPending}
+              >
+                <Icon name="evidence" size={11} /> Turtle
+              </button>
+              <button
+                className="bkb-btn bkb-btn-ghost"
+                onClick={() => exportMut.mutate({ reviewId, format: "jsonld" })}
+                disabled={exportMut.isPending}
+              >
+                <Icon name="evidence" size={11} /> JSON-LD
+              </button>
+              {(r.data_charting_rubrics?.length ?? 0) > 0 && (
+                <>
+                  <button
+                    className="bkb-btn bkb-btn-ghost"
+                    onClick={() => exportMut.mutate({ reviewId, format: "rubric_markdown" })}
+                    disabled={exportMut.isPending}
+                  >
+                    <Icon name="evidence" size={11} /> Rubric (md)
+                  </button>
+                  <button
+                    className="bkb-btn bkb-btn-ghost"
+                    onClick={() => exportMut.mutate({ reviewId, format: "rubric_json" })}
+                    disabled={exportMut.isPending}
+                  >
+                    <Icon name="evidence" size={11} /> Rubric (json)
+                  </button>
+                  <button
+                    className="bkb-btn bkb-btn-ghost"
+                    onClick={() => exportMut.mutate({ reviewId, format: "charting_json" })}
+                    disabled={exportMut.isPending}
+                  >
+                    <Icon name="evidence" size={11} /> Charting (json)
+                  </button>
+                </>
+              )}
+              {(r.critical_appraisals?.length ?? 0) > 0 && (
+                <button
+                  className="bkb-btn bkb-btn-ghost"
+                  onClick={() => exportMut.mutate({ reviewId, format: "appraisal_json" })}
+                  disabled={exportMut.isPending}
+                >
+                  <Icon name="evidence" size={11} /> Appraisal (json)
+                </button>
+              )}
+              {(r.narrative_rows?.length ?? 0) > 0 && (
+                <button
+                  className="bkb-btn bkb-btn-ghost"
+                  onClick={() => exportMut.mutate({ reviewId, format: "narrative_summary_json" })}
+                  disabled={exportMut.isPending}
+                >
+                  <Icon name="evidence" size={11} /> Narrative (json)
+                </button>
+              )}
             </>
           )}
           <button
@@ -1695,6 +1759,14 @@ function FlowCountsCard({ flow }: { flow: NonNullable<ReturnType<typeof useRevie
 export default function SynthScholarPage() {
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
 
+  // Auto-select a review when arriving via ?review=… (e.g. from
+  // /knowledge-base/synth-scholar). Falls back to no selection if absent.
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const id = new URLSearchParams(window.location.search).get("review");
+    if (id) setSelectedId(id);
+  }, []);
+
   return (
     <div style={{ maxWidth: 1480, margin: "0 auto", padding: "32px 32px 64px" }}>
       <div style={{ marginBottom: 24 }}>
@@ -1709,10 +1781,19 @@ export default function SynthScholarPage() {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(360px, 1fr) minmax(260px, 320px) minmax(420px, 2fr)", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(360px, 1fr) minmax(260px, 320px) minmax(420px, 2fr)", gap: 16, alignItems: "start" }}>
         <StartReviewForm onCreated={setSelectedId} />
         <ReviewsList selectedId={selectedId} onSelect={setSelectedId} />
-        <div>
+        <div
+          className="bkb-scroll"
+          style={{
+            position: "sticky",
+            top: 16,
+            maxHeight: "calc(100vh - 32px)",
+            overflowY: "auto",
+            paddingRight: 4,
+          }}
+        >
           {selectedId ? (
             <ReviewDetail reviewId={selectedId} />
           ) : (
