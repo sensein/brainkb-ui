@@ -138,6 +138,13 @@ keyfeatures:
       button_text: "Login to try now"
       icon_slug: "filetext"
       color_theme: "purple"
+    - title: "SynthScholar"
+      short_description: "PRISMA-guided literature reviews with AI"
+      description: "Run end-to-end PRISMA literature reviews — from search strategy to synthesis, screening, and critical appraisal — orchestrated across multiple LLMs."
+      link: "/user/synth-scholar"
+      button_text: "Login to try now"
+      icon_slug: "bookopen"
+      color_theme: "publication"
 
 usecases:
   title: "Use Cases"
@@ -170,7 +177,7 @@ usecases:
       discussion_link: "https://github.com/sensein/BrainKB/discussions/28"
       is_future: false
       status: "available"
-      use_link: "/resources"
+      use_link: "/knowledge-base/resources"
       use_link_text: "View extracted resources"
       use_text: "Login to access available features"
     - title: "Resource Metadata Expansion"
@@ -198,7 +205,7 @@ usecases:
       discussion_link: "https://github.com/sensein/BrainKB/discussions/25"
       is_future: false
       status: "available"
-      use_link: "/ner"
+      use_link: "/knowledge-base/ner"
       use_link_text: "View extracted neuroscientific NER terms"
     - title: "Assertion Evidence"
       case_number: "Case 5"
@@ -212,6 +219,20 @@ usecases:
       discussion_link: "https://github.com/sensein/BrainKB/discussions/27"
       is_future: false
       status: "in_development"
+    - title: "SynthScholar"
+      case_number: "Case 6"
+      description: "PRISMA-guided literature review — search strategy, screening, critical appraisal, and synthesis orchestrated across multiple LLMs."
+      icon_slug: "bookopen"
+      gradient: "from-yellow-500 to-amber-500"
+      background_gradient: "from-yellow-50 to-white"
+      border_color: "yellow-300"
+      text_color: "yellow-700"
+      icon_color: "yellow-500"
+      discussion_link: "https://github.com/sensein/BrainKB/discussions"
+      is_future: false
+      status: "available"
+      use_link: "/knowledge-base/synth-scholar"
+      use_link_text: "View public reviews"
     - title: "Brain Visualization"
       case_number: "Future Consideration"
       description: "Connect all information through interactive brain visualization for comprehensive knowledge exploration."

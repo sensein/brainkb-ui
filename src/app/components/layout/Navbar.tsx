@@ -181,7 +181,8 @@ const Navbar: React.FC = () => {
                                 { href: "/knowledge-base/libraryaliquot", label: "Library Generation" },
                                 { href: "/knowledge-base/genomeannotation", label: "Genome Annotation" },
                                 { href: "/knowledge-base/ner", label: "Neuroscientific NER" },
-                                { href: "/knowledge-base/resources", label: "Structured Resources" }
+                                { href: "/knowledge-base/resources", label: "Structured Resources" },
+                                { href: "/knowledge-base/synth-scholar", label: "Public Reviews" }
                             ]}
                             isOpen={isKnowledgeBaseOpen}
                             onToggle={() => setIsKnowledgeBaseOpen(!isKnowledgeBaseOpen)}

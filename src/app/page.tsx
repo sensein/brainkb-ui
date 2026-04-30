@@ -116,7 +116,7 @@ export default function Home() {
               Login by clicking the button on the top-right navbar to use these features.
             </div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20 }}>
             {Array.isArray(yaml.keyfeatures?.features) &&
               yaml.keyfeatures.features.map((f: any, i: number) => {
                 const Icon = iconBySlug(f.icon_slug);
@@ -125,7 +125,9 @@ export default function Home() {
                     ? "var(--bkb-accent)"
                     : f.color_theme === "purple"
                       ? "var(--bkb-evidence)"
-                      : "var(--bkb-primary)";
+                      : f.color_theme === "publication"
+                        ? "var(--bkb-publication)"
+                        : "var(--bkb-primary)";
                 return (
                   <Link
                     key={i}
