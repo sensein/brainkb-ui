@@ -58,6 +58,14 @@ export const TOOL_REGISTRY: ToolEntry[] = [
     color: "var(--bkb-publication)",
   },
   {
+    pageKey: "tools.synth-scholar",
+    href: "/user/synth-scholar",
+    title: "SynthScholar",
+    description: "Literature review (PRISMA-guided).",
+    icon: "agent",
+    color: "var(--bkb-accent)",
+  },
+  {
     pageKey: "tools.profile",
     href: "/user/profile",
     title: "Profile",
