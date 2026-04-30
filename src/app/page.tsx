@@ -418,7 +418,7 @@ export default function Home() {
           </section>
         )}
 
-        {/* ── Statistics ───────────────────────────────────────────── */}
+        {/* ── Statistics ─────────────────────────────────────────────
         <section
           style={{
             padding: "96px 64px",
@@ -478,7 +478,7 @@ export default function Home() {
             </div>
           </div>
         </section>
-
+*/}
         {/* ── Structured Models ────────────────────────────────────── */}
         <section style={{ padding: "96px 64px", maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ maxWidth: 720, marginBottom: 56 }}>

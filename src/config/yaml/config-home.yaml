@@ -277,7 +277,7 @@ usecases:
 
 publications:
   title: "Powered by Advanced AI Agents"
-  description: "BrainKB leverages cutting-edge agentic frameworks for structured information extraction. Our platform utilizes STRUCTSENSE, a task-agnostic agentic framework that enables sophisticated structured information extraction."
+  description: "BrainKB leverages cutting-edge agentic frameworks for structured information extraction. Our platform utilizes STRUCTSENSE, a task-agnostic agentic framework that enables sophisticated structured information extraction. SynthScholar extends this foundation to support PRISMA-guided literature synthesis, including structured data extraction and critical appraisal of scientific studies."
   citation:
     label: "Research Citation:"
     text: "Chhetri, T.R., Chen, Y., Trivedi, P., Jarecka, D., Haobsh, S., Ray, P., Ng, L. and Ghosh, S.S., 2025. STRUCTSENSE: A Task-Agnostic Agentic Framework for Structured Information Extraction with Human-In-The-Loop Evaluation and Benchmarking. arXiv preprint arXiv:2507.03674."
