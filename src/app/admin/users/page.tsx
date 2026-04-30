@@ -17,8 +17,10 @@ import {
   type AdminUserListItem,
   type AvailableRole,
 } from "@/src/services/api/userManagement";
+import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 
 export default function AdminUsersPage() {
+  const { user: me } = useCurrentUser();
   const [users, setUsers] = React.useState<AdminUserListItem[]>([]);
   const [roles, setRoles] = React.useState<AvailableRole[]>([]);
   const [q, setQ] = React.useState("");
@@ -62,6 +64,10 @@ export default function AdminUsersPage() {
   }
 
   async function removeRole(profile_id: number, role: string) {
+    if (role === "SuperAdmin") {
+      alert("The SuperAdmin role is protected and cannot be removed via the admin UI.");
+      return;
+    }
     if (!confirm(`Remove role "${role}" from this user?`)) return;
     setActingOn(profile_id);
     try {
@@ -74,7 +80,11 @@ export default function AdminUsersPage() {
     }
   }
 
-  async function deleteUser(profile_id: number, email: string) {
+  async function deleteUser(profile_id: number, email: string, isSuperAdmin: boolean) {
+    if (isSuperAdmin) {
+      alert("SuperAdmin accounts cannot be deleted via the admin UI.");
+      return;
+    }
     if (!confirm(`Delete user ${email}? This cascades through their activities, roles, and OAuth identities.`)) return;
     setActingOn(profile_id);
     try {
@@ -82,6 +92,42 @@ export default function AdminUsersPage() {
       await reload();
     } catch (e: any) {
       alert(`Could not delete user: ${e?.message ?? "request failed"}`);
+    } finally {
+      setActingOn(null);
+    }
+  }
+
+  async function banUser(profile_id: number, email: string, isSuperAdmin: boolean) {
+    if (isSuperAdmin) {
+      alert("SuperAdmin accounts cannot be banned via the admin UI.");
+      return;
+    }
+    const reason = window.prompt(`Suspend ${email}? Provide a reason — visible to other admins for audit.`);
+    if (reason === null) return; // user hit cancel
+    const trimmed = reason.trim();
+    if (!trimmed) {
+      alert("A reason is required.");
+      return;
+    }
+    setActingOn(profile_id);
+    try {
+      await adminApi.banUser(profile_id, trimmed);
+      await reload();
+    } catch (e: any) {
+      alert(`Could not ban user: ${e?.message ?? "request failed"}`);
+    } finally {
+      setActingOn(null);
+    }
+  }
+
+  async function unbanUser(profile_id: number, email: string) {
+    if (!confirm(`Lift suspension for ${email}? They'll be able to use the platform again immediately.`)) return;
+    setActingOn(profile_id);
+    try {
+      await adminApi.unbanUser(profile_id);
+      await reload();
+    } catch (e: any) {
+      alert(`Could not unban user: ${e?.message ?? "request failed"}`);
     } finally {
       setActingOn(null);
     }
@@ -135,7 +181,7 @@ export default function AdminUsersPage() {
             background: "var(--bkb-surfaceAlt)",
             borderBottom: "1px solid var(--bkb-border)",
             display: "grid",
-            gridTemplateColumns: "1.5fr 1.6fr 1fr 1.4fr 0.6fr 80px",
+            gridTemplateColumns: "1.5fr 1.6fr 1fr 1.4fr 0.6fr 160px",
             gap: 16,
             fontSize: 11,
             color: "var(--bkb-textMuted)",
@@ -157,7 +203,10 @@ export default function AdminUsersPage() {
           <div style={{ padding: 18, fontSize: 12, color: "var(--bkb-textMuted)" }}>No users match the current filter.</div>
         )}
         {!loading &&
-          users.map((u, i) => (
+          users.map((u, i) => {
+            const isSelf = me?.profile_id === u.profile_id;
+            const isSuperAdmin = u.roles.includes("SuperAdmin");
+            return (
             <div
               key={u.profile_id}
               className="bkb-hover-row"
@@ -165,14 +214,34 @@ export default function AdminUsersPage() {
                 padding: "12px 18px",
                 borderBottom: i < users.length - 1 ? "1px solid var(--bkb-border)" : "none",
                 display: "grid",
-                gridTemplateColumns: "1.5fr 1.6fr 1fr 1.4fr 0.6fr 80px",
+                gridTemplateColumns: "1.5fr 1.6fr 1fr 1.4fr 0.6fr 160px",
                 gap: 16,
                 alignItems: "center",
                 fontSize: 13,
               }}
             >
               <div>
-                <div style={{ fontWeight: 500 }}>{u.name || "(no name)"}</div>
+                <div style={{ fontWeight: 500, display: "flex", alignItems: "center", gap: 6 }}>
+                  {u.name || "(no name)"}
+                  {isSelf && (
+                    <span
+                      className="bkb-chip"
+                      title="This is your account"
+                      style={{ fontSize: 9, borderColor: "var(--bkb-textSubtle)", color: "var(--bkb-textMuted)" }}
+                    >
+                      you
+                    </span>
+                  )}
+                  {u.is_banned && (
+                    <span
+                      className="bkb-chip"
+                      title={u.ban_reason ? `Banned: ${u.ban_reason}` : "Banned"}
+                      style={{ fontSize: 9, borderColor: "var(--bkb-danger)", color: "var(--bkb-danger)" }}
+                    >
+                      <Icon name="lock" size={9} /> banned
+                    </span>
+                  )}
+                </div>
                 <div className="bkb-mono" style={{ fontSize: 11, color: "var(--bkb-textSubtle)" }}>
                   #{u.profile_id}
                 </div>
@@ -197,17 +266,29 @@ export default function AdminUsersPage() {
                 )}
               </div>
               <div style={{ display: "flex", gap: 4, flexWrap: "wrap", alignItems: "center" }}>
-                {u.roles.map((r) => (
-                  <span
-                    key={r}
-                    className="bkb-chip"
-                    style={{ fontSize: 10, cursor: "pointer", borderColor: "var(--bkb-primary)", color: "var(--bkb-primary)" }}
-                    title="Click to remove this role"
-                    onClick={() => removeRole(u.profile_id, r)}
-                  >
-                    {r} <Icon name="x" size={9} />
-                  </span>
-                ))}
+                {u.roles.map((r) => {
+                  const locked = r === "SuperAdmin";
+                  return (
+                    <span
+                      key={r}
+                      className="bkb-chip"
+                      style={{
+                        fontSize: 10,
+                        cursor: locked ? "not-allowed" : "pointer",
+                        borderColor: "var(--bkb-primary)",
+                        color: "var(--bkb-primary)",
+                        opacity: locked ? 0.55 : 1,
+                      }}
+                      title={locked ? "The SuperAdmin role is protected and cannot be removed." : "Click to remove this role"}
+                      onClick={() => {
+                        if (locked) return;
+                        void removeRole(u.profile_id, r);
+                      }}
+                    >
+                      {r} {locked ? null : <Icon name="x" size={9} />}
+                    </span>
+                  );
+                })}
                 <select
                   disabled={actingOn === u.profile_id}
                   className="bkb-input"
@@ -232,16 +313,47 @@ export default function AdminUsersPage() {
               <span style={{ color: "var(--bkb-textMuted)", fontSize: 12 }}>
                 {u.created_at ? new Date(u.created_at).toLocaleDateString() : "—"}
               </span>
-              <button
-                className="bkb-btn bkb-btn-ghost"
-                style={{ padding: "4px 8px", borderColor: "var(--bkb-danger)", color: "var(--bkb-danger)" }}
-                disabled={actingOn === u.profile_id}
-                onClick={() => deleteUser(u.profile_id, u.email)}
-              >
-                <Icon name="x" size={11} /> Delete
-              </button>
+              <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
+                {u.is_banned ? (
+                  <button
+                    className="bkb-btn bkb-btn-ghost"
+                    style={{ padding: "4px 8px", borderColor: "var(--bkb-primary)", color: "var(--bkb-primary)" }}
+                    disabled={actingOn === u.profile_id}
+                    onClick={() => unbanUser(u.profile_id, u.email)}
+                    title={u.ban_reason ? `Lift ban (was: ${u.ban_reason})` : "Lift ban"}
+                  >
+                    <Icon name="check" size={11} /> Unban
+                  </button>
+                ) : (
+                  <button
+                    className="bkb-btn bkb-btn-ghost"
+                    style={{ padding: "4px 8px", borderColor: "var(--bkb-publication)", color: "var(--bkb-publication)" }}
+                    disabled={actingOn === u.profile_id || isSelf || isSuperAdmin}
+                    onClick={() => banUser(u.profile_id, u.email, isSuperAdmin)}
+                    title={
+                      isSuperAdmin
+                        ? "SuperAdmin accounts cannot be banned."
+                        : isSelf
+                          ? "You can't ban your own account."
+                          : "Suspend this user — keeps their profile but blocks all authenticated requests."
+                    }
+                  >
+                    <Icon name="lock" size={11} /> Ban
+                  </button>
+                )}
+                <button
+                  className="bkb-btn bkb-btn-ghost"
+                  style={{ padding: "4px 8px", borderColor: "var(--bkb-danger)", color: "var(--bkb-danger)" }}
+                  disabled={actingOn === u.profile_id || isSuperAdmin}
+                  onClick={() => deleteUser(u.profile_id, u.email, isSuperAdmin)}
+                  title={isSuperAdmin ? "SuperAdmin accounts cannot be deleted." : "Delete this user."}
+                >
+                  <Icon name="x" size={11} /> Delete
+                </button>
+              </div>
             </div>
-          ))}
+            );
+          })}
       </div>
     </div>
   );

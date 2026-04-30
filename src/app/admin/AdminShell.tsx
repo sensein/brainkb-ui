@@ -19,6 +19,7 @@ const ADMIN_NAV: { href: string; label: string; icon: string }[] = [
   { href: "/admin/users", label: "Users", icon: "person" },
   { href: "/admin/roles", label: "Roles & permissions", icon: "shield" },
   { href: "/admin/page-access", label: "Page access", icon: "lock" },
+  { href: "/admin/guide", label: "Guide", icon: "info" },
 ];
 
 function AdminSidebar() {
@@ -73,6 +74,32 @@ function AdminSidebar() {
   );
 }
 
+function SuspendedNotice({ reason, bannedAt }: { reason: string | null; bannedAt: string | null }) {
+  return (
+    <div style={{ padding: "60px 36px", maxWidth: 560 }}>
+      <div style={{ fontSize: 11, color: "var(--bkb-textSubtle)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
+        Account suspended
+      </div>
+      <h1 style={{ fontFamily: FONTS.display, fontSize: 32, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
+        Your account has been suspended
+      </h1>
+      <p style={{ fontSize: 13, color: "var(--bkb-textMuted)", lineHeight: 1.6, marginTop: 12 }}>
+        {reason
+          ? <>An administrator suspended this account with the following reason: <em>{reason}</em></>
+          : "An administrator suspended this account."}
+        {bannedAt && (
+          <>
+            {" "}Effective <span className="bkb-mono">{new Date(bannedAt).toLocaleString()}</span>.
+          </>
+        )}
+      </p>
+      <p style={{ fontSize: 13, color: "var(--bkb-textMuted)", lineHeight: 1.6, marginTop: 8 }}>
+        If you believe this is an error, contact a platform administrator.
+      </p>
+    </div>
+  );
+}
+
 function Denied({ reason }: { reason: string }) {
   return (
     <div style={{ padding: "60px 36px", maxWidth: 520 }}>
@@ -91,12 +118,16 @@ function Denied({ reason }: { reason: string }) {
 }
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
-  const { user, loading, isAdmin } = useCurrentUser();
+  const { user, loading, isAdmin, banned } = useCurrentUser();
 
   if (loading) {
     return (
       <div style={{ padding: "60px 36px", color: "var(--bkb-textMuted)", fontSize: 13 }}>Checking access…</div>
     );
+  }
+
+  if (banned) {
+    return <SuspendedNotice reason={banned.reason} bannedAt={banned.banned_at} />;
   }
 
   if (!user) {

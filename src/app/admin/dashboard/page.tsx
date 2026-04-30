@@ -11,7 +11,7 @@
 import React from "react";
 import Link from "next/link";
 import { FONTS, Icon } from "@/src/app/components/design-system";
-import { adminApi } from "@/src/services/api/userManagement";
+import { adminApi, type AvailableRole, type SharedOpenRouterKeyAdminView } from "@/src/services/api/userManagement";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 
 interface Counts {
@@ -102,6 +102,8 @@ export default function AdminStatsPage() {
         </div>
       )}
 
+      <SharedOpenRouterKeyCard />
+
       <div className="bkb-card" style={{ padding: 20, marginBottom: 20 }}>
         <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 14 }}>Signed in as</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
@@ -120,6 +122,254 @@ export default function AdminStatsPage() {
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// Shared OpenRouter API key
+// =============================================================================
+// Admin-only card to set / replace / clear the shared OpenRouter key. End
+// users get the plaintext via /api/settings/openrouter-key/effective for use
+// in browser API calls — it's never displayed to non-admins. The admin can
+// reveal the plaintext on demand to copy/audit it (`reveal=true` query
+// param). Stored encrypted at rest with the same Fernet key as OAuth tokens.
+
+function SharedOpenRouterKeyCard() {
+  const [view, setView] = React.useState<SharedOpenRouterKeyAdminView | null>(null);
+  const [roles, setRoles] = React.useState<AvailableRole[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [editing, setEditing] = React.useState(false);
+  const [draftKey, setDraftKey] = React.useState("");
+  const [draftRoles, setDraftRoles] = React.useState<Set<string>>(new Set());
+  const [revealed, setRevealed] = React.useState<string | null>(null);
+  const [busy, setBusy] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [notice, setNotice] = React.useState<string | null>(null);
+
+  const reload = React.useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [v, r] = await Promise.all([
+        adminApi.getOpenRouterKey().catch(() => null),
+        adminApi.listRoles().catch(() => [] as AvailableRole[]),
+      ]);
+      setView(v);
+      setRoles(r);
+      setDraftRoles(new Set(v?.allowed_role_names ?? []));
+    } catch (e: any) {
+      setError(e?.message ?? "request failed");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => { void reload(); }, [reload]);
+
+  async function handleReveal() {
+    setBusy(true);
+    setError(null);
+    try {
+      const v = await adminApi.getOpenRouterKey(true);
+      setRevealed(v.plaintext);
+    } catch (e: any) {
+      setError(e?.message ?? "request failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleSave() {
+    if (!draftKey.trim()) {
+      setError("Paste a key before saving.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await adminApi.setOpenRouterKey({
+        api_key: draftKey.trim(),
+        allowed_role_names: draftRoles.size === 0 ? null : Array.from(draftRoles),
+      });
+      setNotice("Shared key saved. Users will receive it on their next page load.");
+      setDraftKey("");
+      setRevealed(null);
+      setEditing(false);
+      await reload();
+    } catch (e: any) {
+      setError(e?.message ?? "save failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleClear() {
+    if (!confirm("Clear the shared OpenRouter key? Users will fall back to their own key.")) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await adminApi.deleteOpenRouterKey();
+      setNotice("Shared key cleared.");
+      setRevealed(null);
+      await reload();
+    } catch (e: any) {
+      setError(e?.message ?? "clear failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function toggleRole(name: string) {
+    setDraftRoles((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  }
+
+  return (
+    <div className="bkb-card" style={{ padding: 20, marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 500 }}>Shared OpenRouter API key</div>
+          <div style={{ fontSize: 11, color: "var(--bkb-textMuted)", marginTop: 2 }}>
+            Provided to users for SIE / Resource extraction unless they set their own. Encrypted at rest.
+          </div>
+        </div>
+        {view?.has_key && (
+          <span className="bkb-chip" style={{ borderColor: "var(--bkb-primary)", color: "var(--bkb-primary)" }}>
+            <Icon name="check" size={10} /> Set · ends in {view.last_4}
+          </span>
+        )}
+      </div>
+
+      {loading ? (
+        <div style={{ fontSize: 12, color: "var(--bkb-textMuted)" }}>Loading…</div>
+      ) : (
+        <>
+          <div style={{ fontSize: 12, color: "var(--bkb-textMuted)", marginBottom: 10 }}>
+            {view?.has_key ? (
+              <>
+                Last updated{" "}
+                <span style={{ color: "var(--bkb-text)" }}>
+                  {view.updated_at ? new Date(view.updated_at).toLocaleString() : "—"}
+                </span>
+                {" "}·{" "}
+                {view.allowed_role_names && view.allowed_role_names.length > 0
+                  ? <>Available to roles: {view.allowed_role_names.join(", ")}</>
+                  : <>Available to <strong style={{ color: "var(--bkb-text)" }}>any signed-in user</strong></>}
+              </>
+            ) : (
+              <>No shared key set. Users must paste their own on the dashboard.</>
+            )}
+          </div>
+
+          {revealed !== null && (
+            <div
+              style={{
+                padding: 10,
+                marginBottom: 10,
+                borderRadius: 6,
+                border: "1px solid var(--bkb-border)",
+                background: "var(--bkb-surfaceAlt)",
+                fontFamily: FONTS.mono,
+                fontSize: 12,
+                wordBreak: "break-all",
+              }}
+            >
+              {revealed}
+              <div style={{ marginTop: 6 }}>
+                <button className="bkb-btn bkb-btn-ghost" style={{ padding: "2px 8px", fontSize: 11 }} onClick={() => setRevealed(null)}>
+                  Hide
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!editing && (
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button className="bkb-btn bkb-btn-primary" disabled={busy} onClick={() => setEditing(true)}>
+                <Icon name="key" size={11} /> {view?.has_key ? "Replace key" : "Set shared key"}
+              </button>
+              {view?.has_key && (
+                <>
+                  <button className="bkb-btn bkb-btn-ghost" disabled={busy} onClick={handleReveal}>
+                    <Icon name="eye" size={11} /> Reveal current
+                  </button>
+                  <button
+                    className="bkb-btn bkb-btn-ghost"
+                    disabled={busy}
+                    onClick={handleClear}
+                    style={{ color: "var(--bkb-danger)", borderColor: "var(--bkb-danger)" }}
+                  >
+                    <Icon name="x" size={11} /> Clear
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
+          {editing && (
+            <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 10 }}>
+              <div>
+                <label style={{ fontSize: 11, color: "var(--bkb-textMuted)" }}>New API key</label>
+                <input
+                  className="bkb-input"
+                  type="password"
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder="sk-or-v1-…"
+                  value={draftKey}
+                  onChange={(e) => setDraftKey(e.target.value)}
+                />
+              </div>
+              <div>
+                <div style={{ fontSize: 11, color: "var(--bkb-textMuted)", marginBottom: 4 }}>
+                  Roles allowed to use this key (no roles selected = any signed-in user)
+                </div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {roles.map((r) => {
+                    const on = draftRoles.has(r.name);
+                    return (
+                      <button
+                        key={r.id ?? r.name}
+                        type="button"
+                        onClick={() => toggleRole(r.name)}
+                        className="bkb-chip"
+                        style={{
+                          cursor: "pointer",
+                          borderColor: on ? "var(--bkb-primary)" : "var(--bkb-border)",
+                          color: on ? "var(--bkb-primary)" : "var(--bkb-text)",
+                          background: on ? "color-mix(in oklch, var(--bkb-primary), transparent 92%)" : "transparent",
+                        }}
+                      >
+                        {on && <Icon name="check" size={9} />} {r.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button className="bkb-btn bkb-btn-primary" disabled={busy} onClick={handleSave}>
+                  Save
+                </button>
+                <button
+                  className="bkb-btn bkb-btn-ghost"
+                  disabled={busy}
+                  onClick={() => { setEditing(false); setDraftKey(""); setError(null); }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {error && <div style={{ fontSize: 12, color: "var(--bkb-danger)", marginTop: 8 }}>{error}</div>}
+          {notice && <div style={{ fontSize: 12, color: "var(--bkb-primary)", marginTop: 8 }}>{notice}</div>}
+        </>
+      )}
     </div>
   );
 }

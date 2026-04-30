@@ -130,7 +130,9 @@ export default function AdminPageAccessPage() {
   // are shown as one-click stub-create buttons so getting started doesn't
   // require typing keys by hand.
   const knownKeys = new Set(pages.map((p) => p.page_key));
-  const seedables = TOOL_REGISTRY.filter((t) => !knownKeys.has(t.pageKey));
+  // Skip admin-only tools — registering them in the page-access table is a
+  // no-op since the gate enforces admin via the `adminOnly` prop directly.
+  const seedables = TOOL_REGISTRY.filter((t) => !knownKeys.has(t.pageKey) && !t.adminOnly);
 
   function preFillFromTool(t: typeof TOOL_REGISTRY[number]) {
     setSelectedKey(null);
@@ -150,7 +152,9 @@ export default function AdminPageAccessPage() {
           </h1>
           <div style={{ fontSize: 13, color: "var(--bkb-textMuted)" }}>
             Map UI page keys (e.g. <span className="bkb-mono">admin.users</span>) to allowed roles and user overrides.
-            Tools without an entry are denied by default.
+            Tools without an entry are denied by default. <strong style={{ color: "var(--bkb-text)", fontWeight: 500 }}>Admins always pass</strong>{" "}
+            regardless of the entries below — the gate short-circuits the role check, so deleting an{" "}
+            <span className="bkb-mono">admin.*</span> entry never locks an Admin out.
           </div>
         </div>
         <button className="bkb-btn bkb-btn-primary" onClick={startNew}>
@@ -223,16 +227,32 @@ export default function AdminPageAccessPage() {
                       {p.is_public ? "public" : `${p.allowed_roles.length} role(s) · ${p.allowed_user_emails.length} user(s)`}
                     </div>
                   </div>
-                  <button
-                    className="bkb-btn bkb-btn-ghost"
-                    style={{ padding: "2px 6px", color: "var(--bkb-danger)" }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      void deletePage(p.page_key);
-                    }}
-                  >
-                    <Icon name="x" size={11} />
-                  </button>
+                  {(() => {
+                    const isAdminPage = p.page_key.startsWith("admin.");
+                    return (
+                      <button
+                        className="bkb-btn bkb-btn-ghost"
+                        style={{
+                          padding: "2px 6px",
+                          color: isAdminPage ? "var(--bkb-textSubtle)" : "var(--bkb-danger)",
+                          cursor: isAdminPage ? "not-allowed" : "pointer",
+                        }}
+                        disabled={isAdminPage}
+                        title={
+                          isAdminPage
+                            ? "Bootstrap-managed page — re-seeded on every backend startup. Admins keep access via the hardcoded gate even if removed."
+                            : "Delete this entry"
+                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (isAdminPage) return;
+                          void deletePage(p.page_key);
+                        }}
+                      >
+                        <Icon name="x" size={11} />
+                      </button>
+                    );
+                  })()}
                 </div>
               );
             })}
