@@ -6,6 +6,34 @@ import { TokenResponse } from '@/src/types/api';
  */
 export type TokenEndpointType = 'ml' | 'query' | 'user-management' | 'default';
 
+// -----------------------------------------------------------------------------
+// Session-based backend JWT for user-management calls.
+// The logged-in user's JWT is issued by usermanagement_service after OAuth and
+// lives in the NextAuth session. Pulling it from there (instead of minting a
+// fresh service-account token) means every call carries the caller's identity,
+// which the backend needs for role-based and per-user page access checks.
+// -----------------------------------------------------------------------------
+async function getSessionBackendToken(): Promise<string | null> {
+    try {
+        if (typeof window !== 'undefined') {
+            // Client-side: read via NextAuth's client helper.
+            const { getSession } = await import('next-auth/react');
+            const session = await getSession();
+            return (session as any)?.backendToken ?? null;
+        }
+        // Server-side: use getServerSession with our authOptions.
+        const [{ getServerSession }, { authOptions }] = await Promise.all([
+            import('next-auth/next'),
+            import('@/lib/auth'),
+        ]);
+        const session = await getServerSession(authOptions as any);
+        return (session as any)?.backendToken ?? null;
+    } catch (err) {
+        console.warn('[Auth] Failed to read backend JWT from session:', err);
+        return null;
+    }
+}
+
 /**
  * Fetch auth token from a specific endpoint with custom credentials
  * This allows using credentials from form data instead of env variables
@@ -85,12 +113,21 @@ async function fetchQueryAuthToken(): Promise<string> {
 }
 
 /**
- * Fetch auth token for User Management service
+ * Fetch auth token for User Management service.
+ * Prefers the logged-in user's JWT from the NextAuth session (issued by the
+ * backend after OAuth). Only falls back to the static JWT_USER/JWT_PASSWORD
+ * flow if no session exists — needed because user-management endpoints now
+ * enforce role-based and per-user page access, which requires the caller's
+ * identity rather than a shared service-account token.
  */
 async function fetchUserManagementAuthToken(): Promise<string> {
+    const sessionToken = await getSessionBackendToken();
+    if (sessionToken) {
+        return sessionToken;
+    }
     const tokenEndpoint = env.get('NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE');
     if (!tokenEndpoint) {
-        throw new Error('User Management service token endpoint not configured');
+        throw new Error('User Management service token endpoint not configured and no session token available');
     }
     return fetchAuthTokenFromEndpoint(tokenEndpoint, 'User Management');
 }
@@ -157,25 +194,35 @@ export async function withAuthHeaders(tokenEndpoint?: TokenEndpointType): Promis
             
             // Check if we're running on the client-side
             if (typeof window !== 'undefined') {
-                // Client-side: use API route to proxy token request (avoids CORS)
-                try {
-                    const response = await fetch('/api/auth/token', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ tokenEndpointType: endpointType }),
-                        cache: 'no-store',
-                    });
+                // For user-management, prefer the logged-in user's session JWT.
+                // This is the only token that carries their profile_id + roles,
+                // which the backend needs for page access and admin checks.
+                if (endpointType === 'user-management') {
+                    token = await getSessionBackendToken();
+                }
 
-                    if (response.ok) {
-                        const data = await response.json();
-                        token = data.token || null;
-                    } else {
-                        console.warn('[withAuthHeaders] Token API route returned error:', response.status);
+                // Fall back (or for ml/query/default): use the proxy route so
+                // the browser doesn't hit the token endpoint directly.
+                if (!token) {
+                    try {
+                        const response = await fetch('/api/auth/token', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ tokenEndpointType: endpointType }),
+                            cache: 'no-store',
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            token = data.token || null;
+                        } else {
+                            console.warn('[withAuthHeaders] Token API route returned error:', response.status);
+                        }
+                    } catch (error) {
+                        console.warn('[withAuthHeaders] Failed to fetch token via API route:', error);
                     }
-                } catch (error) {
-                    console.warn('[withAuthHeaders] Failed to fetch token via API route:', error);
                 }
             } else {
                 // Server-side: fetch token directly
