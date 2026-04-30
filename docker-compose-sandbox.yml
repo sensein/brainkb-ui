@@ -1,9 +1,23 @@
-version: '3'
+# Sandbox compose for the brainkb-ui — meant for iterating on the UI against
+# a running BrainKB backend stack on the same host. Mounts the source tree
+# into the container so you can edit files locally and re-run, without
+# rebuilding the image. Use the production compose (docker-compose.yml) for
+# real deployments — that one strips the volume overlay and lets you bake
+# real public URLs at build time via NEXT_PUBLIC_* build args.
+#
+# Bring it up alongside the backend (which lives on the external
+# `brainkb-network`) so the UI container can reach service hostnames like
+# `brainkb-unified`. Create the network once if it does not yet exist:
+#       docker network create brainkb-network
+
 services:
   sandbox_web:
     build: .
     ports:
-      - '80:3000' # Maps host:container port
+      # Default to 3000 to avoid clashing with anything else listening on
+      # host port 80 (reverse proxies, etc). Override via the
+      # SANDBOX_WEB_HOST_PORT env var when you need it on 80.
+      - '${SANDBOX_WEB_HOST_PORT:-3000}:3000'
     env_file:
       - .env.local
     environment:
@@ -12,3 +26,11 @@ services:
       - .:/app
       - /app/node_modules
       - /app/.next
+    restart: unless-stopped
+    networks:
+      - brainkb-network
+
+networks:
+  brainkb-network:
+    external: true
+    name: brainkb-network

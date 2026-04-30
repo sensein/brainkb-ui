@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { fetchEntityData } from "./services/dataService";
 import { calculateStats } from "./utils/entityUtils";
