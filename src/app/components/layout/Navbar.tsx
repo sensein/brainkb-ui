@@ -5,8 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { ChevronDown, ExternalLink } from "lucide-react";
+import { ChevronDown, ExternalLink, Shield } from "lucide-react";
 import SignInButtons from "../auth/SignInButtons"; // Import the client-side sign-in buttons
+import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 
 interface DropdownItem {
     href: string;
@@ -71,6 +72,7 @@ const Navbar: React.FC = () => {
     const [isSubmitDataOpen, setIsSubmitDataOpen] = useState(false);
     const [isExtractedKnowledgeOpen, setIsExtractedKnowledgeOpen] = useState(false);
     const { data: session } = useSession();
+    const { isAdmin } = useCurrentUser();
     const router = useRouter();
     const dropdownRef = useRef<HTMLDivElement>(null);
     const ResourcesRef = useRef<HTMLDivElement>(null);
@@ -126,7 +128,17 @@ const Navbar: React.FC = () => {
                         priority
                     />
                     <span
-                        className="self-center text-4xl font-semibold whitespace-nowrap dark:text-white">BrainKB</span>
+                        className="self-center whitespace-nowrap dark:text-white"
+                        style={{
+                            fontFamily: '"Instrument Serif", "Times New Roman", Georgia, serif',
+                            fontSize: 32,
+                            fontWeight: 400,
+                            letterSpacing: "-0.02em",
+                            lineHeight: 1.1,
+                        }}
+                    >
+                        BrainKB
+                    </span>
                 </Link>
 
                 <div className="flex md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
@@ -208,7 +220,7 @@ const Navbar: React.FC = () => {
                                     onClick={() => setIsMobileMenuOpen(false)}
                                     className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700"
                                 >
-                                    StructSense
+                                    Dashboard
                                 </Link>
                             </li>
                         )}
@@ -248,18 +260,35 @@ const Navbar: React.FC = () => {
                                     </button>
                                     {isOpen && (
                                         <div className="absolute right-0 md:right-0 left-auto md:left-auto mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-50 min-w-[120px] max-w-[200px]">
-                                            <Link href="/user/ingest-kg" onClick={() => {
+                                            <Link href="/user/dashboard" onClick={() => {
                                                 setIsOpen(false);
                                                 setIsMobileMenuOpen(false);
-                                            }} className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Submit Data</Link>
-                                            <Link href="/user/job-status" onClick={() => {
-                                                setIsOpen(false);
-                                                setIsMobileMenuOpen(false);
-                                            }} className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Job Status</Link>
+                                            }} className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Dashboard</Link>
                                             <Link href="/user/profile" onClick={() => {
                                                 setIsOpen(false);
                                                 setIsMobileMenuOpen(false);
                                             }} className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Profile</Link>
+                                            {isAdmin && (
+                                                <>
+                                                    <div className="my-1 border-t border-gray-200 dark:border-gray-700" />
+                                                    <div className="px-4 pt-1 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                                                        Admin
+                                                    </div>
+                                                    <Link href="/admin/dashboard" onClick={() => {
+                                                        setIsOpen(false);
+                                                        setIsMobileMenuOpen(false);
+                                                    }} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                                        <Shield className="w-3.5 h-3.5" /> Admin Dashboard
+                                                    </Link>
+                                                    <Link href="/admin/users" onClick={() => {
+                                                        setIsOpen(false);
+                                                        setIsMobileMenuOpen(false);
+                                                    }} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                                        <Shield className="w-3.5 h-3.5" /> Manage Users
+                                                    </Link>
+                                                    <div className="my-1 border-t border-gray-200 dark:border-gray-700" />
+                                                </>
+                                            )}
                                             <button onClick={() => {
                                                 handleLogout();
                                                 setIsMobileMenuOpen(false);
