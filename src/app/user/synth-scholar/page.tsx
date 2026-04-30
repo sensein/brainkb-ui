@@ -35,6 +35,8 @@ import {
   usePlanResponse,
   useProgressStream,
   useExportReview,
+  useSetReviewVisibility,
+  useSetCacheSharing,
 } from "@/src/hooks/useSynthScholar";
 import { resolveOpenRouterKey } from "@/src/app/components/user/useApiKeyValidator";
 import type {
@@ -136,8 +138,14 @@ interface StartFormState {
   competing_interests: string;
   // Protocol — RoB & charting
   rob_tool: string;
-  charting_questions_text: string; // newline-separated → string[]
-  appraisal_domains_text: string;  // newline-separated → string[]
+  /** Questions the data-charting agent answers per included study. Seeded
+   *  with five sensible defaults matching the AEP UI; users add/remove rows
+   *  via the inline editor. */
+  charting_questions: string[];
+  /** Critical-appraisal domains, capped at 4 per the agent's prompt budget.
+   *  Seeded with the four-domain rubric used by the AEP knowledge-synthesis
+   *  workflow. */
+  appraisal_domains: string[];
   // Protocol — per-group analysis
   grouping_dimension: string;
   default_group_questions_text: string; // newline-separated → string[]
@@ -181,8 +189,19 @@ const INITIAL_FORM: StartFormState = {
   funding_sources: "",
   competing_interests: "",
   rob_tool: "RoB 2",
-  charting_questions_text: "",
-  appraisal_domains_text: "",
+  charting_questions: [
+    "What is the primary disorder or clinical population studied?",
+    "What features or biomarkers were extracted and analysed?",
+    "What machine learning models or algorithms were applied?",
+    "What were the key performance metrics and results?",
+    "What datasets or data collection methods were used?",
+  ],
+  appraisal_domains: [
+    "Participant and Sample Quality",
+    "Data Collection Quality",
+    "Feature and Model Quality",
+    "Bias and Transparency",
+  ],
   grouping_dimension: "disorder_cohort",
   default_group_questions_text: "",
   per_group_questions: [],
@@ -296,8 +315,9 @@ function StartReviewForm({ onCreated }: { onCreated: (id: string) => void }) {
       funding_sources: form.funding_sources,
       competing_interests: form.competing_interests,
       rob_tool: form.rob_tool as any,
-      charting_questions: _splitLines(form.charting_questions_text),
-      appraisal_domains: _splitLines(form.appraisal_domains_text),
+      // Drop blank rows; trim whitespace.
+      charting_questions: form.charting_questions.map((q) => q.trim()).filter(Boolean),
+      appraisal_domains: form.appraisal_domains.map((d) => d.trim()).filter(Boolean),
       grouping_dimension: form.grouping_dimension,
       default_group_questions: _splitLines(form.default_group_questions_text),
       per_group_questions: perGroup,
@@ -460,12 +480,23 @@ function StartReviewForm({ onCreated }: { onCreated: (id: string) => void }) {
             ))}
           </select>
         </Field>
-        <Field label="Charting questions (one per line)">
-          <textarea className="bkb-input" rows={3} value={form.charting_questions_text} onChange={(e) => update("charting_questions_text", e.target.value)} placeholder={"What population was studied?\nWhat outcomes were measured?"} style={{ fontFamily: FONTS.body, resize: "vertical" }} />
-        </Field>
-        <Field label="Critical-appraisal domains (one per line)">
-          <textarea className="bkb-input" rows={3} value={form.appraisal_domains_text} onChange={(e) => update("appraisal_domains_text", e.target.value)} placeholder={"Sample size justification\nBlinding\nLoss to follow-up"} style={{ fontFamily: FONTS.body, resize: "vertical" }} />
-        </Field>
+        <StringListEditor
+          label="Charting Questions"
+          description="Questions the agent will answer for each included study during data extraction."
+          items={form.charting_questions}
+          onChange={(items) => update("charting_questions", items)}
+          placeholder="e.g. What outcomes were measured?"
+          addLabel="Add question"
+        />
+        <StringListEditor
+          label="Appraisal Domains"
+          description="Critical appraisal domains used to assess study quality (max 4)."
+          items={form.appraisal_domains}
+          onChange={(items) => update("appraisal_domains", items)}
+          placeholder="e.g. Sample size justification"
+          addLabel="Add domain"
+          max={4}
+        />
       </Section>
 
       {/* ── Per-group analysis ─────────────────────── */}
@@ -594,6 +625,104 @@ function StartReviewForm({ onCreated }: { onCreated: (id: string) => void }) {
         <Icon name="agent" size={12} /> {isSubmitting ? "Starting…" : "Start review"}
       </button>
     </form>
+  );
+}
+
+function StringListEditor({
+  label,
+  description,
+  items,
+  onChange,
+  placeholder,
+  addLabel,
+  max,
+}: {
+  label: string;
+  description?: string;
+  items: string[];
+  onChange: (next: string[]) => void;
+  placeholder?: string;
+  addLabel: string;
+  max?: number;
+}) {
+  const add = () => onChange([...items, ""]);
+  const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i));
+  const updateItem = (i: number, value: string) =>
+    onChange(items.map((it, idx) => (idx === i ? value : it)));
+  const atCap = max != null && items.length >= max;
+
+  return (
+    <div>
+      <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 2 }}>{label}</div>
+      {description && (
+        <div style={{ fontSize: 11, color: "var(--bkb-textMuted)", marginBottom: 8 }}>
+          {description}
+        </div>
+      )}
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {items.length === 0 && (
+          <div
+            style={{
+              fontSize: 11,
+              color: "var(--bkb-textSubtle)",
+              padding: 10,
+              border: "1px dashed var(--bkb-border)",
+              borderRadius: 6,
+            }}
+          >
+            No entries yet — click {addLabel.toLowerCase()} below to add one.
+          </div>
+        )}
+        {items.map((value, i) => (
+          <div
+            key={i}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              background: "var(--bkb-surfaceAlt)",
+              border: "1px solid var(--bkb-border)",
+              borderRadius: 6,
+              padding: "4px 8px",
+            }}
+          >
+            <input
+              className="bkb-input"
+              placeholder={placeholder}
+              value={value}
+              onChange={(e) => updateItem(i, e.target.value)}
+              style={{ flex: 1, border: "none", background: "transparent", padding: "4px 0" }}
+            />
+            <button
+              type="button"
+              onClick={() => remove(i)}
+              title="Remove"
+              style={{
+                border: "none",
+                background: "transparent",
+                color: "var(--bkb-textMuted)",
+                cursor: "pointer",
+                padding: 4,
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <Icon name="x" size={12} />
+            </button>
+          </div>
+        ))}
+      </div>
+      <button
+        type="button"
+        className="bkb-btn bkb-btn-ghost"
+        onClick={add}
+        disabled={atCap}
+        title={atCap ? `Limit of ${max} reached` : addLabel}
+        style={{ padding: "4px 10px", marginTop: 8, fontSize: 12 }}
+      >
+        <Icon name="plus" size={11} /> {addLabel}
+      </button>
+    </div>
   );
 }
 
@@ -763,6 +892,52 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
   );
 }
 
+function SharingToggle({
+  label,
+  description,
+  checked,
+  disabled,
+  onChange,
+  hint,
+}: {
+  label: string;
+  description: string;
+  checked: boolean;
+  disabled?: boolean;
+  onChange: (v: boolean) => void;
+  hint?: string;
+}) {
+  return (
+    <label style={{ display: "flex", gap: 10, alignItems: "start", cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.7 : 1 }}>
+      <input
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)}
+        style={{ marginTop: 2 }}
+      />
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 500, display: "flex", alignItems: "center", gap: 6 }}>
+          {label}
+          {checked && (
+            <span className="bkb-chip" style={{ fontSize: 9, borderColor: "var(--bkb-accent)", color: "var(--bkb-accent)" }}>
+              on
+            </span>
+          )}
+        </div>
+        <div style={{ fontSize: 11, color: "var(--bkb-textMuted)", lineHeight: 1.45, marginTop: 2 }}>
+          {description}
+        </div>
+        {hint && (
+          <div style={{ fontSize: 11, color: "var(--bkb-textSubtle)", marginTop: 4, fontStyle: "italic" }}>
+            {hint}
+          </div>
+        )}
+      </div>
+    </label>
+  );
+}
+
 function ApiKeyBanner({ status }: { status: { source: "personal" | "shared" | "none"; checked: boolean } }) {
   if (!status.checked) return null;
   if (status.source === "none") {
@@ -884,6 +1059,26 @@ function ReviewListItem({
           <div className="bkb-mono" style={{ fontSize: 10, color: "var(--bkb-textSubtle)", marginTop: 2 }}>
             {review.review_id}
           </div>
+          <div style={{ display: "flex", gap: 4, marginTop: 4, flexWrap: "wrap" }}>
+            {review.is_public && (
+              <span
+                className="bkb-chip"
+                style={{ fontSize: 9, borderColor: "var(--bkb-accent)", color: "var(--bkb-accent)" }}
+                title="Anyone with the review ID can fetch this review."
+              >
+                public
+              </span>
+            )}
+            {!review.is_public && review.share_to_cache && (
+              <span
+                className="bkb-chip"
+                style={{ fontSize: 9, borderColor: "var(--bkb-textMuted)", color: "var(--bkb-textMuted)" }}
+                title="Article cache shared, but the review itself remains private."
+              >
+                cache shared
+              </span>
+            )}
+          </div>
           {review.stage && (
             <div style={{ fontSize: 11, color: "var(--bkb-textMuted)", marginTop: 4 }}>
               {review.stage}
@@ -910,6 +1105,8 @@ function ReviewDetail({ reviewId }: { reviewId: string }) {
   const del = useDeleteReview();
   const planResponse = usePlanResponse();
   const exportMut = useExportReview();
+  const setVisibility = useSetReviewVisibility();
+  const setCacheSharing = useSetCacheSharing();
 
   const [pendingPlan, setPendingPlan] = React.useState<ReviewPlan | null>(null);
   const [planIteration, setPlanIteration] = React.useState(0);
@@ -1020,6 +1217,48 @@ function ReviewDetail({ reviewId }: { reviewId: string }) {
             <Icon name="x" size={11} /> Delete
           </button>
         </div>
+
+        {/* Visibility & cache sharing — only meaningful once a review has run.
+            Public mirrors share_to_cache (making a review public auto-enables
+            cache sharing); cache sharing is independent so a private review
+            can still contribute its article cache to other users. */}
+        {r.status !== "running" && r.status !== "pending" && (
+          <div
+            style={{
+              marginTop: 14,
+              padding: 12,
+              border: "1px solid var(--bkb-border)",
+              borderRadius: 6,
+              background: "var(--bkb-surfaceAlt)",
+            }}
+          >
+            <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--bkb-textSubtle)", marginBottom: 8 }}>
+              Sharing
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <SharingToggle
+                label="Public"
+                description="Anyone with the review ID can fetch the full review (synthesis, included articles, exports). Auto-enables cache sharing."
+                checked={r.is_public}
+                disabled={setVisibility.isPending}
+                onChange={(v) => setVisibility.mutate({ reviewId, is_public: v })}
+              />
+              <SharingToggle
+                label="Share article cache"
+                description="Other users searching the same articles can re-use the cached fetches and LLM responses from this review. The review itself stays private unless you also flip Public."
+                checked={r.share_to_cache}
+                disabled={setCacheSharing.isPending || r.is_public}
+                onChange={(v) => setCacheSharing.mutate({ reviewId, share_to_cache: v })}
+                hint={r.is_public ? "Enabled automatically because the review is public." : undefined}
+              />
+            </div>
+            {(setVisibility.error || setCacheSharing.error) && (
+              <div style={{ fontSize: 11, color: "var(--bkb-danger)", marginTop: 6 }}>
+                {((setVisibility.error || setCacheSharing.error) as Error).message}
+              </div>
+            )}
+          </div>
+        )}
 
         {r.error && (
           <div
