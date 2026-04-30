@@ -12,6 +12,9 @@ import AssistantInitializer from "./components/assistant/AssistantInitializer";
 // Site-wide bkb design tokens (cream background, --bkb-* CSS vars, and the
 // Tailwind → bkb overrides scoped by .bkb in globals.css).
 import { Theme } from "./components/design-system";
+// TanStack Query client — used by SynthScholar (and any future page that wants
+// react-query primitives). Mounted high so all client subtrees share one cache.
+import QueryProvider from "./components/synth-scholar/QueryProvider";
 
 // Dynamically import the ConditionalNavbar (client component)
 const ConditionalNavbar = dynamic(() => import("./components/layout/ConditionalNavbar"), { ssr: false });
@@ -51,19 +54,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </noscript>
 
       <SessionProvider session={session}>
-          <header>
-              <ConditionalNavbar/>
-          </header>
-          {/* Wrap every page in <Theme> so the bkb design tokens, cream
-              background, and Tailwind → bkb CSS overrides (scoped by .bkb in
-              globals.css) apply to every route — about, privacy, contact,
-              resources, knowledge-base, dashboards, admin, etc. */}
-          <Theme theme="light" style={{ background: "#f0eee9" }}>
-              <main className="flex min-h-screen flex-col pt-16">{children}</main>
-          </Theme>
-          <footer>
-              <Footer/>
-          </footer>
+          <QueryProvider>
+              <header>
+                  <ConditionalNavbar/>
+              </header>
+              {/* Wrap every page in <Theme> so the bkb design tokens, cream
+                  background, and Tailwind → bkb CSS overrides (scoped by .bkb in
+                  globals.css) apply to every route — about, privacy, contact,
+                  resources, knowledge-base, dashboards, admin, etc. */}
+              <Theme theme="light" style={{ background: "#f0eee9" }}>
+                  <main className="flex min-h-screen flex-col pt-16">{children}</main>
+              </Theme>
+              <footer>
+                  <Footer/>
+              </footer>
+          </QueryProvider>
       </SessionProvider>
       {/*<div className="assistant">*/}
       {/*    <BrainKBAssistantWrapper/>*/}
