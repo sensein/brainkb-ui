@@ -46,6 +46,8 @@ import type {
 } from "@/src/types/synthScholar";
 import { PlanConfirmDialog } from "@/src/app/components/synth-scholar/PlanConfirmDialog";
 import { ReviewActionsDropdown } from "@/src/app/components/synth-scholar/ReviewActionsDropdown";
+import { InfoPopover } from "@/src/app/components/synth-scholar/InfoPopover";
+import { FIELD_GUIDES } from "@/src/app/components/synth-scholar/fieldGuides";
 
 // OpenRouter model catalogue. Slugs use Anthropic's API-ID format (hyphens, not
 // dots) — `anthropic/claude-opus-4.7` is NOT a valid OpenRouter slug; OpenRouter
@@ -368,10 +370,23 @@ function _splitLines(text: string): string[] {
     .filter(Boolean);
 }
 
-function StartReviewForm({ onCreated }: { onCreated: (id: string) => void }) {
+function StartReviewForm({
+  onCreated,
+  fullPage = false,
+}: {
+  onCreated: (id: string) => void;
+  /** Render inline as a card (side-panel use) vs. expanded layout for the
+      ?mode=new full-page experience. fullPage opens all sections by default
+      and drops the inner card wrapper since the page already supplies one. */
+  fullPage?: boolean;
+}) {
   const [form, setForm] = React.useState<StartFormState>(INITIAL_FORM);
   const [keyStatus, setKeyStatus] = React.useState<{ source: "personal" | "shared" | "none"; checked: boolean }>({ source: "none", checked: false });
-  const [openSections, setOpenSections] = React.useState({ protocol: true, search: false, metadata: false, rob: false, group: false, run: false });
+  const [openSections, setOpenSections] = React.useState(
+    fullPage
+      ? { protocol: true, search: true, metadata: true, rob: true, group: true, run: true }
+      : { protocol: true, search: false, metadata: false, rob: false, group: false, run: false },
+  );
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const create = useCreateReview();
   const createCompare = useCreateCompareReview();
@@ -500,15 +515,26 @@ function StartReviewForm({ onCreated }: { onCreated: (id: string) => void }) {
   const isSubmitting = create.isPending || createCompare.isPending;
 
   return (
-    <form onSubmit={submit} className="bkb-card" style={{ padding: 18, display: "flex", flexDirection: "column", gap: 12 }}>
-      <div>
-        <h2 style={{ fontFamily: FONTS.display, fontSize: 22, margin: 0, letterSpacing: "-0.01em", fontWeight: 400 }}>
-          Start a new review
-        </h2>
-        <div style={{ fontSize: 12, color: "var(--bkb-textMuted)", marginTop: 4 }}>
-          Configure protocol, search strategy, and run options. Sections are collapsible.
+    <form
+      onSubmit={submit}
+      className={fullPage ? "" : "bkb-card"}
+      style={{
+        padding: fullPage ? 0 : 18,
+        display: "flex",
+        flexDirection: "column",
+        gap: fullPage ? 18 : 12,
+      }}
+    >
+      {!fullPage && (
+        <div>
+          <h2 style={{ fontFamily: FONTS.display, fontSize: 22, margin: 0, letterSpacing: "-0.01em", fontWeight: 400 }}>
+            Start a new review
+          </h2>
+          <div style={{ fontSize: 12, color: "var(--bkb-textMuted)", marginTop: 4 }}>
+            Configure protocol, search strategy, and run options. Sections are collapsible.
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Load-example shortcut. Pre-fills the form with one of the seeded
           protocols so the user can hit Start right away or tweak one field
@@ -587,7 +613,7 @@ function StartReviewForm({ onCreated }: { onCreated: (id: string) => void }) {
 
       {/* ── Protocol — basics ─────────────────────────── */}
       <Section title="Protocol — basics" open={openSections.protocol} onToggle={() => toggleSection("protocol")}>
-        <Field label="Title" required>
+        <Field label="Title" required info="title">
           <input
             className="bkb-input"
             required
@@ -596,7 +622,7 @@ function StartReviewForm({ onCreated }: { onCreated: (id: string) => void }) {
             placeholder="e.g. Efficacy of CRISPR therapies in monogenic disorders"
           />
         </Field>
-        <Field label="Objective (optional)">
+        <Field label="Objective (optional)" info="objective">
           <input
             className="bkb-input"
             value={form.objective}
@@ -605,30 +631,30 @@ function StartReviewForm({ onCreated }: { onCreated: (id: string) => void }) {
           />
         </Field>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          <Field label="P – Population">
+          <Field label="P – Population" info="population">
             <input className="bkb-input" value={form.pico_population} onChange={(e) => update("pico_population", e.target.value)} />
           </Field>
-          <Field label="I – Intervention">
+          <Field label="I – Intervention" info="intervention">
             <input className="bkb-input" value={form.pico_intervention} onChange={(e) => update("pico_intervention", e.target.value)} />
           </Field>
-          <Field label="C – Comparison">
+          <Field label="C – Comparison" info="comparison">
             <input className="bkb-input" value={form.pico_comparison} onChange={(e) => update("pico_comparison", e.target.value)} />
           </Field>
-          <Field label="O – Outcome">
+          <Field label="O – Outcome" info="outcome">
             <input className="bkb-input" value={form.pico_outcome} onChange={(e) => update("pico_outcome", e.target.value)} />
           </Field>
         </div>
-        <Field label="Inclusion criteria">
+        <Field label="Inclusion criteria" info="inclusion">
           <textarea className="bkb-input" rows={2} value={form.inclusion_criteria} onChange={(e) => update("inclusion_criteria", e.target.value)} style={{ fontFamily: FONTS.body, resize: "vertical" }} />
         </Field>
-        <Field label="Exclusion criteria">
+        <Field label="Exclusion criteria" info="exclusion">
           <textarea className="bkb-input" rows={2} value={form.exclusion_criteria} onChange={(e) => update("exclusion_criteria", e.target.value)} style={{ fontFamily: FONTS.body, resize: "vertical" }} />
         </Field>
       </Section>
 
       {/* ── Search strategy ─────────────────────────── */}
       <Section title="Search strategy" open={openSections.search} onToggle={() => toggleSection("search")}>
-        <Field label="Databases (toggle each one)">
+        <Field label="Databases (toggle each one)" info="databases">
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {ALL_DATABASES.map((db) => {
               const on = form.databases.includes(db.id);
@@ -652,13 +678,13 @@ function StartReviewForm({ onCreated }: { onCreated: (id: string) => void }) {
           </div>
         </Field>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-          <Field label="Date range start (YYYY-MM-DD)">
+          <Field label="Date range start (YYYY-MM-DD)" info="date_range">
             <input className="bkb-input" value={form.date_range_start} onChange={(e) => update("date_range_start", e.target.value)} placeholder="2019-01-01" />
           </Field>
-          <Field label="Date range end (YYYY-MM-DD)">
+          <Field label="Date range end (YYYY-MM-DD)" info="date_range">
             <input className="bkb-input" value={form.date_range_end} onChange={(e) => update("date_range_end", e.target.value)} placeholder="2024-12-31" />
           </Field>
-          <Field label="Citation hops">
+          <Field label="Citation hops" info="hops">
             <input type="number" className="bkb-input" min={0} max={10} value={form.max_hops} onChange={(e) => update("max_hops", Math.max(0, Math.min(10, Number(e.target.value) || 0)))} />
           </Field>
         </div>
@@ -667,24 +693,24 @@ function StartReviewForm({ onCreated }: { onCreated: (id: string) => void }) {
       {/* ── Registration & disclosures ─────────────── */}
       <Section title="Registration & disclosures" open={openSections.metadata} onToggle={() => toggleSection("metadata")}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          <Field label="Registration number (e.g. PROSPERO)">
+          <Field label="Registration number (e.g. PROSPERO)" info="registration">
             <input className="bkb-input" value={form.registration_number} onChange={(e) => update("registration_number", e.target.value)} />
           </Field>
-          <Field label="Protocol URL">
+          <Field label="Protocol URL" info="protocol_url">
             <input className="bkb-input" value={form.protocol_url} onChange={(e) => update("protocol_url", e.target.value)} />
           </Field>
         </div>
-        <Field label="Funding sources">
+        <Field label="Funding sources" info="funding">
           <textarea className="bkb-input" rows={2} value={form.funding_sources} onChange={(e) => update("funding_sources", e.target.value)} style={{ fontFamily: FONTS.body, resize: "vertical" }} />
         </Field>
-        <Field label="Competing interests">
+        <Field label="Competing interests" info="competing_interests">
           <textarea className="bkb-input" rows={2} value={form.competing_interests} onChange={(e) => update("competing_interests", e.target.value)} style={{ fontFamily: FONTS.body, resize: "vertical" }} />
         </Field>
       </Section>
 
       {/* ── Risk-of-bias & charting ───────────────── */}
       <Section title="Risk-of-bias & charting" open={openSections.rob} onToggle={() => toggleSection("rob")}>
-        <Field label="Risk-of-bias tool">
+        <Field label="Risk-of-bias tool" info="rob_tool">
           <select className="bkb-input" value={form.rob_tool} onChange={(e) => update("rob_tool", e.target.value)}>
             {ROB_TOOLS.map((t) => (
               <option key={t} value={t}>{t}</option>
@@ -712,10 +738,10 @@ function StartReviewForm({ onCreated }: { onCreated: (id: string) => void }) {
 
       {/* ── Per-group analysis ─────────────────────── */}
       <Section title="Per-group analysis" open={openSections.group} onToggle={() => toggleSection("group")}>
-        <Field label="Grouping dimension (DataChartingRubric attribute)">
+        <Field label="Grouping dimension (DataChartingRubric attribute)" info="grouping_dimension">
           <input className="bkb-input" value={form.grouping_dimension} onChange={(e) => update("grouping_dimension", e.target.value)} placeholder="disorder_cohort" />
         </Field>
-        <Field label="Default per-group questions (one per line, max 10)">
+        <Field label="Default per-group questions (one per line, max 10)" info="default_group_questions">
           <textarea className="bkb-input" rows={3} value={form.default_group_questions_text} onChange={(e) => update("default_group_questions_text", e.target.value)} style={{ fontFamily: FONTS.body, resize: "vertical" }} />
         </Field>
         <PerGroupQuestionsEditor
@@ -726,7 +752,7 @@ function StartReviewForm({ onCreated }: { onCreated: (id: string) => void }) {
 
       {/* ── Run configuration ─────────────────────── */}
       <Section title="Run configuration" open={openSections.run} onToggle={() => toggleSection("run")}>
-        <Field label="Mode">
+        <Field label="Mode" info="mode">
           <div style={{ display: "flex", gap: 6 }}>
             <button type="button" className="bkb-chip" onClick={() => update("compare_mode", false)} style={{ cursor: "pointer", borderColor: !form.compare_mode ? "var(--bkb-primary)" : "var(--bkb-border)", color: !form.compare_mode ? "var(--bkb-primary)" : "var(--bkb-textMuted)" }}>
               Single model
@@ -738,7 +764,7 @@ function StartReviewForm({ onCreated }: { onCreated: (id: string) => void }) {
         </Field>
 
         {!form.compare_mode ? (
-          <Field label="Model">
+          <Field label="Model" info="model">
             <select className="bkb-input" value={form.model} onChange={(e) => update("model", e.target.value)}>
               {MODELS_BY_PROVIDER.map(({ provider, models }) => (
                 <optgroup key={provider} label={provider}>
@@ -754,7 +780,7 @@ function StartReviewForm({ onCreated }: { onCreated: (id: string) => void }) {
           </Field>
         ) : (
           <>
-            <Field label={`Compare models (pick 2 to 5 — ${form.compare_models.length} selected)`}>
+            <Field label={`Compare models (pick 2 to 5 — ${form.compare_models.length} selected)`} info="model">
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {MODELS_BY_PROVIDER.map(({ provider, models }) => (
                   <div key={provider}>
@@ -823,7 +849,7 @@ function StartReviewForm({ onCreated }: { onCreated: (id: string) => void }) {
                 ))}
               </div>
             </Field>
-            <Field label="Consensus model (defaults to first compare model)">
+            <Field label="Consensus model (defaults to first compare model)" info="consensus_model">
               <select
                 className="bkb-input"
                 value={form.consensus_model}
@@ -844,27 +870,27 @@ function StartReviewForm({ onCreated }: { onCreated: (id: string) => void }) {
         )}
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-          <Field label="Max results per query">
+          <Field label="Max results per query" info="max_results">
             <input type="number" className="bkb-input" min={5} max={1000} value={form.max_results_per_query} onChange={(e) => update("max_results_per_query", Math.max(5, Math.min(1000, Number(e.target.value) || 20)))} />
           </Field>
-          <Field label="Related-articles depth">
+          <Field label="Related-articles depth" info="related_depth">
             <input type="number" className="bkb-input" min={0} max={10} value={form.related_depth} onChange={(e) => update("related_depth", Math.max(0, Math.min(10, Number(e.target.value) || 0)))} />
           </Field>
-          <Field label="bioRxiv lookback (days)">
+          <Field label="bioRxiv lookback (days)" info="biorxiv_days">
             <input type="number" className="bkb-input" min={30} max={730} value={form.biorxiv_days} onChange={(e) => update("biorxiv_days", Math.max(30, Math.min(730, Number(e.target.value) || 180)))} />
           </Field>
-          <Field label="Max articles (cap, blank = no cap)">
+          <Field label="Max articles (cap, blank = no cap)" info="max_articles">
             <input type="number" className="bkb-input" min={10} max={10000} value={form.max_articles ?? ""} onChange={(e) => update("max_articles", e.target.value ? Math.max(10, Math.min(10000, Number(e.target.value))) : null)} />
           </Field>
-          <Field label="Concurrency">
+          <Field label="Concurrency" info="concurrency">
             <input type="number" className="bkb-input" min={1} max={50} value={form.concurrency} onChange={(e) => update("concurrency", Math.max(1, Math.min(50, Number(e.target.value) || 5)))} />
           </Field>
-          <Field label="Max plan iterations">
+          <Field label="Max plan iterations" info="max_plan_iterations">
             <input type="number" className="bkb-input" min={1} max={10} value={form.max_plan_iterations} onChange={(e) => update("max_plan_iterations", Math.max(1, Math.min(10, Number(e.target.value) || 3)))} />
           </Field>
         </div>
 
-        <Field label="Synthesis style">
+        <Field label="Synthesis style" info="synthesis_style">
           <select className="bkb-input" value={form.output_synthesis_style} onChange={(e) => update("output_synthesis_style", e.target.value as StartFormState["output_synthesis_style"])}>
             {SYNTHESIS_STYLES.map((s) => (
               <option key={s.id} value={s.id}>{s.label}</option>
@@ -872,7 +898,7 @@ function StartReviewForm({ onCreated }: { onCreated: (id: string) => void }) {
           </select>
         </Field>
 
-        <Field label="Data-extraction items (one per line; leave empty for default set)">
+        <Field label="Data-extraction items (one per line; leave empty for default set)" info="data_items">
           <textarea className="bkb-input" rows={3} value={form.data_items_text} onChange={(e) => update("data_items_text", e.target.value)} style={{ fontFamily: FONTS.body, resize: "vertical" }} />
         </Field>
 
@@ -1255,11 +1281,30 @@ function ApiKeyBanner({ status }: { status: { source: "personal" | "shared" | "n
   );
 }
 
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function Field({
+  label,
+  required,
+  info,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  /** Key into FIELD_GUIDES — when present, renders an info-popover next to the label. */
+  info?: keyof typeof FIELD_GUIDES;
+  children: React.ReactNode;
+}) {
+  const guide = info ? FIELD_GUIDES[info] : null;
   return (
     <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <span style={{ fontSize: 11, color: "var(--bkb-textMuted)" }}>
+      <span style={{ fontSize: 11, color: "var(--bkb-textMuted)", display: "inline-flex", alignItems: "center" }}>
         {label} {required && <span style={{ color: "var(--bkb-danger)" }}>*</span>}
+        {guide && (
+          <InfoPopover
+            title={guide.title}
+            description={guide.description}
+            link={guide.link}
+          />
+        )}
       </span>
       {children}
     </label>
@@ -1837,31 +1882,112 @@ function FlowCountsCard({ flow }: { flow: NonNullable<ReturnType<typeof useRevie
 
 export default function SynthScholarPage() {
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
+  const [mode, setMode] = React.useState<"list" | "new">("list");
 
-  // Auto-select a review when arriving via ?review=… (e.g. from
-  // /knowledge-base/synth-scholar). Falls back to no selection if absent.
+  // Auto-select a review when arriving via ?review=…, or open the full-page
+  // form when ?mode=new. Both controlled via window.location so navigation
+  // back/forward and shareable URLs work.
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    const id = new URLSearchParams(window.location.search).get("review");
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("review");
     if (id) setSelectedId(id);
+    if (params.get("mode") === "new") setMode("new");
   }, []);
 
-  return (
-    <div style={{ maxWidth: 1480, margin: "0 auto", padding: "32px 32px 64px" }}>
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 11, color: "var(--bkb-textSubtle)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6 }}>
-          Tool
+  // Listen for browser back/forward navigation between list and new modes.
+  React.useEffect(() => {
+    const onPop = () => {
+      const params = new URLSearchParams(window.location.search);
+      setMode(params.get("mode") === "new" ? "new" : "list");
+      const id = params.get("review");
+      if (id) setSelectedId(id);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  const goToNew = () => {
+    setMode("new");
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("mode", "new");
+      url.searchParams.delete("review");
+      window.history.pushState({}, "", url.toString());
+    }
+  };
+  const goToList = () => {
+    setMode("list");
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("mode");
+      window.history.pushState({}, "", url.toString());
+    }
+  };
+  const onCreatedFromFullPage = (id: string) => {
+    setSelectedId(id);
+    goToList();
+  };
+
+  // ── Full-page "Start a new review" experience ──────────────────────
+  if (mode === "new") {
+    return (
+      <div style={{ maxWidth: 980, margin: "0 auto", padding: "32px 32px 64px" }}>
+        <div style={{ marginBottom: 20 }}>
+          <button
+            type="button"
+            onClick={goToList}
+            className="bkb-btn bkb-btn-ghost"
+            style={{ fontSize: 12, marginBottom: 16 }}
+          >
+            ← Back to reviews
+          </button>
+          <div style={{ fontSize: 11, color: "var(--bkb-textSubtle)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6 }}>
+            New review
+          </div>
+          <h1 style={{ fontFamily: FONTS.display, fontSize: 32, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
+            Start a new review
+          </h1>
+          <div style={{ fontSize: 14, color: "var(--bkb-textMuted)", marginTop: 6, maxWidth: 700, lineHeight: 1.5 }}>
+            Configure the protocol, search strategy, and run options. Click the
+            <span style={{ color: "var(--bkb-text)" }}> ⓘ </span>icon next to
+            any field for a description and a link to authoritative guidance
+            (PICO, PRISMA, RoB tools, …).
+          </div>
         </div>
-        <h1 style={{ fontFamily: FONTS.display, fontSize: 36, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
-          SynthScholar
-        </h1>
-        <div style={{ fontSize: 14, color: "var(--bkb-textMuted)", marginTop: 4 }}>
-          Literature review (PRISMA-guided).
+        <div className="bkb-card" style={{ padding: 24 }}>
+          <StartReviewForm fullPage onCreated={onCreatedFromFullPage} />
         </div>
       </div>
+    );
+  }
 
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(360px, 1fr) minmax(260px, 320px) minmax(420px, 2fr)", gap: 16, alignItems: "start" }}>
-        <StartReviewForm onCreated={setSelectedId} />
+  // ── Default 3-column list view ──────────────────────────────────────
+  return (
+    <div style={{ maxWidth: 1480, margin: "0 auto", padding: "32px 32px 64px" }}>
+      <div style={{ marginBottom: 24, display: "flex", alignItems: "end", justifyContent: "space-between", gap: 16 }}>
+        <div>
+          <div style={{ fontSize: 11, color: "var(--bkb-textSubtle)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6 }}>
+            Tool
+          </div>
+          <h1 style={{ fontFamily: FONTS.display, fontSize: 36, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
+            SynthScholar
+          </h1>
+          <div style={{ fontSize: 14, color: "var(--bkb-textMuted)", marginTop: 4 }}>
+            Literature review (PRISMA-guided).
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={goToNew}
+          className="bkb-btn bkb-btn-primary"
+          style={{ fontSize: 13 }}
+        >
+          <Icon name="plus" size={12} /> Start a new review
+        </button>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(280px, 1fr) minmax(420px, 2fr)", gap: 16, alignItems: "start" }}>
         <ReviewsList selectedId={selectedId} onSelect={setSelectedId} />
         <div
           className="bkb-scroll"
@@ -1876,8 +2002,14 @@ export default function SynthScholarPage() {
           {selectedId ? (
             <ReviewDetail reviewId={selectedId} />
           ) : (
-            <div className="bkb-card" style={{ padding: 18, fontSize: 13, color: "var(--bkb-textMuted)" }}>
-              Select a review on the left to see live progress and results.
+            <div className="bkb-card" style={{ padding: 24, fontSize: 13, color: "var(--bkb-textMuted)", textAlign: "center" }}>
+              <div style={{ fontSize: 14, color: "var(--bkb-text)", marginBottom: 8 }}>
+                Select a review on the left to see live progress and results.
+              </div>
+              <div>
+                Or click <strong>Start a new review</strong> above to configure
+                a new PRISMA-guided literature review with full guidance.
+              </div>
             </div>
           )}
         </div>
