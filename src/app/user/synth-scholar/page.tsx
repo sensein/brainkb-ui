@@ -45,6 +45,7 @@ import type {
   RunReviewRequest,
 } from "@/src/types/synthScholar";
 import { PlanConfirmDialog } from "@/src/app/components/synth-scholar/PlanConfirmDialog";
+import { ReviewActionsDropdown } from "@/src/app/components/synth-scholar/ReviewActionsDropdown";
 
 // OpenRouter model catalogue. Slugs use Anthropic's API-ID format (hyphens, not
 // dots) — `anthropic/claude-opus-4.7` is NOT a valid OpenRouter slug; OpenRouter
@@ -1403,6 +1404,16 @@ function ReviewDetail({ reviewId }: { reviewId: string }) {
     }
   }, [detail.data?.status, pendingPlan]);
 
+  // 1-second tick used by the progress card to render "last update Ns ago".
+  // Without it the seconds-since-last-event display would only refresh when
+  // a new event arrives — defeating the whole point of a stuck-detector.
+  const [nowTick, setNowTick] = React.useState(() => Date.now());
+  React.useEffect(() => {
+    if (!isLive) return;
+    const id = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [isLive]);
+
   if (!detail.data && detail.isLoading) {
     return (
       <div className="bkb-card" style={{ padding: 18, fontSize: 13, color: "var(--bkb-textMuted)" }}>
@@ -1452,13 +1463,13 @@ function ReviewDetail({ reviewId }: { reviewId: string }) {
             </button>
           )}
           {(r.status === "failed" || r.status === "cancelled") && (
-            <button
-              className="bkb-btn bkb-btn-ghost"
-              onClick={() => retry.mutate({ reviewId })}
-              disabled={retry.isPending}
-            >
-              <Icon name="arrow" size={11} /> Retry
-            </button>
+            <ReviewActionsDropdown
+              lastCompletedStep={r.last_completed_step}
+              isPending={retry.isPending}
+              onRetry={(body?: { enable_cache?: boolean; resume?: boolean }) =>
+                retry.mutate({ reviewId, body })
+              }
+            />
           )}
           {r.status === "completed" && (
             <>
@@ -1618,24 +1629,92 @@ function ReviewDetail({ reviewId }: { reviewId: string }) {
           the detail endpoint doesn't echo them in its response body. */}
       {(isLive || progress.events.length > 0) && (() => {
         const latest = [...progress.events].reverse().find((e) => e.kind && e.kind !== "log") ?? progress.events[progress.events.length - 1];
+        // Overall pipeline progress — 18 top-level stages in PRISMA pipeline,
+        // populated as stage_index / stage_total on every classified SSE event.
+        const overallPct = (latest?.stage_index != null && latest?.stage_total)
+          ? Math.min(100, Math.round((latest.stage_index / latest.stage_total) * 100))
+          : null;
+        // Within-stage progress (e.g. "47 of 100 articles charted").
+        const stageHasItems = latest?.stage_done != null && latest?.stage_total != null && latest.stage_total > 0;
+        const stagePct = stageHasItems
+          ? Math.min(100, Math.round((latest.stage_done! / latest.stage_total!) * 100))
+          : null;
+        // Stuck detector: live runs that haven't emitted an event for >60s
+        // are likely either deep in a long stage or genuinely stalled. Show
+        // a "last update Ns ago" hint so the user can tell the difference.
+        const sinceLast = (isLive && progress.lastEventAt)
+          ? Math.round((nowTick - progress.lastEventAt) / 1000)
+          : null;
+        const stale = sinceLast != null && sinceLast > 60;
         return (
         <div className="bkb-card" style={{ padding: 18 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "end", marginBottom: 10 }}>
-            <div>
-              <h3 style={{ fontFamily: FONTS.display, fontSize: 16, margin: 0, fontWeight: 500 }}>Progress</h3>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "end", marginBottom: 10, gap: 12 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h3 style={{ fontFamily: FONTS.display, fontSize: 16, margin: 0, fontWeight: 500 }}>
+                Progress {overallPct != null && (
+                  <span style={{ color: "var(--bkb-textMuted)", fontWeight: 400, fontSize: 14, marginLeft: 6 }}>
+                    {overallPct}%
+                  </span>
+                )}
+              </h3>
               <div style={{ fontSize: 11, color: "var(--bkb-textMuted)", marginTop: 2 }}>
                 {latest?.stage ? latest.stage : "Awaiting first event"}
-                {latest?.stage_total != null && (
+                {latest?.stage_index != null && latest?.stage_total != null && (
                   <span style={{ marginLeft: 6, color: "var(--bkb-textSubtle)" }}>
-                    · step {latest.stage_done ?? 0} of {latest.stage_total}
+                    · stage {latest.stage_index} of {latest.stage_total}
+                  </span>
+                )}
+                {stagePct != null && (
+                  <span style={{ marginLeft: 6, color: "var(--bkb-textSubtle)" }}>
+                    · {latest!.stage_done}/{latest!.stage_total} ({stagePct}%)
                   </span>
                 )}
               </div>
             </div>
-            <span className="bkb-mono" style={{ fontSize: 11, color: "var(--bkb-textSubtle)" }}>
-              {progress.step} events
-            </span>
+            <div style={{ textAlign: "right", display: "flex", flexDirection: "column", gap: 2 }}>
+              <span className="bkb-mono" style={{ fontSize: 11, color: "var(--bkb-textSubtle)" }}>
+                {progress.events.length} events · step {progress.step}
+              </span>
+              {sinceLast != null && (
+                <span
+                  className="bkb-mono"
+                  style={{
+                    fontSize: 10,
+                    color: stale ? "var(--bkb-publication)" : "var(--bkb-textSubtle)",
+                  }}
+                >
+                  {stale ? "⚠ " : ""}last update {sinceLast}s ago
+                  {stale && " (long stage or stalled)"}
+                </span>
+              )}
+            </div>
           </div>
+          {/* Top-level pipeline progress bar */}
+          {overallPct != null && (
+            <div
+              style={{
+                width: "100%",
+                height: 4,
+                background: "var(--bkb-surfaceAlt)",
+                borderRadius: 2,
+                overflow: "hidden",
+                marginBottom: 10,
+              }}
+              role="progressbar"
+              aria-valuenow={overallPct}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <div
+                style={{
+                  width: `${overallPct}%`,
+                  height: "100%",
+                  background: stale ? "var(--bkb-publication)" : "var(--bkb-accent)",
+                  transition: "width 250ms ease-out, background 200ms ease",
+                }}
+              />
+            </div>
+          )}
           <div
             className="bkb-scroll"
             style={{

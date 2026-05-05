@@ -207,6 +207,10 @@ export function useProgressStream(
   const [latestMessage, setLatestMessage] = useState("");
   const [step, setStep] = useState(0);
   const [isDone, setIsDone] = useState(false);
+  // Wall-clock timestamp of the most recent non-keepalive event. Used by the
+  // UI to show "last update Ns ago" so a long-running stage with no
+  // intermediate events is distinguishable from a stuck/disconnected stream.
+  const [lastEventAt, setLastEventAt] = useState<number | null>(null);
   const queryClient = useQueryClient();
   const shouldReconnectRef = useRef(false);
   const isDoneRef = useRef(false);
@@ -228,6 +232,7 @@ export function useProgressStream(
         setEvents((prev) => [...prev, event]);
         setLatestMessage(event.message);
         setStep((prev) => Math.max(prev, event.step));
+        setLastEventAt(Date.now());
         if (event.event_type === "plan_review" && event.plan && onPlanReviewRef.current) {
           onPlanReviewRef.current(event.plan as ReviewPlan, event);
         }
@@ -293,7 +298,7 @@ export function useProgressStream(
     }
   }, [isStreaming, isDone, reviewId, start]);
 
-  return { events, isStreaming, latestMessage, step, isDone };
+  return { events, isStreaming, latestMessage, step, isDone, lastEventAt };
 }
 
 export function usePlanResponse() {
