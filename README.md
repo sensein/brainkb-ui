@@ -529,3 +529,6 @@ showProvenance: false         # Optional: show provenance tab (default: true)
 showRelated: true             # Optional: show related items (default: false)
 ```
 
+
+## License
+Apache 2.0
