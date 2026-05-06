@@ -96,6 +96,18 @@ export function useReview(reviewId: string | undefined) {
   });
 }
 
+/** One-shot fetch of the persisted log/event trail for a completed review.
+    Used by the public provenance page to render the at-rest pipeline timeline
+    (no SSE — the review is already done by the time provenance is viewed). */
+export function useReviewLog(reviewId: string | undefined) {
+  return useQuery({
+    queryKey: ["synth-scholar", "review-log", reviewId],
+    queryFn: () => getReviewLog(reviewId!),
+    enabled: !!reviewId,
+    staleTime: 60_000, // log of a completed review doesn't change
+  });
+}
+
 export function useReviewStatus(reviewId: string | undefined) {
   return useQuery({
     queryKey: ["synth-scholar", "review-status", reviewId],

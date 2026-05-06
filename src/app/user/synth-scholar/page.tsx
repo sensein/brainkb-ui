@@ -26,6 +26,7 @@ import { FONTS, Icon } from "@/src/app/components/design-system";
 import {
   useReviews,
   useReview,
+  useReviewLog,
   useCreateReview,
   useCreateCompareReview,
   useDeleteReview,
@@ -50,6 +51,7 @@ import { InfoPopover } from "@/src/app/components/synth-scholar/InfoPopover";
 import { FIELD_GUIDES } from "@/src/app/components/synth-scholar/fieldGuides";
 import { ReviewFormGuide } from "@/src/app/components/synth-scholar/ReviewFormGuide";
 import { MarkdownContent } from "@/src/app/components/synth-scholar/MarkdownContent";
+import { ProvenanceTimelineOwner } from "@/src/app/components/synth-scholar/ProvenanceTimelineOwner";
 
 // OpenRouter model catalogue. Slugs use Anthropic's API-ID format (hyphens, not
 // dots) — `anthropic/claude-opus-4.7` is NOT a valid OpenRouter slug; OpenRouter
@@ -1572,6 +1574,7 @@ function ReviewListItem({
 
 function ReviewDetail({ reviewId }: { reviewId: string }) {
   const detail = useReview(reviewId);
+  const reviewLog = useReviewLog(reviewId);
   const cancel = useCancelReview();
   const retry = useRetryReview();
   const del = useDeleteReview();
@@ -1582,6 +1585,12 @@ function ReviewDetail({ reviewId }: { reviewId: string }) {
 
   const [pendingPlan, setPendingPlan] = React.useState<ReviewPlan | null>(null);
   const [planIteration, setPlanIteration] = React.useState(0);
+
+  // Local tab state for completed reviews. Two tabs: review content (default)
+  // and provenance timeline. Not URL-synced because the user-side review
+  // detail is part of a 2-column layout where the URL is already used for
+  // ?review=<id> selection.
+  const [resultTab, setResultTab] = React.useState<"review" | "provenance">("review");
 
   const isLive = detail.data
     ? ["running", "pending", "plan_pending"].includes(detail.data.status)
@@ -1715,6 +1724,8 @@ function ReviewDetail({ reviewId }: { reviewId: string }) {
           )}
           {r.status === "completed" && (
             <>
+              {/* Provenance is now an inline tab on the result detail
+                  below — no longer a separate-page link. */}
               <button
                 className="bkb-btn bkb-btn-ghost"
                 onClick={() => exportMut.mutate({ reviewId, format: "markdown" })}
@@ -1868,8 +1879,12 @@ function ReviewDetail({ reviewId }: { reviewId: string }) {
 
       {/* Live progress — stage/counters come from the latest classified SSE
           event (set by the backend's progress_events.merge_into_state) since
-          the detail endpoint doesn't echo them in its response body. */}
-      {(isLive || progress.events.length > 0) && (() => {
+          the detail endpoint doesn't echo them in its response body.
+          Hidden once the review settles into a terminal state — completed /
+          failed / cancelled reviews surface the same event trail (and more)
+          inside the Provenance tab below, so the redundant Progress card
+          would just push the result content further off-screen. */}
+      {isLive && (() => {
         const latest = [...progress.events].reverse().find((e) => e.kind && e.kind !== "log") ?? progress.events[progress.events.length - 1];
         // Overall pipeline progress — 18 top-level stages in PRISMA pipeline,
         // populated as stage_index / stage_total on every classified SSE event.
@@ -1992,39 +2007,196 @@ function ReviewDetail({ reviewId }: { reviewId: string }) {
         );
       })()}
 
-      {/* Synthesis text (when done) */}
+      {/* Result detail (when done) — tabbed: Review | Provenance */}
       {r.status === "completed" && (
         <>
-          {r.flow && <FlowCountsCard flow={r.flow} />}
-          {r.synthesis_text && (
-            <div className="bkb-card" style={{ padding: 18 }}>
-              <h3 style={{ fontFamily: FONTS.display, fontSize: 18, margin: "0 0 8px", fontWeight: 500 }}>Synthesis</h3>
-              <MarkdownContent style={{ fontSize: 13, lineHeight: 1.65 }}>
-                {r.synthesis_text}
-              </MarkdownContent>
+          {/* Tab strip */}
+          <div className="bkb-card" style={{ padding: 0, overflow: "hidden" }}>
+            <div
+              style={{
+                display: "flex",
+                borderBottom: "1px solid var(--bkb-border)",
+                background: "var(--bkb-surface)",
+              }}
+              role="tablist"
+              aria-label="Review result tabs"
+            >
+              {(["review", "provenance"] as const).map((tab) => {
+                const on = resultTab === tab;
+                return (
+                  <button
+                    key={tab}
+                    type="button"
+                    role="tab"
+                    aria-selected={on}
+                    onClick={() => setResultTab(tab)}
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      borderBottom: on ? "2px solid var(--bkb-accent)" : "2px solid transparent",
+                      color: on ? "var(--bkb-accent)" : "var(--bkb-textMuted)",
+                      fontWeight: on ? 600 : 500,
+                      padding: "12px 18px",
+                      cursor: "pointer",
+                      fontSize: 13,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      marginBottom: -1,
+                      transition: "color 120ms ease, border-color 120ms ease",
+                    }}
+                  >
+                    <Icon name={tab === "review" ? "evidence" : "agent"} size={12} />
+                    {tab === "review" ? "Review" : "Provenance"}
+                  </button>
+                );
+              })}
             </div>
+          </div>
+
+          {/* Provenance tab */}
+          {resultTab === "provenance" && (
+            <ProvenanceTimelineOwner
+              review={r}
+              logEvents={reviewLog.data?.log_events ?? []}
+              log={reviewLog.data?.log ?? []}
+            />
           )}
-          {r.included_articles.length > 0 && (
-            <div className="bkb-card" style={{ padding: 18 }}>
-              <h3 style={{ fontFamily: FONTS.display, fontSize: 18, margin: "0 0 8px", fontWeight: 500 }}>
-                Included articles ({r.included_articles.length})
-              </h3>
-              <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
-                {r.included_articles.slice(0, 50).map((a) => (
-                  <li key={a.pmid} style={{ paddingBottom: 8, borderBottom: "1px solid var(--bkb-border)" }}>
-                    <div style={{ fontSize: 13, fontWeight: 500 }}>{a.title}</div>
-                    <div style={{ fontSize: 11, color: "var(--bkb-textMuted)" }}>
-                      {a.authors} · {a.journal} · {a.year} · <span className="bkb-mono">{a.source || "—"}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              {r.included_articles.length > 50 && (
-                <div style={{ fontSize: 11, color: "var(--bkb-textSubtle)", marginTop: 8 }}>
-                  Showing first 50 of {r.included_articles.length}. Use export for full list.
-                </div>
+
+          {/* Review tab — full long-form content */}
+          {resultTab === "review" && (
+            <>
+              {r.flow && <FlowCountsCard flow={r.flow} />}
+
+              {r.structured_abstract && (
+                <DetailCard title="Abstract">
+                  <MarkdownContent style={{ fontSize: 13, lineHeight: 1.65 }}>
+                    {r.structured_abstract}
+                  </MarkdownContent>
+                </DetailCard>
               )}
-            </div>
+
+              {r.introduction_text && (
+                <DetailCard title="Introduction">
+                  <MarkdownContent style={{ fontSize: 13, lineHeight: 1.65 }}>
+                    {r.introduction_text}
+                  </MarkdownContent>
+                </DetailCard>
+              )}
+
+              {(r.search_queries?.length ?? 0) > 0 && (
+                <DetailCard title="Search strategy">
+                  <ul style={{ margin: 0, paddingLeft: 18 }}>
+                    {r.search_queries.map((q: string, i: number) => (
+                      <li
+                        key={i}
+                        className="bkb-mono"
+                        style={{ fontSize: 11, color: "var(--bkb-textMuted)", padding: "2px 0", wordBreak: "break-word" }}
+                      >
+                        {q}
+                      </li>
+                    ))}
+                  </ul>
+                </DetailCard>
+              )}
+
+              {r.synthesis_text && (
+                <DetailCard title="Synthesis">
+                  <MarkdownContent style={{ fontSize: 13, lineHeight: 1.65 }}>
+                    {r.synthesis_text}
+                  </MarkdownContent>
+                </DetailCard>
+              )}
+
+              {r.bias_assessment && (
+                <DetailCard title="Risk of bias assessment">
+                  <MarkdownContent style={{ fontSize: 13, lineHeight: 1.65 }}>
+                    {r.bias_assessment}
+                  </MarkdownContent>
+                </DetailCard>
+              )}
+
+              {r.grade_assessments && r.grade_assessments.length > 0 && (
+                <DetailCard title="GRADE — certainty of evidence">
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {r.grade_assessments.map((g, i: number) => (
+                      <div
+                        key={i}
+                        style={{
+                          padding: 10,
+                          border: "1px solid var(--bkb-border)",
+                          borderRadius: 6,
+                          background: "var(--bkb-surfaceAlt)",
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
+                          <strong style={{ fontSize: 13, color: "var(--bkb-text)" }}>{g.outcome}</strong>
+                          <span
+                            className="bkb-chip"
+                            style={{
+                              fontSize: 10,
+                              ...gradeChipStyle(g.overall_certainty),
+                            }}
+                          >
+                            {g.overall_certainty}
+                          </span>
+                        </div>
+                        {g.summary && (
+                          <div style={{ fontSize: 12, color: "var(--bkb-textMuted)", lineHeight: 1.55 }}>
+                            {g.summary}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </DetailCard>
+              )}
+
+              {r.limitations && (
+                <DetailCard title="Limitations">
+                  <MarkdownContent style={{ fontSize: 13, lineHeight: 1.65 }}>
+                    {r.limitations}
+                  </MarkdownContent>
+                </DetailCard>
+              )}
+
+              {r.conclusions_text && (
+                <DetailCard title="Conclusions">
+                  <MarkdownContent style={{ fontSize: 13, lineHeight: 1.65 }}>
+                    {r.conclusions_text}
+                  </MarkdownContent>
+                </DetailCard>
+              )}
+
+              {r.included_articles.length > 0 && (
+                <DetailCard title={`Included articles (${r.included_articles.length})`}>
+                  <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+                    {r.included_articles.slice(0, 50).map((a) => (
+                      <li key={a.pmid} style={{ paddingBottom: 8, borderBottom: "1px solid var(--bkb-border)" }}>
+                        <div style={{ fontSize: 13, fontWeight: 500 }}>{a.title}</div>
+                        <div style={{ fontSize: 11, color: "var(--bkb-textMuted)" }}>
+                          {a.authors} · {a.journal} · {a.year} ·{" "}
+                          <span className="bkb-mono">{a.source || "—"}</span>
+                          {a.rob_overall && (
+                            <span
+                              className="bkb-chip"
+                              style={{ fontSize: 9, marginLeft: 6, ...robChipStyle(a.rob_overall) }}
+                            >
+                              RoB: {a.rob_overall}
+                            </span>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  {r.included_articles.length > 50 && (
+                    <div style={{ fontSize: 11, color: "var(--bkb-textSubtle)", marginTop: 8 }}>
+                      Showing first 50 of {r.included_articles.length}. Use export for full list.
+                    </div>
+                  )}
+                </DetailCard>
+              )}
+            </>
           )}
         </>
       )}
@@ -2073,6 +2245,44 @@ function FlowCountsCard({ flow }: { flow: NonNullable<ReturnType<typeof useRevie
       </div>
     </div>
   );
+}
+
+// ── Detail-card helpers used by the user-side review-detail Review tab ──
+
+function DetailCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="bkb-card" style={{ padding: 18 }}>
+      <h3
+        style={{
+          fontFamily: FONTS.display,
+          fontSize: 18,
+          margin: "0 0 8px",
+          fontWeight: 500,
+        }}
+      >
+        {title}
+      </h3>
+      {children}
+    </div>
+  );
+}
+
+function gradeChipStyle(certainty: string): React.CSSProperties {
+  const v = (certainty || "").toLowerCase();
+  if (v.includes("very low")) return { borderColor: "var(--bkb-danger)", color: "var(--bkb-danger)" };
+  if (v.includes("low"))      return { borderColor: "var(--bkb-publication)", color: "var(--bkb-publication)" };
+  if (v.includes("high"))     return { borderColor: "var(--bkb-agent)", color: "var(--bkb-agent)" };
+  if (v.includes("moderate")) return { borderColor: "var(--bkb-primary)", color: "var(--bkb-primary)" };
+  return {};
+}
+
+function robChipStyle(rating: string): React.CSSProperties {
+  const v = (rating || "").toLowerCase();
+  if (v.includes("low"))   return { borderColor: "var(--bkb-agent)", color: "var(--bkb-agent)" };
+  if (v.includes("high"))  return { borderColor: "var(--bkb-danger)", color: "var(--bkb-danger)" };
+  if (v.includes("some") || v.includes("moderate"))
+    return { borderColor: "var(--bkb-publication)", color: "var(--bkb-publication)" };
+  return {};
 }
 
 // ── Page ─────────────────────────────────────────────────────────────
