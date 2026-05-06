@@ -48,6 +48,8 @@ import { PlanConfirmDialog } from "@/src/app/components/synth-scholar/PlanConfir
 import { ReviewActionsDropdown } from "@/src/app/components/synth-scholar/ReviewActionsDropdown";
 import { InfoPopover } from "@/src/app/components/synth-scholar/InfoPopover";
 import { FIELD_GUIDES } from "@/src/app/components/synth-scholar/fieldGuides";
+import { ReviewFormGuide } from "@/src/app/components/synth-scholar/ReviewFormGuide";
+import { MarkdownContent } from "@/src/app/components/synth-scholar/MarkdownContent";
 
 // OpenRouter model catalogue. Slugs use Anthropic's API-ID format (hyphens, not
 // dots) — `anthropic/claude-opus-4.7` is NOT a valid OpenRouter slug; OpenRouter
@@ -1313,6 +1315,29 @@ function Field({
 
 // ── Reviews list ───────────────────────────────────────────────────
 
+// ── Reviews list filters ────────────────────────────────────────────────
+//
+// At the top of the list we expose a small toolbar so the page stays usable
+// with hundreds of reviews:
+//   • Search box — substring match on title or review_id
+//   • Status filter chips — All / Running / Completed / Failed / Cancelled
+//     (with per-status counts)
+//   • Sort dropdown — newest first (default), oldest first, or by status
+// All client-side; no server-side pagination yet (the /reviews endpoint
+// returns the user's own list, which scales fine in the hundreds).
+
+type StatusFilter = ReviewStatus | "all";
+type SortOrder = "newest" | "oldest" | "status";
+
+const STATUS_FILTERS: ReadonlyArray<{ id: StatusFilter; label: string }> = [
+  { id: "all", label: "All" },
+  { id: "running", label: "Running" },
+  { id: "plan_pending", label: "Plan pending" },
+  { id: "completed", label: "Completed" },
+  { id: "failed", label: "Failed" },
+  { id: "cancelled", label: "Cancelled" },
+];
+
 function ReviewsList({
   selectedId,
   onSelect,
@@ -1321,27 +1346,156 @@ function ReviewsList({
   onSelect: (id: string) => void;
 }) {
   const reviews = useReviews();
+  const [search, setSearch] = React.useState("");
+  const [statusFilter, setStatusFilter] = React.useState<StatusFilter>("all");
+  const [sortOrder, setSortOrder] = React.useState<SortOrder>("newest");
+
+  // Counts per status for the filter chips — computed once over the raw list,
+  // not the filtered one, so users can see how many reviews exist in each
+  // bucket regardless of the current filter.
+  const counts = React.useMemo(() => {
+    const m: Record<string, number> = { all: reviews.data?.length ?? 0 };
+    for (const r of (reviews.data ?? []) as ReviewSummary[]) {
+      m[r.status] = (m[r.status] ?? 0) + 1;
+    }
+    return m;
+  }, [reviews.data]);
+
+  // Apply search → status filter → sort, in that order.
+  const visible = React.useMemo<ReviewSummary[]>(() => {
+    if (!reviews.data) return [];
+    const q = search.trim().toLowerCase();
+    let out = reviews.data as ReviewSummary[];
+    if (q) {
+      out = out.filter((r: ReviewSummary) =>
+        (r.title ?? "").toLowerCase().includes(q) ||
+        (r.review_id ?? "").toLowerCase().includes(q),
+      );
+    }
+    if (statusFilter !== "all") {
+      out = out.filter((r: ReviewSummary) => r.status === statusFilter);
+    }
+    if (sortOrder === "newest") {
+      out = [...out].sort((a: ReviewSummary, b: ReviewSummary) => (b.created_at ?? "").localeCompare(a.created_at ?? ""));
+    } else if (sortOrder === "oldest") {
+      out = [...out].sort((a: ReviewSummary, b: ReviewSummary) => (a.created_at ?? "").localeCompare(b.created_at ?? ""));
+    } else if (sortOrder === "status") {
+      const order: Record<string, number> = { running: 0, plan_pending: 1, pending: 2, failed: 3, cancelled: 4, completed: 5 };
+      out = [...out].sort((a: ReviewSummary, b: ReviewSummary) => (order[a.status] ?? 99) - (order[b.status] ?? 99));
+    }
+    return out;
+  }, [reviews.data, search, statusFilter, sortOrder]);
+
+  const total = reviews.data?.length ?? 0;
+  const filtered = visible.length;
 
   return (
     <div className="bkb-card" style={{ padding: 0, overflow: "hidden" }}>
-      <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--bkb-border)" }}>
-        <div style={{ fontSize: 13, fontWeight: 500 }}>Your reviews</div>
-        <div style={{ fontSize: 11, color: "var(--bkb-textMuted)", marginTop: 2 }}>
-          {reviews.isLoading ? "Loading…" : `${reviews.data?.length ?? 0} entries`}
+      <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--bkb-border)", display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+          <div style={{ fontSize: 13, fontWeight: 500 }}>Your reviews</div>
+          <div style={{ fontSize: 11, color: "var(--bkb-textMuted)" }}>
+            {reviews.isLoading
+              ? "Loading…"
+              : filtered === total
+                ? `${total} ${total === 1 ? "entry" : "entries"}`
+                : `${filtered} of ${total}`}
+          </div>
         </div>
+
+        {/* Search box. Hidden when there are <=3 reviews — the toolbar would
+            cost more screen real-estate than it saves. */}
+        {total > 3 && (
+          <>
+            <div style={{ position: "relative" }}>
+              <div style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", color: "var(--bkb-textSubtle)", display: "flex", alignItems: "center" }}>
+                <Icon name="search" size={12} />
+              </div>
+              <input
+                type="search"
+                className="bkb-input"
+                placeholder="Search by title or review ID…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{ paddingLeft: 28, fontSize: 12 }}
+                aria-label="Filter reviews"
+              />
+            </div>
+
+            {/* Status chips. Per-status counts come from the raw list so the
+                user sees how many reviews exist in each bucket regardless of
+                what they've typed in search. */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+              {STATUS_FILTERS.map((f) => {
+                const n = counts[f.id] ?? 0;
+                if (f.id !== "all" && n === 0) return null;  // hide empty buckets
+                const on = statusFilter === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setStatusFilter(f.id)}
+                    className="bkb-chip"
+                    style={{
+                      cursor: "pointer",
+                      fontSize: 10,
+                      padding: "3px 8px",
+                      borderColor: on ? "var(--bkb-primary)" : "var(--bkb-border)",
+                      color: on ? "var(--bkb-primary)" : "var(--bkb-textMuted)",
+                      background: on ? "color-mix(in oklch, var(--bkb-primary), transparent 92%)" : "transparent",
+                    }}
+                  >
+                    {f.label} <span style={{ opacity: 0.6 }}>({n})</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Sort */}
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <label style={{ fontSize: 10, color: "var(--bkb-textSubtle)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                Sort
+              </label>
+              <select
+                className="bkb-input"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+                style={{ fontSize: 11, padding: "3px 6px", flex: 1 }}
+                aria-label="Sort reviews"
+              >
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="status">By status (active first)</option>
+              </select>
+            </div>
+          </>
+        )}
       </div>
-      <div style={{ maxHeight: 540, overflowY: "auto" }} className="bkb-scroll">
+
+      <div style={{ maxHeight: 600, overflowY: "auto" }} className="bkb-scroll">
         {reviews.error && (
           <div style={{ padding: 14, fontSize: 12, color: "var(--bkb-danger)" }}>
             {(reviews.error as Error).message}
           </div>
         )}
-        {reviews.data?.length === 0 && !reviews.isLoading && (
+        {total === 0 && !reviews.isLoading && (
           <div style={{ padding: 14, fontSize: 12, color: "var(--bkb-textMuted)" }}>
-            No reviews yet — start one from the form on the left.
+            No reviews yet — click <strong>Start a new review</strong> above to begin.
           </div>
         )}
-        {reviews.data?.map((r) => (
+        {total > 0 && filtered === 0 && (
+          <div style={{ padding: 14, fontSize: 12, color: "var(--bkb-textMuted)" }}>
+            No reviews match your filters.{" "}
+            <button
+              type="button"
+              onClick={() => { setSearch(""); setStatusFilter("all"); }}
+              style={{ background: "transparent", border: "none", color: "var(--bkb-accent)", cursor: "pointer", padding: 0, fontSize: 12, textDecoration: "underline" }}
+            >
+              Clear filters
+            </button>
+          </div>
+        )}
+        {visible.map((r: ReviewSummary) => (
           <ReviewListItem key={r.review_id} review={r} active={r.review_id === selectedId} onClick={() => onSelect(r.review_id)} />
         ))}
       </div>
@@ -1500,20 +1654,63 @@ function ReviewDetail({ reviewId }: { reviewId: string }) {
           {(r.status === "running" || r.status === "pending" || r.status === "plan_pending") && (
             <button
               className="bkb-btn bkb-btn-ghost"
-              onClick={() => cancel.mutate(reviewId)}
+              onClick={() => {
+                if (cancel.isPending) return;
+                cancel.mutate(reviewId, {
+                  onError: (err: unknown) => {
+                    // Make a failed cancel visible to the user instead of
+                    // silently looking like the button "doesn't work".
+                    const msg = err instanceof Error ? err.message : "unknown error";
+                    alert(
+                      `Cancel failed: ${msg}.\n\n` +
+                      "If this happens repeatedly, the worker that owns the " +
+                      "pipeline may be unreachable. The review will still " +
+                      "transition to cancelled within a few seconds via the " +
+                      "DB-poll fallback.",
+                    );
+                  },
+                });
+              }}
               disabled={cancel.isPending}
-              style={{ borderColor: "var(--bkb-publication)", color: "var(--bkb-publication)" }}
+              style={{
+                borderColor: "var(--bkb-publication)",
+                color: "var(--bkb-publication)",
+                opacity: cancel.isPending ? 0.6 : 1,
+              }}
+              title={
+                cancel.isPending
+                  ? "Cancel request sent. Waiting for the pipeline to reach a cancel checkpoint…"
+                  : "Cancel this review"
+              }
             >
-              <Icon name="x" size={11} /> Cancel
+              <Icon name="x" size={11} />{" "}
+              {cancel.isPending ? "Cancelling…" : "Cancel"}
             </button>
           )}
           {(r.status === "failed" || r.status === "cancelled") && (
             <ReviewActionsDropdown
               lastCompletedStep={r.last_completed_step}
               isPending={retry.isPending}
-              onRetry={(body?: { enable_cache?: boolean; resume?: boolean }) =>
-                retry.mutate({ reviewId, body })
-              }
+              onRetry={async (body?: { enable_cache?: boolean; resume?: boolean }) => {
+                // The backend never persists the OpenRouter key with a review
+                // (run_request is stored excluding it). On every retry/resume
+                // we must resolve the user's currently configured key — from
+                // sessionStorage (personal) or admin-shared — and pass it in
+                // the retry body. Without this, the pipeline aborts with the
+                // exact "No OpenRouter API key available" 400 the user has
+                // been hitting.
+                const { key } = await resolveOpenRouterKey();
+                if (!key) {
+                  alert(
+                    "No OpenRouter API key available. Configure one on the dashboard's API key tab, then try again.",
+                  );
+                  return;
+                }
+                retry.mutate({
+                  reviewId,
+                  body: { ...(body ?? {}), openrouter_api_key: key },
+                });
+              }}
             />
           )}
           {r.status === "completed" && (
@@ -1802,9 +1999,9 @@ function ReviewDetail({ reviewId }: { reviewId: string }) {
           {r.synthesis_text && (
             <div className="bkb-card" style={{ padding: 18 }}>
               <h3 style={{ fontFamily: FONTS.display, fontSize: 18, margin: "0 0 8px", fontWeight: 500 }}>Synthesis</h3>
-              <div style={{ fontSize: 13, color: "var(--bkb-text)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+              <MarkdownContent style={{ fontSize: 13, lineHeight: 1.65 }}>
                 {r.synthesis_text}
-              </div>
+              </MarkdownContent>
             </div>
           )}
           {r.included_articles.length > 0 && (
@@ -1945,14 +2142,19 @@ export default function SynthScholarPage() {
           <div style={{ fontSize: 11, color: "var(--bkb-textSubtle)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6 }}>
             New review
           </div>
-          <h1 style={{ fontFamily: FONTS.display, fontSize: 32, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
-            Start a new review
-          </h1>
+          <div style={{ display: "flex", alignItems: "start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+            <h1 style={{ fontFamily: FONTS.display, fontSize: 32, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
+              Start a new review
+            </h1>
+            <ReviewFormGuide />
+          </div>
           <div style={{ fontSize: 14, color: "var(--bkb-textMuted)", marginTop: 6, maxWidth: 700, lineHeight: 1.5 }}>
             Configure the protocol, search strategy, and run options. Click the
             <span style={{ color: "var(--bkb-text)" }}> ⓘ </span>icon next to
             any field for a description and a link to authoritative guidance
-            (PICO, PRISMA, RoB tools, …).
+            (PICO, PRISMA, RoB tools, …), or use{" "}
+            <strong>Open full guide</strong> on the right to read every option
+            in one place.
           </div>
         </div>
         <div className="bkb-card" style={{ padding: 24 }}>

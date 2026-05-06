@@ -15,6 +15,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Download, BookOpen, Loader2, AlertCircle } from "lucide-react";
 import { useReview, useExportReview } from "@/src/hooks/useSynthScholar";
+import { MarkdownContent } from "@/src/app/components/synth-scholar/MarkdownContent";
 
 export default function PublicReviewDetailPage() {
   const params = useParams();
@@ -133,12 +134,12 @@ export default function PublicReviewDetailPage() {
                 Synthesis
               </h2>
               {data.synthesis_text ? (
-                <div
-                  className="text-gray-800 leading-relaxed whitespace-pre-wrap"
-                  style={{ fontSize: 15 }}
+                <MarkdownContent
+                  className="text-gray-800"
+                  style={{ fontSize: 15, lineHeight: 1.7 }}
                 >
                   {data.synthesis_text}
-                </div>
+                </MarkdownContent>
               ) : (
                 <p className="text-gray-500 italic">
                   No synthesis text available for this review.

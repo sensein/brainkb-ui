@@ -27,6 +27,45 @@ const PRISMA_LINK: InfoLink = {
   label: "PRISMA 2020 statement",
 };
 
+/**
+ * Example block — small bordered card with a "Dummy example" tag and one or
+ * more lines. Used for fields where seeing a concrete shape is more useful
+ * than another sentence of prose.
+ */
+function Example({ lines }: { lines: ReadonlyArray<React.ReactNode> }) {
+  return (
+    <div
+      style={{
+        marginTop: 10,
+        padding: "8px 10px",
+        background: "var(--bkb-surfaceAlt, #f5f5f0)",
+        border: "1px dashed var(--bkb-border)",
+        borderRadius: 6,
+        fontSize: 11.5,
+        lineHeight: 1.55,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 10,
+          fontWeight: 600,
+          letterSpacing: "0.06em",
+          textTransform: "uppercase",
+          color: "var(--bkb-textSubtle)",
+          marginBottom: 4,
+        }}
+      >
+        Dummy example
+      </div>
+      {lines.map((ln, i) => (
+        <div key={i} style={{ fontFamily: "inherit", color: "var(--bkb-textMuted)" }}>
+          {ln}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export const FIELD_GUIDES: Record<string, FieldGuide> = {
   // ── Protocol — basics ─────────────────────────────────────────────────
   title: {
@@ -45,7 +84,15 @@ export const FIELD_GUIDES: Record<string, FieldGuide> = {
       <>
         The single research question your review answers. Often phrased as
         "What is the effect of <em>I</em> compared to <em>C</em> on <em>O</em>
-        in <em>P</em>?". Defaults to the title if blank.
+        in <em>P</em>?". Defaults to the title if blank. For scoping reviews,
+        a list of mapping objectives is also fine.
+        <Example
+          lines={[
+            "Characterise participant populations across included sources, including whether samples are clinical or drawn from the general population, and what demographic information is reported",
+            "Characterise study designs, including whether studies are cross-sectional or longitudinal, and (if longitudinal) the duration and frequency of data collection",
+            "Identify whether studies use within-subjects or between-subjects designs",
+          ]}
+        />
       </>
     ),
   },
@@ -99,25 +146,31 @@ export const FIELD_GUIDES: Record<string, FieldGuide> = {
     title: "Inclusion criteria",
     description: (
       <>
-        Eligibility rules a study must meet to be included. Common axes: study
-        design (RCT, cohort, case-control), language, publication date range,
-        peer-review status. One rule per line is best.
+        Eligibility rules a study must meet to be included — required by{" "}
+        <strong>PRISMA 2020 item 5</strong> (eligibility criteria). Common
+        axes: study design (RCT, cohort, case-control), language, publication
+        date range, peer-review status. One rule per line is best.
       </>
     ),
     link: {
-      href: "https://training.cochrane.org/handbook/current/chapter-03",
-      label: "Cochrane Handbook ch. 3 — Defining the criteria",
+      href: "https://www.prisma-statement.org/prisma-2020",
+      label: "PRISMA 2020 — Item 5 (eligibility criteria)",
     },
   },
   exclusion: {
     title: "Exclusion criteria",
     description: (
       <>
-        Reasons to drop a study: editorials, conference abstracts, animal-only
-        studies, retracted papers, n &lt; some threshold, etc. Should be
-        non-overlapping with inclusion criteria.
+        Reasons to drop a study — also under <strong>PRISMA 2020 item 5</strong>.
+        Examples: editorials, conference abstracts, animal-only studies,
+        retracted papers, n &lt; some threshold. Should be non-overlapping with
+        inclusion criteria.
       </>
     ),
+    link: {
+      href: "https://www.prisma-statement.org/prisma-2020",
+      label: "PRISMA 2020 — Item 5 (eligibility criteria)",
+    },
   },
 
   // ── Search strategy ───────────────────────────────────────────────────
@@ -214,8 +267,13 @@ export const FIELD_GUIDES: Record<string, FieldGuide> = {
       </>
     ),
     link: {
-      href: "https://methods.cochrane.org/risk-bias-tools",
-      label: "Cochrane RoB tools overview",
+      // riskofbias.info is the canonical site maintained by the RoB 2 and
+      // ROBINS-I tool authors — covers all the tools above. The earlier
+      // Cochrane methods URL has been retired (returns 404). For the RoB 2
+      // -specific Cochrane page, see:
+      // https://methods.cochrane.org/bias/resources/rob-2-revised-cochrane-risk-bias-tool-randomized-trials
+      href: "https://www.riskofbias.info/",
+      label: "RoB 2 / ROBINS-I tool home (riskofbias.info)",
     },
   },
   charting_questions: {
@@ -225,6 +283,14 @@ export const FIELD_GUIDES: Record<string, FieldGuide> = {
         Custom data-extraction prompts the LLM will answer for every included
         article. Use the question text verbatim as the field key in the
         output. Leave empty to use built-in PRISMA-style charting fields.
+        <Example
+          lines={[
+            "What was the total sample size?",
+            "What primary outcome was measured and how?",
+            "What was the median follow-up duration (in weeks)?",
+            "What statistical test was used for the primary analysis?",
+          ]}
+        />
       </>
     ),
   },
@@ -233,8 +299,15 @@ export const FIELD_GUIDES: Record<string, FieldGuide> = {
     description: (
       <>
         Quality / methodological domains the LLM scores per study (max 4).
-        Examples: <em>study design</em>, <em>sample size adequacy</em>,
-        <em> outcome measurement</em>, <em>statistical analysis</em>.
+        Pick the four that matter most for your study designs.
+        <Example
+          lines={[
+            "Risk of bias in participant selection",
+            "Validity of outcome measurement",
+            "Appropriateness of statistical analysis",
+            "Generalisability of findings",
+          ]}
+        />
       </>
     ),
   },
@@ -244,10 +317,16 @@ export const FIELD_GUIDES: Record<string, FieldGuide> = {
     title: "Grouping dimension",
     description: (
       <>
-        Optional attribute the synthesis will stratify by — e.g.{" "}
-        <code>disorder_cohort</code>, <code>age_group</code>,{" "}
-        <code>severity</code>. The LLM partitions studies on this attribute
-        and produces a per-group narrative + Q&A.
+        Optional attribute the synthesis will stratify by. The LLM partitions
+        studies on this attribute and produces a per-group narrative + Q&A.
+        <Example
+          lines={[
+            <code key="1">disorder_cohort</code>,
+            <code key="2">age_group  (children / adolescents / adults)</code>,
+            <code key="3">severity  (mild / moderate / severe)</code>,
+            <code key="4">intervention_class  (pharmacological / behavioural)</code>,
+          ]}
+        />
       </>
     ),
   },
@@ -258,6 +337,14 @@ export const FIELD_GUIDES: Record<string, FieldGuide> = {
         Questions answered separately within each group (max 10, one per
         line). Use these for cross-cutting questions you want answered for
         every cohort: prevalence, response rate, comparative effects, etc.
+        <Example
+          lines={[
+            "What is the prevalence in this group?",
+            "Which interventions show the largest effect size for this group?",
+            "What adverse events are most commonly reported in this group?",
+            "How does follow-up duration affect outcomes here?",
+          ]}
+        />
       </>
     ),
   },
@@ -372,7 +459,6 @@ export const FIELD_GUIDES: Record<string, FieldGuide> = {
         <strong>Table</strong> = structured comparison rows.
       </>
     ),
-    link: PRISMA_LINK,
   },
   data_items: {
     title: "Data-extraction items",
