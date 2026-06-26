@@ -238,6 +238,84 @@ const EXAMPLES: ExampleProtocol[] = [
       auto_confirm: false,
     }),
   },
+  {
+    id: "voice-mh",
+    label: "Vocal biomarkers: depression & anxiety (PRISMA-ScR)",
+    description:
+      "Scoping review of speech/voice biomarkers for depression and anxiety, grouped by disorder cohort. Custom charting questions covering populations, speech tasks, features, models and comorbidity; QUADAS-2 appraisal; pauses for plan review.",
+    apply: (base) => ({
+      ...base,
+      title: "Vocal Biomarkers for Depression and Anxiety Detection: A Scoping Review",
+      objective:
+        "Map the evidence base on vocal biomarkers — acoustic, prosodic, articulatory, and learned/DNN speech representations — for depression and anxiety in adults. Catalogue populations, study designs, speech tasks, extracted features, modeling approaches, and reported performance; identify gaps (underrepresented demographics, feature types, comorbidity reporting); and compare the depression and anxiety literatures side by side.",
+      pico_population:
+        "Adults (18+) with depression or anxiety, identified by clinically validated diagnosis OR validated self-report instruments (PHQ-9, BDI, HAM-D for depression; GAD-7, HAM-A, STAI for anxiety) in general-population samples. Speakers of any language.",
+      pico_intervention:
+        "Vocal biomarkers derived from speech: hand-crafted acoustic/prosodic/articulatory features (jitter, shimmer, F0, HNR, MFCCs, formants) and/or learned DNN embeddings (wav2vec, HuBERT, Whisper), analysed via correlation, statistical models, or ML/AI models to detect the disorder or estimate its severity.",
+      pico_comparison:
+        "Healthy controls, between-disorder contrasts, or continuous disorder-severity measures (no control group required for inclusion).",
+      pico_outcome:
+        "Reported model/analysis performance (accuracy, AUC, F1, RMSE, R², correlation) and, where present, feature-importance findings. No pooling or standardization across studies.",
+      inclusion_criteria:
+        "Adults 18+. Investigates vocal/speech biomarkers in relation to depression and/or anxiety (diagnosis or severity). Reports which speech task(s) participants performed and which features were used. Reports model performance and, where applicable, statistical significance. Primary empirical, peer-reviewed research published 2010–2026; English language.",
+      exclusion_criteria:
+        "Animal-only or simulation studies with no human participants; no voice/speech data collected or analysed; no reporting of features used; no description of the speech task; conference abstracts without a full paper; theoretical papers with no empirical data; narrative/systematic reviews and meta-analyses; preprints with no peer-reviewed version, theses, dissertations, editorials, opinion pieces; non-English papers; published outside 2010–2026; pediatric-only (<18) samples; no relevance to depression or anxiety.",
+      date_range_start: "2010-01-01",
+      date_range_end: "2026-12-31",
+      rob_tool: "QUADAS-2",
+      charting_questions: [
+        "What population was studied — clinical or general-population sample, and what demographics (age, gender, language) were reported?",
+        "Was the study cross-sectional or longitudinal, and if longitudinal, what was the duration and data-collection frequency?",
+        "Was the design within-subjects, between-subjects, or mixed?",
+        "Was the modeling task framed as classification (diagnostic category) or regression (continuous severity)?",
+        "What speech tasks did participants perform (sustained vowel, read speech, picture description, spontaneous speech, interview)?",
+        "What vocal feature types were extracted (acoustic, linguistic, articulatory, DNN embeddings) and which specific features and extraction tools/libraries (openSMILE, librosa, torchaudio, parselmouth) were used?",
+        "What modeling approach and specific algorithms were used (statistical, classical ML, deep learning)?",
+        "What performance metrics and headline results were reported (accuracy, AUC, F1, RMSE, R²)?",
+        "If feature importance was reported, what method was used, which features were most associated with the disorder, and did they increase or decrease relative to controls/severity?",
+        "Did the study compare hand-crafted features vs DNN embeddings, and what was the reported performance of each?",
+        "Were comorbidities explicitly handled (Yes/No/Not Reported), which comorbidities were allowed in the cohort, and which were excluded?",
+        "How was diagnosis or disorder status assessed (DSM-5, clinician diagnosis, PHQ-9/GAD-7 cutoff, etc.)?",
+      ],
+      appraisal_domains: [
+        "Participant and Sample Quality",
+        "Data Collection Quality",
+        "Feature and Model Quality",
+        "Bias and Transparency",
+      ],
+      // Group studies by disorder cohort (depression vs anxiety), ask each
+      // group the cross-cohort defaults plus the per-cohort overrides below.
+      grouping_dimension: "disorder_cohort",
+      default_group_questions_text: [
+        "How many studies fall in this cohort, and what diagnostic/severity instruments dominate?",
+        "Which speech tasks and feature types are most common in this cohort?",
+        "What modeling approaches and performance ranges are reported in this cohort?",
+        "How is comorbidity handled across studies in this cohort, and which comorbidities recur?",
+        "What demographic or methodological gaps are evident within this cohort?",
+      ].join("\n"),
+      per_group_questions: [
+        {
+          label: "depression",
+          questions: [
+            "Which depression instruments were used (PHQ-9, BDI, HAM-D) and at what cutoffs?",
+            "Which vocal features were most predictive of depression, and in which direction?",
+            "Are severity-regression studies more or less common than binary classification here?",
+          ],
+        },
+        {
+          label: "anxiety",
+          questions: [
+            "Which anxiety instruments were used (GAD-7, HAM-A, STAI) and at what cutoffs?",
+            "Which vocal features were most predictive of anxiety, and in which direction?",
+            "Is anxiety more often studied as a comorbidity than as the primary target?",
+          ],
+        },
+      ],
+      max_results_per_query: 50,
+      biorxiv_days: 730,
+      auto_confirm: false,
+    }),
+  },
 ];
 
 // ── Status chip ─────────────────────────────────────────────────────
