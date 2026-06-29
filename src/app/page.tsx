@@ -12,6 +12,7 @@
  */
 
 import yaml from "@/src/config/yaml/config-home.yaml";
+import toolsLib from "@/src/config/yaml/tools-libraries.yaml";
 import { useEffect, useState } from "react";
 import {
   Brain, Database, FileText, Users, Sparkles, ExternalLink, Network, CheckCircle,
@@ -153,11 +154,20 @@ function VideoPlayer({ id, title, onPlay }: { id: string; title?: string; onPlay
             display: "block",
           }}
         >
-          {/* thumbnail (plain img — external host, no next/image config needed) */}
+          {/* thumbnail (plain img — external host, no next/image config needed).
+              maxresdefault only exists for HD videos / once processed, so fall
+              back to hqdefault, which YouTube always generates. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={`https://i.ytimg.com/vi/${id}/maxresdefault.jpg`}
             alt=""
+            onError={(e) => {
+              const img = e.currentTarget;
+              if (!img.dataset.fallback) {
+                img.dataset.fallback = "1";
+                img.src = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+              }
+            }}
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.5 }}
           />
           {title && (
@@ -344,8 +354,15 @@ export default function Home() {
 
   const videos: any[] = Array.isArray(yaml.videos?.items) ? yaml.videos.items : [];
 
+  // "open-source tools" counts everything on the Tools & Libraries page —
+  // the flagship apps plus the Python libraries.
+  const tl: any = toolsLib;
+  const openSourceCount =
+    (Array.isArray(tl.tools) ? tl.tools.length : 0) +
+    (Array.isArray(tl.libraries) ? tl.libraries.length : 0);
+
   const heroStats = [
-    { value: Array.isArray(yaml.tools?.items) ? yaml.tools.items.length : 0, label: "open-source tools" },
+    { value: openSourceCount, label: "open-source tools", href: "/tools-and-libraries" },
     { value: Array.isArray(yaml.usecases?.cases) ? yaml.usecases.cases.length : 0, label: "active use cases" },
     { value: "Multi-agent", label: "orchestration" },
   ];
