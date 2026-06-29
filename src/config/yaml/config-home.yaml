@@ -96,7 +96,7 @@ whatisbrainkb:
   eyebrow: "What is BrainKB"
   title: "What is BrainKB?"
   headline: "A platform that turns scattered neuroscience knowledge into evidence you can query."
-  description: "BrainKB structures and organizes scientific knowledge using knowledge graphs (KGs) — delivering evidence-based insights with full provenance. Every assertion is traceable, every contribution reviewable, every dataset connected."
+  description: "BrainKB structures and organizes scientific knowledge using knowledge graphs (KGs) — delivering evidence-based insights with provenance. Every assertion is traceable, every contribution reviewable, every dataset connected."
   subtitle: "BrainKB is a platform designed to support neuroscience research by structuring and organizing scientific knowledge using knowledge graphs (KGs) for delivering evidence-based insights."
   bullet_points:
     - heading: "Structured Knowledge"
@@ -104,9 +104,9 @@ whatisbrainkb:
     - heading: "Data Exploration"
       title: "Search, visualize, and analyze the graph through accessible, interactive tools."
     - heading: "Community Contribution"
-      title: "Researchers contribute, review, and validate evidence with full provenance."
+      title: "Researchers contribute, review, and validate evidence with provenance."
     - heading: "Collaboration Hub"
-      title: "A common workbench for neuroscience teams to build on each other's findings."
+      title: "A common workbench for neuroscientists to build on each other's findings."
 
 usecases:
   eyebrow: "In Practice"
@@ -323,7 +323,7 @@ abstractatlas:
   eyebrow: "Explore"
   badge: ""
   title: "Browse the neuroscience landscape."
-  description: "AbstractAtlas maps thousands of neuroscience abstracts — OHBM 2026 and a broader PubMed corpus — into an interactive 2D/3D UMAP projection. Search semantically, filter by facet, and see where any study sits within the wider literature."
+  description: "AbstractAtlas maps thousands of neuroscience abstracts — OHBM 2026 and NeuroScape PubMed 1999–2023 corpus — into an interactive 2D/3D UMAP projection. Search semantically, filter by facet, and see where any study sits within the wider literature."
   image: "/atlasabstract.png"
   link: "https://abstractatlas.brainkb.org/"
   button_text: "Open AbstractAtlas"
