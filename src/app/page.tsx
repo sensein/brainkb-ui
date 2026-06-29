@@ -264,8 +264,9 @@ function VideoCarousel({
     <div style={{ display: "grid", gridTemplateColumns: "1.15fr 1fr", gap: 56, alignItems: "center" }}>
       <VideoPlayer key={active} id={cur.youtube_id} title={cur.title} onPlay={() => setPaused(true)} />
       <div>
+        {/* eyebrow + headline are fixed; only the video and its description cycle */}
         <Eyebrow>{eyebrow || "See It in Action"}</Eyebrow>
-        <SectionTitle size={40}>{cur.headline || headline || "See It in Action"}</SectionTitle>
+        <SectionTitle size={40}>{headline || "See It in Action"}</SectionTitle>
         {(cur.description || description) && (
           <p style={{ fontSize: 16, color: "var(--bkb-textMuted)", lineHeight: 1.7, margin: "16px 0 28px" }}>
             {cur.description || description}
