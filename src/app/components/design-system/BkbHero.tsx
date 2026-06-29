@@ -128,7 +128,9 @@ function FloatingGraph() {
   );
 }
 
-export function BkbHero() {
+export type HeroStat = { value: string | number; label: string };
+
+export function BkbHero({ stats }: { stats?: HeroStat[] }) {
   return (
     <section
       className="bkb"
@@ -228,6 +230,49 @@ export function BkbHero() {
           <FloatingGraph />
         </div>
       </div>
+
+      {/* Stat strip — auto-counted tools / use cases + orchestration tag */}
+      {Array.isArray(stats) && stats.length > 0 && (
+        <div
+          style={{
+            position: "relative",
+            maxWidth: 1320,
+            margin: "64px auto 0",
+            paddingTop: 32,
+            borderTop: "1px solid oklch(0.74 0.14 170 / 0.18)",
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 64,
+          }}
+        >
+          {stats.map((s, i) => (
+            <div key={i}>
+              <div
+                style={{
+                  fontFamily: FONTS.display,
+                  fontSize: 38,
+                  fontWeight: 400,
+                  lineHeight: 1,
+                  letterSpacing: "-0.02em",
+                  color: "oklch(0.96 0.006 85)",
+                }}
+              >
+                {s.value}
+              </div>
+              <div
+                style={{
+                  fontSize: 13,
+                  color: "oklch(0.72 0.03 195)",
+                  marginTop: 10,
+                  letterSpacing: "0.01em",
+                }}
+              >
+                {s.label}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
