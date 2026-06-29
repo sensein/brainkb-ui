@@ -12,6 +12,7 @@
  */
 
 import React from "react";
+import Link from "next/link";
 import { FONTS } from "./index";
 
 function FloatingGraph() {
@@ -128,7 +129,7 @@ function FloatingGraph() {
   );
 }
 
-export type HeroStat = { value: string | number; label: string };
+export type HeroStat = { value: string | number; label: string; href?: string };
 
 export function BkbHero({ stats }: { stats?: HeroStat[] }) {
   return (
@@ -185,7 +186,7 @@ export function BkbHero({ stats }: { stats?: HeroStat[] }) {
             }}
           >
             <span className="bkb-pulse-dot" style={{ background: "oklch(0.74 0.14 170)" }} />
-            BrainKB
+            Open neuroscience infrastructure
           </div>
 
           <h1
@@ -215,7 +216,7 @@ export function BkbHero({ stats }: { stats?: HeroStat[] }) {
               fontWeight: 300,
             }}
           >
-            Building open, trustworthy knowledge graph infrastructure to integrate fragmented neuroscience knowledge and data to accelerate reproducible discovery.
+          Trustworthy knowledge-graph infrastructure that integrates fragmented neuroscience literature, data, and evidence — enabling researchers to make reproducible discoveries and helping funders identify, evaluate, and invest in high-impact science.
           </p>
         </div>
 
@@ -245,32 +246,45 @@ export function BkbHero({ stats }: { stats?: HeroStat[] }) {
             gap: 64,
           }}
         >
-          {stats.map((s, i) => (
-            <div key={i}>
-              <div
-                style={{
-                  fontFamily: FONTS.display,
-                  fontSize: 38,
-                  fontWeight: 400,
-                  lineHeight: 1,
-                  letterSpacing: "-0.02em",
-                  color: "oklch(0.96 0.006 85)",
-                }}
-              >
-                {s.value}
-              </div>
-              <div
-                style={{
-                  fontSize: 13,
-                  color: "oklch(0.72 0.03 195)",
-                  marginTop: 10,
-                  letterSpacing: "0.01em",
-                }}
-              >
-                {s.label}
-              </div>
-            </div>
-          ))}
+          {stats.map((s, i) => {
+            const inner = (
+              <>
+                <div
+                  style={{
+                    fontFamily: FONTS.display,
+                    fontSize: 38,
+                    fontWeight: 400,
+                    lineHeight: 1,
+                    letterSpacing: "-0.02em",
+                    color: "oklch(0.96 0.006 85)",
+                  }}
+                >
+                  {s.value}
+                </div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    color: "oklch(0.72 0.03 195)",
+                    marginTop: 10,
+                    letterSpacing: "0.01em",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 5,
+                  }}
+                >
+                  {s.label}
+                  {s.href && <span aria-hidden style={{ fontSize: 12 }}>↗</span>}
+                </div>
+              </>
+            );
+            return s.href ? (
+              <Link key={i} href={s.href} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
+                {inner}
+              </Link>
+            ) : (
+              <div key={i}>{inner}</div>
+            );
+          })}
         </div>
       )}
     </section>
