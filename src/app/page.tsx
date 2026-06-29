@@ -3,11 +3,12 @@
 /**
  * Home — landing page (editorial direction).
  *
- * Sections, in order: Hero → What is BrainKB → BrainKB Tools → Use Cases →
- * Structured Models → See It in Action (videos) → Powered by AI agents.
+ * Narrative order: Hero → What is BrainKB (what it is) → AbstractAtlas (what
+ * users can explore) → Use Cases (where it applies) → BrainKB Tools (which
+ * tools enable it) → Video (how it works) → Structured Models (what models
+ * support it) → Powered by AI agents (technical credibility).
  * All copy is content-managed from config-home.yaml; the /api/statistics flow
- * is preserved. Visuals use the bkb design tokens (FONTS.display / FONTS.mono,
- * --bkb-* colours, .bkb-card, .bkb-btn).
+ * is preserved.
  */
 
 import yaml from "@/src/config/yaml/config-home.yaml";
@@ -135,7 +136,10 @@ function VideoPlayer({ id, title, onPlay }: { id: string; title?: string; onPlay
         />
       ) : (
         <button
-          onClick={() => setPlaying(true)}
+          onClick={() => {
+            onPlay?.();
+            setPlaying(true);
+          }}
           aria-label={`Play ${title || "video"}`}
           style={{
             position: "absolute",
@@ -350,64 +354,7 @@ export default function Home() {
       <Theme theme="light" style={{ background: "transparent" }}>
         <BkbHero stats={heroStats} />
 
-        {/* ── AbstractAtlas (featured interactive demo) ────────────── */}
-        {yaml.abstractatlas && (
-          <section style={{ background: "var(--bkb-surface)", borderBottom: "1px solid var(--bkb-border)" }}>
-            <div style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1.1fr", gap: 64, alignItems: "center" }}>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
-                  <span style={{ fontFamily: FONTS.mono, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--bkb-accent)", fontWeight: 600 }}>
-                    {yaml.abstractatlas.eyebrow || "Explore"}
-                  </span>
-                  {yaml.abstractatlas.badge && (
-                    <span style={{ fontFamily: FONTS.mono, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--bkb-publication)", border: "1px solid color-mix(in oklch, var(--bkb-publication), transparent 60%)", borderRadius: 999, padding: "2px 9px" }}>
-                      {yaml.abstractatlas.badge}
-                    </span>
-                  )}
-                </div>
-                <SectionTitle size={42}>{yaml.abstractatlas.title}</SectionTitle>
-                {yaml.abstractatlas.description && (
-                  <p style={{ fontSize: 16, color: "var(--bkb-textMuted)", lineHeight: 1.7, margin: "16px 0 28px", maxWidth: 520 }}>
-                    {yaml.abstractatlas.description}
-                  </p>
-                )}
-                <a
-                  href={yaml.abstractatlas.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bkb-btn bkb-btn-primary"
-                  style={{ textDecoration: "none" }}
-                >
-                  {yaml.abstractatlas.button_text || "Open AbstractAtlas"} →
-                </a>
-              </div>
-              <a
-                href={yaml.abstractatlas.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: "block",
-                  borderRadius: 16,
-                  overflow: "hidden",
-                  border: "1px solid var(--bkb-border)",
-                  background: "linear-gradient(135deg, #f5f4ef, #e9e7e0)",
-                  boxShadow: "0 24px 50px -26px rgba(0,0,0,0.35)",
-                  padding: 8,
-                }}
-              >
-                <Image
-                  src={yaml.abstractatlas.image}
-                  alt="AbstractAtlas — interactive map of the neuroscience literature"
-                  width={1200}
-                  height={680}
-                  style={{ width: "100%", height: "auto", display: "block", borderRadius: 10 }}
-                />
-              </a>
-            </div>
-          </section>
-        )}
-
-        {/* ── What is BrainKB ──────────────────────────────────────── */}
+        {/* ── What is BrainKB (what it is) ─────────────────────────── */}
         {yaml.whatisbrainkb && (
           <section style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
             <div style={{ display: "grid", gridTemplateColumns: "1.05fr 1fr", gap: 72, alignItems: "start", marginBottom: 64 }}>
@@ -436,101 +383,64 @@ export default function Home() {
           </section>
         )}
 
-        {/* ── BrainKB Tools ────────────────────────────────────────── */}
-        {yaml.tools && (
-          <section style={{ background: "var(--bkb-surface)", borderTop: "1px solid var(--bkb-border)", borderBottom: "1px solid var(--bkb-border)" }}>
-          <div style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
-            <div style={{ marginBottom: 56 }}>
-              <Eyebrow>{yaml.tools.eyebrow || "The Toolkit"}</Eyebrow>
-              <SectionTitle>{yaml.tools.title || "BrainKB Tools"}</SectionTitle>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 40, marginTop: 18, flexWrap: "wrap" }}>
-                <p style={{ fontSize: 16, color: "var(--bkb-textMuted)", lineHeight: 1.65, margin: 0, maxWidth: 640 }}>{yaml.tools.subtitle}</p>
-                {yaml.tools.more_link && (
-                  <MoreLink href={yaml.tools.more_link} external={false}>
-                    {yaml.tools.more_text || "View all tools"} →
-                  </MoreLink>
+        {/* ── AbstractAtlas (what users can explore) ───────────────── */}
+        {yaml.abstractatlas && (
+          <section style={{ background: "linear-gradient(135deg, #e7efe9 0%, #eef2ed 100%)", borderTop: "1px solid var(--bkb-border)", borderBottom: "1px solid var(--bkb-border)" }}>
+            <div style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1.1fr", gap: 64, alignItems: "center" }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--bkb-accent)", fontWeight: 600 }}>
+                    {yaml.abstractatlas.eyebrow || "Explore"}
+                  </span>
+                  {yaml.abstractatlas.badge && (
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--bkb-publication)", border: "1px solid color-mix(in oklch, var(--bkb-publication), transparent 55%)", borderRadius: 999, padding: "2px 9px" }}>
+                      {yaml.abstractatlas.badge}
+                    </span>
+                  )}
+                </div>
+                <SectionTitle size={42}>{yaml.abstractatlas.title}</SectionTitle>
+                {yaml.abstractatlas.description && (
+                  <p style={{ fontSize: 16, color: "var(--bkb-textMuted)", lineHeight: 1.7, margin: "18px 0 28px", maxWidth: 520 }}>
+                    {yaml.abstractatlas.description}
+                  </p>
                 )}
+                <a
+                  href={yaml.abstractatlas.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bkb-btn bkb-btn-primary"
+                  style={{ textDecoration: "none" }}
+                >
+                  {yaml.abstractatlas.button_text || "Open AbstractAtlas"} →
+                </a>
               </div>
+              <a
+                href={yaml.abstractatlas.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "block",
+                  borderRadius: 16,
+                  overflow: "hidden",
+                  border: "1px solid var(--bkb-border)",
+                  background: "#fff",
+                  boxShadow: "0 24px 50px -26px rgba(0,0,0,0.25)",
+                  padding: 8,
+                }}
+              >
+                <Image
+                  src={yaml.abstractatlas.image}
+                  alt="AbstractAtlas — interactive map of the neuroscience literature"
+                  width={1200}
+                  height={680}
+                  style={{ width: "100%", height: "auto", display: "block", borderRadius: 10 }}
+                />
+              </a>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 22 }}>
-              {Array.isArray(yaml.tools.items) &&
-                yaml.tools.items.map((t: any, i: number) => {
-                  const isExternal = t.link?.startsWith?.("http");
-                  const isComingSoon = !t.link || t.link === "#";
-                  const color = t.color || TOOL_COLORS[i % TOOL_COLORS.length];
-                  // Mixed-orientation logos: horizontal wordmarks fill width and
-                  // stay short; square/stacked logos fill the tile height so the
-                  // two kinds carry comparable visual weight.
-                  const isSquareLogo = t.logo_orientation === "square";
-                  const logoImgStyle: React.CSSProperties = isSquareLogo
-                    ? { width: "auto", height: "150px", maxWidth: "70%", objectFit: "contain" }
-                    : { width: "auto", height: "auto", maxWidth: "94%", maxHeight: 150, objectFit: "contain" };
-                  const Inner = (
-                    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-                      {t.category && (
-                        <div style={{ fontFamily: FONTS.mono, fontSize: 11, letterSpacing: "0.13em", textTransform: "uppercase", color: "var(--bkb-textSubtle)", marginBottom: 18, textAlign: "right" }}>
-                          {t.category}
-                        </div>
-                      )}
-                      {/* logo — no box; orientation-aware sizing */}
-                      <div
-                        style={{
-                          height: 96,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "flex-start",
-                          marginBottom: 22,
-                        }}
-                      >
-                        {t.logo ? (
-                          <Image src={t.logo} alt={t.name} width={280} height={150} style={logoImgStyle} />
-                        ) : (
-                          <span style={{ fontFamily: FONTS.display, fontSize: 28, color }}>{t.name}</span>
-                        )}
-                      </div>
-                      <p style={{ fontSize: 14, color: "var(--bkb-textMuted)", lineHeight: 1.65, margin: "0 0 20px", flex: 1 }}>{t.description}</p>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: isComingSoon ? "var(--bkb-textSubtle)" : "var(--bkb-accent)", display: "inline-flex", alignItems: "center", gap: 5 }}>
-                        {isComingSoon ? (
-                          <>{t.link_text || "Coming soon"}</>
-                        ) : (
-                          <>
-                            {t.link_text || "Learn more"}
-                            {isExternal ? <ExternalLink className="w-3.5 h-3.5" /> : <span>→</span>}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  );
-                  const cardStyle: React.CSSProperties = {
-                    padding: 30,
-                    borderRadius: 16,
-                    textDecoration: "none",
-                    color: "inherit",
-                    display: "block",
-                    height: "100%",
-                    background: "var(--bkb-surfaceAlt)",
-                  };
-                  return isComingSoon ? (
-                    <div key={i} className="bkb-card" style={cardStyle}>{Inner}</div>
-                  ) : (
-                    <Link
-                      key={i}
-                      href={t.link}
-                      target={isExternal ? "_blank" : "_self"}
-                      rel={isExternal ? "noopener noreferrer" : ""}
-                      className="bkb-card"
-                      style={cardStyle}
-                    >
-                      {Inner}
-                    </Link>
-                  );
-                })}
-            </div>
-          </div>
           </section>
         )}
 
-        {/* ── Use Cases ────────────────────────────────────────────── */}
+        {/* ── Use Cases (where it applies) ─────────────────────────── */}
         {yaml.usecases && (
           <section style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
             <div style={{ maxWidth: 720, marginBottom: 48 }}>
@@ -616,7 +526,114 @@ export default function Home() {
           </section>
         )}
 
-        {/* ── Structured Models ────────────────────────────────────── */}
+        {/* ── BrainKB Tools (which tools enable it) ────────────────── */}
+        {yaml.tools && (
+          <section style={{ background: "var(--bkb-surface)", borderTop: "1px solid var(--bkb-border)", borderBottom: "1px solid var(--bkb-border)" }}>
+            <div style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
+              <div style={{ marginBottom: 56 }}>
+                <Eyebrow>{yaml.tools.eyebrow || "The Toolkit"}</Eyebrow>
+                <SectionTitle>{yaml.tools.title || "BrainKB Tools"}</SectionTitle>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 40, marginTop: 18, flexWrap: "wrap" }}>
+                  <p style={{ fontSize: 16, color: "var(--bkb-textMuted)", lineHeight: 1.65, margin: 0, maxWidth: 640 }}>{yaml.tools.subtitle}</p>
+                  {yaml.tools.more_link && (
+                    <MoreLink href={yaml.tools.more_link} external={false}>
+                      {yaml.tools.more_text || "View all tools"} →
+                    </MoreLink>
+                  )}
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 22 }}>
+                {Array.isArray(yaml.tools.items) &&
+                  yaml.tools.items.map((t: any, i: number) => {
+                    const isExternal = t.link?.startsWith?.("http");
+                    const isComingSoon = !t.link || t.link === "#";
+                    const color = t.color || TOOL_COLORS[i % TOOL_COLORS.length];
+                    // Mixed-orientation logos: horizontal wordmarks fill width and
+                    // stay short; square/stacked logos fill the tile height so the
+                    // two kinds carry comparable visual weight.
+                    const isSquareLogo = t.logo_orientation === "square";
+                    const logoImgStyle: React.CSSProperties = isSquareLogo
+                      ? { width: "auto", height: "150px", maxWidth: "70%", objectFit: "contain" }
+                      : { width: "auto", height: "auto", maxWidth: "94%", maxHeight: 150, objectFit: "contain" };
+                    const Inner = (
+                      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+                        {t.category && (
+                          <div style={{ fontFamily: FONTS.mono, fontSize: 11, letterSpacing: "0.13em", textTransform: "uppercase", color: "var(--bkb-textSubtle)", marginBottom: 18, textAlign: "right" }}>
+                            {t.category}
+                          </div>
+                        )}
+                        {/* logo — no box; orientation-aware sizing */}
+                        <div
+                          style={{
+                            height: 96,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "flex-start",
+                            marginBottom: 22,
+                          }}
+                        >
+                          {t.logo ? (
+                            <Image src={t.logo} alt={t.name} width={280} height={150} style={logoImgStyle} />
+                          ) : (
+                            <span style={{ fontFamily: FONTS.display, fontSize: 28, color }}>{t.name}</span>
+                          )}
+                        </div>
+                        <p style={{ fontSize: 14, color: "var(--bkb-textMuted)", lineHeight: 1.65, margin: "0 0 20px", flex: 1 }}>{t.description}</p>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: isComingSoon ? "var(--bkb-textSubtle)" : "var(--bkb-accent)", display: "inline-flex", alignItems: "center", gap: 5 }}>
+                          {isComingSoon ? (
+                            <>{t.link_text || "Coming soon"}</>
+                          ) : (
+                            <>
+                              {t.link_text || "Learn more"}
+                              {isExternal ? <ExternalLink className="w-3.5 h-3.5" /> : <span>→</span>}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                    const cardStyle: React.CSSProperties = {
+                      padding: 30,
+                      borderRadius: 16,
+                      textDecoration: "none",
+                      color: "inherit",
+                      display: "block",
+                      height: "100%",
+                      background: "var(--bkb-surfaceAlt)",
+                    };
+                    return isComingSoon ? (
+                      <div key={i} className="bkb-card" style={cardStyle}>{Inner}</div>
+                    ) : (
+                      <Link
+                        key={i}
+                        href={t.link}
+                        target={isExternal ? "_blank" : "_self"}
+                        rel={isExternal ? "noopener noreferrer" : ""}
+                        className="bkb-card"
+                        style={cardStyle}
+                      >
+                        {Inner}
+                      </Link>
+                    );
+                  })}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── See It in Action (how it works) ──────────────────────── */}
+        {videos.length > 0 && (
+          <section style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
+            <VideoCarousel
+              videos={videos}
+              eyebrow={yaml.videos.eyebrow}
+              headline={yaml.videos.headline || yaml.videos.title}
+              description={yaml.videos.description}
+              buttonText={yaml.videos.button_text}
+            />
+          </section>
+        )}
+
+        {/* ── Structured Models (what models support it) ───────────── */}
         <section style={{ background: "var(--bkb-surface)", borderTop: "1px solid var(--bkb-border)", borderBottom: "1px solid var(--bkb-border)" }}>
           <div style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
             <div style={{ marginBottom: 48 }}>
@@ -625,6 +642,9 @@ export default function Home() {
                 <SectionTitle>{structuedModelHeaderTitle || "Structured Models"}</SectionTitle>
                 <MoreLink href="https://sensein.group/brainkbdocs/">View all models →</MoreLink>
               </div>
+              <p style={{ fontSize: 16, color: "var(--bkb-textMuted)", lineHeight: 1.65, margin: "16px 0 0", maxWidth: 660 }}>
+                These models provide the shared structure behind BrainKB&apos;s graph, tools, and use cases.
+              </p>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
               {Array.isArray(yaml.structuredmodelsbox) &&
@@ -675,20 +695,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── See It in Action (video carousel) ────────────────────── */}
-        {videos.length > 0 && (
-          <section style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
-            <VideoCarousel
-              videos={videos}
-              eyebrow={yaml.videos.eyebrow}
-              headline={yaml.videos.headline || yaml.videos.title}
-              description={yaml.videos.description}
-              buttonText={yaml.videos.button_text}
-            />
-          </section>
-        )}
-
-        {/* ── Powered by AI agents (dark) ──────────────────────────── */}
+        {/* ── Powered by AI agents (technical credibility, dark) ───── */}
         <section style={{ background: "linear-gradient(160deg, #15271e 0%, #0c1611 60%)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
           <div style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "start" }}>
