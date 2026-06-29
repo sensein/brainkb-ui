@@ -350,6 +350,63 @@ export default function Home() {
       <Theme theme="light" style={{ background: "transparent" }}>
         <BkbHero stats={heroStats} />
 
+        {/* ── AbstractAtlas (featured interactive demo) ────────────── */}
+        {yaml.abstractatlas && (
+          <section style={{ background: "var(--bkb-surface)", borderBottom: "1px solid var(--bkb-border)" }}>
+            <div style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1.1fr", gap: 64, alignItems: "center" }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--bkb-accent)", fontWeight: 600 }}>
+                    {yaml.abstractatlas.eyebrow || "Explore"}
+                  </span>
+                  {yaml.abstractatlas.badge && (
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--bkb-publication)", border: "1px solid color-mix(in oklch, var(--bkb-publication), transparent 60%)", borderRadius: 999, padding: "2px 9px" }}>
+                      {yaml.abstractatlas.badge}
+                    </span>
+                  )}
+                </div>
+                <SectionTitle size={42}>{yaml.abstractatlas.title}</SectionTitle>
+                {yaml.abstractatlas.description && (
+                  <p style={{ fontSize: 16, color: "var(--bkb-textMuted)", lineHeight: 1.7, margin: "16px 0 28px", maxWidth: 520 }}>
+                    {yaml.abstractatlas.description}
+                  </p>
+                )}
+                <a
+                  href={yaml.abstractatlas.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bkb-btn bkb-btn-primary"
+                  style={{ textDecoration: "none" }}
+                >
+                  {yaml.abstractatlas.button_text || "Open AbstractAtlas"} →
+                </a>
+              </div>
+              <a
+                href={yaml.abstractatlas.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "block",
+                  borderRadius: 16,
+                  overflow: "hidden",
+                  border: "1px solid var(--bkb-border)",
+                  background: "linear-gradient(135deg, #f5f4ef, #e9e7e0)",
+                  boxShadow: "0 24px 50px -26px rgba(0,0,0,0.35)",
+                  padding: 8,
+                }}
+              >
+                <Image
+                  src={yaml.abstractatlas.image}
+                  alt="AbstractAtlas — interactive map of the neuroscience literature"
+                  width={1200}
+                  height={680}
+                  style={{ width: "100%", height: "auto", display: "block", borderRadius: 10 }}
+                />
+              </a>
+            </div>
+          </section>
+        )}
+
         {/* ── What is BrainKB ──────────────────────────────────────── */}
         {yaml.whatisbrainkb && (
           <section style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
