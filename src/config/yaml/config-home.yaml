@@ -269,7 +269,7 @@ usecases:
 tools:
   eyebrow: "The Toolkit"
   title: "BrainKB Tools"
-  subtitle: "Open, composable engines for named-entity recognition, resource extraction, literature review, and concept mapping. Each works inside BrainKB — or standalone in your own research."
+  subtitle: "Open, modular tools that integrate with BrainKB applications or operate independently within your own research pipelines."
   more_link: "/tools-and-libraries"
   more_text: "View all tools"
   items:
