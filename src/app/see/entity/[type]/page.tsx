@@ -323,11 +323,12 @@ export default function EntityTypePage({ params }: EntityTypePageProps) {
                     </Link>
                 </div>
 
-                <div className="flex justify-between items-center mb-6">
+                {/* Stack title above download controls on phones so neither is cramped */}
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
                     <h1 className="text-2xl font-bold">{type} Entities</h1>
 
-                    {/* Download Options */}
-                    <div className="flex space-x-2">
+                    {/* Download Options — wrap on narrow screens */}
+                    <div className="flex flex-wrap items-center gap-2">
                         <div className="flex items-center mr-4">
                             <input
                                 type="checkbox"

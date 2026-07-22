@@ -59,14 +59,35 @@
 .set-margin-hundred{
    margin:100px;
 }
+@media (max-width: 900px) {
+  .set-margin-hundred { margin: 48px 32px; }
+}
+@media (max-width: 600px) {
+  .set-margin-hundred { margin: 32px 16px; }
+}
 
 .fix-left-margin{
     margin-left: 13rem;
 
 }
+/* The 13rem left indent only clears the knowledge-base sidebar, which is
+   itself hidden (-translate-x-full) below the `sm` (640px) breakpoint. Drop
+   the indent there so list/detail content uses the full phone width instead
+   of being squeezed into a narrow column. */
+@media (max-width: 640px) {
+    .fix-left-margin { margin-left: 0; }
+}
 .kb-page-margin{
     margin-top: 5rem;
     margin-right: 6rem;
+}
+/* Replace the fixed 6rem side gutter with small, symmetric phone margins. */
+@media (max-width: 640px) {
+    .kb-page-margin {
+        margin-top: 4.5rem;
+        margin-left: 1rem;
+        margin-right: 1rem;
+    }
 }
 .fix-margin-left-footer{
     position: relative;
@@ -148,6 +169,22 @@ thead.sticky {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Horizontal-overflow guard for page CONTENT. Editorial pages use large fixed
+   inline layouts; if any single element is a few px wider than a phone
+   viewport it makes the page horizontally scrollable, which reads as content
+   "shifted/clipped left".
+   IMPORTANT: this must NOT go on html/body — overflow on the root element
+   propagates to the viewport and clips `position: fixed` elements, which makes
+   the fixed navbar disappear. We scope it to <main> instead. The navbar lives
+   in a <header> sibling OUTSIDE <main>, so it is unaffected. `overflow-x: clip`
+   (not `hidden`) is used so it never creates a scroll container — it can't
+   force overflow-y:auto or break position:sticky / vertical scrolling. Tables
+   that must scroll sideways have their own `overflow-x-auto` wrappers and are
+   unaffected. */
+main {
+  overflow-x: clip;
 }
 
 
@@ -746,5 +783,82 @@ thead.sticky {
   background-color: transparent !important;
   background-image: none !important;
   color: var(--bkb-primary) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────
+   Mobile responsiveness — landing page, hero, and footer.
+
+   These editorial surfaces (home page sections, BkbHero, Footer) are laid
+   out with inline React styles that hard-code multi-column CSS grids and
+   large horizontal padding — inline styles that CSS media queries normally
+   can't touch. We tag each responsive container with a `home-*` class and
+   override it here at `!important`, which DOES win over an inline style
+   without `!important`. Desktop keeps its exact inline layout untouched;
+   only ≤900px (tablet) and ≤600px (phone) are affected.
+   ───────────────────────────────────────────────────────────────────── */
+
+/* Section horizontal padding + hero padding shrink on small screens so
+   content never overflows the viewport. */
+@media (max-width: 900px) {
+  .home-pad { padding-left: 40px !important; padding-right: 40px !important; }
+  .home-pad-y { padding-top: 72px !important; padding-bottom: 72px !important; }
+  .home-hero-pad { padding: 64px 40px 72px !important; }
+
+  /* Two-column editorial splits collapse to a single column. */
+  .home-2col { grid-template-columns: 1fr !important; gap: 40px !important; }
+
+  /* 4-up / 3-up card rows step down to 2-up. */
+  .home-4col { grid-template-columns: 1fr 1fr !important; }
+  .home-3col { grid-template-columns: 1fr 1fr !important; }
+
+  /* Dark "how it works" panel: intro + phases stack to 2-up. */
+  .home-hiw { grid-template-columns: 1fr 1fr !important; gap: 32px !important; padding: 40px !important; }
+
+  /* Footer columns stack to 2-up (brand blurb spans full width). */
+  .home-footer-grid { grid-template-columns: 1fr 1fr !important; gap: 32px !important; }
+  .home-footer-grid > :first-child { grid-column: 1 / -1 !important; }
+
+  /* Use-case rows: the 5-column desktop grid needs ~600px+ of width, so
+     collapse it to a stacked, left-aligned block from tablet down (not just
+     phone) to avoid a cramped/overflowing row. */
+  .home-usecase-row {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    padding: 22px 28px !important;
+  }
+  .home-usecase-row > * { text-align: left !important; }
+}
+
+@media (max-width: 600px) {
+  .home-pad { padding-left: 20px !important; padding-right: 20px !important; }
+  .home-pad-y { padding-top: 56px !important; padding-bottom: 56px !important; }
+  .home-hero-pad { padding: 48px 20px 56px !important; }
+
+  /* Everything collapses to a single column on phones. */
+  .home-2col,
+  .home-4col,
+  .home-3col,
+  .home-hiw,
+  .home-footer-grid { grid-template-columns: 1fr !important; gap: 28px !important; }
+  .home-hiw { padding: 32px 24px !important; }
+
+  /* 4-up card grids: drop the vertical divider borders that only make
+     sense in a row, and remove the left inset on the "what is" bullets. */
+  .home-4col > * { border-left: none !important; padding-left: 0 !important; padding-right: 0 !important; }
+
+  /* Use-case rows: the 5-column desktop grid becomes a stacked block with
+     everything left-aligned. */
+  .home-usecase-row {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    padding: 22px 20px !important;
+  }
+  .home-usecase-row > * { text-align: left !important; }
+
+  /* Tighten the hero stat strip so the three stats don't sprawl. */
+  .home-hero-stats { gap: 32px !important; }
+
+  /* Reduce oversized inline gaps that leave big empty gutters when stacked. */
+  .home-gap-sm { gap: 24px !important; }
 }
 

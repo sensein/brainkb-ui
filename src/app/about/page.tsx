@@ -19,7 +19,8 @@ function Eyebrow({ children, color = "var(--bkb-accent)" }: { children: React.Re
 
 function CardGrid({ points, Icon, accent }: { points: any[]; Icon: any; accent: string }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 22 }}>
+    // `home-3col`: 3-up on desktop → 2-up on tablet → 1-up on phone (globals.css).
+    <div className="home-3col" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 22 }}>
       {points?.map((p: any, i: number) => (
         <div
           key={i}
@@ -63,11 +64,11 @@ export default function About() {
     <div style={{ background: "#f0eee9" }}>
       {/* ── About / What is BrainKB ───────────────────────────────── */}
       {whatIs && (
-        <section style={{ padding: "96px 64px 72px", maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1.05fr 1fr", gap: 72, alignItems: "start", marginBottom: 56 }}>
+        <section className="home-pad home-pad-y" style={{ padding: "96px 64px 72px", maxWidth: 1200, margin: "0 auto" }}>
+          <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "1.05fr 1fr", gap: 72, alignItems: "start", marginBottom: 56 }}>
             <div>
               <Eyebrow>About</Eyebrow>
-              <h1 style={{ fontFamily: FONTS.display, fontSize: 52, lineHeight: 1.05, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
+              <h1 style={{ fontFamily: FONTS.display, fontSize: "clamp(34px, 7vw, 52px)", lineHeight: 1.05, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
                 {whatIs.title}
               </h1>
             </div>
@@ -77,7 +78,7 @@ export default function About() {
           </div>
 
           {Array.isArray(whatIs.bullet_points) && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", borderTop: "1px solid var(--bkb-border)" }}>
+            <div className="home-4col" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", borderTop: "1px solid var(--bkb-border)" }}>
               {whatIs.bullet_points.map((p: any, i: number) => (
                 <div key={i} style={{ padding: "30px 30px 0", borderLeft: i ? "1px solid var(--bkb-border)" : "none" }}>
                   <div style={{ fontFamily: FONTS.mono, fontSize: 13, color: "var(--bkb-accent)", marginBottom: 22 }}>
@@ -94,10 +95,10 @@ export default function About() {
       {/* ── Objectives (white) ────────────────────────────────────── */}
       {objectives && (
         <section style={{ background: "var(--bkb-surface)", borderTop: "1px solid var(--bkb-border)", borderBottom: "1px solid var(--bkb-border)" }}>
-          <div style={{ padding: "96px 64px", maxWidth: 1200, margin: "0 auto" }}>
+          <div className="home-pad home-pad-y" style={{ padding: "96px 64px", maxWidth: 1200, margin: "0 auto" }}>
             <div style={{ maxWidth: 720, marginBottom: 48 }}>
               <Eyebrow>Mission</Eyebrow>
-              <h2 style={{ fontFamily: FONTS.display, fontSize: 46, lineHeight: 1.06, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
+              <h2 style={{ fontFamily: FONTS.display, fontSize: "clamp(30px, 6vw, 46px)", lineHeight: 1.06, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
                 {objectives.title}
               </h2>
               {objectives.subtitle && (
@@ -111,10 +112,10 @@ export default function About() {
 
       {/* ── Expected Outcomes (cream) ─────────────────────────────── */}
       {outcomes && (
-        <section style={{ padding: "96px 64px", maxWidth: 1200, margin: "0 auto" }}>
+        <section className="home-pad home-pad-y" style={{ padding: "96px 64px", maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ maxWidth: 720, marginBottom: 48 }}>
             <Eyebrow color="#b4451f">Outcomes</Eyebrow>
-            <h2 style={{ fontFamily: FONTS.display, fontSize: 46, lineHeight: 1.06, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
+            <h2 style={{ fontFamily: FONTS.display, fontSize: "clamp(30px, 6vw, 46px)", lineHeight: 1.06, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
               {outcomes.title}
             </h2>
             {outcomes.subtitle && (

@@ -169,7 +169,8 @@ export default function EntityDetailPage({ params }: EntityDetailPageProps) {
                 <div>
                     <h2 className="text-lg font-semibold mb-4">Correction History</h2>
                     {entity.correctionHistory && entity.correctionHistory.length > 0 ? (
-                        <div className="border rounded-lg overflow-hidden">
+                        // overflow-x-auto lets the 4-col table scroll instead of overflowing on phones
+                        <div className="border rounded-lg overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50 dark:bg-gray-700">
                                     <tr>

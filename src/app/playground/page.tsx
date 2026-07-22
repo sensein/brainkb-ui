@@ -947,7 +947,8 @@ export default function PlaygroundPage() {
         {graphData && !errorInfo && (
           <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
             {/* View Toggle */}
-            <div className="flex items-center justify-between mb-6">
+            {/* Mobile: stack heading above the graph/table toggle so buttons aren't squeezed */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
               <h2 className="text-2xl font-bold text-gray-900">Graph Visualization</h2>
               <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
                 <button
@@ -994,7 +995,8 @@ export default function PlaygroundPage() {
               ) : (
                 <div>
                   {/* Table Header with Export Button */}
-                  <div className="flex items-center justify-between mb-4">
+                  {/* Mobile: stack title above the export button so neither is truncated */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                     <h3 className="text-lg font-semibold text-gray-900">Graph Data Table</h3>
                     <button
                       onClick={exportGraphTableToCSV}
@@ -1277,7 +1279,8 @@ export default function PlaygroundPage() {
             <div className="mt-6">
               {getStatisticDetails(selectedStatistic) && (
                 <>
-                  <div className="flex items-center justify-between mb-4">
+                  {/* Mobile: stack the stat title/description above the export button */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900">
                         {getStatisticDetails(selectedStatistic)?.title} Details

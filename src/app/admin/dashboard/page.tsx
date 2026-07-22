@@ -56,7 +56,8 @@ export default function AdminStatsPage() {
         Manage users, roles, permissions, and page-level access for BrainKB.
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
+      {/* home-4col: 4-up on desktop → 2-up ≤900px → 1-up ≤600px */}
+      <div className="home-4col" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
         {[
           { n: counts.users, l: "Users", icon: "person", c: "var(--bkb-agent)", href: "/admin/users" },
           { n: counts.roles, l: "Roles", icon: "shield", c: "var(--bkb-primary)", href: "/admin/roles" },
@@ -106,7 +107,8 @@ export default function AdminStatsPage() {
 
       <div className="bkb-card" style={{ padding: 20, marginBottom: 20 }}>
         <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 14 }}>Signed in as</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+        {/* home-3col: 3-up on desktop → 2-up ≤900px → 1-up ≤600px */}
+        <div className="home-3col" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
           {[
             { l: "Email", v: user?.email ?? "—" },
             { l: "Profile ID", v: user?.profile_id != null ? String(user.profile_id) : "—" },

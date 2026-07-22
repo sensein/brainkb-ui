@@ -291,7 +291,8 @@ export default function IngestKnowledgeGraphPage() {
                 <StatusIndicator status="error" label="Error" isActive={currentStatus === 'error'} />
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-gray-800 rounded-lg p-8 shadow-md">
+            {/* p-4 on phones, full p-8 padding at sm+ so the card doesn't crowd narrow screens */}
+            <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-8 shadow-md">
                 
                 {/* Named Graph Selection */}
                 <div>

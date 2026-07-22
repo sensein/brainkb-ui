@@ -186,7 +186,8 @@ export default function AdminRolesPage() {
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 16 }}>
+      {/* home-2col: roles list + detail side by side on desktop, stacked ≤900px */}
+      <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 16 }}>
         {/* ── Roles list ─────────────────────────────────────────────── */}
         <div className="bkb-card" style={{ padding: 0 }}>
           <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--bkb-border)" }}>
@@ -393,7 +394,9 @@ export default function AdminRolesPage() {
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr 80px", gap: 8, marginBottom: 10 }}>
+        {/* Create-permission row scrolls horizontally on mobile so inputs stay usable */}
+        <div style={{ overflowX: "auto", marginBottom: 10 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1fr 80px", gap: 8, minWidth: 600 }}>
           <input className="bkb-input" placeholder="Name (e.g. assertion.create)" value={newPermName} onChange={(e) => setNewPermName(e.target.value)} />
           <input className="bkb-input" placeholder="Resource (e.g. assertion)" value={newPermResource} onChange={(e) => setNewPermResource(e.target.value)} />
           <input className="bkb-input" placeholder="Action (e.g. create)" value={newPermAction} onChange={(e) => setNewPermAction(e.target.value)} />
@@ -405,8 +408,11 @@ export default function AdminRolesPage() {
             <Icon name="plus" size={12} /> Add
           </button>
         </div>
+        </div>
 
-        <div style={{ border: "1px solid var(--bkb-border)", borderRadius: 6 }}>
+        {/* Wide 5-column catalog table scrolls horizontally on mobile instead of crushing */}
+        <div style={{ overflowX: "auto" }}>
+        <div style={{ border: "1px solid var(--bkb-border)", borderRadius: 6, minWidth: 600 }}>
           <div
             style={{
               padding: "10px 14px",
@@ -458,6 +464,7 @@ export default function AdminRolesPage() {
               No permissions yet.
             </div>
           )}
+        </div>
         </div>
       </div>
     </div>

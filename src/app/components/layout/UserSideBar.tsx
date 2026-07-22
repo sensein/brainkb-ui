@@ -39,7 +39,10 @@ const UserSideBar: React.FC = () => {
         <>
             
 
-            <aside id="logo-sidebar" className="fixed left-0 z-[5] w-64 transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700" style={{ top: "56px", height: "300px" }} aria-label="Sidebar">
+            {/* Mobile-safe: -translate-x-full hides the fixed sidebar off-screen below sm (640px);
+                sm:translate-x-0 slides it in at tablet+. w-64 (256px) stays within phone viewports.
+                No content margin is applied elsewhere, so the hidden rail never squeezes page content. */}
+            <aside id="logo-sidebar" className="fixed left-0 z-[5] w-64 max-w-[80vw] transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700" style={{ top: "56px", height: "300px" }} aria-label="Sidebar">
                 <div className="h-full px-4 py-4 overflow-y-auto bg-white dark:bg-gray-800">
                     <ul className="space-y-1 font-medium">
                         {menuItems.map((item) => {

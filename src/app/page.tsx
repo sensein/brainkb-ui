@@ -54,7 +54,7 @@ function SectionTitle({ children, size = 46 }: { children: React.ReactNode; size
     <h2
       style={{
         fontFamily: FONTS.display,
-        fontSize: size,
+        fontSize: `clamp(30px, 6vw, ${size}px)`,
         lineHeight: 1.06,
         margin: 0,
         letterSpacing: "-0.02em",
@@ -271,7 +271,7 @@ function VideoCarousel({
   };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1.15fr 1fr", gap: 56, alignItems: "center" }}>
+    <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "1.15fr 1fr", gap: 56, alignItems: "center" }}>
       <VideoPlayer key={active} id={cur.youtube_id} title={cur.title} onPlay={() => setPaused(true)} />
       <div>
         {/* eyebrow + headline are fixed; only the video and its description cycle */}
@@ -374,8 +374,8 @@ export default function Home() {
 
         {/* ── What is BrainKB (what it is) ─────────────────────────── */}
         {yaml.whatisbrainkb && (
-          <section style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1.05fr 1fr", gap: 72, alignItems: "start", marginBottom: 64 }}>
+          <section className="home-pad home-pad-y" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
+            <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "1.05fr 1fr", gap: 72, alignItems: "start", marginBottom: 64 }}>
               <div>
                 <Eyebrow>{yaml.whatisbrainkb.eyebrow || "What is BrainKB"}</Eyebrow>
                 <SectionTitle>{yaml.whatisbrainkb.headline || yaml.whatisbrainkb.title || "What is BrainKB?"}</SectionTitle>
@@ -384,7 +384,7 @@ export default function Home() {
                 {yaml.whatisbrainkb.description || yaml.whatisbrainkb.subtitle}
               </p>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", borderTop: "1px solid var(--bkb-border)" }}>
+            <div className="home-4col" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", borderTop: "1px solid var(--bkb-border)" }}>
               {Array.isArray(yaml.whatisbrainkb.bullet_points) &&
                 yaml.whatisbrainkb.bullet_points.map((p: any, i: number) => (
                   <div key={i} style={{ padding: "30px 30px 0", borderLeft: i ? "1px solid var(--bkb-border)" : "none" }}>
@@ -404,7 +404,7 @@ export default function Home() {
         {/* ── AbstractAtlas (what users can explore) ───────────────── */}
         {yaml.abstractatlas && (
           <section style={{ background: "linear-gradient(135deg, #e7efe9 0%, #eef2ed 100%)", borderTop: "1px solid var(--bkb-border)", borderBottom: "1px solid var(--bkb-border)" }}>
-            <div style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1.1fr", gap: 64, alignItems: "center" }}>
+            <div className="home-pad home-pad-y home-2col" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1.1fr", gap: 64, alignItems: "center" }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
                   <span style={{ fontFamily: FONTS.mono, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--bkb-accent)", fontWeight: 600 }}>
@@ -460,7 +460,7 @@ export default function Home() {
 
         {/* ── Use Cases (where it applies) ─────────────────────────── */}
         {yaml.usecases && (
-          <section style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
+          <section className="home-pad home-pad-y" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
             <div style={{ maxWidth: 720, marginBottom: 48 }}>
               <Eyebrow color="#b4451f">{yaml.usecases.eyebrow || "In Practice"}</Eyebrow>
               <SectionTitle>{yaml.usecases.title || "Use Cases"}</SectionTitle>
@@ -476,6 +476,7 @@ export default function Home() {
                   return (
                     <div
                       key={i}
+                      className="home-usecase-row"
                       style={{
                         display: "grid",
                         gridTemplateColumns: "110px minmax(190px, 1fr) 1.4fr 150px 64px",
@@ -514,6 +515,7 @@ export default function Home() {
 
             {yaml.usecases.how_it_works && (
               <div
+                className="home-hiw"
                 style={{
                   marginTop: 28,
                   background: "linear-gradient(135deg, #14241c, #0e1a14)",
@@ -547,7 +549,7 @@ export default function Home() {
         {/* ── BrainKB Tools (which tools enable it) ────────────────── */}
         {yaml.tools && (
           <section style={{ background: "var(--bkb-surface)", borderTop: "1px solid var(--bkb-border)", borderBottom: "1px solid var(--bkb-border)" }}>
-            <div style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
+            <div className="home-pad home-pad-y" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
               <div style={{ marginBottom: 56 }}>
                 <Eyebrow>{yaml.tools.eyebrow || "The Toolkit"}</Eyebrow>
                 <SectionTitle>{yaml.tools.title || "BrainKB Tools"}</SectionTitle>
@@ -560,7 +562,7 @@ export default function Home() {
                   )}
                 </div>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 22 }}>
+              <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 22 }}>
                 {Array.isArray(yaml.tools.items) &&
                   yaml.tools.items.map((t: any, i: number) => {
                     const isExternal = t.link?.startsWith?.("http");
@@ -640,7 +642,7 @@ export default function Home() {
 
         {/* ── See It in Action (how it works) ──────────────────────── */}
         {videos.length > 0 && (
-          <section style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
+          <section className="home-pad home-pad-y" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
             <VideoCarousel
               videos={videos}
               eyebrow={yaml.videos.eyebrow}
@@ -653,7 +655,7 @@ export default function Home() {
 
         {/* ── Structured Models (what models support it) ───────────── */}
         <section style={{ background: "var(--bkb-surface)", borderTop: "1px solid var(--bkb-border)", borderBottom: "1px solid var(--bkb-border)" }}>
-          <div style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
+          <div className="home-pad home-pad-y" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
             <div style={{ marginBottom: 48 }}>
               <Eyebrow>Foundations</Eyebrow>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 32, flexWrap: "wrap" }}>
@@ -664,7 +666,7 @@ export default function Home() {
                 These models provide the shared structure behind BrainKB&apos;s graph, tools, and use cases.
               </p>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
+            <div className="home-4col" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
               {Array.isArray(yaml.structuredmodelsbox) &&
                 yaml.structuredmodelsbox.map((m: any, i: number) => {
                   const external = m.links?.startsWith?.("http");
@@ -715,13 +717,13 @@ export default function Home() {
 
         {/* ── Powered by AI agents (technical credibility, dark) ───── */}
         <section style={{ background: "linear-gradient(160deg, #15271e 0%, #0c1611 60%)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-          <div style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "start" }}>
+          <div className="home-pad home-pad-y" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
+            <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "start" }}>
               <div>
                 <div style={{ fontFamily: FONTS.mono, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "#3ecf8e", fontWeight: 600, marginBottom: 18 }}>
                   {yaml.publications?.eyebrow || "Under the Hood"}
                 </div>
-                <h2 style={{ fontFamily: FONTS.display, fontSize: 44, fontWeight: 400, color: "#f0eee9", letterSpacing: "-0.02em", lineHeight: 1.1, margin: 0 }}>
+                <h2 style={{ fontFamily: FONTS.display, fontSize: "clamp(30px, 6vw, 44px)", fontWeight: 400, color: "#f0eee9", letterSpacing: "-0.02em", lineHeight: 1.1, margin: 0 }}>
                   {yaml.publications?.title || "Powered by advanced AI agents."}
                 </h2>
                 <p style={{ fontSize: 16, color: "rgba(240,238,233,0.7)", lineHeight: 1.7, margin: "20px 0 0", maxWidth: 480 }}>

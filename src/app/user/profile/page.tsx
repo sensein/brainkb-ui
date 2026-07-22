@@ -946,7 +946,8 @@ export default function Profile() {
                         <div className="flex-1 overflow-y-auto px-6 py-5">
 
                         {/* Basic Information */}
-                        <div className="grid grid-cols-3 gap-4 mb-6">
+                        {/* Mobile: all edit-form rows stack to one column (grid-cols-1) and expand to their desktop N-column layout at sm+ */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                             <div className="mb-4">
                                 <label className="block text-sm font-medium mb-2">Name Prefix</label>
                                 <input
@@ -993,7 +994,7 @@ export default function Profile() {
                         </div>
 
                         {/* Contact Information */}
-                        <div className="grid grid-cols-2 gap-4 mb-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                             <div className="mb-4">
                                 <label className="block text-sm font-medium mb-2">Email</label>
                                 <input
@@ -1021,7 +1022,7 @@ export default function Profile() {
                         </div>
 
                         {/* Social Links */}
-                        <div className="grid grid-cols-2 gap-4 mb-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                             <div className="mb-4">
                                 <label className="block text-sm font-medium mb-2">Website</label>
                                 <input
@@ -1100,7 +1101,7 @@ export default function Profile() {
                                 </button>
                             </div>
                             {profileData.countries.map((country, index) => (
-                                <div key={index} className="grid grid-cols-3 gap-2 mb-2">
+                                <div key={index} className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
                                     <div className="relative">
                                         <input
                                             type="text"
@@ -1210,7 +1211,7 @@ export default function Profile() {
 
                                 return (
                                     <div key={index} className="border border-gray-200 rounded-lg p-4 mb-3">
-                                        <div className="grid grid-cols-2 gap-4 mb-3">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
                                             <input
                                                 type="text"
                                                 placeholder="Organization Name"
@@ -1234,7 +1235,7 @@ export default function Profile() {
                                                 className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                                             />
                                         </div>
-                                        <div className="grid grid-cols-3 gap-4 mb-3">
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-3">
                                             <input
                                                 type="text"
                                                 placeholder="Department"
@@ -1335,7 +1336,7 @@ export default function Profile() {
                             </div>
                             {profileData.education.map((edu, index) => (
                                 <div key={index} className="border border-gray-200 rounded-lg p-4 mb-3">
-                                    <div className="grid grid-cols-2 gap-4 mb-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
                                         <input
                                             type="text"
                                             placeholder="Degree"
@@ -1359,7 +1360,7 @@ export default function Profile() {
                                             className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                                         />
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4 mb-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
                                         <input
                                             type="text"
                                             placeholder="Institution"
@@ -1443,7 +1444,7 @@ export default function Profile() {
                             </div>
                             {profileData.expertise_areas.map((expertise, index) => (
                                 <div key={index} className="border border-gray-200 rounded-lg p-4 mb-3">
-                                    <div className="grid grid-cols-3 gap-4 mb-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-3">
                                         <input
                                             type="text"
                                             placeholder="Expertise Area"
