@@ -90,26 +90,52 @@ async function fetchAuthTokenFromEndpoint(tokenEndpoint: string, serviceName: st
 }
 
 /**
- * Fetch auth token for ML service
+ * Exchange the logged-in user's session JWT (issued by usermanagement after OAuth)
+ * for a short-lived, audience-scoped access token for a specific service — the
+ * SSO way, so we don't need a shared service-account password. Falls back to the
+ * legacy service-account token only if there is no session (deprecated; goes away
+ * once backend password login is retired).
  */
-async function fetchMLAuthToken(): Promise<string> {
-    const tokenEndpoint = env.tokenEndpointMLService;
-    console.log('[fetchMLAuthToken] ML token endpoint:', tokenEndpoint || 'NOT CONFIGURED');
-    if (!tokenEndpoint) {
-        throw new Error('ML service token endpoint not configured');
+async function fetchServiceTokenViaSession(
+    audience: 'ml_service' | 'query_service',
+    serviceName: string,
+    legacyEndpoint?: string,
+): Promise<string> {
+    const sessionToken = await getSessionBackendToken();
+    if (sessionToken) {
+        const base = env.userManagementApiBase.replace(/\/+$/, '');
+        const res = await fetch(`${base}/api/auth/session-exchange`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${sessionToken}` },
+            body: JSON.stringify({ audience }),
+            cache: 'no-store',
+        });
+        if (res.ok) {
+            const data: TokenResponse = await res.json();
+            return data.access_token;
+        }
+        console.warn(`[Auth] session-exchange for ${audience} failed (${res.status}); falling back`);
     }
-    return fetchAuthTokenFromEndpoint(tokenEndpoint, 'ML');
+    // Legacy fallback: shared service-account password. Deprecated — remove once
+    // backend password login is retired.
+    if (!legacyEndpoint) {
+        throw new Error(`${serviceName} service authentication failed (no session; no legacy endpoint)`);
+    }
+    return fetchAuthTokenFromEndpoint(legacyEndpoint, serviceName);
 }
 
 /**
- * Fetch auth token for Query service
+ * Fetch auth token for ML service (session-exchange, SSO).
+ */
+async function fetchMLAuthToken(): Promise<string> {
+    return fetchServiceTokenViaSession('ml_service', 'ML', env.tokenEndpointMLService);
+}
+
+/**
+ * Fetch auth token for Query service (session-exchange, SSO).
  */
 async function fetchQueryAuthToken(): Promise<string> {
-    const tokenEndpoint = env.tokenEndpointQueryService;
-    if (!tokenEndpoint) {
-        throw new Error('Query service token endpoint not configured');
-    }
-    return fetchAuthTokenFromEndpoint(tokenEndpoint, 'Query');
+    return fetchServiceTokenViaSession('query_service', 'Query', env.tokenEndpointQueryService);
 }
 
 /**

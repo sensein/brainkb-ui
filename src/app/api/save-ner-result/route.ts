@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import { env } from '../../../config/env';
-import { getAuthTokenWithCredentials } from '../../../utils/api/auth';
+import { getAuthTokenForService, getAuthTokenWithCredentials } from '../../../utils/api/auth';
 
 export async function POST(request: NextRequest) {
     try {
@@ -22,19 +22,21 @@ export async function POST(request: NextRequest) {
 
         const results = JSON.parse(resultsJson);
 
-        if (!email || !password) {
-            console.error('Missing credentials:', { email: !!email, password: !!password });
-            return NextResponse.json(
-                {error: 'Email and password are required'},
-                {status: 400}
-            );
+        // Prefer the logged-in user's session (SSO session-exchange → ml_service
+        // token); fall back to form credentials only if there is no session
+        // (deprecated — removed once backend password login is retired).
+        let token = await getAuthTokenForService('ml');
+        if (!token) {
+            if (!email || !password) {
+                return NextResponse.json(
+                    { error: 'Not authenticated. Sign in, or provide credentials.' },
+                    { status: 401 }
+                );
+            }
+            const tokenEndpoint = env.tokenEndpointMLService || 'http://localhost:8007/api/token';
+            token = await getAuthTokenWithCredentials(tokenEndpoint, email, password, 'ML');
         }
-
-        console.log('Getting token from /api/token...');
-        // Get token using shared auth function with credentials from form data
-        const tokenEndpoint = env.tokenEndpointMLService || 'http://localhost:8009/api/token';
-        const token = await getAuthTokenWithCredentials(tokenEndpoint, email, password, 'ML');
-        console.log('Token received successfully');
+        console.log('Token obtained (session or credentials)');
 
         // Add retry logic for the external API call
         const maxRetries = 3;
