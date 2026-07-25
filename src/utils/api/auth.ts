@@ -34,128 +34,61 @@ async function getSessionBackendToken(): Promise<string | null> {
     }
 }
 
-/**
- * Fetch auth token from a specific endpoint with custom credentials
- * This allows using credentials from form data instead of env variables
- */
-async function fetchAuthTokenFromEndpointWithCredentials(
-    tokenEndpoint: string,
-    serviceName: string,
-    email: string,
-    password: string
-): Promise<string> {
-    if (!tokenEndpoint || !email || !password) {
-        throw new Error(`JWT authentication credentials not provided for ${serviceName} service`);
-    }
-
-    try {
-        const response = await fetch(tokenEndpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                email,
-                password,
-            }),
-            cache: 'no-store',
-        });
-
-        if (!response.ok) {
-            throw new Error(`Token request failed: ${response.status}`);
-        }
-
-        const tokenData: TokenResponse = await response.json();
-        return tokenData.access_token;
-    } catch (error) {
-        console.error(`[Auth] Failed to get ${serviceName} JWT token:`, error);
-        throw new Error(`${serviceName} service authentication failed`);
-    }
-}
-
-/**
- * Fetch auth token from a specific endpoint
- * This is the single function that handles all token fetching logic
- * Note: Tokens are NOT cached for security reasons - always fetched fresh
- */
-async function fetchAuthTokenFromEndpoint(tokenEndpoint: string, serviceName: string): Promise<string> {
-    const jwtUser = env.jwtUser;
-    const jwtPassword = env.jwtPassword;
-
-    if (!tokenEndpoint || !jwtUser || !jwtPassword) {
-        throw new Error(`JWT authentication credentials not configured for ${serviceName} service`);
-    }
-
-    return fetchAuthTokenFromEndpointWithCredentials(tokenEndpoint, serviceName, jwtUser, jwtPassword);
-}
 
 /**
  * Exchange the logged-in user's session JWT (issued by usermanagement after OAuth)
- * for a short-lived, audience-scoped access token for a specific service — the
- * SSO way, so we don't need a shared service-account password. Falls back to the
- * legacy service-account token only if there is no session (deprecated; goes away
- * once backend password login is retired).
+ * for a short-lived, audience-scoped access token for a service. SSO only — there
+ * is NO service-account (JWT_USER/JWT_PASSWORD) fallback; a missing or invalid
+ * session is a clean authentication error, so calls carry the caller's identity.
  */
 async function fetchServiceTokenViaSession(
     audience: 'ml_service' | 'query_service',
     serviceName: string,
-    legacyEndpoint?: string,
 ): Promise<string> {
     const sessionToken = await getSessionBackendToken();
-    if (sessionToken) {
-        const base = env.userManagementApiBase.replace(/\/+$/, '');
-        const res = await fetch(`${base}/api/auth/session-exchange`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${sessionToken}` },
-            body: JSON.stringify({ audience }),
-            cache: 'no-store',
-        });
-        if (res.ok) {
-            const data: TokenResponse = await res.json();
-            return data.access_token;
-        }
-        console.warn(`[Auth] session-exchange for ${audience} failed (${res.status}); falling back`);
+    if (!sessionToken) {
+        throw new Error(`${serviceName} service requires a signed-in session — please sign in.`);
     }
-    // Legacy fallback: shared service-account password. Deprecated — remove once
-    // backend password login is retired.
-    if (!legacyEndpoint) {
-        throw new Error(`${serviceName} service authentication failed (no session; no legacy endpoint)`);
+    const base = env.userManagementApiBase.replace(/\/+$/, '');
+    const res = await fetch(`${base}/api/auth/session-exchange`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${sessionToken}` },
+        body: JSON.stringify({ audience }),
+        cache: 'no-store',
+    });
+    if (!res.ok) {
+        throw new Error(`${serviceName} session-exchange failed (${res.status}) — please sign in again.`);
     }
-    return fetchAuthTokenFromEndpoint(legacyEndpoint, serviceName);
+    const data: TokenResponse = await res.json();
+    return data.access_token;
 }
 
 /**
  * Fetch auth token for ML service (session-exchange, SSO).
  */
 async function fetchMLAuthToken(): Promise<string> {
-    return fetchServiceTokenViaSession('ml_service', 'ML', env.tokenEndpointMLService);
+    return fetchServiceTokenViaSession('ml_service', 'ML');
 }
 
 /**
  * Fetch auth token for Query service (session-exchange, SSO).
  */
 async function fetchQueryAuthToken(): Promise<string> {
-    return fetchServiceTokenViaSession('query_service', 'Query', env.tokenEndpointQueryService);
+    return fetchServiceTokenViaSession('query_service', 'Query');
 }
 
 /**
- * Fetch auth token for User Management service.
- * Prefers the logged-in user's JWT from the NextAuth session (issued by the
- * backend after OAuth). Only falls back to the static JWT_USER/JWT_PASSWORD
- * flow if no session exists — needed because user-management endpoints now
- * enforce role-based and per-user page access, which requires the caller's
- * identity rather than a shared service-account token.
+ * Fetch auth token for User Management service — the logged-in user's own session
+ * JWT (issued by the backend after OAuth). No service-account fallback: these
+ * endpoints enforce role-based and per-user access, which needs the caller's
+ * identity, so an anonymous call is a clean auth error.
  */
 async function fetchUserManagementAuthToken(): Promise<string> {
     const sessionToken = await getSessionBackendToken();
-    if (sessionToken) {
-        return sessionToken;
+    if (!sessionToken) {
+        throw new Error('User Management requires a signed-in session — please sign in.');
     }
-    const tokenEndpoint = env.get('NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE');
-    if (!tokenEndpoint) {
-        throw new Error('User Management service token endpoint not configured and no session token available');
-    }
-    return fetchAuthTokenFromEndpoint(tokenEndpoint, 'User Management');
+    return sessionToken;
 }
 
 /**
@@ -269,17 +202,4 @@ export async function withAuthHeaders(tokenEndpoint?: TokenEndpointType): Promis
     }
 
     return headers;
-}
-
-/**
- * Get auth token using custom credentials (from form data, etc.)
- * Useful when credentials are provided by the user rather than from env
- */
-export async function getAuthTokenWithCredentials(
-    tokenEndpoint: string,
-    email: string,
-    password: string,
-    serviceName: string = 'Service'
-): Promise<string> {
-    return fetchAuthTokenFromEndpointWithCredentials(tokenEndpoint, serviceName, email, password);
 }

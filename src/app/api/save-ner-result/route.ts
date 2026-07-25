@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import { env } from '../../../config/env';
-import { getAuthTokenForService, getAuthTokenWithCredentials } from '../../../utils/api/auth';
+import { getAuthTokenForService } from '../../../utils/api/auth';
 
 export async function POST(request: NextRequest) {
     try {
@@ -22,21 +22,16 @@ export async function POST(request: NextRequest) {
 
         const results = JSON.parse(resultsJson);
 
-        // Prefer the logged-in user's session (SSO session-exchange → ml_service
-        // token); fall back to form credentials only if there is no session
-        // (deprecated — removed once backend password login is retired).
-        let token = await getAuthTokenForService('ml');
+        // Auth via the logged-in user's session only (SSO session-exchange →
+        // ml_service token). No service-account/form-credential fallback.
+        const token = await getAuthTokenForService('ml');
         if (!token) {
-            if (!email || !password) {
-                return NextResponse.json(
-                    { error: 'Not authenticated. Sign in, or provide credentials.' },
-                    { status: 401 }
-                );
-            }
-            const tokenEndpoint = env.tokenEndpointMLService || 'http://localhost:8007/api/token';
-            token = await getAuthTokenWithCredentials(tokenEndpoint, email, password, 'ML');
+            return NextResponse.json(
+                { error: 'Not authenticated. Please sign in.' },
+                { status: 401 }
+            );
         }
-        console.log('Token obtained (session or credentials)');
+        console.log('Token obtained (session)');
 
         // Add retry logic for the external API call
         const maxRetries = 3;
