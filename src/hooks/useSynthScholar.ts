@@ -96,6 +96,18 @@ export function useReview(reviewId: string | undefined) {
   });
 }
 
+/** One-shot fetch of the persisted log/event trail for a completed review.
+    Used by the public provenance page to render the at-rest pipeline timeline
+    (no SSE — the review is already done by the time provenance is viewed). */
+export function useReviewLog(reviewId: string | undefined) {
+  return useQuery({
+    queryKey: ["synth-scholar", "review-log", reviewId],
+    queryFn: () => getReviewLog(reviewId!),
+    enabled: !!reviewId,
+    staleTime: 60_000, // log of a completed review doesn't change
+  });
+}
+
 export function useReviewStatus(reviewId: string | undefined) {
   return useQuery({
     queryKey: ["synth-scholar", "review-status", reviewId],
@@ -197,6 +209,12 @@ export function useExportReview() {
 
 // ── SSE Progress ────────────────────────────────────────────────────
 
+// Build a stable signature for dedup. Step + message + timestamp identifies
+// an event uniquely across the seed-from-DB path and the live SSE path.
+function _eventSignature(e: ProgressEvent): string {
+  return `${e.step}|${e.message}|${e.timestamp ?? ""}`;
+}
+
 export function useProgressStream(
   reviewId: string | undefined,
   shouldStream: boolean,
@@ -207,11 +225,21 @@ export function useProgressStream(
   const [latestMessage, setLatestMessage] = useState("");
   const [step, setStep] = useState(0);
   const [isDone, setIsDone] = useState(false);
+  // Wall-clock timestamp of the most recent non-keepalive event. Used by the
+  // UI to show "last update Ns ago" so a long-running stage with no
+  // intermediate events is distinguishable from a stuck/disconnected stream.
+  const [lastEventAt, setLastEventAt] = useState<number | null>(null);
   const queryClient = useQueryClient();
   const shouldReconnectRef = useRef(false);
   const isDoneRef = useRef(false);
   const onPlanReviewRef = useRef(onPlanReview);
   onPlanReviewRef.current = onPlanReview;
+  // Signatures of every event we've ever appended for this review_id. Lets
+  // us skip duplicates when the SSE reconnects (which the backend treats by
+  // re-sending the full history, causing the user to see the same
+  // "Generating search strategy" / "Plan ready for review" lines repeatedly
+  // after a tab visibility change or transient network blip).
+  const seenSigsRef = useRef<Set<string>>(new Set());
 
   const start = useCallback(() => {
     if (!reviewId) return;
@@ -225,9 +253,16 @@ export function useProgressStream(
       reviewId,
       (event) => {
         if (event.event_type === "keepalive") return;
+        const sig = _eventSignature(event);
+        if (seenSigsRef.current.has(sig)) {
+          // Reconnect-replay or duplicate from the backend — drop silently.
+          return;
+        }
+        seenSigsRef.current.add(sig);
         setEvents((prev) => [...prev, event]);
         setLatestMessage(event.message);
         setStep((prev) => Math.max(prev, event.step));
+        setLastEventAt(Date.now());
         if (event.event_type === "plan_review" && event.plan && onPlanReviewRef.current) {
           onPlanReviewRef.current(event.plan as ReviewPlan, event);
         }
@@ -251,6 +286,7 @@ export function useProgressStream(
   useEffect(() => {
     if (!reviewId) return;
     setEvents([]);
+    seenSigsRef.current = new Set();  // fresh review → fresh dedup window
     getReviewLog(reviewId).then((data) => {
       setStep((prev) => Math.max(prev, data.step_count));
       const source = data.log_events?.length
@@ -271,7 +307,13 @@ export function useProgressStream(
           event_type: "progress" as const,
           source: null,
         }));
-        setEvents((prev) => (prev.length === 0 ? seedEvents : prev));
+        // Seed both the rendered list and the dedup window so the live SSE
+        // doesn't re-add events we already loaded from /reviews/{id}/log.
+        setEvents((prev) => {
+          if (prev.length > 0) return prev;
+          for (const e of seedEvents) seenSigsRef.current.add(_eventSignature(e));
+          return seedEvents;
+        });
       }
     }).catch(() => {});
   }, [reviewId]);
@@ -293,7 +335,25 @@ export function useProgressStream(
     }
   }, [isStreaming, isDone, reviewId, start]);
 
-  return { events, isStreaming, latestMessage, step, isDone };
+  // Reset the "last update Ns ago" clock when the user comes back to the
+  // tab. While the tab was hidden, browsers throttle timers / pause some
+  // network activity, so the freshness clock would show a misleading large
+  // gap (the "⚠ last update 70s ago" the user reported on tab return). Just
+  // bumping lastEventAt to "now" on visibility change keeps the warning
+  // honest — it'll only re-trigger if events genuinely stop arriving AFTER
+  // the user is back on this tab.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const onVisibility = () => {
+      if (document.visibilityState === "visible" && isStreaming) {
+        setLastEventAt(Date.now());
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [isStreaming]);
+
+  return { events, isStreaming, latestMessage, step, isDone, lastEventAt };
 }
 
 export function usePlanResponse() {
@@ -323,11 +383,17 @@ export function useCancelReview() {
 export function useRetryReview() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ reviewId, body }: { reviewId: string; body?: { enable_cache?: boolean; resume?: boolean } }) =>
-      retryReview(reviewId, body),
+    mutationFn: ({ reviewId, body }: {
+      reviewId: string;
+      body?: {
+        enable_cache?: boolean;
+        resume?: boolean;
+        openrouter_api_key?: string;
+      };
+    }) => retryReview(reviewId, body),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["synth-scholar", "reviews"] });
-      queryClient.setQueryData(["synth-scholar", "review", data.review_id], undefined);
+      queryClient.invalidateQueries({ queryKey: ["synth-scholar", "review", data.review_id] });
     },
   });
 }

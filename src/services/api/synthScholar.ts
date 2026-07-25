@@ -182,7 +182,14 @@ export async function cancelReview(reviewId: string): Promise<ReviewSummary> {
 
 export async function retryReview(
   reviewId: string,
-  body?: { enable_cache?: boolean; resume?: boolean },
+  body?: {
+    enable_cache?: boolean;
+    resume?: boolean;
+    /** Required by the backend — the key is intentionally not persisted with
+        the original review (see RetryRequest in schemas.py), so every retry
+        must provide it again. Resolve via resolveOpenRouterKey() before call. */
+    openrouter_api_key?: string;
+  },
 ): Promise<ReviewSummary> {
   return fetchJSON(`/reviews/${reviewId}/retry`, {
     method: "POST",

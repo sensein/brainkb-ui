@@ -75,7 +75,10 @@ export function PlanConfirmDialog({
             background: "rgba(20, 24, 32, 0.55)",
             backdropFilter: "blur(10px)",
             WebkitBackdropFilter: "blur(10px)",
-            zIndex: 50,
+            // High z so the overlay covers the BrainKB navbar — otherwise
+            // the navbar would render on top of the dim and break the
+            // "this is the foreground" feel.
+            zIndex: 999,
           }}
         />
         <Dialog.Content
@@ -84,34 +87,39 @@ export function PlanConfirmDialog({
           aria-describedby={undefined}
           style={{
             position: "fixed",
-            top: "50%",
+            // Anchor below the BrainKB navbar (~80px). Centring the modal
+            // vertically with maxHeight: 90vh used to push the modal's top
+            // behind the navbar, hiding the close button and the header
+            // top padding. 96px clears the navbar with a small gap.
+            top: 96,
             left: "50%",
-            transform: "translate(-50%, -50%)",
-            // Fully opaque, theme-aligned. var(--bkb-surface) is the white
-            // surface token used by every other bkb-card on the site — keeps
-            // the dialog visually consistent with the rest of the UI.
-            // Important: NO alpha or color-mix on this background — the box
-            // must read as a solid sheet over the dimmed page.
-            background: "var(--bkb-surface)",
+            transform: "translateX(-50%)",
+            // Fully opaque white surface — has a fallback in case
+            // var(--bkb-surface) ever goes undefined during a theme refactor.
+            background: "var(--bkb-surface, #ffffff)",
             border: "1px solid var(--bkb-border)",
             borderRadius: 12,
             width: "min(960px, 94vw)",
-            maxHeight: "90vh",
+            // Limit height so the modal always fits between the navbar
+            // (96px from top) and a 32px gap at the viewport bottom.
+            maxHeight: "calc(100vh - 128px)",
             display: "flex",
             flexDirection: "column",
             // Strong shadow lifts the card off the dimmed page.
             boxShadow:
               "0 32px 80px -20px rgba(0, 0, 0, 0.55), 0 12px 30px -8px rgba(0, 0, 0, 0.35)",
-            zIndex: 51,
+            // Aggressively above any sticky navbar / page chrome.
+            zIndex: 1000,
             overflow: "hidden",
           }}
         >
-          {/* Sticky header */}
+          {/* Sticky header — generous top + bottom padding so the title
+              doesn't feel cramped, especially on the wider modal layout. */}
           <div
             style={{
-              padding: "20px 28px 16px",
+              padding: "32px 32px 22px",
               borderBottom: "1px solid var(--bkb-border)",
-              background: "var(--bkb-surface)",
+              background: "var(--bkb-surface, #ffffff)",
             }}
           >
             <div style={{ display: "flex", alignItems: "start", justifyContent: "space-between", gap: 16 }}>
@@ -168,9 +176,9 @@ export function PlanConfirmDialog({
             className="bkb-scroll"
             style={{
               overflowY: "auto",
-              padding: "20px 28px",
+              padding: "24px 32px 32px",
               flex: 1,
-              background: "var(--bkb-surface)",
+              background: "var(--bkb-surface, #ffffff)",
             }}
           >
             {mode === "revise" ? (
@@ -188,9 +196,9 @@ export function PlanConfirmDialog({
           {/* Sticky footer with primary actions */}
           <div
             style={{
-              padding: "14px 28px",
+              padding: "20px 32px",
               borderTop: "1px solid var(--bkb-border)",
-              background: "var(--bkb-surfaceAlt)",
+              background: "var(--bkb-surfaceAlt, #f5f5f0)",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",

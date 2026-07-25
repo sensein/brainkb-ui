@@ -182,7 +182,9 @@ const Navbar: React.FC = () => {
 //                                 { href: "/knowledge-base/genomeannotation", label: "Genome Annotation" },
                                 { href: "/knowledge-base/ner", label: "Neuroscientific NER" },
                                 { href: "/knowledge-base/resources", label: "Structured Resources" },
-                                { href: "/knowledge-base/synth-scholar", label: "Public Reviews" }
+                                { href: "/knowledge-base/synth-scholar", label: "Public Reviews" },
+                                { href: "https://abstractatlas.brainkb.org", target:"_blank", label: "AbstractAtlas" }
+
                             ]}
                             isOpen={isKnowledgeBaseOpen}
                             onToggle={() => setIsKnowledgeBaseOpen(!isKnowledgeBaseOpen)}
