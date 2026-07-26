@@ -751,6 +751,47 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {/* ── Use BrainKB from your AI assistant (MCP) — CTA band that flows
+            from the dark AI-agents section into the dark footer ───── */}
+        <section style={{ background: "#0c1611", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="home-pad home-pad-y" style={{ padding: "84px 64px", maxWidth: 1200, margin: "0 auto", textAlign: "center" }}>
+            <div style={{ fontFamily: FONTS.mono, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "#3ecf8e", fontWeight: 600, marginBottom: 18 }}>
+              Model Context Protocol
+            </div>
+            <h2 style={{ fontFamily: FONTS.display, fontSize: "clamp(28px, 5vw, 40px)", fontWeight: 400, color: "#f0eee9", letterSpacing: "-0.02em", lineHeight: 1.12, margin: "0 auto", maxWidth: 720 }}>
+              Drive BrainKB from your AI assistant
+            </h2>
+            <p style={{ fontSize: 16, color: "rgba(240,238,233,0.7)", lineHeight: 1.7, margin: "18px auto 30px", maxWidth: 600 }}>
+              Connect Claude — or any MCP client — and ingest, search, and explore the knowledge
+              graph in natural language, as yourself and under your own permissions.
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", justifyContent: "center" }}>
+              <a
+                href="/mcp"
+                style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#1db981", color: "#0c1611", fontWeight: 600, fontSize: 14, padding: "12px 22px", borderRadius: 10, textDecoration: "none" }}
+              >
+                Explore the MCP →
+              </a>
+              <code
+                style={{
+                  fontFamily: FONTS.mono,
+                  fontSize: 13,
+                  color: "rgba(240,238,233,0.85)",
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  borderRadius: 10,
+                  padding: "11px 16px",
+                  maxWidth: "100%",
+                  overflowX: "auto",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                claude mcp add --transport http brainkb https://mcp.brainkb.org/mcp
+              </code>
+            </div>
+          </div>
+        </section>
       </Theme>
     </div>
   );
