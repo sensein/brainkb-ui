@@ -135,7 +135,8 @@ export default function AdminUsersPage() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "end", marginBottom: 20 }}>
+      {/* flexWrap: search controls drop below the title on narrow screens */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "end", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h1 style={{ fontFamily: FONTS.display, fontSize: 32, margin: "0 0 4px", letterSpacing: "-0.02em", fontWeight: 400 }}>
             Users
@@ -144,19 +145,20 @@ export default function AdminUsersPage() {
             Browse user profiles, assign roles, and revoke access.
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        {/* controls wrap + grow so they never overflow the viewport on mobile */}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", flex: "1 1 auto", justifyContent: "flex-end" }}>
           <input
             className="bkb-input"
             placeholder="Search by name, email, ORCID…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            style={{ width: 260 }}
+            style={{ width: 260, maxWidth: "100%", flex: "1 1 200px" }} // shrink/grow instead of fixed 260
           />
           <select
             className="bkb-input"
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
-            style={{ width: 160 }}
+            style={{ width: 160, maxWidth: "100%" }}
           >
             <option value="">All roles</option>
             {roles.map((r) => (
@@ -174,7 +176,10 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      <div className="bkb-card">
+      {/* Wide 6-column user table scrolls horizontally on mobile (minWidth on the
+          card) rather than crushing columns or overflowing the viewport */}
+      <div style={{ overflowX: "auto" }}>
+      <div className="bkb-card" style={{ minWidth: 880 }}>
         <div
           style={{
             padding: "10px 18px",
@@ -354,6 +359,7 @@ export default function AdminUsersPage() {
             </div>
             );
           })}
+      </div>
       </div>
     </div>
   );

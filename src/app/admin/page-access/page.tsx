@@ -145,7 +145,8 @@ export default function AdminPageAccessPage() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "end", marginBottom: 20 }}>
+      {/* flexWrap lets the New-page button drop below the title on narrow screens */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "end", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
         <div>
           <h1 style={{ fontFamily: FONTS.display, fontSize: 32, margin: "0 0 4px", letterSpacing: "-0.02em", fontWeight: 400 }}>
             Page access
@@ -191,7 +192,8 @@ export default function AdminPageAccessPage() {
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 16 }}>
+      {/* home-2col: list + editor side by side on desktop, stacked ≤900px */}
+      <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 16 }}>
         {/* List */}
         <div className="bkb-card" style={{ padding: 0 }}>
           <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--bkb-border)" }}>
@@ -270,7 +272,8 @@ export default function AdminPageAccessPage() {
             {selectedKey ? `Editing ${selectedKey}` : "Create a new page entry"}
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+          {/* home-2col: page-key + description fields stack on mobile */}
+          <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
             <div>
               <label style={{ fontSize: 11, color: "var(--bkb-textMuted)" }}>Page key</label>
               <input

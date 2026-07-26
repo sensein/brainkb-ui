@@ -72,7 +72,8 @@ function DashTools() {
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
+      {/* Mobile: min(280px,100%) lets the auto-fill grid collapse to one column without overflowing narrow phones */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(280px, 100%), 1fr))", gap: 12 }}>
         {TOOL_REGISTRY.map((t) => {
           const allowed = bypass ? true : allowedMap[t.pageKey];
           const ready = bypass ? true : !loading;
@@ -211,7 +212,8 @@ export default function DashboardPage() {
     <Theme theme="light" style={{ background: "#f0eee9", minHeight: "calc(100vh - 64px)" }}>
       <div style={{ minHeight: "100%", background: "var(--bkb-bg)" }}>
         <div style={{ background: "var(--bkb-surface)", borderBottom: "1px solid var(--bkb-border)" }}>
-          <div style={{ maxWidth: 1280, margin: "0 auto", padding: "28px 32px 0" }}>
+          {/* home-pad shrinks the horizontal padding on tablet/phone */}
+          <div className="home-pad" style={{ maxWidth: 1280, margin: "0 auto", padding: "28px 32px 0" }}>
             <div style={{ display: "flex", alignItems: "end", justifyContent: "space-between", marginBottom: 20 }}>
               <div>
                 <div
@@ -225,7 +227,8 @@ export default function DashboardPage() {
                 >
                   Dashboard
                 </div>
-                <h1 style={{ fontFamily: FONTS.display, fontSize: 40, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
+                {/* clamp() scales the 40px heading down on small screens, same max */}
+                <h1 style={{ fontFamily: FONTS.display, fontSize: "clamp(28px, 7vw, 40px)", margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
                   Welcome back, <em>{greetingName}</em>
                 </h1>
                 <div style={{ fontSize: 13, color: "var(--bkb-textMuted)", marginTop: 4 }}>{subtitle}</div>
@@ -261,7 +264,8 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "28px 32px" }}>
+        {/* home-pad shrinks the horizontal padding on tablet/phone */}
+        <div className="home-pad" style={{ maxWidth: 1280, margin: "0 auto", padding: "28px 32px" }}>
           {tab === "tools" && <DashTools />}
           {tab === "keys" && <DashKeys />}
         </div>

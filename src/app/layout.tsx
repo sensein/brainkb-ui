@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { getServerSession } from "next-auth";
@@ -31,6 +31,15 @@ export const metadata: Metadata = {
     template: "%s | BrainKB",
   },
   description: "A large-scale Neuroscience Knowledge Graph Infrastructure",
+};
+
+// Viewport meta — REQUIRED for mobile responsiveness. Without
+// `width=device-width`, mobile browsers fall back to a ~980px layout viewport,
+// so every `@media (max-width: ...)` rule (and all our responsive layouts)
+// would be ignored and the site would render desktop-width and scaled down.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

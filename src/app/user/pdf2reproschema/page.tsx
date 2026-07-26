@@ -212,7 +212,8 @@ export default function Pdf2ReproschemaPage() {
                 warningMessage="Please validate your OpenRouter API key above to enable document conversion."
             />
 
-            <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-gray-800 rounded-lg p-8 shadow-lg">
+            {/* p-4 on phones, full p-8 padding at sm+ so the card doesn't crowd narrow screens */}
+            <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-8 shadow-lg">
 
                 <InputTypeSelector
                     selectedInputType={selectedInputType}
@@ -295,7 +296,8 @@ export default function Pdf2ReproschemaPage() {
 
             {/* Conversion Result Section */}
             {conversionResult && (
-                <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg p-8 shadow-lg">
+                // p-4 on phones, full p-8 padding at sm+
+                <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-8 shadow-lg">
                     <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Reproschema Output</h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                         Review the converted Reproschema format below.

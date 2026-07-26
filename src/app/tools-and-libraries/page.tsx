@@ -39,10 +39,10 @@ export default function ToolsLibraries() {
   return (
     <div style={{ background: "#f0eee9" }}>
       {/* ── Header + capabilities ─────────────────────────────────── */}
-      <section style={{ padding: "96px 64px 64px", maxWidth: 1200, margin: "0 auto" }}>
+      <section className="home-pad home-pad-y" style={{ padding: "96px 64px 64px", maxWidth: 1200, margin: "0 auto" }}>
         <div style={{ maxWidth: 760 }}>
           <Eyebrow>Open Source</Eyebrow>
-          <h1 style={{ fontFamily: FONTS.display, fontSize: 52, lineHeight: 1.05, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
+          <h1 style={{ fontFamily: FONTS.display, fontSize: "clamp(34px, 7vw, 52px)", lineHeight: 1.05, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
             Tools &amp; libraries for neuroscience research.
           </h1>
           <p style={{ fontSize: 17, color: "var(--bkb-textMuted)", lineHeight: 1.7, margin: "20px 0 0" }}>
@@ -53,7 +53,7 @@ export default function ToolsLibraries() {
           </p>
         </div>
 
-        <div style={{ marginTop: 56, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", borderTop: "1px solid var(--bkb-border)" }}>
+        <div className="home-3col" style={{ marginTop: 56, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", borderTop: "1px solid var(--bkb-border)" }}>
           {CAPABILITIES.map((c, i) => (
             <div key={i} style={{ padding: "30px 30px 0", borderLeft: i ? "1px solid var(--bkb-border)" : "none" }}>
               <CheckCircle style={{ width: 20, height: 20, color: "var(--bkb-accent)", marginBottom: 16 }} />
@@ -66,10 +66,10 @@ export default function ToolsLibraries() {
 
       {/* ── Tools & Libraries grid (white) ────────────────────────── */}
       <section style={{ background: "var(--bkb-surface)", borderTop: "1px solid var(--bkb-border)", borderBottom: "1px solid var(--bkb-border)" }}>
-        <div style={{ padding: "96px 64px", maxWidth: 1200, margin: "0 auto" }}>
+        <div className="home-pad home-pad-y" style={{ padding: "96px 64px", maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ maxWidth: 720, marginBottom: 48 }}>
             <Eyebrow>The Toolkit</Eyebrow>
-            <h2 style={{ fontFamily: FONTS.display, fontSize: 46, lineHeight: 1.06, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
+            <h2 style={{ fontFamily: FONTS.display, fontSize: "clamp(30px, 6vw, 46px)", lineHeight: 1.06, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
               Tools &amp; Libraries
             </h2>
             <p style={{ fontSize: 16, color: "var(--bkb-textMuted)", lineHeight: 1.65, margin: "16px 0 0" }}>
@@ -78,7 +78,8 @@ export default function ToolsLibraries() {
             </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 22 }}>
+          {/* home-2col collapses the 2-up card grid to 1 column on phones so cards aren't cut off */}
+          <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 22 }}>
             {items.map((it, index) => {
               const isExternal = it.link?.startsWith?.("http");
               const isComingSoon = it._kind === "tool" && (!it.link || it.link === "#");

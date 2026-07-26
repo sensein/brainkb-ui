@@ -592,7 +592,8 @@ export default function NamedEntityRecognition() {
             )}
 
             {/* Input Type Selection and Content Section */}
-            <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-gray-800 rounded-lg p-8 shadow-lg mb-6">
+            {/* p-4 on phones, full p-8 padding at sm+ so the card doesn't crowd narrow screens */}
+            <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-8 shadow-lg mb-6">
                 <InputTypeSelector
                     selectedInputType={selectedInputType}
                     onInputTypeChange={setSelectedInputType}

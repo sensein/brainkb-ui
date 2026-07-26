@@ -134,7 +134,10 @@ export type HeroStat = { value: string | number; label: string; href?: string };
 export function BkbHero({ stats }: { stats?: HeroStat[] }) {
   return (
     <section
-      className="bkb"
+      // `home-hero-pad` reduces the generous 64px side / 80px top padding on
+      // tablet and phone widths (see globals.css) so the hero fits narrow
+      // viewports without clipping.
+      className="bkb home-hero-pad"
       style={{
         position: "relative",
         overflow: "hidden",
@@ -235,6 +238,8 @@ export function BkbHero({ stats }: { stats?: HeroStat[] }) {
       {/* Stat strip — auto-counted tools / use cases + orchestration tag */}
       {Array.isArray(stats) && stats.length > 0 && (
         <div
+          // `home-hero-stats` tightens the 64px gap between stats on phones.
+          className="home-hero-stats"
           style={{
             position: "relative",
             maxWidth: 1320,

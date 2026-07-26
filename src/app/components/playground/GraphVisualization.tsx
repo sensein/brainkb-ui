@@ -581,8 +581,9 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
   return (
     <div className="relative w-full">
       {/* Controls Bar */}
-      <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-        <div className="flex items-center gap-2">
+      {/* Mobile: stack the two control groups vertically and allow buttons to wrap so they don't overflow */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-medium text-gray-700">Controls:</span>
           <button
             className="px-3 py-1.5 bg-white hover:bg-gray-100 border border-gray-300 rounded-md text-sm font-medium text-gray-700 transition-colors"
@@ -621,7 +622,8 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
             Reset View
           </button>
         </div>
-        <div className="flex items-center gap-2">
+        {/* Mobile: wrap export buttons so they stay inside the viewport */}
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-medium text-gray-700">Export:</span>
           <button
             className="px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-md text-sm font-medium transition-colors shadow-sm"
@@ -695,7 +697,8 @@ export default function GraphVisualization({ data, onNodeClick }: GraphVisualiza
       </div>
 
       {/* Legend */}
-      <div className="mt-4 flex items-center justify-center gap-6 p-3 bg-gray-50 rounded-lg border border-gray-200">
+      {/* Mobile: wrap legend items and reduce gap so the three items don't overflow on phones */}
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded-full bg-sky-500 border-2 border-white"></div>
           <span className="text-sm text-gray-700 font-medium">Subject Nodes</span>

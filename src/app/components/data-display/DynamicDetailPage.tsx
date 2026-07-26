@@ -667,7 +667,8 @@ function EnhancedDetailsSection({ item, config, data, currentId, currentSlug }: 
   return (
     <Card className="overflow-hidden p-0">
       {/* Tab Navigation */}
-      <div className="flex border-b bg-muted/30">
+      {/* overflow-x-auto lets the tab row scroll horizontally on mobile instead of cramming/overflowing when there are several tabs */}
+      <div className="flex border-b bg-muted/30 overflow-x-auto">
         {config.tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -675,7 +676,8 @@ function EnhancedDetailsSection({ item, config, data, currentId, currentSlug }: 
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-all ${
+              /* whitespace-nowrap + shrink-0 keep each tab intact so they scroll rather than squashing on small screens */
+              className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-all whitespace-nowrap shrink-0 ${
                 isActive
                   ? "border-b-2 border-primary text-primary bg-background"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/50"

@@ -40,13 +40,20 @@ const Footer: React.FC = () => {
   return (
     <Theme theme="dark" style={{ background: "#0b1410" }}>
       <footer
+        // `home-pad` shrinks the 64px side padding on small screens so the
+        // footer never forces horizontal scroll on phones.
+        className="home-pad"
         style={{
           background: "#0b1410",
           borderTop: `1px solid ${HAIRLINE}`,
           padding: "64px 64px 36px",
         }}
       >
+        {/* Brand blurb + link columns. On desktop this is a 1.6/1/1 three-column
+            grid; `home-footer-grid` collapses it to 2-up (tablet) then 1-up
+            (phone) via the media queries in globals.css. */}
         <div
+          className="home-footer-grid"
           style={{
             maxWidth: 1200,
             margin: "0 auto",

@@ -712,7 +712,8 @@ function StartReviewForm({
             placeholder="Defaults to title if blank"
           />
         </Field>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        {/* home-2col collapses the PICO pair to one column on tablet/phone */}
+        <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <Field label="P – Population" info="population">
             <input className="bkb-input" value={form.pico_population} onChange={(e) => update("pico_population", e.target.value)} />
           </Field>
@@ -759,7 +760,8 @@ function StartReviewForm({
             })}
           </div>
         </Field>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+        {/* home-3col collapses these to 2-up on tablet and 1-up on phone */}
+        <div className="home-3col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
           <Field label="Date range start (YYYY-MM-DD)" info="date_range">
             <input className="bkb-input" value={form.date_range_start} onChange={(e) => update("date_range_start", e.target.value)} placeholder="2019-01-01" />
           </Field>
@@ -774,7 +776,8 @@ function StartReviewForm({
 
       {/* ── Registration & disclosures ─────────────── */}
       <Section title="Registration & disclosures" open={openSections.metadata} onToggle={() => toggleSection("metadata")}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        {/* home-2col collapses the registration pair to one column on tablet/phone */}
+        <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <Field label="Registration number (e.g. PROSPERO)" info="registration">
             <input className="bkb-input" value={form.registration_number} onChange={(e) => update("registration_number", e.target.value)} />
           </Field>
@@ -951,7 +954,8 @@ function StartReviewForm({
           </>
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+        {/* home-3col collapses the run-config number fields to 2-up on tablet, 1-up on phone */}
+        <div className="home-3col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
           <Field label="Max results per query" info="max_results">
             <input type="number" className="bkb-input" min={5} max={1000} value={form.max_results_per_query} onChange={(e) => update("max_results_per_query", Math.max(5, Math.min(1000, Number(e.target.value) || 20)))} />
           </Field>
@@ -2417,7 +2421,8 @@ export default function SynthScholarPage() {
   // ── Full-page "Start a new review" experience ──────────────────────
   if (mode === "new") {
     return (
-      <div style={{ maxWidth: 980, margin: "0 auto", padding: "32px 32px 64px" }}>
+      // home-pad shrinks the horizontal padding on tablet/phone
+      <div className="home-pad" style={{ maxWidth: 980, margin: "0 auto", padding: "32px 32px 64px" }}>
         <div style={{ marginBottom: 20 }}>
           <button
             type="button"
@@ -2453,9 +2458,11 @@ export default function SynthScholarPage() {
   }
 
   // ── Default 3-column list view ──────────────────────────────────────
+  // home-pad shrinks the horizontal padding on tablet/phone.
   return (
-    <div style={{ maxWidth: 1480, margin: "0 auto", padding: "32px 32px 64px" }}>
-      <div style={{ marginBottom: 24, display: "flex", alignItems: "end", justifyContent: "space-between", gap: 16 }}>
+    <div className="home-pad" style={{ maxWidth: 1480, margin: "0 auto", padding: "32px 32px 64px" }}>
+      {/* flexWrap lets the title + "Start a new review" button stack on narrow screens */}
+      <div style={{ marginBottom: 24, display: "flex", alignItems: "end", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
         <div>
           <div style={{ fontSize: 11, color: "var(--bkb-textSubtle)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 6 }}>
             Tool
@@ -2477,7 +2484,8 @@ export default function SynthScholarPage() {
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(280px, 1fr) minmax(420px, 2fr)", gap: 16, alignItems: "start" }}>
+      {/* home-2col collapses the list + detail columns to a single column on tablet/phone */}
+      <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "minmax(280px, 1fr) minmax(420px, 2fr)", gap: 16, alignItems: "start" }}>
         <ReviewsList selectedId={selectedId} onSelect={setSelectedId} />
         <div
           className="bkb-scroll"

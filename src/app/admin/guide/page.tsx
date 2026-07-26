@@ -256,7 +256,9 @@ const SECTIONS: Section[] = [
           Set in <code>BrainKB/.env</code>. Restart the backend after editing — env is read once at
           startup.
         </p>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+        {/* Long env-var names overflow on phones — let the table scroll horizontally */}
+        <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, minWidth: 480 }}>
           <thead>
             <tr style={{ background: "var(--bkb-surfaceAlt)", textAlign: "left" }}>
               <th style={{ padding: 8, border: "1px solid var(--bkb-border)" }}>Variable</th>
@@ -280,6 +282,7 @@ const SECTIONS: Section[] = [
             ))}
           </tbody>
         </table>
+        </div>
         <p style={{ marginTop: 12 }}>
           OAuth provider redirect URLs are configured in each provider's developer console and must
           point at the <strong>backend</strong> (e.g.{" "}
