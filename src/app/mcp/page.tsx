@@ -77,10 +77,11 @@ export default function McpPage() {
         Use BrainKB from your AI assistant
       </h1>
       <p style={{ fontSize: 17, lineHeight: 1.7, color: "var(--bkb-textMuted)", maxWidth: 720, margin: "0 0 40px" }}>
-        BrainKB runs an <strong>MCP server</strong> so an assistant like Claude can operate the
-        knowledge graph <em>on your behalf</em> — ingest data, search, explore provenance, and
-        manage spaces — using your own account and permissions. Every action is access-controlled
-        server-side exactly as it is in this web app.
+        BrainKB runs an <strong>MCP server</strong> — and ships a <strong>BrainKB skill</strong> for
+        Claude — so an assistant can operate the knowledge graph <em>on your behalf</em>: ingest
+        data, search, explore provenance, and manage spaces, using your own account and permissions.
+        Every action is access-controlled server-side exactly as it is in this web app. For example,
+        just ask: <em>“Ingest my TTL into the hmba space, then show what changed.”</em>
       </p>
 
       <div className="home-3col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 22, marginBottom: 40 }}>
@@ -92,8 +93,9 @@ export default function McpPage() {
           <Code>{`claude mcp add --transport http \\
   brainkb ${MCP_URL}`}</Code>
           <p style={{ fontSize: 13, color: "var(--bkb-textMuted)", lineHeight: 1.6, marginTop: 12 }}>
-            Registry id <code style={{ fontFamily: FONTS.mono }}>org.brainkb/brainkb</code>. Transport:
-            streamable-http.
+            Registry id <code style={{ fontFamily: FONTS.mono }}>org.brainkb/brainkb</code>, transport
+            streamable-http. Prefer guided workflows? The <strong>BrainKB skill</strong> wraps these
+            same tools with step-by-step guidance in Claude Code.
           </p>
         </Card>
         <Card>

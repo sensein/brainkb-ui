@@ -421,8 +421,9 @@ export default function Home() {
                   Drive BrainKB from your AI assistant
                 </h2>
                 <p style={{ fontSize: 16, color: "rgba(240,238,233,0.7)", lineHeight: 1.7, margin: "18px 0 28px", maxWidth: 460 }}>
-                  Connect Claude — or any MCP client — and ingest, search, and explore the
-                  knowledge graph in natural language, as yourself and under your own permissions.
+                  Connect Claude — via the <strong style={{ color: "#f0eee9", fontWeight: 600 }}>MCP server</strong> or the{" "}
+                  <strong style={{ color: "#f0eee9", fontWeight: 600 }}>BrainKB skill</strong> — and ingest, search, and explore
+                  the knowledge graph in natural language, as yourself and under your own permissions.
                 </p>
                 <a
                   href="/mcp"
