@@ -420,16 +420,17 @@ export default function Home() {
                 <h2 style={{ fontFamily: FONTS.display, fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 400, color: "#f0eee9", letterSpacing: "-0.02em", lineHeight: 1.1, margin: 0 }}>
                   Drive BrainKB from your AI assistant
                 </h2>
-                <p style={{ fontSize: 16, color: "rgba(240,238,233,0.7)", lineHeight: 1.7, margin: "18px 0 28px", maxWidth: 460 }}>
-                  Connect Claude — via the <strong style={{ color: "#f0eee9", fontWeight: 600 }}>MCP server</strong> or the{" "}
-                  <strong style={{ color: "#f0eee9", fontWeight: 600 }}>BrainKB skill</strong> — and ingest, search, and explore
-                  the knowledge graph in natural language, as yourself and under your own permissions.
+                <p style={{ fontSize: 16, color: "rgba(240,238,233,0.7)", lineHeight: 1.7, margin: "18px 0 28px", maxWidth: 470 }}>
+                  Use the <strong style={{ color: "#f0eee9", fontWeight: 600 }}>MCP server</strong> directly with Claude or any
+                  MCP client — or the <strong style={{ color: "#f0eee9", fontWeight: 600 }}>BrainKB skill</strong>, which runs on
+                  the same MCP with guided workflows. Either way you ingest, search, and explore the graph in natural language,
+                  as yourself and under your own permissions.
                 </p>
                 <a
                   href="/mcp"
                   style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#1db981", color: "#0c1611", fontWeight: 600, fontSize: 14, padding: "12px 22px", borderRadius: 10, textDecoration: "none" }}
                 >
-                  Explore the MCP →
+                  Explore MCP &amp; skill →
                 </a>
               </div>
               {/* terminal mock */}

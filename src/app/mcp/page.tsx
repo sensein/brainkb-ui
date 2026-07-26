@@ -77,11 +77,13 @@ export default function McpPage() {
         Use BrainKB from your AI assistant
       </h1>
       <p style={{ fontSize: 17, lineHeight: 1.7, color: "var(--bkb-textMuted)", maxWidth: 720, margin: "0 0 40px" }}>
-        BrainKB runs an <strong>MCP server</strong> — and ships a <strong>BrainKB skill</strong> for
-        Claude — so an assistant can operate the knowledge graph <em>on your behalf</em>: ingest
-        data, search, explore provenance, and manage spaces, using your own account and permissions.
-        Every action is access-controlled server-side exactly as it is in this web app. For example,
-        just ask: <em>“Ingest my TTL into the hmba space, then show what changed.”</em>
+        BrainKB exposes an <strong>MCP server</strong> so an assistant can operate the knowledge
+        graph <em>on your behalf</em>: ingest data, search, explore provenance, and manage spaces,
+        using your own account and permissions. <strong>Two ways to use it</strong> — point any MCP
+        client (Claude, etc.) at the server directly, or use the <strong>BrainKB skill</strong>,
+        which runs on the <em>same</em> MCP and adds guided, step-by-step workflows. Every action is
+        access-controlled server-side exactly as in this web app. For example, just ask:{" "}
+        <em>“Ingest my TTL into the hmba space, then show what changed.”</em>
       </p>
 
       <div className="home-3col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 22, marginBottom: 40 }}>
