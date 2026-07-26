@@ -401,6 +401,66 @@ export default function Home() {
           </section>
         )}
 
+        {/* ── Use BrainKB from your AI assistant (MCP) — placed high so it's
+            seen; dark highlight card on the light page with a terminal mock ── */}
+        <section className="home-pad" style={{ padding: "0 64px 32px", maxWidth: 1200, margin: "0 auto" }}>
+          <div
+            style={{
+              background: "linear-gradient(160deg, #15271e 0%, #0c1611 62%)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 24,
+              padding: "clamp(28px, 5vw, 56px)",
+            }}
+          >
+            <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
+              <div>
+                <div style={{ fontFamily: FONTS.mono, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "#3ecf8e", fontWeight: 600, marginBottom: 18 }}>
+                  Model Context Protocol
+                </div>
+                <h2 style={{ fontFamily: FONTS.display, fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 400, color: "#f0eee9", letterSpacing: "-0.02em", lineHeight: 1.1, margin: 0 }}>
+                  Drive BrainKB from your AI assistant
+                </h2>
+                <p style={{ fontSize: 16, color: "rgba(240,238,233,0.7)", lineHeight: 1.7, margin: "18px 0 28px", maxWidth: 460 }}>
+                  Connect Claude — or any MCP client — and ingest, search, and explore the
+                  knowledge graph in natural language, as yourself and under your own permissions.
+                </p>
+                <a
+                  href="/mcp"
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#1db981", color: "#0c1611", fontWeight: 600, fontSize: 14, padding: "12px 22px", borderRadius: 10, textDecoration: "none" }}
+                >
+                  Explore the MCP →
+                </a>
+              </div>
+              {/* terminal mock */}
+              <div style={{ background: "rgba(0,0,0,0.32)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, overflow: "hidden" }}>
+                <div style={{ display: "flex", gap: 7, padding: "13px 15px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                  <span style={{ width: 11, height: 11, borderRadius: "50%", background: "#f2564f" }} />
+                  <span style={{ width: 11, height: 11, borderRadius: "50%", background: "#f4bf4f" }} />
+                  <span style={{ width: 11, height: 11, borderRadius: "50%", background: "#3ecf8e" }} />
+                </div>
+                <pre
+                  style={{
+                    fontFamily: FONTS.mono,
+                    fontSize: 12.5,
+                    lineHeight: 1.75,
+                    color: "rgba(240,238,233,0.9)",
+                    margin: 0,
+                    padding: "18px 20px",
+                    overflowX: "auto",
+                    whiteSpace: "pre",
+                  }}
+                >
+{`$ claude mcp add --transport http \\
+    brainkb https://mcp.brainkb.org/mcp
+
+> "Ingest my TTL into the hmba space,
+   then show what changed."`}
+                </pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ── AbstractAtlas (what users can explore) ───────────────── */}
         {yaml.abstractatlas && (
           <section style={{ background: "linear-gradient(135deg, #e7efe9 0%, #eef2ed 100%)", borderTop: "1px solid var(--bkb-border)", borderBottom: "1px solid var(--bkb-border)" }}>
@@ -748,47 +808,6 @@ export default function Home() {
                   </a>
                 </div>
               )}
-            </div>
-          </div>
-        </section>
-
-        {/* ── Use BrainKB from your AI assistant (MCP) — CTA band that flows
-            from the dark AI-agents section into the dark footer ───── */}
-        <section style={{ background: "#0c1611", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-          <div className="home-pad home-pad-y" style={{ padding: "84px 64px", maxWidth: 1200, margin: "0 auto", textAlign: "center" }}>
-            <div style={{ fontFamily: FONTS.mono, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "#3ecf8e", fontWeight: 600, marginBottom: 18 }}>
-              Model Context Protocol
-            </div>
-            <h2 style={{ fontFamily: FONTS.display, fontSize: "clamp(28px, 5vw, 40px)", fontWeight: 400, color: "#f0eee9", letterSpacing: "-0.02em", lineHeight: 1.12, margin: "0 auto", maxWidth: 720 }}>
-              Drive BrainKB from your AI assistant
-            </h2>
-            <p style={{ fontSize: 16, color: "rgba(240,238,233,0.7)", lineHeight: 1.7, margin: "18px auto 30px", maxWidth: 600 }}>
-              Connect Claude — or any MCP client — and ingest, search, and explore the knowledge
-              graph in natural language, as yourself and under your own permissions.
-            </p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", justifyContent: "center" }}>
-              <a
-                href="/mcp"
-                style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#1db981", color: "#0c1611", fontWeight: 600, fontSize: 14, padding: "12px 22px", borderRadius: 10, textDecoration: "none" }}
-              >
-                Explore the MCP →
-              </a>
-              <code
-                style={{
-                  fontFamily: FONTS.mono,
-                  fontSize: 13,
-                  color: "rgba(240,238,233,0.85)",
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  borderRadius: 10,
-                  padding: "11px 16px",
-                  maxWidth: "100%",
-                  overflowX: "auto",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                claude mcp add --transport http brainkb https://mcp.brainkb.org/mcp
-              </code>
             </div>
           </div>
         </section>
