@@ -520,94 +520,6 @@ export default function Home() {
           </section>
         )}
 
-        {/* ── Use Cases (where it applies) ─────────────────────────── */}
-        {yaml.usecases && (
-          <section className="home-pad home-pad-y" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
-            <div style={{ maxWidth: 720, marginBottom: 48 }}>
-              <Eyebrow color="#b4451f">{yaml.usecases.eyebrow || "In Practice"}</Eyebrow>
-              <SectionTitle>{yaml.usecases.title || "Use Cases"}</SectionTitle>
-              <SectionLead>{yaml.usecases.subtitle}</SectionLead>
-            </div>
-
-            <div className="bkb-card" style={{ padding: 0, borderRadius: 16, overflow: "hidden" }}>
-              {Array.isArray(yaml.usecases.cases) &&
-                yaml.usecases.cases.map((c: any, i: number) => {
-                  const pill = STATUS_PILL[c.status] || STATUS_PILL.coming_soon;
-                  const href = c.use_link || c.discussion_link || null;
-                  const linkExternal = href?.startsWith?.("http");
-                  return (
-                    <div
-                      key={i}
-                      className="home-usecase-row"
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "110px minmax(190px, 1fr) 1.4fr 150px 64px",
-                        gap: 24,
-                        alignItems: "center",
-                        padding: "26px 32px",
-                        borderTop: i ? "1px solid var(--bkb-border)" : "none",
-                      }}
-                    >
-                      <div style={{ fontFamily: FONTS.mono, fontSize: 12, color: "var(--bkb-textSubtle)", letterSpacing: "0.06em" }}>
-                        {`Case ${String(i + 1).padStart(2, "0")}`}
-                      </div>
-                      <h3 style={{ fontFamily: FONTS.display, fontSize: 21, fontWeight: 400, letterSpacing: "-0.01em", margin: 0 }}>{c.title}</h3>
-                      <p style={{ fontSize: 13.5, color: "var(--bkb-textMuted)", lineHeight: 1.55, margin: 0 }}>{c.description}</p>
-                      <div>
-                        <span style={{ fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 999, color: pill.fg, background: pill.bg, whiteSpace: "nowrap" }}>
-                          {pill.label}
-                        </span>
-                      </div>
-                      <div style={{ textAlign: "right" }}>
-                        {href && (
-                          <Link
-                            href={href}
-                            target={linkExternal ? "_blank" : "_self"}
-                            rel={linkExternal ? "noopener noreferrer" : ""}
-                            style={{ fontSize: 13, fontWeight: 600, color: "var(--bkb-accent)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}
-                          >
-                            View <span>→</span>
-                          </Link>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-
-            {yaml.usecases.how_it_works && (
-              <div
-                className="home-hiw"
-                style={{
-                  marginTop: 28,
-                  background: "linear-gradient(135deg, #14241c, #0e1a14)",
-                  borderRadius: 20,
-                  padding: "48px 52px",
-                  display: "grid",
-                  gridTemplateColumns: "1.25fr 1fr 1fr 1fr",
-                  gap: 40,
-                }}
-              >
-                <div>
-                  <h3 style={{ fontFamily: FONTS.display, fontSize: 27, fontWeight: 400, color: "#f0eee9", margin: "0 0 14px", letterSpacing: "-0.01em" }}>
-                    {yaml.usecases.how_it_works.title}
-                  </h3>
-                  <p style={{ fontSize: 13.5, color: "rgba(240,238,233,0.6)", lineHeight: 1.6, margin: 0 }}>{yaml.usecases.how_it_works.subtitle}</p>
-                </div>
-                {Array.isArray(yaml.usecases.how_it_works.phases) &&
-                  yaml.usecases.how_it_works.phases.map((ph: any, i: number) => (
-                    <div key={i}>
-                      <div style={{ fontFamily: FONTS.mono, fontSize: 11.5, letterSpacing: "0.12em", textTransform: "uppercase", color: "#3ecf8e", marginBottom: 14 }}>
-                        {`${String(i + 1).padStart(2, "0")} · ${ph.label}`}
-                      </div>
-                      <p style={{ fontSize: 13.5, color: "rgba(240,238,233,0.75)", lineHeight: 1.6, margin: 0 }}>{ph.description}</p>
-                    </div>
-                  ))}
-              </div>
-            )}
-          </section>
-        )}
-
         {/* ── BrainKB Tools (which tools enable it) ────────────────── */}
         {yaml.tools && (
           <section style={{ background: "var(--bkb-surface)", borderTop: "1px solid var(--bkb-border)", borderBottom: "1px solid var(--bkb-border)" }}>
@@ -699,6 +611,94 @@ export default function Home() {
                   })}
               </div>
             </div>
+          </section>
+        )}
+
+        {/* ── Use Cases (where it applies) ─────────────────────────── */}
+        {yaml.usecases && (
+          <section className="home-pad home-pad-y" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
+            <div style={{ maxWidth: 720, marginBottom: 48 }}>
+              <Eyebrow color="#b4451f">{yaml.usecases.eyebrow || "In Practice"}</Eyebrow>
+              <SectionTitle>{yaml.usecases.title || "Use Cases"}</SectionTitle>
+              <SectionLead>{yaml.usecases.subtitle}</SectionLead>
+            </div>
+
+            <div className="bkb-card" style={{ padding: 0, borderRadius: 16, overflow: "hidden" }}>
+              {Array.isArray(yaml.usecases.cases) &&
+                yaml.usecases.cases.map((c: any, i: number) => {
+                  const pill = STATUS_PILL[c.status] || STATUS_PILL.coming_soon;
+                  const href = c.use_link || c.discussion_link || null;
+                  const linkExternal = href?.startsWith?.("http");
+                  return (
+                    <div
+                      key={i}
+                      className="home-usecase-row"
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "110px minmax(190px, 1fr) 1.4fr 150px 64px",
+                        gap: 24,
+                        alignItems: "center",
+                        padding: "26px 32px",
+                        borderTop: i ? "1px solid var(--bkb-border)" : "none",
+                      }}
+                    >
+                      <div style={{ fontFamily: FONTS.mono, fontSize: 12, color: "var(--bkb-textSubtle)", letterSpacing: "0.06em" }}>
+                        {`Case ${String(i + 1).padStart(2, "0")}`}
+                      </div>
+                      <h3 style={{ fontFamily: FONTS.display, fontSize: 21, fontWeight: 400, letterSpacing: "-0.01em", margin: 0 }}>{c.title}</h3>
+                      <p style={{ fontSize: 13.5, color: "var(--bkb-textMuted)", lineHeight: 1.55, margin: 0 }}>{c.description}</p>
+                      <div>
+                        <span style={{ fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 999, color: pill.fg, background: pill.bg, whiteSpace: "nowrap" }}>
+                          {pill.label}
+                        </span>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        {href && (
+                          <Link
+                            href={href}
+                            target={linkExternal ? "_blank" : "_self"}
+                            rel={linkExternal ? "noopener noreferrer" : ""}
+                            style={{ fontSize: 13, fontWeight: 600, color: "var(--bkb-accent)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}
+                          >
+                            View <span>→</span>
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+
+            {yaml.usecases.how_it_works && (
+              <div
+                className="home-hiw"
+                style={{
+                  marginTop: 28,
+                  background: "linear-gradient(135deg, #14241c, #0e1a14)",
+                  borderRadius: 20,
+                  padding: "48px 52px",
+                  display: "grid",
+                  gridTemplateColumns: "1.25fr 1fr 1fr 1fr",
+                  gap: 40,
+                }}
+              >
+                <div>
+                  <h3 style={{ fontFamily: FONTS.display, fontSize: 27, fontWeight: 400, color: "#f0eee9", margin: "0 0 14px", letterSpacing: "-0.01em" }}>
+                    {yaml.usecases.how_it_works.title}
+                  </h3>
+                  <p style={{ fontSize: 13.5, color: "rgba(240,238,233,0.6)", lineHeight: 1.6, margin: 0 }}>{yaml.usecases.how_it_works.subtitle}</p>
+                </div>
+                {Array.isArray(yaml.usecases.how_it_works.phases) &&
+                  yaml.usecases.how_it_works.phases.map((ph: any, i: number) => (
+                    <div key={i}>
+                      <div style={{ fontFamily: FONTS.mono, fontSize: 11.5, letterSpacing: "0.12em", textTransform: "uppercase", color: "#3ecf8e", marginBottom: 14 }}>
+                        {`${String(i + 1).padStart(2, "0")} · ${ph.label}`}
+                      </div>
+                      <p style={{ fontSize: 13.5, color: "rgba(240,238,233,0.75)", lineHeight: 1.6, margin: 0 }}>{ph.description}</p>
+                    </div>
+                  ))}
+              </div>
+            )}
           </section>
         )}
 
