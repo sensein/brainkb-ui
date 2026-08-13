@@ -1,148 +1,128 @@
 "use client";
 
-import { Target, Zap, CheckCircle } from "lucide-react";
+/**
+ * About — editorial direction, consistent with the landing and tools pages.
+ * What is BrainKB (numbered columns) → Objectives → Expected Outcomes.
+ */
+
+import { Target, Zap } from "lucide-react";
+import { FONTS } from "@/src/app/components/design-system";
 import yaml from "@/src/config/yaml/about.yaml";
+
+function Eyebrow({ children, color = "var(--bkb-accent)" }: { children: React.ReactNode; color?: string }) {
+  return (
+    <div style={{ fontFamily: FONTS.mono, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color, fontWeight: 600, marginBottom: 18 }}>
+      {children}
+    </div>
+  );
+}
+
+function CardGrid({ points, Icon, accent }: { points: any[]; Icon: any; accent: string }) {
+  return (
+    // `home-3col`: 3-up on desktop → 2-up on tablet → 1-up on phone (globals.css).
+    <div className="home-3col" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 22 }}>
+      {points?.map((p: any, i: number) => (
+        <div
+          key={i}
+          className="bkb-card"
+          style={{ padding: 28, borderRadius: 16, background: "var(--bkb-surfaceAlt)", height: "100%", display: "flex", flexDirection: "column" }}
+        >
+          <span
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 11,
+              background: accent,
+              color: "#fff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 18,
+            }}
+          >
+            <Icon style={{ width: 20, height: 20 }} />
+          </span>
+          <h3 style={{ fontFamily: FONTS.display, fontSize: 20, fontWeight: 400, letterSpacing: "-0.01em", margin: "0 0 10px", lineHeight: 1.25 }}>
+            {p.title}
+          </h3>
+          {p.description && (
+            <p style={{ fontSize: 13.5, color: "var(--bkb-textMuted)", lineHeight: 1.6, margin: 0 }}>{p.description}</p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function About() {
   const sections = yaml.sections;
-  const objectivesSection = sections.find(s => s.section === "objectives");
-  const expectedOutcomeSection = sections.find(s => s.section === "expectedoutcome");
-  const whatIsSection = sections.find(s => s.section === "whatisbrainkb");
+  const whatIs = sections.find((s) => s.section === "whatisbrainkb");
+  const objectives = sections.find((s) => s.section === "objectives");
+  const outcomes = sections.find((s) => s.section === "expectedoutcome");
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-sky-50">
-      {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-sky-50 via-white to-emerald-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mt-[30px]">
-            <h1 className="text-5xl sm:text-6xl font-extrabold mb-6">
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 via-blue-600 to-emerald-600">
-                About BrainKB
-              </span>
-            </h1>
-            <p className="text-xl sm:text-2xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
-              Learn about our mission, objectives, and expected outcomes
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* What is BrainKB Section */}
-      {whatIsSection && (
-        <section className="py-20 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-                {whatIsSection.title}
-              </h2>
-              {whatIsSection.subtitle && (
-                <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-12">
-                  {whatIsSection.subtitle}
-                </p>
-              )}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {whatIsSection.bullet_points?.map((point, index) => (
-                  <div
-                    key={index}
-                    className="bg-gradient-to-br from-sky-50 to-emerald-50 rounded-xl p-6 border border-sky-100 hover:shadow-lg transition-all duration-300"
-                  >
-                    <CheckCircle className="w-8 h-8 text-sky-600 mb-4" />
-                    <p className="text-gray-700 font-medium leading-relaxed">
-                      {point.title}
-                    </p>
-                  </div>
-                ))}
-              </div>
+    <div style={{ background: "#f0eee9" }}>
+      {/* ── About / What is BrainKB ───────────────────────────────── */}
+      {whatIs && (
+        <section className="home-pad home-pad-y" style={{ padding: "96px 64px 72px", maxWidth: 1200, margin: "0 auto" }}>
+          <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "1.05fr 1fr", gap: 72, alignItems: "start", marginBottom: 56 }}>
+            <div>
+              <Eyebrow>About</Eyebrow>
+              <h1 style={{ fontFamily: FONTS.display, fontSize: "clamp(34px, 7vw, 52px)", lineHeight: 1.05, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
+                {whatIs.title}
+              </h1>
             </div>
+            {whatIs.subtitle && (
+              <p style={{ fontSize: 17, color: "var(--bkb-textMuted)", lineHeight: 1.7, margin: 0, paddingTop: 6 }}>{whatIs.subtitle}</p>
+            )}
+          </div>
+
+          {Array.isArray(whatIs.bullet_points) && (
+            <div className="home-4col" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", borderTop: "1px solid var(--bkb-border)" }}>
+              {whatIs.bullet_points.map((p: any, i: number) => (
+                <div key={i} style={{ padding: "30px 30px 0", borderLeft: i ? "1px solid var(--bkb-border)" : "none" }}>
+                  <div style={{ fontFamily: FONTS.mono, fontSize: 13, color: "var(--bkb-accent)", marginBottom: 22 }}>
+                    {String(i + 1).padStart(2, "0")}
+                  </div>
+                  <p style={{ fontSize: 14, color: "var(--bkb-textMuted)", lineHeight: 1.6, margin: 0 }}>{p.title}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* ── Objectives (white) ────────────────────────────────────── */}
+      {objectives && (
+        <section style={{ background: "var(--bkb-surface)", borderTop: "1px solid var(--bkb-border)", borderBottom: "1px solid var(--bkb-border)" }}>
+          <div className="home-pad home-pad-y" style={{ padding: "96px 64px", maxWidth: 1200, margin: "0 auto" }}>
+            <div style={{ maxWidth: 720, marginBottom: 48 }}>
+              <Eyebrow>Mission</Eyebrow>
+              <h2 style={{ fontFamily: FONTS.display, fontSize: "clamp(30px, 6vw, 46px)", lineHeight: 1.06, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
+                {objectives.title}
+              </h2>
+              {objectives.subtitle && (
+                <p style={{ fontSize: 16, color: "var(--bkb-textMuted)", lineHeight: 1.65, margin: "16px 0 0" }}>{objectives.subtitle}</p>
+              )}
+            </div>
+            <CardGrid points={objectives.bullet_points} Icon={Target} accent="var(--bkb-accent)" />
           </div>
         </section>
       )}
 
-      {/* Objectives Section */}
-      {objectivesSection && (
-        <section className="py-20 bg-gradient-to-br from-gray-50 to-sky-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-                {objectivesSection.title}
-              </h2>
-              {objectivesSection.subtitle && (
-                <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                  {objectivesSection.subtitle}
-                </p>
-              )}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {objectivesSection.bullet_points?.map((point, index) => (
-                <div
-                  key={index}
-                  className="group bg-gradient-to-br from-sky-50 to-white rounded-xl p-6 border-2 border-gray-100 hover:border-sky-300 hover:shadow-lg transition-all duration-300"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0">
-                      <div className="w-12 h-12 bg-gradient-to-br from-sky-500 to-blue-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                        <Target className="w-6 h-6 text-white" />
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-gray-900 mb-2">
-                        {point.title}
-                      </h3>
-                      {point.description && (
-                        <p className="text-gray-600 text-sm leading-relaxed">
-                          {point.description}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+      {/* ── Expected Outcomes (cream) ─────────────────────────────── */}
+      {outcomes && (
+        <section className="home-pad home-pad-y" style={{ padding: "96px 64px", maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ maxWidth: 720, marginBottom: 48 }}>
+            <Eyebrow color="#b4451f">Outcomes</Eyebrow>
+            <h2 style={{ fontFamily: FONTS.display, fontSize: "clamp(30px, 6vw, 46px)", lineHeight: 1.06, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
+              {outcomes.title}
+            </h2>
+            {outcomes.subtitle && (
+              <p style={{ fontSize: 16, color: "var(--bkb-textMuted)", lineHeight: 1.65, margin: "16px 0 0" }}>{outcomes.subtitle}</p>
+            )}
           </div>
-        </section>
-      )}
-
-      {/* Expected Outcomes Section */}
-      {expectedOutcomeSection && (
-        <section className="py-20 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-                {expectedOutcomeSection.title}
-              </h2>
-              {expectedOutcomeSection.subtitle && (
-                <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-4">
-                  {expectedOutcomeSection.subtitle}
-                </p>
-              )}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {expectedOutcomeSection.bullet_points?.map((point, index) => (
-                <div
-                  key={index}
-                  className="group bg-gradient-to-br from-emerald-50 to-sky-50 rounded-xl p-6 border-2 border-gray-100 hover:border-emerald-300 hover:shadow-lg transition-all duration-300"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0">
-                      <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                        <Zap className="w-6 h-6 text-white" />
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-gray-900 mb-2">
-                        {point.title}
-                      </h3>
-                      {point.description && (
-                        <p className="text-gray-600 text-sm leading-relaxed">
-                          {point.description}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <CardGrid points={outcomes.bullet_points} Icon={Zap} accent="#b4451f" />
         </section>
       )}
     </div>

@@ -1,7 +1,7 @@
 import {NextRequest, NextResponse} from 'next/server';
 import { Client } from 'undici';
 import { env } from '../../../config/env';
-import { getAuthTokenWithCredentials } from '../../../utils/api/auth';
+import { getAuthTokenForService } from '../../../utils/api/auth';
 
 export async function POST(request: NextRequest) {
     console.log('[process-document] POST handler invoked');
@@ -52,14 +52,6 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        if (!email || !password) {
-            console.error('[process-document] Missing credentials:', {email: !!email, password: !!password});
-            return NextResponse.json(
-                {error: 'Email and password are required'},
-                {status: 400}
-            );
-        }
-
         if (!api_key) {
             console.error('[process-document] Missing API key');
             return NextResponse.json(
@@ -80,10 +72,16 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        console.log('[process-document] Getting token from /api/token...');
-        // Get token using shared auth function with credentials from form data
-        const token = await getAuthTokenWithCredentials(tokenEndpoint, email, password, 'ML');
-        console.log('[process-document] Token received successfully');
+        // Auth via the logged-in user's session only (SSO session-exchange →
+        // ml_service token). No service-account/form-credential fallback.
+        const token = await getAuthTokenForService('ml');
+        if (!token) {
+            return NextResponse.json(
+                {error: 'Not authenticated. Please sign in.'},
+                {status: 401}
+            );
+        }
+        console.log('[process-document] Token obtained (session)');
 
         // Create a new FormData without email and password
         const pdfFormData = new FormData();

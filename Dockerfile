@@ -10,8 +10,83 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install --force
 
+# Local-dev defaults live in .env.local. Next.js loads them at build time
+# and inlines every NEXT_PUBLIC_* into the client bundle, so the URLs the
+# **browser** ends up calling are frozen here. When deploying on a remote
+# host, override these via build args (compose `build.args` or
+# `docker build --build-arg ...`); values written to .env.production.local
+# below take priority over .env.local during `next build`.
+ARG NEXT_PUBLIC_USER_MANAGEMENT_API_BASE=
+ARG NEXT_PUBLIC_ML_SERVICE_API_BASE=
+ARG NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE=
+ARG NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE=
+ARG NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE=
+ARG NEXT_PUBLIC_TOKEN_ENDPOINT_CHAT_SERVICE=
+ARG NEXT_PUBLIC_API_QUERY_ENDPOINT=
+ARG NEXT_PUBLIC_API_NAMED_GRAPH_QUERY_ENDPOINT=
+ARG NEXT_PUBLIC_CHAT_SERVICE_API_ENDPOINT=
+ARG NEXT_PUBLIC_API_NER_ENDPOINT=
+ARG NEXT_PUBLIC_NER_GET_ENDPOINT=
+ARG NEXT_PUBLIC_NER_SAVE_ENDPOINT=
+ARG NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT=
+ARG NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT=
+ARG NEXT_PUBLIC_API_ADMIN_SAVE_STRUCTURED_RESOURCE_ENDPOINT=
+ARG NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT=
+ARG NEXT_PUBLIC_API_ADMIN_INSERT_KGS_JSONLD_TTL_ENDPOINT=
+ARG NEXT_PUBLIC_API_ADMIN_INSERT_KGS_JSONLD_TTL_JOB_STATUS_ENDPOINT=
+ARG NEXT_PUBLIC_API_ADMIN_INSERT_ALL_KGS_JSONLD_TTL_JOB_STATUS_ENDPOINT=
+ARG NEXT_PUBLIC_API_ADMIN_INSERT_RECOVERY_JOB_ENDPOINT=
+ARG NEXT_PUBLIC_API_ADMIN_INSERT_CHECK_RECOVERABLE_JOB_ENDPOINT=
+ARG NEXT_PUBLIC_ENABLE_PAGE_ACCESS_GATE=
+ARG NEXTAUTH_URL=
+
 # Copy environment file
 COPY .env.local ./
+
+# NextAuth (next-auth/utils/parse-url.js) calls `new URL(NEXTAUTH_URL)` and
+# uses `??` for the fallback, which does NOT cover the empty-string case.
+# An empty NEXTAUTH_URL → `new URL("")` → ERR_INVALID_URL during prerender.
+# Fall back to the local-dev value here so the build never bakes "" into
+# the bundle.
+ARG _NEXTAUTH_URL_FALLBACK=http://localhost:3000
+RUN if [ -z "$NEXTAUTH_URL" ]; then \
+      echo "[build] NEXTAUTH_URL was empty; defaulting to ${_NEXTAUTH_URL_FALLBACK}"; \
+      echo "[build] override at deploy time via --build-arg or .env.deploy"; \
+    fi
+ENV NEXTAUTH_URL=${NEXTAUTH_URL:-$_NEXTAUTH_URL_FALLBACK}
+
+# Override .env.local with any non-empty build args. Skipping empty values
+# means a partial set of overrides still works — anything you don't pass
+# falls back to .env.local.
+RUN set -e; \
+    : > .env.production.local; \
+    for v in \
+      NEXT_PUBLIC_USER_MANAGEMENT_API_BASE \
+      NEXT_PUBLIC_ML_SERVICE_API_BASE \
+      NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE \
+      NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE \
+      NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE \
+      NEXT_PUBLIC_TOKEN_ENDPOINT_CHAT_SERVICE \
+      NEXT_PUBLIC_API_QUERY_ENDPOINT \
+      NEXT_PUBLIC_API_NAMED_GRAPH_QUERY_ENDPOINT \
+      NEXT_PUBLIC_CHAT_SERVICE_API_ENDPOINT \
+      NEXT_PUBLIC_API_NER_ENDPOINT \
+      NEXT_PUBLIC_NER_GET_ENDPOINT \
+      NEXT_PUBLIC_NER_SAVE_ENDPOINT \
+      NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT \
+      NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT \
+      NEXT_PUBLIC_API_ADMIN_SAVE_STRUCTURED_RESOURCE_ENDPOINT \
+      NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT \
+      NEXT_PUBLIC_API_ADMIN_INSERT_KGS_JSONLD_TTL_ENDPOINT \
+      NEXT_PUBLIC_API_ADMIN_INSERT_KGS_JSONLD_TTL_JOB_STATUS_ENDPOINT \
+      NEXT_PUBLIC_API_ADMIN_INSERT_ALL_KGS_JSONLD_TTL_JOB_STATUS_ENDPOINT \
+      NEXT_PUBLIC_API_ADMIN_INSERT_RECOVERY_JOB_ENDPOINT \
+      NEXT_PUBLIC_API_ADMIN_INSERT_CHECK_RECOVERABLE_JOB_ENDPOINT \
+      NEXT_PUBLIC_ENABLE_PAGE_ACCESS_GATE \
+      NEXTAUTH_URL ; do \
+      val=$(eval "echo \"\$$v\""); \
+      if [ -n "$val" ]; then echo "$v=$val" >> .env.production.local; fi; \
+    done
 
 # Copy the rest of the application source code to the working directory
 COPY . .

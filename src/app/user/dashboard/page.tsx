@@ -1,87 +1,275 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+/**
+ * /user/dashboard — user dashboard.
+ *
+ * Two tabs: Tools (default) and API keys. The mocked Overview / Multi-agent
+ * workflows / Query history / Contributions sections from the prototype were
+ * removed because they showed sample data with no real backend wiring.
+ *
+ * The welcome banner pulls identity + role from /api/users/me via
+ * useCurrentUser. The Tools tab batches page-access checks against the
+ * usermanagement_service so each workflow card reflects the live access
+ * decision for the signed-in user. The API keys tab models a single key
+ * per user that is reused across every enabled tool (placeholder until the
+ * key issuance endpoint lands).
+ */
+
+import React from "react";
 import Link from "next/link";
-import { Database, FileText, Upload, Brain } from "lucide-react";
+import { FONTS, Icon, Theme } from "@/src/app/components/design-system";
+import { useCurrentUser } from "@/src/hooks/useCurrentUser";
+import { usePageAccessBatch } from "@/src/hooks/usePageAccess";
+import { TOOL_REGISTRY } from "@/src/config/toolRegistry";
+import { ENABLE_PAGE_ACCESS_GATE } from "@/src/config/featureFlags";
+import { useApiKeyValidator } from "@/src/app/components/user/useApiKeyValidator";
+import { ApiKeyValidatorUI } from "@/src/app/components/user/ApiKeyValidator";
 
+type DashTab = "tools" | "keys";
 
-export default function Dashboard() {
-    const { data: session } = useSession();
-    const router = useRouter();
+// ─── Tools tab ────────────────────────────────────────────────────────────
 
-    // Redirect if not logged in
-    useEffect(() => {
-        if (session === null) {
-            router.push("/");
-        }
-    }, [session, router]);
+function DashTools() {
+  // Per-card access check via a single batched call to /api/access/pages.
+  // Default behaviour when no entry exists in the backend is "denied" — i.e.
+  // every workflow is off until an admin enables it through /admin/page-access.
+  // ENABLE_PAGE_ACCESS_GATE=false short-circuits this for local dev.
+  // The hook auto-revalidates on tab focus so an admin's grant in another tab
+  // shows up here without forcing a reload; the Refresh button is an explicit
+  // escape hatch for the same-tab case.
+  //
+  // SuperAdmin bypass only — that role is the platform's protected oversight
+  // tier. Regular Admin goes through the page-access check like every other
+  // role; admins can grant themselves access via /admin/page-access if they
+  // need it. Backend check_access also bypasses only for SuperAdmin (see
+  // PageAccessRepository.check_access) — this is belt-and-braces.
+  const keys = TOOL_REGISTRY.map((t) => t.pageKey);
+  const { loading, allowedMap, refresh } = usePageAccessBatch(keys);
+  const { isSuperAdmin } = useCurrentUser();
+  const bypass = !ENABLE_PAGE_ACCESS_GATE || isSuperAdmin;
 
-    const tasks = [
-        {
-            title: "Ingest KGs",
-            description: "Upload Knowledge Graph files in JSON-LD or Turtle format to a specified named graph",
-            icon: Database,
-            href: "/user/ingest-kg",
-            color: "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
-        },
-        {
-            title: "NER Extraction",
-            description: "Extract Neuroscience Named Entities from text using multi-agent systems",
-            icon: Brain,
-            href: "/user/sie",
-            color: "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
-        },
-        {
-            title: "Resource Extraction",
-            description: "Extract structured resources from unstructured sources and documents",
-            icon: FileText,
-            href: "/user/extract-resource",
-            color: "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800"
-        },
-//         {
-//             title: "Pdf2Reproschema",
-//             description: "Convert PDF documents to Reproschema format using multi-agent extraction",
-//             icon: Upload,
-//             href: "/user/pdf2reproschema",
-//             color: "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800"
-//         }
-    ];
-
-    return (
-        <div className="flex flex-col max-w-6xl mx-auto p-4">
-            <h1 className="text-3xl font-bold mb-4 dark:text-white">Welcome to Your Dashboard</h1>
-            <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg">
-                Access various tools and perform different tasks. You can navigate using the sidebar menu on the left or click on the task cards below to get started.
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                {tasks.map((task, index) => {
-                    const Icon = task.icon;
-                    return (
-                        <Link
-                            key={index}
-                            href={task.href}
-                            className={`block p-6 rounded-lg border-2 ${task.color} hover:shadow-lg transition-all duration-200 group`}
-                        >
-                            <div className="flex items-start space-x-4">
-                                <div className={`p-3 rounded-lg bg-white dark:bg-gray-800 group-hover:scale-110 transition-transform duration-200`}>
-                                    <Icon className="w-6 h-6 text-gray-700 dark:text-gray-300" />
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                        {task.title}
-                                    </h3>
-                                    <p className="text-gray-600 dark:text-gray-400 text-sm">
-                                        {task.description}
-                                    </p>
-                                </div>
-                            </div>
-                        </Link>
-                    );
-                })}
-            </div>
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "end", justifyContent: "space-between", marginBottom: 16 }}>
+        <div>
+          <h2 style={{ fontFamily: FONTS.display, fontSize: 24, margin: 0, letterSpacing: "-0.01em", fontWeight: 400 }}>
+            Workflow tools
+          </h2>
+          <div style={{ fontSize: 12, color: "var(--bkb-textMuted)", marginTop: 4 }}>
+            {isSuperAdmin
+              ? "SuperAdmin access — every tool is enabled regardless of page-access entries."
+              : "Tools are off by default — an admin grants role- or user-level access through the page-access surface."}
+          </div>
         </div>
-    );
+        <button
+          className="bkb-btn bkb-btn-ghost"
+          onClick={refresh}
+          disabled={loading}
+          title="Re-check tool access — useful right after an admin grants you a new tool."
+          style={{ padding: "4px 10px", fontSize: 12 }}
+        >
+          <Icon name="arrow" size={11} /> {loading ? "Refreshing…" : "Refresh"}
+        </button>
+      </div>
+
+      {/* Mobile: min(280px,100%) lets the auto-fill grid collapse to one column without overflowing narrow phones */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(280px, 100%), 1fr))", gap: 12 }}>
+        {TOOL_REGISTRY.map((t) => {
+          const allowed = bypass ? true : allowedMap[t.pageKey];
+          const ready = bypass ? true : !loading;
+          const inner = (
+            <div
+              className="bkb-card"
+              style={{
+                padding: 18,
+                opacity: ready && !allowed ? 0.55 : 1,
+                cursor: ready ? (allowed ? "pointer" : "not-allowed") : "default",
+                transition: "all .15s",
+                height: "100%",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                <div
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 6,
+                    background: `color-mix(in oklch, ${t.color}, transparent 90%)`,
+                    color: t.color,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Icon name={t.icon} size={16} />
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 500 }}>{t.title}</div>
+                <span
+                  className="bkb-chip"
+                  style={{
+                    marginLeft: "auto",
+                    fontSize: 10,
+                    borderColor: ready
+                      ? allowed
+                        ? "var(--bkb-accent)"
+                        : "var(--bkb-textSubtle)"
+                      : "var(--bkb-border)",
+                    color: ready ? (allowed ? "var(--bkb-accent)" : "var(--bkb-textMuted)") : "var(--bkb-textMuted)",
+                  }}
+                >
+                  {ready ? (allowed ? "available" : "disabled") : "checking…"}
+                </span>
+              </div>
+              <div style={{ fontSize: 12, color: "var(--bkb-textMuted)", lineHeight: 1.5, marginBottom: 12 }}>
+                {t.description}
+              </div>
+              <div className="bkb-mono" style={{ fontSize: 10, color: "var(--bkb-textSubtle)" }}>
+                {t.pageKey}
+              </div>
+            </div>
+          );
+          return allowed ? (
+            <Link key={t.pageKey} href={t.href} style={{ textDecoration: "none", color: "inherit" }}>
+              {inner}
+            </Link>
+          ) : (
+            <div key={t.pageKey} title="Disabled — request access from an admin">
+              {inner}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── API key tab — manage the shared OpenRouter key ──────────────────────
+
+function DashKeys() {
+  const v = useApiKeyValidator();
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "end", justifyContent: "space-between", marginBottom: 16 }}>
+        <div>
+          <h2 style={{ fontFamily: FONTS.display, fontSize: 24, margin: 0, letterSpacing: "-0.01em", fontWeight: 400 }}>
+            API key
+          </h2>
+          <div style={{ fontSize: 12, color: "var(--bkb-textMuted)", marginTop: 4, maxWidth: 640 }}>
+            Configure your OpenRouter API key once here. It is reused by every workflow tool the admin has enabled
+            for you (NER extraction, Resource extraction, …).
+          </div>
+        </div>
+      </div>
+
+      <ApiKeyValidatorUI
+        apiKey={v.apiKey}
+        onApiKeyChange={v.setApiKey}
+        isApiKeyValid={v.isApiKeyValid}
+        isValidatingKey={v.isValidatingKey}
+        apiKeyError={v.apiKeyError}
+        successMessage={v.successMessage}
+        onValidate={v.validateApiKey}
+        onClear={v.handleClear}
+        sharedKeyStatus={v.sharedKeyStatus}
+        warningMessage="No key configured yet — workflow tools that need it will refuse to run until you validate one."
+      />
+
+      <div
+        style={{
+          fontSize: 11,
+          color: "var(--bkb-textSubtle)",
+          marginTop: 4,
+        }}
+      >
+        Stored in <span className="bkb-mono">sessionStorage</span> for this browser session only — sign out or close
+        the tab to forget it.
+      </div>
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────
+
+export default function DashboardPage() {
+  const { user, loading } = useCurrentUser();
+  const [tab, setTab] = React.useState<DashTab>("tools");
+
+  const greetingName = React.useMemo(() => {
+    if (loading) return "—";
+    if (!user) return "Guest";
+    if (user.name) return user.name.split(/\s+/)[0];
+    return user.email.split("@")[0];
+  }, [user, loading]);
+
+  const subtitle = React.useMemo(() => {
+    if (!user) return "Sign in to see your tools.";
+    const role = user.roles?.[0] ?? "Member";
+    return `${role} · ${user.auth_source ?? "—"}`;
+  }, [user]);
+
+  return (
+    <Theme theme="light" style={{ background: "#f0eee9", minHeight: "calc(100vh - 64px)" }}>
+      <div style={{ minHeight: "100%", background: "var(--bkb-bg)" }}>
+        <div style={{ background: "var(--bkb-surface)", borderBottom: "1px solid var(--bkb-border)" }}>
+          {/* home-pad shrinks the horizontal padding on tablet/phone */}
+          <div className="home-pad" style={{ maxWidth: 1280, margin: "0 auto", padding: "28px 32px 0" }}>
+            <div style={{ display: "flex", alignItems: "end", justifyContent: "space-between", marginBottom: 20 }}>
+              <div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: "var(--bkb-textSubtle)",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    marginBottom: 6,
+                  }}
+                >
+                  Dashboard
+                </div>
+                {/* clamp() scales the 40px heading down on small screens, same max */}
+                <h1 style={{ fontFamily: FONTS.display, fontSize: "clamp(28px, 7vw, 40px)", margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
+                  Welcome back, <em>{greetingName}</em>
+                </h1>
+                <div style={{ fontSize: 13, color: "var(--bkb-textMuted)", marginTop: 4 }}>{subtitle}</div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 2, marginBottom: -1 }}>
+              {(
+                [
+                  { id: "tools", l: "Tools" },
+                  { id: "keys", l: "API key" },
+                ] as const
+              ).map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  style={{
+                    padding: "10px 16px",
+                    border: "none",
+                    background: "transparent",
+                    color: tab === t.id ? "var(--bkb-text)" : "var(--bkb-textMuted)",
+                    borderBottom: `2px solid ${tab === t.id ? "var(--bkb-primary)" : "transparent"}`,
+                    fontSize: 13,
+                    fontWeight: tab === t.id ? 500 : 400,
+                    cursor: "pointer",
+                    fontFamily: FONTS.body,
+                  }}
+                >
+                  {t.l}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* home-pad shrinks the horizontal padding on tablet/phone */}
+        <div className="home-pad" style={{ maxWidth: 1280, margin: "0 auto", padding: "28px 32px" }}>
+          {tab === "tools" && <DashTools />}
+          {tab === "keys" && <DashKeys />}
+        </div>
+      </div>
+    </Theme>
+  );
 }

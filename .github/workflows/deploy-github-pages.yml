@@ -1,0 +1,116 @@
+name: Deploy to GitHub Pages
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, closed]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: gh-pages-deploy
+  cancel-in-progress: false
+
+jobs:
+  build-deploy:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Compute base path and destination
+        id: ctx
+        run: |
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          OWNER="${GITHUB_REPOSITORY%/*}"
+          if [ "$REPO_NAME" = "${OWNER}.github.io" ]; then
+            ROOT_BASE=""
+          else
+            ROOT_BASE="/$REPO_NAME"
+          fi
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            PR_NUM="${{ github.event.pull_request.number }}"
+            echo "base=$ROOT_BASE/pr-$PR_NUM" >> "$GITHUB_OUTPUT"
+            echo "dest=pr-$PR_NUM" >> "$GITHUB_OUTPUT"
+            echo "preview=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "base=$ROOT_BASE" >> "$GITHUB_OUTPUT"
+            echo "dest=." >> "$GITHUB_OUTPUT"
+            echo "preview=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - run: npm ci
+
+      - name: Build static export
+        env:
+          EXPORT: "true"
+          NEXT_PUBLIC_BASE_PATH: ${{ steps.ctx.outputs.base }}
+        run: npm run build
+
+      - name: Disable Jekyll processing
+        run: touch out/.nojekyll
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./out
+          destination_dir: ${{ steps.ctx.outputs.dest }}
+          keep_files: true
+          commit_message: "Deploy ${{ steps.ctx.outputs.dest }} from ${{ github.sha }}"
+
+      - name: Comment preview URL on PR
+        if: steps.ctx.outputs.preview == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const prNum = context.payload.pull_request.number;
+            const host = (repo === `${owner}.github.io`)
+              ? `https://${owner}.github.io`
+              : `https://${owner}.github.io/${repo}`;
+            const url = `${host}/pr-${prNum}/`;
+            const marker = '<!-- pages-preview-url -->';
+            const body = `${marker}\n🔎 **Pages preview:** ${url}\n\n_Built from ${context.sha.slice(0, 7)} · updates on each push to this PR._`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner, repo, issue_number: prNum,
+            });
+            const existing = comments.find(c => c.body?.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number: prNum, body });
+            }
+
+  cleanup:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+
+      - name: Remove PR preview directory
+        run: |
+          set -e
+          PR_DIR="pr-${{ github.event.pull_request.number }}"
+          if [ -d "$PR_DIR" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git rm -rf "$PR_DIR"
+            git commit -m "Cleanup preview for PR #${{ github.event.pull_request.number }}"
+            git push
+          else
+            echo "No preview directory to clean up."
+          fi

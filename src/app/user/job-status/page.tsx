@@ -1108,7 +1108,8 @@ export default function JobStatusPage() {
 
     return (
         <div className="flex flex-col max-w-7xl mx-auto p-4">
-            <div className="flex justify-between items-center mb-6">
+            {/* Stack heading above the Refresh button on phones; row layout at sm+ */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-6">
                 <div>
                     <h1 className="text-3xl font-bold mb-2 dark:text-white">Ingestion Job Status</h1>
                     <p className="text-gray-600 dark:text-gray-400">
@@ -1353,9 +1354,10 @@ export default function JobStatusPage() {
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-                            <div className="flex justify-between items-center">
+                            <div className="flex justify-between items-center gap-3">
                                 <h2 className="text-2xl font-bold dark:text-white">Job Details</h2>
-                                <div className="flex items-center gap-3">
+                                {/* Allow the status chips + close button to wrap on narrow screens */}
+                                <div className="flex items-center gap-3 flex-wrap justify-end">
                                     {checkingRecoverable[selectedJob.job_id || selectedJob.id || ''] && (
                                         <span className="text-xs text-gray-500 dark:text-gray-400">Checking recoverable status...</span>
                                     )}
@@ -1390,9 +1392,10 @@ export default function JobStatusPage() {
                             </div>
                         </div>
                         </div>
-                        <div className="flex-1 overflow-hidden flex">
+                        {/* Stack the info + live-feed columns vertically on phones, side-by-side at md+ */}
+                        <div className="flex-1 overflow-y-auto md:overflow-hidden flex flex-col md:flex-row">
                             {/* Left Column - Job Information */}
-                            <div className="flex-1 p-6 space-y-6 overflow-y-auto border-r border-gray-200 dark:border-gray-700 min-w-0">
+                            <div className="flex-1 p-6 space-y-6 md:overflow-y-auto border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 min-w-0">
                             {/* Current Status Section */}
                             {(selectedJob.current_file || selectedJob.status === 'running' || selectedJob.current_stage) && (
                                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
@@ -1756,7 +1759,8 @@ export default function JobStatusPage() {
                             
                             {/* Right Column - Processing History Live Feed */}
                             {selectedJob.processing_history && selectedJob.processing_history.length > 0 ? (
-                                <div className="w-96 flex-shrink-0 p-6 overflow-y-auto bg-gray-50 dark:bg-gray-900/50 border-l border-gray-200 dark:border-gray-700">
+                                // Full width on phones, fixed 384px rail at md+
+                                <div className="w-full md:w-96 md:flex-shrink-0 p-6 md:overflow-y-auto bg-gray-50 dark:bg-gray-900/50 border-t md:border-t-0 md:border-l border-gray-200 dark:border-gray-700">
                                     <div className="sticky top-0 bg-gray-50 dark:bg-gray-900/50 pb-4 mb-4 border-b border-gray-200 dark:border-gray-700 z-10">
                                         <div className="flex justify-between items-center">
                                             <h3 className="text-lg font-semibold dark:text-white">Live Processing Feed</h3>
@@ -1860,8 +1864,8 @@ export default function JobStatusPage() {
                                     </div>
                                 </div>
                             ) : (
-                                // Empty state when no processing history
-                                <div className="w-96 flex-shrink-0 p-6 bg-gray-50 dark:bg-gray-900/50 border-l border-gray-200 dark:border-gray-700 flex items-center justify-center">
+                                // Empty state — full width on phones, fixed 384px rail at md+
+                                <div className="w-full md:w-96 md:flex-shrink-0 p-6 bg-gray-50 dark:bg-gray-900/50 border-t md:border-t-0 md:border-l border-gray-200 dark:border-gray-700 flex items-center justify-center">
                                     <div className="text-center">
                                         <p className="text-sm text-gray-500 dark:text-gray-400">No processing history available</p>
                                     </div>

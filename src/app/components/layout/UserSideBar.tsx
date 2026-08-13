@@ -2,11 +2,12 @@
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Database, Brain, FileText, Upload, User, Activity } from "lucide-react";
+import { ENABLE_EXTRACTION_TOOLS, EXTRACTION_TOOL_HREFS } from "@/src/config/featureFlags";
 
 const UserSideBar: React.FC = () => {
     const pathname = usePathname();
 
-    const menuItems = [
+    const allMenuItems = [
         {
             title: "Dashboard",
             href: "/user/dashboard",
@@ -35,12 +36,24 @@ const UserSideBar: React.FC = () => {
 
     ];
 
+    // Hide the extraction tools while the backend cannot serve them — ml_service
+    // does not register their WebSocket endpoints without the structsense package.
+    // Entries are kept above, not deleted, so flipping the flag restores them.
+    const menuItems = ENABLE_EXTRACTION_TOOLS
+        ? allMenuItems
+        : allMenuItems.filter(
+              (item) => !(EXTRACTION_TOOL_HREFS as readonly string[]).includes(item.href),
+          );
+
     return (
         <>
             
 
-            <aside id="logo-sidebar" className="fixed top-0 left-0 z-30 w-64 pt-20 transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700" style={{ height: "300px" }} aria-label="Sidebar">
-                <div className="h-full px-4 py-4 overflow-y-auto bg-white dark:bg-gray-800" style={{ marginTop: "55px" }}>
+            {/* Mobile-safe: -translate-x-full hides the fixed sidebar off-screen below sm (640px);
+                sm:translate-x-0 slides it in at tablet+. w-64 (256px) stays within phone viewports.
+                No content margin is applied elsewhere, so the hidden rail never squeezes page content. */}
+            <aside id="logo-sidebar" className="fixed left-0 z-[5] w-64 max-w-[80vw] transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700" style={{ top: "56px", height: "300px" }} aria-label="Sidebar">
+                <div className="h-full px-4 py-4 overflow-y-auto bg-white dark:bg-gray-800">
                     <ul className="space-y-1 font-medium">
                         {menuItems.map((item) => {
                             const Icon = item.icon;

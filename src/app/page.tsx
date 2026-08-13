@@ -1,632 +1,819 @@
 "use client";
 
+/**
+ * Home — landing page (editorial direction).
+ *
+ * Narrative order: Hero → What is BrainKB (what it is) → AbstractAtlas (what
+ * users can explore) → Use Cases (where it applies) → BrainKB Tools (which
+ * tools enable it) → Video (how it works) → Structured Models (what models
+ * support it) → Powered by AI agents (technical credibility).
+ * All copy is content-managed from config-home.yaml; the /api/statistics flow
+ * is preserved.
+ */
+
 import yaml from "@/src/config/yaml/config-home.yaml";
-import {useEffect, useState} from "react";
-import {Brain, Database, FileText, Users, Sparkles, ExternalLink, Upload, Network, CheckCircle, FileCheck, Code, Layers, BookOpen, Search, UsersRound, Globe, FolderTree, FileSearch, FileJson, Tag, MessageSquare, Eye, AlertCircle} from "lucide-react";
+import toolsLib from "@/src/config/yaml/tools-libraries.yaml";
+import { useEffect, useState } from "react";
+import {
+  Brain, Database, FileText, Users, Sparkles, ExternalLink, Network, CheckCircle,
+  FileCheck, Code, Layers as LayersIcon, BookOpen, Search, UsersRound, Globe, FolderTree,
+  FileSearch, FileJson, Tag, MessageSquare, Eye, AlertCircle, Play,
+} from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
+import { BkbHero } from "@/src/app/components/design-system/BkbHero";
+import { Theme, FONTS } from "@/src/app/components/design-system";
+import "./user/dashboard/fonts.css";
+
+// ─── Icon mapping (preserved from original) ─────────────────────────────
+
+const ICON_MAP: Record<string, any> = {
+  brain: Brain,
+  database: Database,
+  filetext: FileText,
+  users: Users,
+  code: Code,
+  layers: LayersIcon,
+  bookopen: BookOpen,
+  filecheck: FileCheck,
+  network: Network,
+  search: Search,
+  usersround: UsersRound,
+  globe: Globe,
+  foldertree: FolderTree,
+  filesearch: FileSearch,
+  filejson: FileJson,
+  tag: Tag,
+};
+const iconBySlug = (s?: string) => ICON_MAP[s?.toLowerCase() ?? ""] ?? Database;
+
+// ─── Section primitives ──────────────────────────────────────────────────
+
+function SectionTitle({ children, size = 46 }: { children: React.ReactNode; size?: number }) {
+  return (
+    <h2
+      style={{
+        fontFamily: FONTS.display,
+        fontSize: `clamp(30px, 6vw, ${size}px)`,
+        lineHeight: 1.06,
+        margin: 0,
+        letterSpacing: "-0.02em",
+        fontWeight: 400,
+      }}
+    >
+      {children}
+    </h2>
+  );
+}
+
+function SectionLead({ children }: { children: React.ReactNode }) {
+  return (
+    <p style={{ fontSize: 16, color: "var(--bkb-textMuted)", lineHeight: 1.65, margin: "16px 0 0", maxWidth: 720 }}>
+      {children}
+    </p>
+  );
+}
+
+function Eyebrow({ children, color = "var(--bkb-accent)" }: { children: React.ReactNode; color?: string }) {
+  return (
+    <div
+      style={{
+        fontFamily: FONTS.mono,
+        fontSize: 12,
+        letterSpacing: "0.18em",
+        textTransform: "uppercase",
+        color,
+        fontWeight: 600,
+        marginBottom: 18,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+// Underlined accent link used in section headers ("View all … →").
+function MoreLink({ href, children, external = true }: { href: string; children: React.ReactNode; external?: boolean }) {
+  const style: React.CSSProperties = {
+    fontSize: 14,
+    fontWeight: 600,
+    color: "var(--bkb-accent)",
+    textDecoration: "none",
+    borderBottom: "2px solid color-mix(in oklch, var(--bkb-accent), transparent 60%)",
+    paddingBottom: 2,
+    whiteSpace: "nowrap",
+  };
+  return external ? (
+    <a href={href} target="_blank" rel="noopener noreferrer" style={style}>{children}</a>
+  ) : (
+    <Link href={href} style={style}>{children}</Link>
+  );
+}
+
+// VideoPlayer — lightweight YouTube facade. Shows the thumbnail + a play
+// button; only loads the (autoplaying) iframe once the user clicks, so the
+// landing page stays fast even with several videos.
+function VideoPlayer({ id, title, onPlay }: { id: string; title?: string; onPlay?: () => void }) {
+  const [playing, setPlaying] = useState(false);
+  return (
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        paddingTop: "56.25%",
+        borderRadius: 14,
+        overflow: "hidden",
+        background: "linear-gradient(135deg, #14241c, #0d1813)",
+        boxShadow: "0 18px 40px -18px rgba(0,0,0,0.45)",
+      }}
+    >
+      {playing ? (
+        <iframe
+          src={`https://www.youtube-nocookie.com/embed/${id}?autoplay=1`}
+          title={title || "Video"}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }}
+        />
+      ) : (
+        <button
+          onClick={() => {
+            onPlay?.();
+            setPlaying(true);
+          }}
+          aria-label={`Play ${title || "video"}`}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            border: 0,
+            padding: 0,
+            cursor: "pointer",
+            background: "transparent",
+            display: "block",
+          }}
+        >
+          {/* thumbnail (plain img — external host, no next/image config needed).
+              maxresdefault only exists for HD videos / once processed, so fall
+              back to hqdefault, which YouTube always generates. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`https://i.ytimg.com/vi/${id}/maxresdefault.jpg`}
+            alt=""
+            onError={(e) => {
+              const img = e.currentTarget;
+              if (!img.dataset.fallback) {
+                img.dataset.fallback = "1";
+                img.src = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+              }
+            }}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.5 }}
+          />
+          {title && (
+            <span
+              style={{
+                position: "absolute",
+                top: 22,
+                left: 26,
+                right: 26,
+                textAlign: "left",
+                fontFamily: FONTS.display,
+                fontSize: 18,
+                color: "rgba(255,255,255,0.92)",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              {title}
+            </span>
+          )}
+          <span
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: 66,
+              height: 66,
+              borderRadius: "50%",
+              background: "#fff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 6px 20px rgba(0,0,0,0.3)",
+            }}
+          >
+            <Play style={{ width: 24, height: 24, marginLeft: 3 }} fill="#d12c2c" color="#d12c2c" />
+          </span>
+        </button>
+      )}
+    </div>
+  );
+}
+
+// Status pill styling for use-case rows
+const STATUS_PILL: Record<string, { label: string; fg: string; bg: string }> = {
+  available: { label: "Available", fg: "#0f7a52", bg: "color-mix(in oklch, #1db981, transparent 86%)" },
+  partially_available: { label: "Partially available", fg: "#1d6fb8", bg: "color-mix(in oklch, #2b8fe0, transparent 86%)" },
+  in_development: { label: "In development", fg: "#b4451f", bg: "color-mix(in oklch, #e0682b, transparent 86%)" },
+  in_review: { label: "In review", fg: "#9a6a12", bg: "color-mix(in oklch, #e0a52b, transparent 84%)" },
+  coming_soon: { label: "Coming soon", fg: "var(--bkb-textMuted)", bg: "color-mix(in oklch, var(--bkb-textMuted), transparent 88%)" },
+};
+
+// Shared accent palette for tool badges (falls back when YAML omits `color`)
+const TOOL_COLORS = ["#0f7a52", "#2563eb", "#b45309", "#7c3aed"];
+
+// VideoCarousel — featured player on the left, copy on the right. With more
+// than one video it auto-advances (pausing once the viewer interacts or hits
+// play); the headline/description swap to match the active video.
+function VideoCarousel({
+  videos,
+  eyebrow,
+  headline,
+  description,
+  buttonText,
+}: {
+  videos: any[];
+  eyebrow?: string;
+  headline?: string;
+  description?: string;
+  buttonText?: string;
+}) {
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const n = videos.length;
+
+  useEffect(() => {
+    if (paused || n <= 1) return;
+    const t = setInterval(() => setActive((a) => (a + 1) % n), 6500);
+    return () => clearInterval(t);
+  }, [paused, n]);
+
+  const cur = videos[active] || {};
+  const go = (i: number) => {
+    setPaused(true);
+    setActive(((i % n) + n) % n);
+  };
+
+  const navBtn: React.CSSProperties = {
+    width: 38,
+    height: 38,
+    borderRadius: 999,
+    border: "1px solid var(--bkb-border)",
+    background: "var(--bkb-surface)",
+    color: "var(--bkb-text)",
+    cursor: "pointer",
+    fontSize: 16,
+    lineHeight: 1,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+  };
+
+  return (
+    <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "1.15fr 1fr", gap: 56, alignItems: "center" }}>
+      <VideoPlayer key={active} id={cur.youtube_id} title={cur.title} onPlay={() => setPaused(true)} />
+      <div>
+        {/* eyebrow + headline are fixed; only the video and its description cycle */}
+        <Eyebrow>{eyebrow || "See It in Action"}</Eyebrow>
+        <SectionTitle size={40}>{headline || "See It in Action"}</SectionTitle>
+        {(cur.description || description) && (
+          <p style={{ fontSize: 16, color: "var(--bkb-textMuted)", lineHeight: 1.7, margin: "16px 0 28px" }}>
+            {cur.description || description}
+          </p>
+        )}
+        <a
+          href={`https://youtu.be/${cur.youtube_id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bkb-btn bkb-btn-primary"
+          style={{ textDecoration: "none" }}
+        >
+          {buttonText || "Watch on YouTube"} →
+        </a>
+
+        {n > 1 && (
+          <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 32 }}>
+            <button onClick={() => go(active - 1)} aria-label="Previous video" style={navBtn}>←</button>
+            <div style={{ display: "flex", gap: 8 }}>
+              {videos.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => go(i)}
+                  aria-label={`Go to video ${i + 1}`}
+                  style={{
+                    width: i === active ? 26 : 9,
+                    height: 9,
+                    borderRadius: 999,
+                    border: 0,
+                    padding: 0,
+                    cursor: "pointer",
+                    transition: "all .3s ease",
+                    background: i === active ? "var(--bkb-accent)" : "var(--bkb-border)",
+                  }}
+                />
+              ))}
+            </div>
+            <button onClick={() => go(active + 1)} aria-label="Next video" style={navBtn}>→</button>
+            <span style={{ fontFamily: FONTS.mono, fontSize: 12, color: "var(--bkb-textSubtle)", marginLeft: 4 }}>
+              {String(active + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Page ────────────────────────────────────────────────────────────────
 
 export default function Home() {
-    const [modelBoxCountHeaderTitle, setModelBoxCountHeaderTitle] = useState("");
-    const [modelBoxCountHeaderSubTitle, setModelBoxCountHeaderSubTitle] = useState("");
+  const [structuedModelHeaderTitle, setStructuedModelHeaderTitle] = useState("");
+  const [structuedModelHeaderSubTitle, setStructuedModelHeaderSubTitle] = useState("");
+  const [dataCount, setCountData] = useState<any[]>([]);
 
-    const [structuedModelHeaderTitle, setStructuedModelHeaderTitle] = useState("");
-    const [structuedModelHeaderSubTitle, setStructuedModelHeaderSubTitle] = useState("");
+  useEffect(() => {
+    const sm = yaml.headersboxpage.find((p: any) => p.slug === "structuredmodelsheader");
+    setStructuedModelHeaderTitle(sm?.title ?? "");
+    setStructuedModelHeaderSubTitle(sm?.subtitle ?? "");
 
-    const [brainkbMainPageTitle, setBrainkbMainPageTitle] = useState("");
-    const [brainkbMainPageSubTitle, setBrainkbMainPageSubTitle] = useState("");
-
-    const [dataCount, setCountData] = useState<any[]>([])
-
-    const fetchAndSetData = async () => {
-        setModelBoxCountHeaderTitle("");
-        setModelBoxCountHeaderSubTitle("");
-        setStructuedModelHeaderTitle("");
-        setStructuedModelHeaderSubTitle("");
-        setBrainkbMainPageTitle("");
-        setBrainkbMainPageSubTitle("");
+    (async () => {
+      try {
+        const response = await fetch("/api/statistics");
+        const result = await response.json();
+        if (result.success && result.data) {
+          setCountData(Array.isArray(result.data) ? result.data : []);
+        } else {
+          setCountData([]);
+        }
+      } catch {
         setCountData([]);
+      }
+    })();
+  }, []);
 
+  const videos: any[] = Array.isArray(yaml.videos?.items) ? yaml.videos.items : [];
 
-        const boxiconsdetailsCounter = yaml.headersboxpage.find((page) => page.slug === "statisticsboxheader");
-        // console.log(boxiconsdetailsCounter);
+  // "open-source tools" counts everything on the Tools & Libraries page —
+  // the flagship apps plus the Python libraries.
+  const tl: any = toolsLib;
+  const openSourceCount =
+    (Array.isArray(tl.tools) ? tl.tools.length : 0) +
+    (Array.isArray(tl.libraries) ? tl.libraries.length : 0);
 
-        const page_title = boxiconsdetailsCounter ? boxiconsdetailsCounter.title : "";
-        const page_sub_title = boxiconsdetailsCounter ? boxiconsdetailsCounter.subtitle : "";
-        setModelBoxCountHeaderTitle(page_title);
-        setModelBoxCountHeaderSubTitle(page_sub_title);
+  const heroStats = [
+    { value: openSourceCount, label: "open-source tools", href: "/tools-and-libraries" },
+    { value: Array.isArray(yaml.usecases?.cases) ? yaml.usecases.cases.length : 0, label: "active use cases" },
+    { value: "Multi-agent", label: "orchestration" },
+  ];
 
-        const structuredmodelHeader = yaml.headersboxpage.find((page) => page.slug === "structuredmodelsheader");
-        // console.log(structuredmodelHeader);
+  return (
+    <div style={{ background: "#f0eee9" }}>
+      <Theme theme="light" style={{ background: "transparent" }}>
+        <BkbHero stats={heroStats} />
 
-        const structured_page_title = structuredmodelHeader ? structuredmodelHeader.title : "";
-        const structured_page_sub_title = structuredmodelHeader ? structuredmodelHeader.subtitle : "";
-        setStructuedModelHeaderTitle(structured_page_title);
-        setStructuedModelHeaderSubTitle(structured_page_sub_title);
-
-        const brainkbmainpge = yaml.headersboxpage.find((page) => page.slug === "brainkbmainpge");
-        // console.log(brainkbmainpge);
-
-        const brainkb_title = brainkbmainpge ? brainkbmainpge.title : "";
-        const brainkb_sub_title = brainkbmainpge ? brainkbmainpge.subtitle : "";
-        setBrainkbMainPageTitle(brainkb_title);
-        setBrainkbMainPageSubTitle(brainkb_sub_title);
-    };
-
-    useEffect(() => {
-        fetchAndSetData();
-
-        const fetchAllData = async () => {
-            try {
-                // Fetch from API route which handles server-side caching
-                const response = await fetch('/api/statistics');
-                const result = await response.json();
-                
-                if (result.success && result.data) {
-                    // Ensure data is always an array
-                    const dataArray = Array.isArray(result.data) ? result.data : [];
-                    setCountData(dataArray);
-                } else {
-                    console.error('Failed to fetch statistics:', result.error);
-                    // Fallback to empty array
-                    setCountData([]);
-                }
-            } catch (error) {
-                console.error('Error fetching statistics:', error);
-                setCountData([]);
-            }
-        };
-
-        fetchAllData();
-    }, []);
-
-
-    // Centralized icon mapping
-    const getIconBySlug = (iconSlug: string) => {
-        const iconMap: { [key: string]: any } = {
-            "brain": Brain,
-            "database": Database,
-            "filetext": FileText,
-            "users": Users,
-            "code": Code,
-            "layers": Layers,
-            "bookopen": BookOpen,
-            "filecheck": FileCheck,
-            "network": Network,
-            "search": Search,
-            "usersround": UsersRound,
-            "globe": Globe,
-            "foldertree": FolderTree,
-            "filesearch": FileSearch,
-            "filejson": FileJson,
-            "tag": Tag,
-        };
-        return iconMap[iconSlug?.toLowerCase()] || Database;
-    };
-
-    // Color theme mapping
-    const getColorTheme = (theme: string) => {
-        const themes: { [key: string]: any } = {
-            "blue": {
-                gradient: "from-blue-500 to-blue-600",
-                borderHover: "hover:border-blue-500",
-                text: "text-blue-600",
-                hover: "hover:text-blue-700"
-            },
-            "green": {
-                gradient: "from-green-500 to-green-600",
-                borderHover: "hover:border-green-500",
-                text: "text-green-600",
-                hover: "hover:text-green-700"
-            },
-            "purple": {
-                gradient: "from-purple-500 to-purple-600",
-                borderHover: "hover:border-purple-500",
-                text: "text-purple-600",
-                hover: "hover:text-purple-700"
-            }
-        };
-        return themes[theme?.toLowerCase()] || themes["blue"];
-    };
-
-    // Get color classes for use cases
-    const getUseCaseColorClasses = (colorName: string) => {
-        const colorMap: { [key: string]: { icon: string; text: string; textHover: string; border: string } } = {
-            "sky-500": { icon: "text-sky-500", text: "text-sky-600", textHover: "hover:text-sky-700", border: "hover:border-sky-300" },
-            "emerald-500": { icon: "text-emerald-500", text: "text-emerald-600", textHover: "hover:text-emerald-700", border: "hover:border-emerald-300" },
-            "purple-500": { icon: "text-purple-500", text: "text-purple-600", textHover: "hover:text-purple-700", border: "hover:border-purple-300" },
-            "blue-500": { icon: "text-blue-500", text: "text-blue-600", textHover: "hover:text-blue-700", border: "hover:border-blue-300" },
-            "amber-500": { icon: "text-amber-500", text: "text-amber-600", textHover: "hover:text-amber-700", border: "hover:border-amber-300" },
-            "gray-400": { icon: "text-gray-400", text: "text-gray-600", textHover: "hover:text-gray-700", border: "hover:border-gray-400" }
-        };
-        return colorMap[colorName] || colorMap["gray-400"];
-    };
-
-    return (
-        <div className="main-holder-brainkb">
-            {/* Hero Section */}
-            <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-sky-50 via-white to-emerald-50">
-                <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
-                    <div className="text-center animate-fade-in">
-                        <div className="inline-flex items-center justify-center mb-6">
-                            <Brain className="w-16 h-16 text-sky-500 animate-pulse" />
-                        </div>
-                        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold mb-6 animate-slide-up">
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 via-blue-600 to-emerald-600">
-                                {brainkbMainPageTitle || "BrainKB"}
-                            </span>
-                        </h1>
-                        <p className="text-xl sm:text-2xl lg:text-3xl font-light text-gray-700 mb-8 max-w-3xl mx-auto leading-relaxed animate-slide-up">
-                            {brainkbMainPageSubTitle || "Facilitating Evidence-Based Decision Making to Unlock the Mysteries of the Mind"}
-                        </p>
-                        <div className="flex flex-wrap justify-center gap-4 animate-slide-up">
-                            <a
-                                href="/knowledge-base"
-                                className="px-8 py-3 bg-gradient-to-r from-sky-600 to-blue-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300"
-                            >
-                                View Knowledge Base
-                            </a>
-                            <a
-                                href="#structured-models"
-                                className="px-8 py-3 bg-white text-sky-600 border-2 border-sky-600 rounded-lg font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300"
-                            >
-                                Explore Models
-                            </a>
-                            <a
-                                href="#statistics"
-                                className="px-8 py-3 bg-white text-sky-600 border-2 border-sky-600 rounded-lg font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300"
-                            >
-                                View Statistics
-                            </a>
-                        </div>
+        {/* ── What is BrainKB (what it is) ─────────────────────────── */}
+        {yaml.whatisbrainkb && (
+          <section className="home-pad home-pad-y" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
+            <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "1.05fr 1fr", gap: 72, alignItems: "start", marginBottom: 64 }}>
+              <div>
+                <Eyebrow>{yaml.whatisbrainkb.eyebrow || "What is BrainKB"}</Eyebrow>
+                <SectionTitle>{yaml.whatisbrainkb.headline || yaml.whatisbrainkb.title || "What is BrainKB?"}</SectionTitle>
+              </div>
+              <p style={{ fontSize: 17, color: "var(--bkb-textMuted)", lineHeight: 1.7, margin: 0, paddingTop: 6 }}>
+                {yaml.whatisbrainkb.description || yaml.whatisbrainkb.subtitle}
+              </p>
+            </div>
+            <div className="home-4col" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", borderTop: "1px solid var(--bkb-border)" }}>
+              {Array.isArray(yaml.whatisbrainkb.bullet_points) &&
+                yaml.whatisbrainkb.bullet_points.map((p: any, i: number) => (
+                  <div key={i} style={{ padding: "30px 30px 0", borderLeft: i ? "1px solid var(--bkb-border)" : "none" }}>
+                    <div style={{ fontFamily: FONTS.mono, fontSize: 13, color: "var(--bkb-accent)", marginBottom: 24 }}>
+                      {String(i + 1).padStart(2, "0")}
                     </div>
+                    <h3 style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 400, letterSpacing: "-0.01em", margin: "0 0 10px" }}>
+                      {p.heading}
+                    </h3>
+                    <p style={{ fontSize: 13.5, color: "var(--bkb-textMuted)", lineHeight: 1.6, margin: 0 }}>{p.title}</p>
+                  </div>
+                ))}
+            </div>
+          </section>
+        )}
+
+        {/* ── Use BrainKB from your AI assistant (MCP) — placed high so it's
+            seen; dark highlight card on the light page with a terminal mock ── */}
+        <section className="home-pad" style={{ padding: "0 64px 32px", maxWidth: 1200, margin: "0 auto" }}>
+          <div
+            style={{
+              background: "linear-gradient(160deg, #15271e 0%, #0c1611 62%)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 24,
+              padding: "clamp(28px, 5vw, 56px)",
+            }}
+          >
+            <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
+              <div>
+                <div style={{ fontFamily: FONTS.mono, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "#3ecf8e", fontWeight: 600, marginBottom: 18 }}>
+                  Model Context Protocol
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent"></div>
-            </section>
-
-            {/* Key Features Section */}
-            <section className="py-20 bg-gradient-to-br from-gray-50 to-sky-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-slide-up">
-                    <div className="text-center mb-16">
-                        <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-                            {yaml.keyfeatures?.title || "Key Features"}
-                        </h2>
-                        <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-4">
-                            {yaml.keyfeatures?.subtitle || "Powerful tools for neuroscience knowledge extraction and management"}
-                        </p>
-                        <p className="text-sm text-gray-500 italic">
-                            Login by clicking the button on the top-right navbar to try use these features.
-                        </p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {Array.isArray(yaml.keyfeatures?.features) && yaml.keyfeatures.features.map((feature, index) => {
-                            const Icon = getIconBySlug(feature.icon_slug);
-                            const colorScheme = getColorTheme(feature.color_theme);
-                            return (
-                                <div key={index} className={`group bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent ${colorScheme.borderHover}`}>
-                                    <a 
-                                        href={feature.link}
-                                        className="block"
-                                    >
-                                        <div className={`w-16 h-16 bg-gradient-to-br ${colorScheme.gradient} rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 cursor-pointer`}>
-                                            <Icon className="w-8 h-8 text-white" />
-                                        </div>
-                                    </a>
-                                    <h3 className="text-2xl font-bold text-gray-900 mb-2">{feature.title}</h3>
-                                    <p className="text-sm text-gray-500 mb-4">{feature.short_description}</p>
-                                    <p className="text-gray-600 leading-relaxed">
-                                        {feature.description}
-                                    </p>
-                                </div>
-                            );
-                        })}
-                    </div>
+                <h2 style={{ fontFamily: FONTS.display, fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 400, color: "#f0eee9", letterSpacing: "-0.02em", lineHeight: 1.1, margin: 0 }}>
+                  Drive BrainKB from your AI assistant
+                </h2>
+                <p style={{ fontSize: 16, color: "rgba(240,238,233,0.7)", lineHeight: 1.7, margin: "18px 0 28px", maxWidth: 470 }}>
+                  Use the <strong style={{ color: "#f0eee9", fontWeight: 600 }}>MCP server</strong> directly with Claude or any
+                  MCP client — or the <strong style={{ color: "#f0eee9", fontWeight: 600 }}>BrainKB skill</strong>, which runs on
+                  the same MCP with guided workflows. Either way you ingest, search, and explore the graph in natural language,
+                  as yourself and under your own permissions.
+                </p>
+                <a
+                  href="/mcp"
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#1db981", color: "#0c1611", fontWeight: 600, fontSize: 14, padding: "12px 22px", borderRadius: 10, textDecoration: "none" }}
+                >
+                  Explore MCP &amp; skill →
+                </a>
+              </div>
+              {/* terminal mock */}
+              <div style={{ background: "rgba(0,0,0,0.32)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, overflow: "hidden" }}>
+                <div style={{ display: "flex", gap: 7, padding: "13px 15px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                  <span style={{ width: 11, height: 11, borderRadius: "50%", background: "#f2564f" }} />
+                  <span style={{ width: 11, height: 11, borderRadius: "50%", background: "#f4bf4f" }} />
+                  <span style={{ width: 11, height: 11, borderRadius: "50%", background: "#3ecf8e" }} />
                 </div>
-            </section>
+                <pre
+                  style={{
+                    fontFamily: FONTS.mono,
+                    fontSize: 12.5,
+                    lineHeight: 1.75,
+                    color: "rgba(240,238,233,0.9)",
+                    margin: 0,
+                    padding: "18px 20px",
+                    overflowX: "auto",
+                    whiteSpace: "pre",
+                  }}
+                >
+{`$ claude mcp add --transport http \\
+    brainkb https://mcp.brainkb.org/mcp
 
-            {/* What is BrainKB Section */}
-            <section className="py-20 bg-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-slide-up">
-                    <div className="text-center mb-16">
-                        <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-                            {yaml.whatisbrainkb?.title || "What is BrainKB?"}
-                        </h2>
-                        <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-12">
-                            {yaml.whatisbrainkb?.subtitle || 
-                             "BrainKB is a platform designed to support neuroscience research by structuring and organizing scientific knowledge using knowledge graphs (KGs) for delivering evidence-based insights."}
-                        </p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {Array.isArray(yaml.whatisbrainkb?.bullet_points) && yaml.whatisbrainkb.bullet_points.map((point, index) => {
-                                const CardIcon = getIconBySlug(point.icon_slug || "");
-                                const gradient = point.gradient || "from-gray-500 to-gray-600";
-                                const heading = point.heading || "";
-                                return (
-                                    <div
-                                        key={index}
-                                        className="group bg-gradient-to-br from-sky-50 to-emerald-50 rounded-xl p-6 border border-sky-100 hover:shadow-xl hover:border-sky-300 transition-all duration-300 transform hover:-translate-y-1"
-                                    >
-                                        <div className="mb-4">
-                                            <div className={`w-12 h-12 bg-gradient-to-br ${gradient} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-md`}>
-                                                <CardIcon className="w-6 h-6 text-white" />
-                                            </div>
-                                        </div>
-                                        <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-sky-600 transition-colors">
-                                            {heading}
-                                        </h3>
-                                        <p className="text-gray-700 leading-relaxed">
-                                            {point.title}
-                                        </p>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
+> "Ingest my TTL into the hmba space,
+   then show what changed."`}
+                </pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── AbstractAtlas (what users can explore) ───────────────── */}
+        {yaml.abstractatlas && (
+          <section style={{ background: "linear-gradient(135deg, #e7efe9 0%, #eef2ed 100%)", borderTop: "1px solid var(--bkb-border)", borderBottom: "1px solid var(--bkb-border)" }}>
+            <div className="home-pad home-pad-y home-2col" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1.1fr", gap: 64, alignItems: "center" }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+                  <span style={{ fontFamily: FONTS.mono, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--bkb-accent)", fontWeight: 600 }}>
+                    {yaml.abstractatlas.eyebrow || "Explore"}
+                  </span>
+                  {yaml.abstractatlas.badge && (
+                    <span style={{ fontFamily: FONTS.mono, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--bkb-publication)", border: "1px solid color-mix(in oklch, var(--bkb-publication), transparent 55%)", borderRadius: 999, padding: "2px 9px" }}>
+                      {yaml.abstractatlas.badge}
+                    </span>
+                  )}
                 </div>
-            </section>
+                <SectionTitle size={42}>{yaml.abstractatlas.title}</SectionTitle>
+                {yaml.abstractatlas.description && (
+                  <p style={{ fontSize: 16, color: "var(--bkb-textMuted)", lineHeight: 1.7, margin: "18px 0 28px", maxWidth: 520 }}>
+                    {yaml.abstractatlas.description}
+                  </p>
+                )}
+                <a
+                  href={yaml.abstractatlas.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bkb-btn bkb-btn-primary"
+                  style={{ textDecoration: "none" }}
+                >
+                  {yaml.abstractatlas.button_text || "Open AbstractAtlas"} →
+                </a>
+              </div>
+              <a
+                href={yaml.abstractatlas.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "block",
+                  borderRadius: 16,
+                  overflow: "hidden",
+                  border: "1px solid var(--bkb-border)",
+                  background: "#fff",
+                  boxShadow: "0 24px 50px -26px rgba(0,0,0,0.25)",
+                  padding: 8,
+                }}
+              >
+                <Image
+                  src={yaml.abstractatlas.image}
+                  alt="AbstractAtlas — interactive map of the neuroscience literature"
+                  width={1200}
+                  height={680}
+                  style={{ width: "100%", height: "auto", display: "block", borderRadius: 10 }}
+                />
+              </a>
+            </div>
+          </section>
+        )}
 
-            {/* Use Cases Section */}
-            {yaml.usecases && (
-                <section id="use-cases" className="py-20 bg-gradient-to-br from-gray-50 to-sky-50">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-slide-up">
-                        <div className="text-center mb-16">
-                            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-                                {yaml.usecases.title || "Use Cases"}
-                            </h2>
-                            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-4">
-                                {yaml.usecases.subtitle || "BrainKB is actively developing use cases to support neuroscience research and knowledge management"}
-                            </p>
-                            <p className="text-sm text-gray-500 italic">
-                                {yaml.usecases.description || "Each use case includes ingestion, public view, and feedback components integrated with our Knowledge Graph"}
-                            </p>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                            {Array.isArray(yaml.usecases?.cases) && yaml.usecases.cases.map((useCase, index) => {
-                                const CaseIcon = getIconBySlug(useCase.icon_slug || "");
-                                const isFuture = useCase.is_future || false;
-                                const colorClasses = getUseCaseColorClasses(useCase.icon_color || "gray-400");
-                                return (
-                                    <div 
-                                        key={index} 
-                                        className={`group bg-gradient-to-br ${useCase.background_gradient || "from-gray-50 to-white"} rounded-xl p-6 border-2 ${isFuture ? "border-dashed border-gray-300 hover:border-gray-400 opacity-75" : `border-gray-100 ${colorClasses.border}`} hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1`}
-                                    >
-                                        <div className="flex items-start gap-4 mb-4">
-                                            <div className="flex-shrink-0">
-                                                <div className={`w-12 h-12 bg-gradient-to-br ${useCase.gradient || "from-gray-400 to-gray-500"} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                                                    <CaseIcon className="w-6 h-6 text-white" />
-                                                </div>
-                                            </div>
-                                            <div className="flex-1">
-                                                <h3 className="text-xl font-bold text-gray-900 mb-2">{useCase.title}</h3>
-                                                <p className="text-sm text-gray-600 mb-3">{useCase.case_number}</p>
-                                            </div>
-                                        </div>
-                                        <p className="text-gray-700 leading-relaxed mb-4">
-                                            {useCase.description}
-                                        </p>
-                                        <div className="space-y-2">
-                                            {isFuture ? (
-                                                <div className="flex items-center gap-2 text-sm text-gray-500">
-                                                    <CheckCircle className="w-4 h-4 text-gray-400" />
-                                                    <span>Coming Soon</span>
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                                                        <CheckCircle className={`w-4 h-4 ${colorClasses.icon}`} />
-                                                        <span>Ingestion Process</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                                                        <Eye className={`w-4 h-4 ${colorClasses.icon}`} />
-                                                        <span>Public View & Interactions</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                                                        <MessageSquare className={`w-4 h-4 ${colorClasses.icon}`} />
-                                                        <span>Public Feedback</span>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-                                        <div className="mt-4 space-y-3">
-                                            <div className="flex items-center justify-between gap-4 flex-wrap">
-                                                {useCase.discussion_link && (
-                                                    <a
-                                                        href={useCase.discussion_link}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className={`inline-flex items-center gap-2 ${colorClasses.text} ${colorClasses.textHover} font-semibold transition-colors text-sm`}
-                                                    >
-                                                        View Discussion
-                                                        <ExternalLink className="w-4 h-4" />
-                                                    </a>
-                                                )}
-                                                {useCase.status && (
-                                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
-                                                        useCase.status === "available" 
-                                                            ? "bg-green-100 text-green-800 border border-green-300" 
-                                                            : useCase.status === "partially_available"
-                                                            ? "bg-blue-100 text-blue-800 border border-blue-300"
-                                                            : useCase.status === "in_development"
-                                                            ? "bg-yellow-100 text-yellow-800 border border-yellow-300"
-                                                            : "bg-gray-100 text-gray-800 border border-gray-300"
-                                                    }`}>
-                                                        {useCase.status === "available" 
-                                                            ? "✓ Available" 
-                                                            : useCase.status === "partially_available"
-                                                            ? "⚡ Partially Available"
-                                                            : useCase.status === "in_development"
-                                                            ? "🚧 In Development"
-                                                            : "Coming Soon"}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            {(useCase.status === "available" || useCase.status === "partially_available") && (
-                                                <>
-                                                    {useCase.use_link ? (
-                                                        <a
-                                                            href={useCase.use_link}
-                                                            className={`inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r ${useCase.status === "available" ? "from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600" : "from-blue-500 to-sky-500 hover:from-blue-600 hover:to-sky-600"} text-white rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-sm`}
-                                                        >
-                                                            {useCase.use_link_text || "Login to Use"}
-                                                        </a>
-                                                    ) : useCase.use_text ? (
-                                                        <p className={`text-sm font-medium ${useCase.status === "available" ? "text-green-700" : "text-blue-700"}`}>
-                                                            {useCase.use_text}
-                                                        </p>
-                                                    ) : null}
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        {/* Info Box */}
-                        {yaml.usecases.info_box && (
-                            <div className="bg-gradient-to-br from-sky-50 to-emerald-50 rounded-xl p-6 border-2 border-sky-200">
-                                <div className="flex items-start gap-4">
-                                    <div className="flex-shrink-0">
-                                        <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-emerald-500 rounded-lg flex items-center justify-center">
-                                            <AlertCircle className="w-5 h-5 text-white" />
-                                        </div>
-                                    </div>
-                                    <div className="flex-1">
-                                        <h3 className="text-lg font-bold text-gray-900 mb-2">{yaml.usecases.info_box.title}</h3>
-                                        <p className="text-gray-700 leading-relaxed mb-3">
-                                            {yaml.usecases.info_box.description}
-                                        </p>
-                                        <ul className="space-y-2 text-gray-700 mb-6">
-                                            {Array.isArray(yaml.usecases?.info_box?.components) && yaml.usecases.info_box.components.map((component, compIndex) => (
-                                                <li key={compIndex} className="flex items-start gap-2">
-                                                    <span className="text-sky-500 font-bold">•</span>
-                                                    <span><strong>{component.label}:</strong> {component.description}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-
-                                        {/* Status Information */}
-                                        {yaml.usecases.info_box.status_info && (
-                                            <div className="mt-6 pt-6 border-t border-sky-200">
-                                                <h4 className="text-base font-bold text-gray-900 mb-2">{yaml.usecases.info_box.status_info.title}</h4>
-                                                <p className="text-gray-700 text-sm mb-4">
-                                                    {yaml.usecases.info_box.status_info.description}
-                                                </p>
-                                                <div className="space-y-3">
-                                                    {Array.isArray(yaml.usecases?.info_box?.status_info?.statuses) && yaml.usecases.info_box.status_info.statuses.map((statusItem, statusIndex) => {
-                                                        const getStatusColors = (status: string) => {
-                                                            switch(status) {
-                                                                case "available":
-                                                                    return {
-                                                                        bg: "bg-green-50",
-                                                                        border: "border-green-200",
-                                                                        label: "text-green-800",
-                                                                        text: "text-green-700"
-                                                                    };
-                                                                case "partially_available":
-                                                                    return {
-                                                                        bg: "bg-blue-50",
-                                                                        border: "border-blue-200",
-                                                                        label: "text-blue-800",
-                                                                        text: "text-blue-700"
-                                                                    };
-                                                                case "in_development":
-                                                                    return {
-                                                                        bg: "bg-yellow-50",
-                                                                        border: "border-yellow-200",
-                                                                        label: "text-yellow-800",
-                                                                        text: "text-yellow-700"
-                                                                    };
-                                                                case "coming_soon":
-                                                                    return {
-                                                                        bg: "bg-gray-50",
-                                                                        border: "border-gray-200",
-                                                                        label: "text-gray-800",
-                                                                        text: "text-gray-700"
-                                                                    };
-                                                                default:
-                                                                    return {
-                                                                        bg: "bg-gray-50",
-                                                                        border: "border-gray-200",
-                                                                        label: "text-gray-800",
-                                                                        text: "text-gray-700"
-                                                                    };
-                                                            }
-                                                        };
-                                                        const colors = getStatusColors(statusItem.status);
-                                                        return (
-                                                            <div key={statusIndex} className={`${colors.bg} rounded-lg p-3 border ${colors.border}`}>
-                                                                <div className="flex items-start gap-3">
-                                                                    <span className={`text-sm font-semibold ${colors.label} min-w-[120px]`}>
-                                                                        {statusItem.label}
-                                                                    </span>
-                                                                    <span className={`text-sm ${colors.text} flex-1`}>
-                                                                        {statusItem.description}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {yaml.usecases.info_box.footer_note && (
-                                            <p className="text-gray-600 text-sm mt-6 italic">
-                                                {yaml.usecases.info_box.footer_note}
-                                            </p>
-                                        )}
-                                        {yaml.usecases.info_box.discussion_link && (
-                                            <a
-                                                href={yaml.usecases.info_box.discussion_link}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="mt-4 inline-flex items-center gap-2 text-sky-600 font-semibold hover:text-sky-700 transition-colors text-sm"
-                                            >
-                                                {yaml.usecases.info_box.link_text || "View Full Planning Discussion"}
-                                                <ExternalLink className="w-4 h-4" />
-                                            </a>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
+        {/* ── BrainKB Tools (which tools enable it) ────────────────── */}
+        {yaml.tools && (
+          <section style={{ background: "var(--bkb-surface)", borderTop: "1px solid var(--bkb-border)", borderBottom: "1px solid var(--bkb-border)" }}>
+            <div className="home-pad home-pad-y" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
+              <div style={{ marginBottom: 56 }}>
+                <Eyebrow>{yaml.tools.eyebrow || "The Toolkit"}</Eyebrow>
+                <SectionTitle>{yaml.tools.title || "BrainKB Tools"}</SectionTitle>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 40, marginTop: 18, flexWrap: "wrap" }}>
+                  <p style={{ fontSize: 16, color: "var(--bkb-textMuted)", lineHeight: 1.65, margin: 0, maxWidth: 640 }}>{yaml.tools.subtitle}</p>
+                  {yaml.tools.more_link && (
+                    <MoreLink href={yaml.tools.more_link} external={false}>
+                      {yaml.tools.more_text || "View all tools"} →
+                    </MoreLink>
+                  )}
+                </div>
+              </div>
+              <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 22 }}>
+                {Array.isArray(yaml.tools.items) &&
+                  yaml.tools.items.map((t: any, i: number) => {
+                    const isExternal = t.link?.startsWith?.("http");
+                    const isComingSoon = !t.link || t.link === "#";
+                    const color = t.color || TOOL_COLORS[i % TOOL_COLORS.length];
+                    // Mixed-orientation logos: horizontal wordmarks fill width and
+                    // stay short; square/stacked logos fill the tile height so the
+                    // two kinds carry comparable visual weight.
+                    const isSquareLogo = t.logo_orientation === "square";
+                    const logoImgStyle: React.CSSProperties = isSquareLogo
+                      ? { width: "auto", height: "150px", maxWidth: "70%", objectFit: "contain" }
+                      : { width: "auto", height: "auto", maxWidth: "94%", maxHeight: 150, objectFit: "contain" };
+                    const Inner = (
+                      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+                        {t.category && (
+                          <div style={{ fontFamily: FONTS.mono, fontSize: 11, letterSpacing: "0.13em", textTransform: "uppercase", color: "var(--bkb-textSubtle)", marginBottom: 18, textAlign: "right" }}>
+                            {t.category}
+                          </div>
                         )}
-                    </div>
-                </section>
-            )}
-
-            {/* Statistics Section */}
-            <section id="statistics" className="py-20 bg-gradient-to-br from-gray-50 to-sky-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-slide-up">
-                    <div className="text-center mb-16">
-                        <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-                            Knowledge Graph Metrics
-                        </h2>
-                        <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-2">
-                            {modelBoxCountHeaderSubTitle || "Number of unique samples from different models."}
-                        </p>
-                        <p className="text-sm text-gray-500 italic">
-                            As of November 2025
-                        </p>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {Array.isArray(dataCount) && dataCount.map((count, index) => (
-                            <div
-                                key={index}
-                                className="group relative bg-white rounded-xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent hover:border-sky-500"
-                            >
-                                    <div className="flex flex-col items-center text-center">
-                                    <div className="mb-4 p-3 bg-gradient-to-br from-sky-100 to-emerald-100 rounded-lg group-hover:scale-110 transition-transform duration-300">
-                                        {(() => {
-                                            const StatIcon = getIconBySlug(yaml.boxiconsstatisticscount[index]?.icon_slug || "");
-                                            return <StatIcon className="w-8 h-8 text-sky-500" />;
-                                        })()}
-                                    </div>
-                                    <h2 className="text-5xl sm:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-emerald-600 mb-3">
-                                        {count || "—"}
-                                    </h2>
-                                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
-                                        {yaml.boxiconsstatisticscount[index]?.name}
-                                    </h3>
-                                    {yaml.boxiconsstatisticscount[index]?.short_description && (
-                                        <p className="text-sm text-gray-600 leading-relaxed">
-                                            {yaml.boxiconsstatisticscount[index]?.short_description}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Structured Models Section */}
-            <section id="structured-models" className="py-20 bg-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-slide-up">
-                    <div className="text-center mb-16">
-                        <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-                            {structuedModelHeaderTitle || "Structured Models"}
-                        </h2>
-                        <p 
-                            className="text-xl text-gray-600 max-w-3xl mx-auto"
-                            dangerouslySetInnerHTML={{__html: structuedModelHeaderSubTitle || "Structured models used in BrainKB."}}
-                        ></p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {yaml.structuredmodelsbox && Array.isArray(yaml.structuredmodelsbox) && yaml.structuredmodelsbox.map((page, index) => {
-                            const ModelIcon = getIconBySlug(page.icon_slug || "");
-                            return (
-                                <div
-                                    key={index}
-                                    className="group relative bg-white border-2 border-gray-200 rounded-xl p-6 shadow-md hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:border-sky-500"
-                                >
-                                    <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-sky-100 to-emerald-100 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                                    <div className="relative z-10">
-                                        <div className="mb-4">
-                                            <div className="w-14 h-14 bg-gradient-to-br from-sky-500 to-blue-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-md">
-                                                <ModelIcon className="w-7 h-7 text-white" />
-                                            </div>
-                                        </div>
-                                        <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-sky-600 transition-colors">
-                                            {page.title}
-                                        </h3>
-                                        <p className="text-gray-600 mb-6 leading-relaxed text-sm line-clamp-2 min-h-[3rem]">
-                                            {page.description}
-                                        </p>
-                                        <a
-                                            href={page.links}
-                                            target={page.links.startsWith('http') ? '_blank' : '_self'}
-                                            rel={page.links.startsWith('http') ? 'noopener noreferrer' : ''}
-                                            className="inline-flex items-center gap-2 text-sky-600 font-semibold hover:text-sky-700 transition-colors group/link"
-                                        >
-                                            {page.links === "#" ? "Coming Soon" : "Read more"}
-                                            <span className="group-hover/link:translate-x-1 transition-transform">→</span>
-                                        </a>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            </section>
-
-            {/* publication Section */}
-            <section className="py-20 bg-gradient-to-b from-white to-gray-50">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 animate-slide-up">
-                    <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 border border-gray-100">
-                        <div className="flex items-start gap-4 mb-6">
-                            <div className="flex-shrink-0">
-                                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                                    <Sparkles className="w-6 h-6 text-white" />
-                                </div>
-                            </div>
-                            <div className="flex-1">
-                                <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                                    {yaml.publications?.title || "Powered by Advanced AI Agents"}
-                                </h2>
-                                <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                                    {yaml.publications?.description || 
-                                     "BrainKB leverages cutting-edge agentic frameworks for structured information extraction. Our platform utilizes STRUCTSENSE, a task-agnostic agentic framework that enables sophisticated structured information extraction with human-in-the-loop evaluation and benchmarking capabilities."}
-                                </p>
-                                {yaml.publications?.citation && (
-                                    <div className="bg-gray-50 rounded-lg p-6 border-l-4 border-purple-500">
-                                        <p className="text-sm text-gray-600 italic mb-2">{yaml.publications.citation.label}</p>
-                                        <p className="text-base text-gray-800 leading-relaxed mb-4">
-                                            {yaml.publications.citation.text}
-                                        </p>
-                                        <a
-                                            href={yaml.publications.citation.link}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                                        >
-                                            <ExternalLink className="w-5 h-5" />
-                                            {yaml.publications.citation.button_text || "See Research Paper"}
-                                        </a>
-                                    </div>
-                                )}
-                            </div>
+                        {/* logo — no box; orientation-aware sizing */}
+                        <div
+                          style={{
+                            height: 96,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "flex-start",
+                            marginBottom: 22,
+                          }}
+                        >
+                          {t.logo ? (
+                            <Image src={t.logo} alt={t.name} width={280} height={150} style={logoImgStyle} />
+                          ) : (
+                            <span style={{ fontFamily: FONTS.display, fontSize: 28, color }}>{t.name}</span>
+                          )}
                         </div>
+                        <p style={{ fontSize: 14, color: "var(--bkb-textMuted)", lineHeight: 1.65, margin: "0 0 20px", flex: 1 }}>{t.description}</p>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: isComingSoon ? "var(--bkb-textSubtle)" : "var(--bkb-accent)", display: "inline-flex", alignItems: "center", gap: 5 }}>
+                          {isComingSoon ? (
+                            <>{t.link_text || "Coming soon"}</>
+                          ) : (
+                            <>
+                              {t.link_text || "Learn more"}
+                              {isExternal ? <ExternalLink className="w-3.5 h-3.5" /> : <span>→</span>}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                    const cardStyle: React.CSSProperties = {
+                      padding: 30,
+                      borderRadius: 16,
+                      textDecoration: "none",
+                      color: "inherit",
+                      display: "block",
+                      height: "100%",
+                      background: "var(--bkb-surfaceAlt)",
+                    };
+                    return isComingSoon ? (
+                      <div key={i} className="bkb-card" style={cardStyle}>{Inner}</div>
+                    ) : (
+                      <Link
+                        key={i}
+                        href={t.link}
+                        target={isExternal ? "_blank" : "_self"}
+                        rel={isExternal ? "noopener noreferrer" : ""}
+                        className="bkb-card"
+                        style={cardStyle}
+                      >
+                        {Inner}
+                      </Link>
+                    );
+                  })}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Use Cases (where it applies) ─────────────────────────── */}
+        {yaml.usecases && (
+          <section className="home-pad home-pad-y" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
+            <div style={{ maxWidth: 720, marginBottom: 48 }}>
+              <Eyebrow color="#b4451f">{yaml.usecases.eyebrow || "In Practice"}</Eyebrow>
+              <SectionTitle>{yaml.usecases.title || "Use Cases"}</SectionTitle>
+              <SectionLead>{yaml.usecases.subtitle}</SectionLead>
+            </div>
+
+            <div className="bkb-card" style={{ padding: 0, borderRadius: 16, overflow: "hidden" }}>
+              {Array.isArray(yaml.usecases.cases) &&
+                yaml.usecases.cases.map((c: any, i: number) => {
+                  const pill = STATUS_PILL[c.status] || STATUS_PILL.coming_soon;
+                  const href = c.use_link || c.discussion_link || null;
+                  const linkExternal = href?.startsWith?.("http");
+                  return (
+                    <div
+                      key={i}
+                      className="home-usecase-row"
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "110px minmax(190px, 1fr) 1.4fr 150px 64px",
+                        gap: 24,
+                        alignItems: "center",
+                        padding: "26px 32px",
+                        borderTop: i ? "1px solid var(--bkb-border)" : "none",
+                      }}
+                    >
+                      <div style={{ fontFamily: FONTS.mono, fontSize: 12, color: "var(--bkb-textSubtle)", letterSpacing: "0.06em" }}>
+                        {`Case ${String(i + 1).padStart(2, "0")}`}
+                      </div>
+                      <h3 style={{ fontFamily: FONTS.display, fontSize: 21, fontWeight: 400, letterSpacing: "-0.01em", margin: 0 }}>{c.title}</h3>
+                      <p style={{ fontSize: 13.5, color: "var(--bkb-textMuted)", lineHeight: 1.55, margin: 0 }}>{c.description}</p>
+                      <div>
+                        <span style={{ fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 999, color: pill.fg, background: pill.bg, whiteSpace: "nowrap" }}>
+                          {pill.label}
+                        </span>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        {href && (
+                          <Link
+                            href={href}
+                            target={linkExternal ? "_blank" : "_self"}
+                            rel={linkExternal ? "noopener noreferrer" : ""}
+                            style={{ fontSize: 13, fontWeight: 600, color: "var(--bkb-accent)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}
+                          >
+                            View <span>→</span>
+                          </Link>
+                        )}
+                      </div>
                     </div>
+                  );
+                })}
+            </div>
+
+            {yaml.usecases.how_it_works && (
+              <div
+                className="home-hiw"
+                style={{
+                  marginTop: 28,
+                  background: "linear-gradient(135deg, #14241c, #0e1a14)",
+                  borderRadius: 20,
+                  padding: "48px 52px",
+                  display: "grid",
+                  gridTemplateColumns: "1.25fr 1fr 1fr 1fr",
+                  gap: 40,
+                }}
+              >
+                <div>
+                  <h3 style={{ fontFamily: FONTS.display, fontSize: 27, fontWeight: 400, color: "#f0eee9", margin: "0 0 14px", letterSpacing: "-0.01em" }}>
+                    {yaml.usecases.how_it_works.title}
+                  </h3>
+                  <p style={{ fontSize: 13.5, color: "rgba(240,238,233,0.6)", lineHeight: 1.6, margin: 0 }}>{yaml.usecases.how_it_works.subtitle}</p>
                 </div>
-            </section>
-        </div>
-    );
+                {Array.isArray(yaml.usecases.how_it_works.phases) &&
+                  yaml.usecases.how_it_works.phases.map((ph: any, i: number) => (
+                    <div key={i}>
+                      <div style={{ fontFamily: FONTS.mono, fontSize: 11.5, letterSpacing: "0.12em", textTransform: "uppercase", color: "#3ecf8e", marginBottom: 14 }}>
+                        {`${String(i + 1).padStart(2, "0")} · ${ph.label}`}
+                      </div>
+                      <p style={{ fontSize: 13.5, color: "rgba(240,238,233,0.75)", lineHeight: 1.6, margin: 0 }}>{ph.description}</p>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* ── See It in Action (how it works) ──────────────────────── */}
+        {videos.length > 0 && (
+          <section className="home-pad home-pad-y" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
+            <VideoCarousel
+              videos={videos}
+              eyebrow={yaml.videos.eyebrow}
+              headline={yaml.videos.headline || yaml.videos.title}
+              description={yaml.videos.description}
+              buttonText={yaml.videos.button_text}
+            />
+          </section>
+        )}
+
+        {/* ── Structured Models (what models support it) ───────────── */}
+        <section style={{ background: "var(--bkb-surface)", borderTop: "1px solid var(--bkb-border)", borderBottom: "1px solid var(--bkb-border)" }}>
+          <div className="home-pad home-pad-y" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
+            <div style={{ marginBottom: 48 }}>
+              <Eyebrow>Foundations</Eyebrow>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 32, flexWrap: "wrap" }}>
+                <SectionTitle>{structuedModelHeaderTitle || "Structured Models"}</SectionTitle>
+                <MoreLink href="https://sensein.group/brainkbdocs/">View all models →</MoreLink>
+              </div>
+              <p style={{ fontSize: 16, color: "var(--bkb-textMuted)", lineHeight: 1.65, margin: "16px 0 0", maxWidth: 660 }}>
+                These models provide the shared structure behind BrainKB&apos;s graph, tools, and use cases.
+              </p>
+            </div>
+            <div className="home-4col" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
+              {Array.isArray(yaml.structuredmodelsbox) &&
+                yaml.structuredmodelsbox.map((m: any, i: number) => {
+                  const external = m.links?.startsWith?.("http");
+                  const coming = m.links === "#";
+                  const Inner = (
+                    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+                      <div style={{ fontFamily: FONTS.mono, fontSize: 15, color: "#b4451f", marginBottom: 18 }}>&lt;/&gt;</div>
+                      <h3 style={{ fontFamily: FONTS.display, fontSize: 20, fontWeight: 400, letterSpacing: "-0.01em", margin: "0 0 10px", lineHeight: 1.2 }}>{m.title}</h3>
+                      <p style={{ fontSize: 13, color: "var(--bkb-textMuted)", lineHeight: 1.55, margin: "0 0 18px", flex: 1 }}>{m.description}</p>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: coming ? "var(--bkb-textSubtle)" : "var(--bkb-accent)", display: "inline-flex", alignItems: "center", gap: 5 }}>
+                        {coming ? (
+                          "Coming soon"
+                        ) : (
+                          <>
+                            Read more {external ? <ExternalLink className="w-3.5 h-3.5" /> : <span>→</span>}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                  const cs: React.CSSProperties = {
+                    padding: 24,
+                    borderRadius: 14,
+                    textDecoration: "none",
+                    color: "inherit",
+                    display: "block",
+                    height: "100%",
+                    background: "var(--bkb-surfaceAlt)",
+                  };
+                  return coming ? (
+                    <div key={i} className="bkb-card" style={cs}>{Inner}</div>
+                  ) : (
+                    <Link
+                      key={i}
+                      href={m.links}
+                      target={external ? "_blank" : "_self"}
+                      rel={external ? "noopener noreferrer" : ""}
+                      className="bkb-card"
+                      style={cs}
+                    >
+                      {Inner}
+                    </Link>
+                  );
+                })}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Powered by AI agents (technical credibility, dark) ───── */}
+        <section style={{ background: "linear-gradient(160deg, #15271e 0%, #0c1611 60%)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="home-pad home-pad-y" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
+            <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "start" }}>
+              <div>
+                <div style={{ fontFamily: FONTS.mono, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "#3ecf8e", fontWeight: 600, marginBottom: 18 }}>
+                  {yaml.publications?.eyebrow || "Under the Hood"}
+                </div>
+                <h2 style={{ fontFamily: FONTS.display, fontSize: "clamp(30px, 6vw, 44px)", fontWeight: 400, color: "#f0eee9", letterSpacing: "-0.02em", lineHeight: 1.1, margin: 0 }}>
+                  {yaml.publications?.title || "Powered by advanced AI agents."}
+                </h2>
+                <p style={{ fontSize: 16, color: "rgba(240,238,233,0.7)", lineHeight: 1.7, margin: "20px 0 0", maxWidth: 480 }}>
+                  {yaml.publications?.description}
+                </p>
+              </div>
+              {yaml.publications?.citation && (
+                <div style={{ border: "1px solid rgba(255,255,255,0.14)", borderRadius: 18, padding: 36, background: "rgba(255,255,255,0.02)" }}>
+                  <div style={{ fontFamily: FONTS.mono, fontSize: 11.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "#3ecf8e", marginBottom: 18 }}>
+                    {(yaml.publications.citation.label || "Research Citation").replace(/:\s*$/, "")}
+                  </div>
+                  <p style={{ fontFamily: FONTS.mono, fontSize: 13.5, color: "rgba(240,238,233,0.85)", lineHeight: 1.7, margin: "0 0 24px" }}>
+                    {yaml.publications.citation.text}
+                  </p>
+                  <a
+                    href={yaml.publications.citation.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#1db981", color: "#0c1611", fontWeight: 600, fontSize: 14, padding: "11px 20px", borderRadius: 10, textDecoration: "none" }}
+                  >
+                    <Sparkles className="w-3.5 h-3.5" /> {yaml.publications.citation.button_text || "See research paper"} →
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      </Theme>
+    </div>
+  );
 }

@@ -1,0 +1,3 @@
+/* Pull in the prototype's fonts: Instrument Serif (display) + JetBrains Mono (mono).
+   Inter is already loaded by the root layout via next/font. */
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&display=swap");

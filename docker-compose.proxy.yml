@@ -1,0 +1,30 @@
+# Optional reverse-proxy overlay. Stack it on top of docker-compose.yml to
+# put nginx in front of the UI + backend services on a single port:
+#
+#       docker compose -f docker-compose.yml -f docker-compose.proxy.yml \
+#               up -d --build
+#
+# Or run via `bin/up.sh --with-proxy`.
+#
+# This is meant for single-host deploys (an EC2 box, a homelab box). On AWS
+# you would normally let an ALB / CloudFront terminate TLS and forward to
+# this nginx on plain HTTP — set ALB rules to route `*` to the proxy port.
+
+services:
+  proxy:
+    image: nginx:1.25-alpine
+    container_name: brainkb-proxy
+    ports:
+      - '${PROXY_HOST_PORT:-80}:80'
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - brainkb-network
+    restart: unless-stopped
+    depends_on:
+      - web
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

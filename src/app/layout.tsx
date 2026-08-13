@@ -1,14 +1,21 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { getServerSession } from "next-auth";
 import SessionProvider from "./components/auth/SessionProvider";
+import SessionExpiryWatcher from "./components/auth/SessionExpiryWatcher";
 import Footer from "./Footer";
 import dynamic from "next/dynamic"; // Required for Client Component import
 // Dynamically import the BrainKB Assistant client component
 // import BrainKBAssistantClient from "./components/assistant/BrainKBAssistantClient";
 import BrainKBAssistantWrapper from "./components/assistant/BrainKBAssistantClient";
 import AssistantInitializer from "./components/assistant/AssistantInitializer";
+// Site-wide bkb design tokens (cream background, --bkb-* CSS vars, and the
+// Tailwind → bkb overrides scoped by .bkb in globals.css).
+import { Theme } from "./components/design-system";
+// TanStack Query client — used by SynthScholar (and any future page that wants
+// react-query primitives). Mounted high so all client subtrees share one cache.
+import QueryProvider from "./components/synth-scholar/QueryProvider";
 
 // Dynamically import the ConditionalNavbar (client component)
 const ConditionalNavbar = dynamic(() => import("./components/layout/ConditionalNavbar"), { ssr: false });
@@ -25,6 +32,15 @@ export const metadata: Metadata = {
     template: "%s | BrainKB",
   },
   description: "A large-scale Neuroscience Knowledge Graph Infrastructure",
+};
+
+// Viewport meta — REQUIRED for mobile responsiveness. Without
+// `width=device-width`, mobile browsers fall back to a ~980px layout viewport,
+// so every `@media (max-width: ...)` rule (and all our responsive layouts)
+// would be ignored and the site would render desktop-width and scaled down.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -48,13 +64,24 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </noscript>
 
       <SessionProvider session={session}>
-          <header>
-              <ConditionalNavbar/>
-          </header>
-          <main className="flex min-h-screen flex-col pt-16">{children}</main>
-          <footer>
-              <Footer/>
-          </footer>
+          {/* One place that reacts to an expired backend credential, instead of
+              every feature reporting its own "please sign in" failure. */}
+          <SessionExpiryWatcher/>
+          <QueryProvider>
+              <header>
+                  <ConditionalNavbar/>
+              </header>
+              {/* Wrap every page in <Theme> so the bkb design tokens, cream
+                  background, and Tailwind → bkb CSS overrides (scoped by .bkb in
+                  globals.css) apply to every route — about, privacy, contact,
+                  resources, knowledge-base, dashboards, admin, etc. */}
+              <Theme theme="light" style={{ background: "#f0eee9" }}>
+                  <main className="flex min-h-screen flex-col pt-16">{children}</main>
+              </Theme>
+              <footer>
+                  <Footer/>
+              </footer>
+          </QueryProvider>
       </SessionProvider>
       {/*<div className="assistant">*/}
       {/*    <BrainKBAssistantWrapper/>*/}

@@ -13,6 +13,8 @@ import { useApiKeyValidator } from "../../components/user/useApiKeyValidator";
 import { ApiKeyValidatorUI } from "../../components/user/ApiKeyValidator";
 import FileUploadArea from "../../components/user/FileUploadArea";
 import ProcessingStatusHeader from "../../components/user/ProcessingStatusHeader";
+import { ENABLE_EXTRACTION_TOOLS } from "@/src/config/featureFlags";
+import { ExtractionDisabledNotice } from "@/src/app/components/auth/ExtractionDisabledNotice";
 
 // Define types for our entities and results
 interface Entity {
@@ -57,7 +59,8 @@ function getCorrectedIndices(sentence: string, entity: string, origStart: number
     return { start: origStart, end: origEnd };
 }
 
-export default function NamedEntityRecognition() {
+function NamedEntityRecognitionTool() {
+
     const {data: session} = useSession();
     const router = useRouter();
     const [selectedInputType, setSelectedInputType] = useState<InputType>('pdf');
@@ -89,7 +92,7 @@ export default function NamedEntityRecognition() {
         setApiKey,
         validateApiKey,
         handleClear: clearApiKey
-    } = useApiKeyValidator({ storageKey: 'ner_api_key' }); // Use sessionStorage key for NER
+    } = useApiKeyValidator(); // Shares the OpenRouter key with extract-resource + dashboard
 
     // Check if user is logged in
     useEffect(() => {
@@ -324,13 +327,8 @@ export default function NamedEntityRecognition() {
 
 
                 const formData = new FormData();
-                if (clientEnv.jwtUser) {
-                    formData.append("email", clientEnv.jwtUser);
-                }
-                if (clientEnv.jwtPassword) {
-                    formData.append("password", clientEnv.jwtPassword);
-                }
-
+                // Auth comes from the logged-in session (the /api/save-ner-result
+                // route uses SSO session-exchange) — no service-account credentials.
                 const resultsJson = JSON.stringify(dataToSave);
                 formData.append("results", resultsJson);
 
@@ -414,14 +412,8 @@ export default function NamedEntityRecognition() {
 
             const formData = new FormData();
 
-            // Add credentials if available
-            if (clientEnv.jwtUser) {
-                formData.append("email", clientEnv.jwtUser);
-            }
-            if (clientEnv.jwtPassword) {
-                formData.append("password", clientEnv.jwtPassword);
-            }
-
+            // Auth comes from the logged-in session (the /api/save-ner-result route
+            // uses SSO session-exchange) — no service-account credentials sent.
             // Convert results to JSON string before appending
             const resultsJson = JSON.stringify(resultsToSave);
             formData.append("results", resultsJson);
@@ -575,21 +567,25 @@ export default function NamedEntityRecognition() {
                 }}
             />
 
-            {/* OpenRouter API Key Configuration */}
-            <ApiKeyValidatorUI
-                apiKey={apiKey}
-                onApiKeyChange={setApiKey}
-                isApiKeyValid={isApiKeyValid}
-                isValidatingKey={isValidatingKey}
-                apiKeyError={apiKeyError}
-                successMessage={apiKeySuccessMessage}
-                onValidate={validateApiKey}
-                onClear={clearApiKey}
-                warningMessage="Please validate your OpenRouter API key above to enable document processing."
-            />
+            {/* OpenRouter API key — configured in Dashboard → API key. */}
+            {!isApiKeyValid && (
+                <div className="bkb-card" style={{ padding: 14, marginBottom: 20, borderLeft: "3px solid var(--bkb-publication)" }}>
+                    <div style={{ fontSize: 13, color: "var(--bkb-text)", marginBottom: 4, fontWeight: 500 }}>
+                        OpenRouter API key required
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--bkb-textMuted)" }}>
+                        Configure and validate your key in{" "}
+                        <a href="/user/dashboard" style={{ color: "var(--bkb-primary)", textDecoration: "underline" }}>
+                            Dashboard → API key
+                        </a>
+                        . The same key is reused across every workflow tool.
+                    </div>
+                </div>
+            )}
 
             {/* Input Type Selection and Content Section */}
-            <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-gray-800 rounded-lg p-8 shadow-lg mb-6">
+            {/* p-4 on phones, full p-8 padding at sm+ so the card doesn't crowd narrow screens */}
+            <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-8 shadow-lg mb-6">
                 <InputTypeSelector
                     selectedInputType={selectedInputType}
                     onInputTypeChange={setSelectedInputType}
@@ -694,3 +690,14 @@ export default function NamedEntityRecognition() {
     );
 }
 
+// Hook-free wrapper so the tool component's hooks are never called conditionally
+// (react-hooks/rules-of-hooks). The route still resolves while the tool is hidden
+// from the dashboard and sidebar, so someone with a bookmark lands here; the
+// extraction WebSocket endpoints do not exist without the structsense stack, so the
+// tool would otherwise fail on connect with nothing to explain why.
+export default function NamedEntityRecognition() {
+    if (!ENABLE_EXTRACTION_TOOLS) {
+        return <ExtractionDisabledNotice toolName="NER extraction" />;
+    }
+    return <NamedEntityRecognitionTool />;
+}

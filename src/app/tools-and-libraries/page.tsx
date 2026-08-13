@@ -1,162 +1,158 @@
 "use client";
 
-import { Wrench, ExternalLink, Code, Network, Database, Sparkles, CheckCircle } from "lucide-react";
+/**
+ * Tools & Libraries — editorial direction, consistent with the landing page.
+ * Header + capabilities, then a single unified grid of flagship apps (with
+ * logos) and open-source Python libraries.
+ */
+
+import { ExternalLink, Wrench, CheckCircle } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { FONTS } from "@/src/app/components/design-system";
 import yaml from "@/src/config/yaml/tools-libraries.yaml";
 
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ fontFamily: FONTS.mono, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--bkb-accent)", fontWeight: 600, marginBottom: 18 }}>
+      {children}
+    </div>
+  );
+}
+
+const CAPABILITIES = [
+  { h: "Knowledge Extraction", d: "Extract structured data from text, PDFs, and other unstructured sources." },
+  { h: "Provenance Tracking", d: "Track data lineage and changes across the knowledge graph over time." },
+  { h: "Advanced Analytics", d: "Compare, analyze, and reason over structured neuroscience knowledge." },
+];
+
 export default function ToolsLibraries() {
-    const libraries = yaml.libraries;
+  const libraries = yaml.libraries;
+  const tools = (yaml as any).tools as any[] | undefined;
 
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-sky-50">
-            {/* Hero Section */}
-            <section className="py-20 bg-gradient-to-br from-sky-50 via-white to-emerald-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mt-[30px]">
-                        <div className="inline-flex items-center justify-center mb-6">
-                            <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center">
-                                <Wrench className="w-8 h-8 text-white" />
-                            </div>
-                        </div>
-                        <h1 className="text-5xl sm:text-6xl font-extrabold mb-6">
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 via-blue-600 to-emerald-600">
-                                Tools & Libraries
-                            </span>
-                        </h1>
-                        <p className="text-xl sm:text-2xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
-                            Open-source Python libraries designed to support and enhance neuroscience research
-                        </p>
-                    </div>
-                </div>
-            </section>
+  // One unified list: flagship apps (with logos) first, then libraries.
+  const items = [
+    ...(Array.isArray(tools) ? tools.map((t: any) => ({ ...t, _kind: "tool" })) : []),
+    ...(Array.isArray(libraries) ? libraries.map((l: any) => ({ ...l, _kind: "lib" })) : []),
+  ];
 
-            {/* Overview Section */}
-            <section className="py-20 bg-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="relative overflow-hidden bg-gradient-to-br from-sky-50 via-white to-emerald-50 rounded-2xl p-8 md:p-12 border-2 border-sky-200 shadow-xl">
-                        {/* Decorative background elements */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-sky-200/20 to-emerald-200/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-emerald-200/20 to-sky-200/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
-                        
-                        <div className="relative z-10">
-                            <div className="flex items-center gap-4 mb-8">
-                                <div className="w-14 h-14 bg-gradient-to-br from-sky-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
-                                    <Code className="w-7 h-7 text-white" />
-                                </div>
-                                <h2 className="text-4xl sm:text-5xl font-bold text-gray-900">
-                                    Overview
-                                </h2>
-                            </div>
-                            
-                            <p className="text-lg sm:text-xl text-gray-700 leading-relaxed mb-8 max-w-4xl">
-                                BrainKB provides a set of tools and libraries designed to support and enhance neuroscience research. 
-                                Developed as part of the BrainKB project, these tools and libraries facilitate operations such as 
-                                knowledge extraction, structured representation, provenance tracking, and advanced analytics.
-                            </p>
-                            
-                            <div className="bg-white/60 backdrop-blur-sm rounded-xl p-6 border border-sky-100 shadow-md">
-                                <p className="text-base text-gray-700 font-medium mb-4 flex items-center gap-2">
-                                    <Sparkles className="w-5 h-5 text-sky-600" />
-                                    <span>Flexible Integration</span>
-                                </p>
-                                <p className="text-gray-600 leading-relaxed">
-                                    While these tools are (or will be) integrated into the BrainKB platform to support the BrainKB objective, 
-                                    they are also designed for <strong className="text-gray-900">independent use</strong>, offering flexibility 
-                                    for researchers and developers working in neuroscience and related fields.
-                                </p>
-                            </div>
-                            
-                            {/* Key Capabilities */}
-                            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="flex items-start gap-3 p-4 bg-white/60 backdrop-blur-sm rounded-lg border border-sky-100">
-                                    <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                                    <div>
-                                        <h3 className="font-semibold text-gray-900 mb-1">Knowledge Extraction</h3>
-                                        <p className="text-sm text-gray-600">Extract structured data from various sources</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start gap-3 p-4 bg-white/60 backdrop-blur-sm rounded-lg border border-sky-100">
-                                    <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                                    <div>
-                                        <h3 className="font-semibold text-gray-900 mb-1">Provenance Tracking</h3>
-                                        <p className="text-sm text-gray-600">Track data lineage and changes</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start gap-3 p-4 bg-white/60 backdrop-blur-sm rounded-lg border border-sky-100">
-                                    <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                                    <div>
-                                        <h3 className="font-semibold text-gray-900 mb-1">Advanced Analytics</h3>
-                                        <p className="text-sm text-gray-600">Perform complex data analysis</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* Libraries Section */}
-            <section className="py-20 bg-gradient-to-br from-gray-50 to-sky-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-                            Available Libraries
-                        </h2>
-                        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                            These tools facilitate operations such as knowledge extraction, structured representation, 
-                            provenance tracking, and advanced analytics. While integrated into BrainKB, they are also 
-                            designed for independent use.
-                        </p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {libraries.map((lib, index) => (
-                            <div
-                                key={index}
-                                className="group bg-white rounded-xl p-6 border-2 border-gray-200 hover:border-sky-400 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-                            >
-                                <div className="flex items-start gap-4">
-                                    <div className="flex-shrink-0">
-                                        <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                            <Wrench className="w-6 h-6 text-white" />
-                                        </div>
-                                    </div>
-                                    <div className="flex-1">
-                                        <h3 className="text-xl font-bold text-gray-900 mb-3">
-                                            {lib.name}
-                                        </h3>
-                                        <p className="text-gray-600 mb-4 leading-relaxed">
-                                            {lib.description}
-                                        </p>
-                                        <div className="flex flex-wrap gap-3">
-                                            {lib.link_library && (
-                                                <a
-                                                    href={lib.link_library}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg text-sm font-medium hover:bg-sky-700 transition-colors shadow-md hover:shadow-lg"
-                                                >
-                                                    <ExternalLink className="w-4 h-4" />
-                                                    Visit Library
-                                                </a>
-                                            )}
-                                            {lib.link_example && (
-                                                <a
-                                                    href={lib.link_example}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-2 px-4 py-2 bg-white text-sky-600 border-2 border-sky-600 rounded-lg text-sm font-medium hover:bg-sky-50 transition-colors"
-                                                >
-                                                    <ExternalLink className="w-4 h-4" />
-                                                    View Example
-                                                </a>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
+  return (
+    <div style={{ background: "#f0eee9" }}>
+      {/* ── Header + capabilities ─────────────────────────────────── */}
+      <section className="home-pad home-pad-y" style={{ padding: "96px 64px 64px", maxWidth: 1200, margin: "0 auto" }}>
+        <div style={{ maxWidth: 760 }}>
+          <Eyebrow>Open Source</Eyebrow>
+          <h1 style={{ fontFamily: FONTS.display, fontSize: "clamp(34px, 7vw, 52px)", lineHeight: 1.05, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
+            Tools &amp; libraries for neuroscience research.
+          </h1>
+          <p style={{ fontSize: 17, color: "var(--bkb-textMuted)", lineHeight: 1.7, margin: "20px 0 0" }}>
+            BrainKB provides a set of tools and libraries that facilitate knowledge extraction, structured
+            representation, provenance tracking, and advanced analytics. While integrated into the BrainKB
+            platform, each is also designed for <strong style={{ color: "var(--bkb-text)" }}>independent use</strong> in
+            your own research.
+          </p>
         </div>
-    );
+
+        <div className="home-3col" style={{ marginTop: 56, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", borderTop: "1px solid var(--bkb-border)" }}>
+          {CAPABILITIES.map((c, i) => (
+            <div key={i} style={{ padding: "30px 30px 0", borderLeft: i ? "1px solid var(--bkb-border)" : "none" }}>
+              <CheckCircle style={{ width: 20, height: 20, color: "var(--bkb-accent)", marginBottom: 16 }} />
+              <h3 style={{ fontFamily: FONTS.display, fontSize: 21, fontWeight: 400, letterSpacing: "-0.01em", margin: "0 0 10px" }}>{c.h}</h3>
+              <p style={{ fontSize: 13.5, color: "var(--bkb-textMuted)", lineHeight: 1.6, margin: 0 }}>{c.d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Tools & Libraries grid (white) ────────────────────────── */}
+      <section style={{ background: "var(--bkb-surface)", borderTop: "1px solid var(--bkb-border)", borderBottom: "1px solid var(--bkb-border)" }}>
+        <div className="home-pad home-pad-y" style={{ padding: "96px 64px", maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ maxWidth: 720, marginBottom: 48 }}>
+            <Eyebrow>The Toolkit</Eyebrow>
+            <h2 style={{ fontFamily: FONTS.display, fontSize: "clamp(30px, 6vw, 46px)", lineHeight: 1.06, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
+              Tools &amp; Libraries
+            </h2>
+            <p style={{ fontSize: 16, color: "var(--bkb-textMuted)", lineHeight: 1.65, margin: "16px 0 0" }}>
+              End-to-end applications and open-source Python libraries built on BrainKB — usable within the platform
+              and standalone in your own research.
+            </p>
+          </div>
+
+          {/* home-2col collapses the 2-up card grid to 1 column on phones so cards aren't cut off */}
+          <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 22 }}>
+            {items.map((it, index) => {
+              const isExternal = it.link?.startsWith?.("http");
+              const isComingSoon = it._kind === "tool" && (!it.link || it.link === "#");
+              const isSquareLogo = it.logo_orientation === "square";
+              const typeLabel = it._kind === "lib" ? "Python Library" : "Application";
+              const logoStyle: React.CSSProperties = isSquareLogo
+                ? { height: "100%", width: "auto", maxWidth: "70%", objectFit: "contain" }
+                : { height: "auto", width: "auto", maxHeight: 110, maxWidth: "92%", objectFit: "contain" };
+              const linkStyle: React.CSSProperties = {
+                fontSize: 13,
+                fontWeight: 600,
+                color: "var(--bkb-accent)",
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+              };
+              return (
+                <div
+                  key={index}
+                  className="bkb-card"
+                  style={{ padding: 30, borderRadius: 16, background: "var(--bkb-surfaceAlt)", display: "flex", flexDirection: "column" }}
+                >
+                  <div style={{ fontFamily: FONTS.mono, fontSize: 11, letterSpacing: "0.13em", textTransform: "uppercase", color: "var(--bkb-textSubtle)", marginBottom: 18, textAlign: "right" }}>
+                    {typeLabel}
+                  </div>
+
+                  {/* media: big logo, or icon + name for libraries */}
+                  {it.logo ? (
+                    <div style={{ height: 130, display: "flex", alignItems: "center", justifyContent: "flex-start", marginBottom: 20 }}>
+                      <Image src={it.logo} alt={it.name} width={340} height={130} style={logoStyle} />
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20, minHeight: 56 }}>
+                      <span style={{ width: 48, height: 48, borderRadius: 12, background: "var(--bkb-accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <Wrench style={{ width: 22, height: 22 }} />
+                      </span>
+                      <h3 style={{ fontFamily: FONTS.display, fontSize: 26, fontWeight: 400, letterSpacing: "-0.01em", margin: 0 }}>{it.name}</h3>
+                    </div>
+                  )}
+
+                  <p style={{ fontSize: 14, color: "var(--bkb-textMuted)", lineHeight: 1.65, margin: "0 0 20px", flex: 1 }}>{it.description}</p>
+
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 22 }}>
+                    {it._kind === "tool" &&
+                      (isComingSoon ? (
+                        <span style={{ ...linkStyle, color: "var(--bkb-textSubtle)" }}>{it.link_text || "Coming soon"}</span>
+                      ) : isExternal ? (
+                        <a href={it.link} target="_blank" rel="noopener noreferrer" style={linkStyle}>
+                          {it.link_text || "Learn more"} <ExternalLink style={{ width: 14, height: 14 }} />
+                        </a>
+                      ) : (
+                        <Link href={it.link} style={linkStyle}>
+                          {it.link_text || "Open"} <span>→</span>
+                        </Link>
+                      ))}
+                    {it.link_library && (
+                      <a href={it.link_library} target="_blank" rel="noopener noreferrer" style={linkStyle}>
+                        Visit library <ExternalLink style={{ width: 14, height: 14 }} />
+                      </a>
+                    )}
+                    {it.link_example && (
+                      <a href={it.link_example} target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: "var(--bkb-textMuted)" }}>
+                        View example <ExternalLink style={{ width: 14, height: 14 }} />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
 }

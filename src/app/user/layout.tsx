@@ -1,25 +1,27 @@
-import { Inter } from "next/font/google";
 import "../globals.css";
-import dynamic from "next/dynamic";
+import "./dashboard/fonts.css";
+import { Theme } from "@/src/app/components/design-system";
+import { UserBreadcrumb } from "./UserBreadcrumb";
+import { UserBanGate } from "./UserBanGate";
+import { AuthGate } from "@/src/app/components/auth/AuthGate";
 
-const inter = Inter({ subsets: ["latin"] });
-
-// Dynamically import the sidebar component (client component)
-const UserSideBar = dynamic(() => import("../components/layout/UserSideBar"), { ssr: false });
-
-export default async function UserRootLayout({
+// User routes render under the original site navbar (mounted by the root
+// layout via ConditionalNavbar). AuthGate enforces sign-in for the entire
+// /user/* surface — without it, /user/dashboard renders to anonymous users.
+// UserBanGate then replaces children with a suspension notice if the
+// authenticated user has been banned by an admin. UserBreadcrumb provides
+// the "← Back to dashboard" link and breathing room under the fixed navbar.
+export default function UserRootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <>
-      <UserSideBar />
-      <div className="p-4 sm:ml-64 mt-20">
-          <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700">
-              {children}
-          </div>
-      </div>
-    </>
+    <Theme theme="light" style={{ background: "#f0eee9", minHeight: "calc(100vh - 64px)" }}>
+      <UserBreadcrumb />
+      <AuthGate>
+        <UserBanGate>{children}</UserBanGate>
+      </AuthGate>
+    </Theme>
   );
 }

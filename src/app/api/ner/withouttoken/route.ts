@@ -3,6 +3,7 @@ import { getWarmedCache } from '@/src/utils/cache/cache-warm';
 import { fetchPaginatedDataWithoutToken, searchByIdWithoutToken } from '@/src/utils/api/api-client-without-token';
 import { CacheService } from '@/src/services/cache/cache-service';
 import { CACHE_DURATIONS } from '@/src/config/constants';
+import { toPublicEndpoint } from '@/src/utils/api/public-endpoint';
 
 // Force dynamic rendering - this route uses searchParams
 export const dynamic = 'force-dynamic';
@@ -49,7 +50,10 @@ export async function GET(request: NextRequest) {
         const limit = searchParams.get('limit') || '50';
         const skip = searchParams.get('skip') || '0';
         const search = searchParams.get('search') || undefined;
-        const endpoint = searchParams.get('endpoint');
+        // Map to the /api/public/... sibling: this route sends no credential,
+        // and ml_service's authenticated read endpoints answer 403
+        // "Not authenticated" before scopes are even consulted.
+        const endpoint = toPublicEndpoint(searchParams.get('endpoint') ?? '') || null;
 
         if (!endpoint) {
             return NextResponse.json(

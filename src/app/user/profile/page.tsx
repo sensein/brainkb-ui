@@ -21,22 +21,6 @@ const getSessionUserProperty = (session: any, property: keyof ExtendedUser): str
     return (session?.user as ExtendedUser)?.[property] || "";
 };
 
-// Role constants
-const ROLES = {
-    SUBMITTER: "Submitter",
-    ANNOTATOR: "Annotator",
-    MAPPER: "Mapper",
-    CURATOR: "Curator",
-    REVIEWER: "Reviewer",
-    VALIDATOR: "Validator",
-    CONFLICT_RESOLVER: "Conflict Resolver",
-    KNOWLEDGE_CONTRIBUTOR: "Knowledge Contributor",
-    EVIDENCE_TRACER: "Evidence Tracer",
-    PROVENANCE_TRACKER: "Provenance Tracker",
-    MODERATOR: "Moderator",
-    AMBASSADOR: "Ambassador"
-} as const;
-
 // Validation functions
 const validateEmail = (email: string): string => {
     if (!email) return "Email is required";
@@ -458,9 +442,8 @@ export default function Profile() {
             newErrors.expertise_areas = "At least one expertise area is required";
         }
 
-        if (profileData.roles.length === 0) {
-            newErrors.roles = "At least one role is required";
-        }
+        // Roles are managed by admins via /admin/users — not validated or
+        // editable here. We never send `roles` in the profile payload.
 
         // Validate optional fields
         const websiteError = validateWebsite(profileData.website);
@@ -488,9 +471,13 @@ export default function Profile() {
     const handleSave = async () => {
         if (validateForm()) {
             try {
-                // Clean the data before sending - remove any non-serializable properties
+                // Strip `roles` from the payload. Self-service role assignment
+                // is a privilege-escalation hole — roles are managed only by
+                // admins via /admin/users. The backend ignores `roles` here too,
+                // but dropping it client-side keeps the wire payload honest.
+                const { roles: _omitRoles, ...rest } = profileData;
                 const cleanProfileData = {
-                    ...profileData,
+                    ...rest,
                     // Ensure dates are properly formatted as strings
                     organizations: profileData.organizations.map(org => ({
                         ...org,
@@ -927,21 +914,40 @@ export default function Profile() {
                 </div>
             </section>
 
-            {/* Modal */}
-            {/* Modal */}
-            {isEditing && (() => {
-
-                return true;
-            })() && (
+            {/* Edit Profile dialog */}
+            {isEditing && (
                 <div
-                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] overflow-auto">
+                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 sm:p-6 overflow-auto"
+                    onClick={() => setIsEditing(false)}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="edit-profile-title"
+                >
                     <div
-                        className="bg-white dark:bg-gray-800 p-6 pb-20 rounded-lg shadow-lg w-3/4 max-h-[85vh] overflow-y-auto relative"
-                        style={{zIndex: 10000}}>
-                        <h3 className="text-lg font-semibold mb-4">Edit Profile</h3>
+                        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden border border-gray-200 dark:border-gray-700"
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ zIndex: 10000 }}
+                    >
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                            <h3 id="edit-profile-title" className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                                Edit Profile
+                            </h3>
+                            <button
+                                type="button"
+                                onClick={() => setIsEditing(false)}
+                                aria-label="Close edit profile"
+                                className="inline-flex items-center justify-center w-8 h-8 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500"
+                            >
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                    <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto px-6 py-5">
 
                         {/* Basic Information */}
-                        <div className="grid grid-cols-3 gap-4 mb-6">
+                        {/* Mobile: all edit-form rows stack to one column (grid-cols-1) and expand to their desktop N-column layout at sm+ */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                             <div className="mb-4">
                                 <label className="block text-sm font-medium mb-2">Name Prefix</label>
                                 <input
@@ -988,7 +994,7 @@ export default function Profile() {
                         </div>
 
                         {/* Contact Information */}
-                        <div className="grid grid-cols-2 gap-4 mb-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                             <div className="mb-4">
                                 <label className="block text-sm font-medium mb-2">Email</label>
                                 <input
@@ -1016,7 +1022,7 @@ export default function Profile() {
                         </div>
 
                         {/* Social Links */}
-                        <div className="grid grid-cols-2 gap-4 mb-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                             <div className="mb-4">
                                 <label className="block text-sm font-medium mb-2">Website</label>
                                 <input
@@ -1095,7 +1101,7 @@ export default function Profile() {
                                 </button>
                             </div>
                             {profileData.countries.map((country, index) => (
-                                <div key={index} className="grid grid-cols-3 gap-2 mb-2">
+                                <div key={index} className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
                                     <div className="relative">
                                         <input
                                             type="text"
@@ -1205,7 +1211,7 @@ export default function Profile() {
 
                                 return (
                                     <div key={index} className="border border-gray-200 rounded-lg p-4 mb-3">
-                                        <div className="grid grid-cols-2 gap-4 mb-3">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
                                             <input
                                                 type="text"
                                                 placeholder="Organization Name"
@@ -1229,7 +1235,7 @@ export default function Profile() {
                                                 className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                                             />
                                         </div>
-                                        <div className="grid grid-cols-3 gap-4 mb-3">
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-3">
                                             <input
                                                 type="text"
                                                 placeholder="Department"
@@ -1330,7 +1336,7 @@ export default function Profile() {
                             </div>
                             {profileData.education.map((edu, index) => (
                                 <div key={index} className="border border-gray-200 rounded-lg p-4 mb-3">
-                                    <div className="grid grid-cols-2 gap-4 mb-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
                                         <input
                                             type="text"
                                             placeholder="Degree"
@@ -1354,7 +1360,7 @@ export default function Profile() {
                                             className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
                                         />
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4 mb-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
                                         <input
                                             type="text"
                                             placeholder="Institution"
@@ -1438,7 +1444,7 @@ export default function Profile() {
                             </div>
                             {profileData.expertise_areas.map((expertise, index) => (
                                 <div key={index} className="border border-gray-200 rounded-lg p-4 mb-3">
-                                    <div className="grid grid-cols-3 gap-4 mb-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-3">
                                         <input
                                             type="text"
                                             placeholder="Expertise Area"
@@ -1500,105 +1506,15 @@ export default function Profile() {
                                 <p className="text-red-500 text-xs mt-1">{errors.expertise_areas}</p>}
                         </div>
 
-                        {/* Roles Section */}
+                        {/* Roles are read-only here — see the "Active Roles"
+                            section above for what's currently assigned.
+                            Role changes are admin-only via /admin/users. */}
                         <div className="mb-6">
-                            <div className="flex justify-between items-center mb-2">
-                                <label className="block text-sm font-medium">Roles</label>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        const newRoles = [...profileData.roles, {
-                                            role: "",
-                                            is_active: true
-                                        }];
-                                        setProfileData(prev => ({...prev, roles: newRoles}));
-                                    }}
-                                    className="text-blue-500 text-sm hover:text-blue-700"
-                                >
-                                    + Add Role
-                                </button>
+                            <label className="block text-sm font-medium mb-2">Roles</label>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-3">
+                                Roles are managed by an administrator. New users start as <span className="font-mono">Curator</span>.
+                                If you need a different role, ask an admin to update it from the user-management surface.
                             </div>
-                            {profileData.roles.map((role, index) => (
-                                <div key={index} className="border border-gray-200 rounded-lg p-4 mb-3">
-                                    <div className="grid grid-cols-2 gap-4 mb-3">
-                                        <div className="relative">
-                                            <input
-                                                type="text"
-                                                placeholder="Search role..."
-                                                value={role.role}
-                                                onChange={(e) => {
-                                                    const newRoles = [...profileData.roles];
-                                                    newRoles[index].role = e.target.value;
-                                                    setProfileData(prev => ({...prev, roles: newRoles}));
-                                                }}
-                                                onFocus={(e) => {
-                                                    const dropdown = e.target.nextElementSibling as HTMLDivElement;
-                                                    if (dropdown) dropdown.style.display = 'block';
-                                                }}
-                                                onBlur={(e) => {
-                                                    setTimeout(() => {
-                                                        const dropdown = e.target.nextElementSibling as HTMLDivElement;
-                                                        if (dropdown) dropdown.style.display = 'none';
-                                                    }, 200);
-                                                }}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                                            />
-                                            <div
-                                                className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-10 hidden max-h-48 overflow-y-auto">
-                                                {Object.values(ROLES)
-                                                    .filter(roleName => roleName.toLowerCase().includes(role.role.toLowerCase()))
-                                                    .map((roleName) => (
-                                                        <div
-                                                            key={roleName}
-                                                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                                                            onClick={() => {
-                                                                const newRoles = [...profileData.roles];
-                                                                newRoles[index].role = roleName;
-                                                                setProfileData(prev => ({...prev, roles: newRoles}));
-                                                                const dropdown = document.querySelector(`[data-role-dropdown="${index}"]`) as HTMLDivElement;
-                                                                if (dropdown) dropdown.style.display = 'none';
-                                                            }}
-                                                        >
-                                                            {roleName}
-                                                        </div>
-                                                    ))}
-                                            </div>
-                                        </div>
-                                        <label className="flex items-center">
-                                            <input
-                                                type="checkbox"
-                                                checked={role.is_active}
-                                                onChange={(e) => {
-                                                    const newRoles = [...profileData.roles];
-                                                    newRoles[index].is_active = e.target.checked;
-                                                    setProfileData(prev => ({...prev, roles: newRoles}));
-                                                }}
-                                                className="mr-2"
-                                            />
-                                            Active Role
-                                        </label>
-                                    </div>
-                                    <div className="flex justify-end">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                // Prevent removing the last role
-                                                if (profileData.roles.length <= 1) {
-                                                    showNotification('error', 'At least one role is required');
-                                                    return;
-                                                }
-                                                const newRoles = profileData.roles.filter((_, i) => i !== index);
-                                                setProfileData(prev => ({...prev, roles: newRoles}));
-                                            }}
-                                            className="text-red-500 text-sm hover:text-red-700"
-                                            disabled={profileData.roles.length <= 1}
-                                        >
-                                            Remove
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                            {errors.roles && <p className="text-red-500 text-xs mt-1">{errors.roles}</p>}
                         </div>
 
                         {/* Biography and Conflict of Interest */}
@@ -1634,17 +1550,19 @@ export default function Profile() {
                             </div>
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex justify-end pt-6 pb-4">
+                        </div>
+                        <div className="flex items-center justify-end gap-2 px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                             <button
+                                type="button"
                                 onClick={handleEditToggle}
-                                className="mr-2 px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-400"
                             >
                                 Cancel
                             </button>
                             <button
+                                type="button"
                                 onClick={handleSave}
-                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                className="px-4 py-2 text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 active:bg-blue-900 rounded-md shadow-sm transition-colors focus:outline-none focus:ring-4 focus:ring-blue-300"
                             >
                                 Save Profile
                             </button>
@@ -1652,7 +1570,6 @@ export default function Profile() {
                     </div>
                 </div>
             )}
-            {/*    End model*/}
         </div>
     );
 }

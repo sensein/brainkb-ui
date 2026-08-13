@@ -1,8 +1,10 @@
 import Image from "next/image";
 
 export default function PageNotFound() {
+	// Mobile: shrink the big 96px page padding (p-8 → sm:p-16 → lg:p-24) so the
+	// 404 content isn't cramped on small screens.
 	return (
-        <main className="flex min-h-screen flex-col items-center justify-center p-24">
+        <main className="flex min-h-screen flex-col items-center justify-center p-8 sm:p-16 lg:p-24">
             <div className="relative flex flex-col items-center justify-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial from-white to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic from-sky-200 via-blue-200 to-transparent after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 ">
                 <Image
                     className="relative z-10 dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
