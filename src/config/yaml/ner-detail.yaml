@@ -6,10 +6,14 @@ title: "NER Terms"
 dataSource:
   type: "api-get"
   endpoint: "NEXT_PUBLIC_NER_GET_ENDPOINT"
-  apiRoute: "/api/ner"
+  # Public page: no visitor credential exists, so use the withouttoken route.
+  # It sends no Authorization header and targets ml_service's /api/public/*
+  # endpoints. The authenticated route answers 403 "Not authenticated" for
+  # anonymous callers, which is what broke this page.
+  apiRoute: "/api/ner/withouttoken"
   params:
     tokenEndpointType: "ml"  # Options: "ml", "query", "default" (default: "query")
-    useAuth: true  # Optional: set to false to disable auth (default: true)
+    useAuth: false  # Public page — see the note above; true would switch to the authenticated route
   idParam: "id"
 tabs:
   - id: "summary"
