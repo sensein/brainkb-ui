@@ -13,6 +13,8 @@ import { useApiKeyValidator } from "../../components/user/useApiKeyValidator";
 import { ApiKeyValidatorUI } from "../../components/user/ApiKeyValidator";
 import FileUploadArea from "../../components/user/FileUploadArea";
 import ProcessingStatusHeader from "../../components/user/ProcessingStatusHeader";
+import { ENABLE_EXTRACTION_TOOLS } from "@/src/config/featureFlags";
+import { ExtractionDisabledNotice } from "@/src/app/components/auth/ExtractionDisabledNotice";
 
 // Define types for our entities and results
 interface Entity {
@@ -57,7 +59,8 @@ function getCorrectedIndices(sentence: string, entity: string, origStart: number
     return { start: origStart, end: origEnd };
 }
 
-export default function NamedEntityRecognition() {
+function NamedEntityRecognitionTool() {
+
     const {data: session} = useSession();
     const router = useRouter();
     const [selectedInputType, setSelectedInputType] = useState<InputType>('pdf');
@@ -687,3 +690,14 @@ export default function NamedEntityRecognition() {
     );
 }
 
+// Hook-free wrapper so the tool component's hooks are never called conditionally
+// (react-hooks/rules-of-hooks). The route still resolves while the tool is hidden
+// from the dashboard and sidebar, so someone with a bookmark lands here; the
+// extraction WebSocket endpoints do not exist without the structsense stack, so the
+// tool would otherwise fail on connect with nothing to explain why.
+export default function NamedEntityRecognition() {
+    if (!ENABLE_EXTRACTION_TOOLS) {
+        return <ExtractionDisabledNotice toolName="NER extraction" />;
+    }
+    return <NamedEntityRecognitionTool />;
+}
