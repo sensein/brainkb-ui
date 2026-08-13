@@ -22,6 +22,7 @@ const COLUMNS: { h: string; items: { label: string; href?: string }[] }[] = [
     h: "Resources",
     items: [
       { label: "Documentation", href: "http://docs.brainkb.org" },
+      { label: "AI assistant (MCP)", href: "/mcp" },
       { label: "Ontologies", href: "https://brain-bican.github.io/models/" },
       { label: "Data sources", href: "/data-release" },
     ],

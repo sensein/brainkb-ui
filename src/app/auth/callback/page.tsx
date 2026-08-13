@@ -34,10 +34,13 @@ export default function AuthCallbackPage() {
       setMessage("No token in callback URL");
       return;
     }
+    // Longer-lived refresh token (optional) — lets NextAuth silently renew the
+    // access token so the session doesn't drop mid-use.
+    const refresh = params.get("refresh") ?? "";
     const redirectTo = params.get("redirect") || "/";
 
     (async () => {
-      const res = await signIn("backend-jwt", { token, redirect: false });
+      const res = await signIn("backend-jwt", { token, refresh, redirect: false });
       if (!res || res.error) {
         setState("error");
         setMessage(res?.error || "Sign-in failed");

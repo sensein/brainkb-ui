@@ -2,16 +2,17 @@
  * SynthScholar API client.
  *
  * Talks to ml_service's `/api/synth-scholar/*` surface. Every call carries a
- * Bearer token obtained from ml_service's `/api/token` endpoint (using the
- * JWT_USER/JWT_PASSWORD service-account credentials configured in env). The
- * caller's identity is stamped onto each review by the backend via the
- * NextAuth session — see ml_service/core/synth_scholar/routes.py.
+ * Bearer token for ml_service obtained via SSO session-exchange — the logged-in
+ * user's session is swapped for a short-lived `aud=ml_service` token
+ * (getAuthTokenForService('ml')). No service-account password: the caller's own
+ * identity is used, and the review is attributed to them by the backend.
  *
- * Ported from aep-knowledge-synthesis/ui/src/lib/api.ts with two changes:
- * (1) base URL pulled from NEXT_PUBLIC_ML_SERVICE_API_BASE, (2) auth header
- * injected on every fetch via getMlServiceToken().
+ * Ported from aep-knowledge-synthesis/ui/src/lib/api.ts; auth is injected on
+ * every fetch via getMlServiceToken(), which now uses the session, not
+ * JWT_USER/JWT_PASSWORD.
  */
 
+import { getAuthTokenForService } from "@/src/utils/api/auth";
 import type {
   RunReviewRequest,
   CompareRunRequest,
@@ -29,9 +30,10 @@ import type {
 
 const API_BASE = (process.env.NEXT_PUBLIC_ML_SERVICE_API_BASE || "http://localhost:8007").replace(/\/+$/, "") + "/api/synth-scholar";
 
-// ── Auth token cache ──────────────────────────────────────────────────
-// Token comes from ml_service's /api/token. We cache it in-memory until it
-// expires (or a 401 forces a refresh).
+// ── Auth token ────────────────────────────────────────────────────────
+// SSO: exchange the logged-in user's session for a short-lived ml_service token
+// (getAuthTokenForService('ml') → /api/auth/session-exchange). No service-account
+// password. Cached briefly; a 401 forces a fresh exchange.
 
 let _cachedToken: string | null = null;
 let _tokenExpiresAt = 0;
@@ -41,26 +43,15 @@ async function getMlServiceToken(forceRefresh = false): Promise<string> {
   if (!forceRefresh && _cachedToken && now < _tokenExpiresAt) {
     return _cachedToken;
   }
-  const tokenEndpoint = process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE;
-  const email = process.env.NEXT_PUBLIC_JWT_USER;
-  const password = process.env.NEXT_PUBLIC_JWT_PASSWORD;
-  if (!tokenEndpoint || !email || !password) {
+  const token = await getAuthTokenForService("ml");
+  if (!token) {
     throw new Error(
-      "ml_service token credentials missing — set NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE, NEXT_PUBLIC_JWT_USER, NEXT_PUBLIC_JWT_PASSWORD in .env.local",
+      "Not authenticated for ml_service — please sign in (SynthScholar uses your session, not a service account).",
     );
   }
-  const res = await fetch(tokenEndpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
-  });
-  if (!res.ok) throw new Error(`ml_service token fetch failed: HTTP ${res.status}`);
-  const data = await res.json();
-  const token: string = data.access_token || data.token;
-  if (!token) throw new Error("ml_service /api/token returned no access_token");
   _cachedToken = token;
-  // ml_service tokens default to 30-min expiry; cache for 25 to be safe.
-  _tokenExpiresAt = now + 25 * 60 * 1000;
+  // Per-service access tokens are short-lived (~15 min); cache for 10 to be safe.
+  _tokenExpiresAt = now + 10 * 60 * 1000;
   return token;
 }
 

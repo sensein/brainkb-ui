@@ -324,13 +324,8 @@ export default function NamedEntityRecognition() {
 
 
                 const formData = new FormData();
-                if (clientEnv.jwtUser) {
-                    formData.append("email", clientEnv.jwtUser);
-                }
-                if (clientEnv.jwtPassword) {
-                    formData.append("password", clientEnv.jwtPassword);
-                }
-
+                // Auth comes from the logged-in session (the /api/save-ner-result
+                // route uses SSO session-exchange) — no service-account credentials.
                 const resultsJson = JSON.stringify(dataToSave);
                 formData.append("results", resultsJson);
 
@@ -414,14 +409,8 @@ export default function NamedEntityRecognition() {
 
             const formData = new FormData();
 
-            // Add credentials if available
-            if (clientEnv.jwtUser) {
-                formData.append("email", clientEnv.jwtUser);
-            }
-            if (clientEnv.jwtPassword) {
-                formData.append("password", clientEnv.jwtPassword);
-            }
-
+            // Auth comes from the logged-in session (the /api/save-ner-result route
+            // uses SSO session-exchange) — no service-account credentials sent.
             // Convert results to JSON string before appending
             const resultsJson = JSON.stringify(resultsToSave);
             formData.append("results", resultsJson);
