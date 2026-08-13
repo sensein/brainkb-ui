@@ -30,16 +30,22 @@ declare module "next-auth" {
     roles?: string[];
     scopes?: string[];
     authSource?: string;
+    // "SessionExpired" once the backend credential behind this session is gone and
+    // cannot be renewed. SessionExpiryWatcher turns it into a single sign-out.
+    error?: "SessionExpired";
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     backendToken?: string;
+    backendRefreshToken?: string | null;
+    backendTokenExp?: number;
     profileId?: number | null;
     userId?: number | null;
     roles?: string[];
     scopes?: string[];
     authSource?: string;
+    error?: "SessionExpired";
   }
 }

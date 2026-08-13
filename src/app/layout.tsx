@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { getServerSession } from "next-auth";
 import SessionProvider from "./components/auth/SessionProvider";
+import SessionExpiryWatcher from "./components/auth/SessionExpiryWatcher";
 import Footer from "./Footer";
 import dynamic from "next/dynamic"; // Required for Client Component import
 // Dynamically import the BrainKB Assistant client component
@@ -63,6 +64,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </noscript>
 
       <SessionProvider session={session}>
+          {/* One place that reacts to an expired backend credential, instead of
+              every feature reporting its own "please sign in" failure. */}
+          <SessionExpiryWatcher/>
           <QueryProvider>
               <header>
                   <ConditionalNavbar/>
