@@ -198,6 +198,65 @@ export async function getReviewLog(reviewId: string): Promise<{
   return fetchJSON(`/reviews/${reviewId}/log`);
 }
 
+// ── Public (unauthenticated) reads ────────────────────────────────────
+// For /knowledge-base/synth-scholar, which anyone can open. These MUST NOT touch
+// getMlServiceToken(): an anonymous visitor has no session to exchange, so asking
+// for a token throws before the request is made — that is the "ML service requires
+// a signed-in session" error the public pages were failing with.
+//
+// They hit ml_service's /public/* routes, which serve only reviews their author
+// marked Public and return 404 for anything else. Server-side filtering matters:
+// the authenticated /reviews listing is owner-scoped, so using it here showed a
+// visitor their own reviews rather than the published ones.
+
+async function fetchPublicJSON<T>(path: string): Promise<T> {
+  const res = await fetch(`${API_BASE}/public${path}`, { headers: { Accept: "application/json" } });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(formatApiDetail((body as any)?.detail, res.status));
+  }
+  return res.json();
+}
+
+export async function listPublicReviews(): Promise<ReviewSummary[]> {
+  return fetchPublicJSON("/reviews");
+}
+
+export async function getPublicReview(reviewId: string): Promise<ReviewDetail> {
+  return fetchPublicJSON(`/reviews/${reviewId}`);
+}
+
+export async function getPublicReviewLog(reviewId: string): Promise<{
+  review_id: string;
+  status: string;
+  step_count: number;
+  log: string[];
+  log_events?: LogEvent[];
+}> {
+  return fetchPublicJSON(`/reviews/${reviewId}/log`);
+}
+
+export async function exportPublicReview(
+  reviewId: string,
+  format: ExportFormat,
+  model?: string,
+): Promise<Blob> {
+  const params = new URLSearchParams({ format });
+  if (model) params.set("model", model);
+  const res = await fetch(`${API_BASE}/public/reviews/${reviewId}/export?${params}`);
+  if (!res.ok) {
+    let detail = "";
+    try {
+      const body = await res.json();
+      detail = formatApiDetail((body as any)?.detail, res.status);
+    } catch {
+      try { detail = await res.text(); } catch { /* ignore */ }
+    }
+    throw new Error(detail || `Export failed (HTTP ${res.status})`);
+  }
+  return res.blob();
+}
+
 // ── Export ────────────────────────────────────────────────────────────
 
 export async function exportReview(

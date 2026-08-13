@@ -25,24 +25,29 @@ import {
   Activity,
   FileText,
 } from "lucide-react";
+// Public (unauthenticated) reads — see usePublicReview*. The authenticated hooks
+// cannot serve this page: they need a session to exchange for an ml_service token,
+// and their endpoints 404 for anyone who is not the review's author, so even a
+// published review was invisible to its readers.
 import {
-  useReview,
-  useReviewLog,
-  useExportReview,
+  usePublicReview,
+  usePublicReviewLog,
+  useExportPublicReview,
 } from "@/src/hooks/useSynthScholar";
 import { MarkdownContent } from "@/src/app/components/synth-scholar/MarkdownContent";
 import { ProvenanceTimelinePublic } from "@/src/app/components/synth-scholar/ProvenanceTimelinePublic";
 import type {
   ArticleSummary,
   GRADEAssessment,
+  ReviewDetail,
 } from "@/src/types/synthScholar";
 
 export default function PublicReviewDetailPage() {
   const params = useParams();
   const reviewId = decodeURIComponent((params?.id as string) || "");
-  const { data, isLoading, error } = useReview(reviewId || undefined);
-  const log = useReviewLog(reviewId || undefined);
-  const exportMut = useExportReview();
+  const { data, isLoading, error } = usePublicReview(reviewId || undefined);
+  const log = usePublicReviewLog(reviewId || undefined);
+  const exportMut = useExportPublicReview();
 
   const isPublicCompleted =
     data?.is_public === true && data?.status === "completed";
@@ -387,7 +392,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function PRISMAFlowCard({
   flow,
 }: {
-  flow: NonNullable<ReturnType<typeof useReview>["data"]>["flow"];
+  flow: ReviewDetail["flow"];
 }) {
   if (!flow) return null;
   const cells: Array<[string, number | string]> = [

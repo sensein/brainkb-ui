@@ -27,6 +27,10 @@ import {
   getReviewLog,
   cancelReview,
   retryReview,
+  listPublicReviews,
+  getPublicReview,
+  getPublicReviewLog,
+  exportPublicReview,
 } from "@/src/services/api/synthScholar";
 import type {
   RunReviewRequest,
@@ -175,35 +179,81 @@ export function useSetCacheSharing() {
   });
 }
 
+// Shared by the authenticated and public export hooks so the downloaded filename
+// is identical either way.
+function _downloadExport(blob: Blob, format: ExportFormat, model?: string) {
+  const EXT: Record<string, string> = {
+    markdown: "md", bibtex: "bib", ttl: "ttl", jsonld: "jsonld", json: "json",
+    rubric_markdown: "md", rubric_json: "json",
+    charting_markdown: "md", charting_json: "json",
+    appraisal_markdown: "md", appraisal_json: "json",
+    narrative_summary_markdown: "md", narrative_summary_json: "json",
+  };
+  const STEM: Record<string, string> = {
+    rubric_markdown: "prisma_rubrics", rubric_json: "prisma_rubrics",
+    charting_markdown: "prisma_charting", charting_json: "prisma_charting",
+    appraisal_markdown: "prisma_appraisal", appraisal_json: "prisma_appraisal",
+    narrative_summary_markdown: "prisma_narrative_summary",
+    narrative_summary_json: "prisma_narrative_summary",
+  };
+  const ext = EXT[format] ?? "json";
+  const stem = STEM[format] ?? "prisma_review";
+  const modelSlug = model ? "_" + model.replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") : "";
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${stem}${modelSlug}.${ext}`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function useExportReview() {
   return useMutation({
     mutationFn: ({ reviewId, format, model }: { reviewId: string; format: ExportFormat; model?: string }) =>
       exportReview(reviewId, format, model),
-    onSuccess: (blob, { format, model }) => {
-      const EXT: Record<string, string> = {
-        markdown: "md", bibtex: "bib", ttl: "ttl", jsonld: "jsonld", json: "json",
-        rubric_markdown: "md", rubric_json: "json",
-        charting_markdown: "md", charting_json: "json",
-        appraisal_markdown: "md", appraisal_json: "json",
-        narrative_summary_markdown: "md", narrative_summary_json: "json",
-      };
-      const STEM: Record<string, string> = {
-        rubric_markdown: "prisma_rubrics", rubric_json: "prisma_rubrics",
-        charting_markdown: "prisma_charting", charting_json: "prisma_charting",
-        appraisal_markdown: "prisma_appraisal", appraisal_json: "prisma_appraisal",
-        narrative_summary_markdown: "prisma_narrative_summary",
-        narrative_summary_json: "prisma_narrative_summary",
-      };
-      const ext = EXT[format] ?? "json";
-      const stem = STEM[format] ?? "prisma_review";
-      const modelSlug = model ? "_" + model.replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") : "";
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${stem}${modelSlug}.${ext}`;
-      a.click();
-      URL.revokeObjectURL(url);
-    },
+    onSuccess: (blob, { format, model }) => _downloadExport(blob, format, model),
+  });
+}
+
+// ── Public reads (no sign-in) ────────────────────────────────────────
+// Used by /knowledge-base/synth-scholar. Kept separate from the hooks above
+// rather than made conditional: the authenticated ones require a session to
+// exchange for an ml_service token, so calling them from a public page fails
+// before any request goes out. Separate query keys too — a signed-in author
+// browsing the public listing must not see their own owner-scoped listing
+// served from cache in its place.
+
+export function usePublicReviews() {
+  return useQuery({
+    queryKey: ["synth-scholar", "public", "reviews"],
+    queryFn: listPublicReviews,
+    staleTime: 60_000, // published reviews are complete; they do not move
+  });
+}
+
+export function usePublicReview(reviewId: string | undefined) {
+  return useQuery({
+    queryKey: ["synth-scholar", "public", "review", reviewId],
+    queryFn: () => getPublicReview(reviewId!),
+    enabled: !!reviewId,
+    staleTime: 60_000,
+  });
+}
+
+export function usePublicReviewLog(reviewId: string | undefined) {
+  return useQuery({
+    queryKey: ["synth-scholar", "public", "review-log", reviewId],
+    queryFn: () => getPublicReviewLog(reviewId!),
+    enabled: !!reviewId,
+    staleTime: 60_000,
+  });
+}
+
+export function useExportPublicReview() {
+  return useMutation({
+    mutationFn: ({ reviewId, format, model }: { reviewId: string; format: ExportFormat; model?: string }) =>
+      exportPublicReview(reviewId, format, model),
+    onSuccess: (blob, { format, model }) => _downloadExport(blob, format, model),
   });
 }
 

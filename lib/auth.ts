@@ -42,10 +42,32 @@ function jwtExpMs(token?: string | null): number {
   }
 }
 
+// How long NextAuth keeps its OWN session cookie alive. This must not outlive the
+// backend's web refresh token (USERMANAGEMENT_WEB_REFRESH_TTL_MIN, default 10080 =
+// 7 days). NextAuth's default is 30 days, which left a ~23-day window where the
+// cookie still reported `authenticated` — navbar, avatar, everything — while the
+// backend credential behind it was gone, so every service call failed with
+// "requires a signed-in session". Set NEXTAUTH_SESSION_MAX_AGE_SEC if the backend's
+// TTL is customised; keep it equal to or shorter than that value.
+const SESSION_MAX_AGE_SEC = (() => {
+  const n = Number(process.env.NEXTAUTH_SESSION_MAX_AGE_SEC);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 7 * 24 * 60 * 60;
+})();
+
+// Outcome of a refresh attempt. The distinction matters: "rejected" means the
+// refresh token itself is dead (expired, revoked, account deactivated) and the user
+// must sign in again, while "unavailable" means we could not ask (network blip,
+// 502 during a redeploy, service restarting) and says nothing about the token. The
+// old code returned null for both and cleared the credentials either way, so a
+// few-second backend hiccup permanently signed everyone out.
+type RefreshResult =
+  | { status: "ok"; token: string }
+  | { status: "rejected" }
+  | { status: "unavailable" };
+
 // Exchange a web refresh token for a fresh usermanagement access token so the
-// session doesn't drop when the short access token expires. Returns the new
-// access token, or null on failure (caller then forces re-login).
-async function refreshBackendToken(refreshToken: string): Promise<string | null> {
+// session doesn't drop when the short access token expires.
+async function refreshBackendToken(refreshToken: string): Promise<RefreshResult> {
   try {
     const res = await fetch(`${userManagementBaseUrl()}/api/auth/exchange`, {
       method: "POST",
@@ -53,17 +75,24 @@ async function refreshBackendToken(refreshToken: string): Promise<string | null>
       body: JSON.stringify({ audience: "usermanagement" }),
       cache: "no-store",
     });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return (data.access_token as string) ?? null;
+    if (res.ok) {
+      const data = await res.json();
+      const access = (data.access_token as string) ?? null;
+      return access ? { status: "ok", token: access } : { status: "rejected" };
+    }
+    // Only the auth codes are a verdict on the token.
+    return res.status === 401 || res.status === 403
+      ? { status: "rejected" }
+      : { status: "unavailable" };
   } catch {
-    return null;
+    return { status: "unavailable" };
   }
 }
 
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET || generateFallbackSecret(),
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: SESSION_MAX_AGE_SEC },
+  jwt: { maxAge: SESSION_MAX_AGE_SEC },
   providers: [
     CredentialsProvider({
       id: "backend-jwt",
@@ -121,6 +150,7 @@ export const authOptions: NextAuthOptions = {
         token.scopes = u.scopes ?? [];
         token.authSource = u.authSource ?? "password";
         (token as any).orcid_id = u.orcid_id ?? null;
+        (token as any).error = undefined; // a fresh login clears any previous expiry
         return token;
       }
 
@@ -129,19 +159,40 @@ export const authOptions: NextAuthOptions = {
       const exp = (token as any).backendTokenExp as number | undefined;
       const refresh = (token as any).backendRefreshToken as string | undefined;
       const SKEW_MS = 60_000; // renew ~1 min before expiry
-      if (refresh && (token as any).backendToken && (!exp || Date.now() > exp - SKEW_MS)) {
-        const fresh = await refreshBackendToken(refresh);
-        if (fresh) {
-          (token as any).backendToken = fresh;
-          (token as any).backendTokenExp = jwtExpMs(fresh);
-        } else {
-          // Refresh failed (expired/revoked/inactive) — drop the backend token so
-          // the app treats the user as signed out and re-prompts login.
-          (token as any).backendToken = undefined;
-          (token as any).backendTokenExp = 0;
-          (token as any).backendRefreshToken = undefined;
-        }
+
+      if (!(token as any).backendToken) return token; // already expired; see below
+      if (exp && Date.now() < exp - SKEW_MS) return token; // still valid
+
+      if (!refresh) {
+        // Signed in without a refresh token — an older backend build, or a login
+        // that took the CLI path (oauth.py mints `refresh` for web logins only).
+        // Nothing can renew this, so once the access token lapses the session is
+        // over. Mark it rather than leaving a dead token in place for every caller
+        // to 401 on individually.
+        (token as any).backendToken = undefined;
+        (token as any).backendTokenExp = 0;
+        (token as any).error = "SessionExpired";
+        return token;
       }
+
+      const res = await refreshBackendToken(refresh);
+      if (res.status === "ok") {
+        (token as any).backendToken = res.token;
+        (token as any).backendTokenExp = jwtExpMs(res.token);
+        (token as any).error = undefined;
+      } else if (res.status === "rejected") {
+        // The refresh token is expired, revoked, or the account was deactivated.
+        // Drop the credentials AND flag it, so the UI signs the user out centrally
+        // instead of each feature surfacing its own "please sign in" error.
+        (token as any).backendToken = undefined;
+        (token as any).backendTokenExp = 0;
+        (token as any).backendRefreshToken = undefined;
+        (token as any).error = "SessionExpired";
+      }
+      // "unavailable": keep the credentials we have and try again on the next call.
+      // The access token may already be past `exp` — a real 401 from the backend is
+      // the correct outcome then, and it is recoverable; discarding the refresh
+      // token would not be.
       return token;
     },
     async session({ session, token }) {
@@ -152,6 +203,10 @@ export const authOptions: NextAuthOptions = {
       s.roles = token.roles ?? [];
       s.scopes = token.scopes ?? [];
       s.authSource = token.authSource ?? "password";
+      // Surfaced to the browser so SessionExpiryWatcher can sign the user out once,
+      // centrally. Without it, a session whose backend credential is gone still
+      // reads as `authenticated` and every feature fails on its own.
+      s.error = (token as any).error ?? undefined;
       if (s.user) {
         s.user.orcid_id = (token as any).orcid_id ?? null;
       }

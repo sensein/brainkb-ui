@@ -8,18 +8,26 @@
  * other knowledge-base list pages (e.g. /knowledge-base/ner) so the surface
  * stays consistent. Each row links to a public detail view that exposes the
  * synthesis text plus a small set of downloads — no editing UI.
+ *
+ * Reads ml_service's unauthenticated /public/reviews. It used to call the
+ * authenticated listing and filter client-side, which could not work either way:
+ * an anonymous visitor has no session to exchange for a token, and a signed-in one
+ * got their OWN reviews, since that endpoint is owner-scoped. The published set now
+ * comes from the server already filtered.
  */
 
 import React from "react";
 import Link from "next/link";
 import { Search, Loader2, AlertCircle } from "lucide-react";
-import { useReviews } from "@/src/hooks/useSynthScholar";
+import { usePublicReviews } from "@/src/hooks/useSynthScholar";
 import type { ReviewSummary } from "@/src/types/synthScholar";
 
 export default function PublicReviewsListPage() {
-  const { data, isLoading, error } = useReviews();
+  const { data, isLoading, error } = usePublicReviews();
   const [searchQuery, setSearchQuery] = React.useState("");
 
+  // The endpoint already returns only published, completed reviews. Kept as a
+  // belt-and-braces guard so a backend change can never surface a draft here.
   const publicReviews = React.useMemo(
     () =>
       (data ?? []).filter(
