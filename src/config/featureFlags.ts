@@ -22,3 +22,42 @@
  */
 export const ENABLE_PAGE_ACCESS_GATE: boolean =
   process.env.NEXT_PUBLIC_ENABLE_PAGE_ACCESS_GATE === "false" ? false : true;
+
+/**
+ * Controls the multi-agent EXTRACTION tools in the signed-in user section:
+ * NER extraction (/user/sie), Resource extraction (/user/extract-resource) and
+ * PDF -> ReproSchema (/user/pdf2reproschema).
+ *
+ * OFF by default, because the backend cannot currently serve them. ml_service no
+ * longer installs the `structsense` package — it pins aiohttp below 3.10 through an
+ * old crewai/litellm, which breaks openai's import and took `synthscholar` (every
+ * /api/synth-scholar route) down with it. With it gone, ml_service does not register
+ * /ws/ner, /ws/extract-resources or /ws/pdf2reproschema at all, so these pages would
+ * fail on connect.
+ *
+ * This hides the tools rather than deleting them: the pages, the WebSocket client and
+ * the API routes are all intact, and flipping this to "true" brings them straight
+ * back once structsense is reinstalled.
+ *
+ * READ-ONLY views are NOT affected and must keep working — /knowledge-base/ner and
+ * /knowledge-base/[slug] read already-extracted annotations through GET /api/ner,
+ * which does not need structsense.
+ *
+ * Set `NEXT_PUBLIC_ENABLE_EXTRACTION_TOOLS=true` to re-enable.
+ */
+export const ENABLE_EXTRACTION_TOOLS: boolean =
+  process.env.NEXT_PUBLIC_ENABLE_EXTRACTION_TOOLS === "true";
+
+/** pageKeys in TOOL_REGISTRY that ENABLE_EXTRACTION_TOOLS governs. */
+export const EXTRACTION_TOOL_PAGE_KEYS = [
+  "tools.ner-extraction",
+  "tools.extract-resource",
+  "tools.pdf2reproschema",
+] as const;
+
+/** Routes ENABLE_EXTRACTION_TOOLS governs, for nav filtering and page gating. */
+export const EXTRACTION_TOOL_HREFS = [
+  "/user/sie",
+  "/user/extract-resource",
+  "/user/pdf2reproschema",
+] as const;

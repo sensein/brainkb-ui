@@ -12,8 +12,11 @@ import { useApiKeyValidator } from "../../components/user/useApiKeyValidator";
 import { ApiKeyValidatorUI } from "../../components/user/ApiKeyValidator";
 import FileUploadArea from "../../components/user/FileUploadArea";
 import ProcessingStatusHeader from "../../components/user/ProcessingStatusHeader";
+import { ENABLE_EXTRACTION_TOOLS } from "@/src/config/featureFlags";
+import { ExtractionDisabledNotice } from "@/src/app/components/auth/ExtractionDisabledNotice";
 
-export default function IngestStructuredResourcePage() {
+function IngestStructuredResourcePageTool() {
+
     const { data: session } = useSession();
     const router = useRouter();
 
@@ -553,4 +556,16 @@ export default function IngestStructuredResourcePage() {
             {/*)}*/}
         </div>
     );
+}
+
+// Hook-free wrapper so the tool component's hooks are never called conditionally
+// (react-hooks/rules-of-hooks). The route still resolves while the tool is hidden
+// from the dashboard and sidebar, so someone with a bookmark lands here; the
+// extraction WebSocket endpoints do not exist without the structsense stack, so the
+// tool would otherwise fail on connect with nothing to explain why.
+export default function IngestStructuredResourcePage() {
+    if (!ENABLE_EXTRACTION_TOOLS) {
+        return <ExtractionDisabledNotice toolName="Resource extraction" />;
+    }
+    return <IngestStructuredResourcePageTool />;
 }

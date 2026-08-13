@@ -11,7 +11,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FONTS, Icon } from "@/src/app/components/design-system";
-import { TOOL_REGISTRY } from "@/src/config/toolRegistry";
+import { ALL_TOOLS } from "@/src/config/toolRegistry";
 
 export function UserBreadcrumb() {
   const pathname = usePathname() ?? "";
@@ -22,7 +22,9 @@ export function UserBreadcrumb() {
 
   // Look up a friendly label from the tool registry; fall back to the last
   // path segment if the route isn't registered (e.g. /user/profile).
-  const tool = TOOL_REGISTRY.find((t) => t.href === pathname);
+  // ALL_TOOLS, not TOOL_REGISTRY: a tool hidden by a feature flag still needs a
+  // proper title if someone reaches its URL directly.
+  const tool = ALL_TOOLS.find((t) => t.href === pathname);
   const fallbackLabel = pathname.split("/").pop() ?? "Tool";
   const label = tool?.title ?? fallbackLabel.replace(/[-_]/g, " ");
 
