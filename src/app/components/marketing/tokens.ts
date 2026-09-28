@@ -27,6 +27,17 @@ export const COLORS = {
   literature: "#b3923a",
 } as const;
 
+// Shared card look for Home / Explore / Skills, so the three pages stay in
+// step. Surface only — each page supplies its own layout and contents.
+export const CARD_SURFACE = {
+  background: COLORS.cardBg,
+  border: `1px solid ${COLORS.border}`,
+  borderRadius: 12,
+  padding: 26,
+} as const;
+
+export const CARD_TITLE_FONT = "400 25px/1.1 var(--font-instrument-serif), serif";
+
 export const MCP_ENDPOINT = "https://mcp.brainkb.org/mcp";
 
 export const MCP_CLIENTS = [

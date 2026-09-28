@@ -8,7 +8,7 @@
 import MarketingHeader from "../components/marketing/MarketingHeader";
 import MarketingFooter from "../components/marketing/MarketingFooter";
 import { instrumentSerif, plexSans, plexMono } from "../components/marketing/fonts";
-import { COLORS } from "../components/marketing/tokens";
+import { COLORS, CARD_SURFACE, CARD_TITLE_FONT } from "../components/marketing/tokens";
 
 const SKILLS_REPO = "https://github.com/sensein/agent_skills";
 
@@ -77,17 +77,9 @@ export default function SkillsPage() {
           {SKILLS.map((skill) => (
             <div
               key={skill.name}
-              style={{
-                background: COLORS.cardBg,
-                border: `1px solid ${COLORS.border}`,
-                borderRadius: 12,
-                padding: 28,
-                display: "flex",
-                flexDirection: "column",
-                gap: 14,
-              }}
+              style={{ ...CARD_SURFACE, display: "flex", flexDirection: "column", gap: 14 }}
             >
-              <h2 style={{ margin: 0, font: "400 26px/1.1 var(--font-instrument-serif), serif", color: COLORS.accentPurple }}>
+              <h2 style={{ margin: 0, font: CARD_TITLE_FONT, color: COLORS.accentPurple }}>
                 {skill.name}
               </h2>
               <p style={{ margin: 0, color: COLORS.ink, fontSize: 15.5, fontWeight: 600, lineHeight: 1.5 }}>

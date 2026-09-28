@@ -21,7 +21,10 @@ const MARKETING_ROUTES = new Set(["/", "/mcp", "/skills", "/explore"]);
 export default function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  if (pathname !== null && MARKETING_ROUTES.has(pathname)) {
+  const standalone =
+    pathname !== null && (MARKETING_ROUTES.has(pathname) || pathname.startsWith("/browse/"));
+
+  if (standalone) {
     return <>{children}</>;
   }
 

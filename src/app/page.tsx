@@ -13,7 +13,7 @@ import MarketingHeader from "./components/marketing/MarketingHeader";
 import MarketingFooter from "./components/marketing/MarketingFooter";
 import { FloatingGraph } from "./components/design-system/BkbHero";
 import { instrumentSerif, plexSans, plexMono } from "./components/marketing/fonts";
-import { COLORS } from "./components/marketing/tokens";
+import { COLORS, CARD_SURFACE, CARD_TITLE_FONT } from "./components/marketing/tokens";
 
 const WHAT_YOU_CAN_DO = [
   {
@@ -164,21 +164,13 @@ export default function HomePage() {
             {WAYS_TO_INTERACT.map((item) => (
               <div
                 key={item.href}
-                style={{
-                  background: COLORS.cardBg,
-                  border: `1px solid ${COLORS.border}`,
-                  borderRadius: 12,
-                  padding: 28,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 14,
-                }}
+                style={{ ...CARD_SURFACE, display: "flex", flexDirection: "column", gap: 14 }}
               >
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14 }}>
                   <h3
                     style={{
                       margin: 0,
-                      font: "400 25px/1.15 var(--font-instrument-serif), serif",
+                      font: CARD_TITLE_FONT,
                       letterSpacing: "-.01em",
                     }}
                   >

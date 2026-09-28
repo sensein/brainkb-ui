@@ -7,23 +7,26 @@
  */
 
 import { useState } from "react";
+import Link from "next/link";
 import MarketingHeader from "../components/marketing/MarketingHeader";
 import MarketingFooter from "../components/marketing/MarketingFooter";
 import { instrumentSerif, plexSans, plexMono } from "../components/marketing/fonts";
-import { COLORS } from "../components/marketing/tokens";
+import { COLORS, CARD_SURFACE, CARD_TITLE_FONT } from "../components/marketing/tokens";
 
+// `href: null` means that data type has no browse page yet — the card renders
+// as plain text until one exists.
 const TYPES = [
-  { name: "Cell types", color: COLORS.accent, desc: "Taxonomies and cell-type definitions with markers and regions.", sources: "BICAN", programs: ["BICAN"] },
-  { name: "Brain regions", color: COLORS.accent, desc: "Anatomical regions and atlases, linked to cell types and data.", sources: "BICAN", programs: ["BICAN"] },
-  { name: "BICAN Resources", color: COLORS.accent, desc: "All resources published by the BICAN consortium.", sources: "BICAN", programs: ["BICAN"] },
-  { name: "BBQS Resources", color: COLORS.accent, desc: "All resources published by the BBQS consortium.", sources: "BBQS", programs: ["BBQS"] },
-  { name: "Literature", color: COLORS.accent, desc: "Claims extracted from papers, each linked to its source.", sources: "BICAN · BBQS", programs: ["BICAN", "BBQS"] },
+  { name: "Cell types", desc: "Taxonomies and cell-type definitions with markers and regions.", sources: "BICAN", programs: ["BICAN"], href: null },
+  { name: "Brain regions", desc: "Anatomical regions and atlases, linked to cell types and data.", sources: "BICAN", programs: ["BICAN"], href: null },
+  { name: "Genes & genomes", desc: "Individual genes with their molecular type — protein-coding or noncoding — linked to the versioned genome annotations from ENSEMBL or NCBI and the reference assemblies they came from.", sources: "BICAN", programs: ["BICAN"], href: "/browse/genes-genomes" },
+  { name: "BICAN Resources", desc: "All resources published by the BICAN consortium.", sources: "BICAN", programs: ["BICAN"], href: null },
+  { name: "BBQS Resources", desc: "All resources published by the BBQS consortium.", sources: "BBQS", programs: ["BBQS"], href: null },
+  { name: "Literature", desc: "Claims extracted from papers, each linked to its source.", sources: "BICAN · BBQS", programs: ["BICAN", "BBQS"], href: null },
 ] as const;
 
 const PROGRAMS = ["All", "BICAN", "BBQS"] as const;
 
 export default function ExplorePage() {
-  const [selectedType, setSelectedType] = useState<string>(TYPES[0].name);
   const [activeProgram, setActiveProgram] = useState<(typeof PROGRAMS)[number]>("All");
   const visibleTypes = TYPES.filter((t) => activeProgram === "All" || (t.programs as readonly string[]).includes(activeProgram));
 
@@ -89,32 +92,35 @@ export default function ExplorePage() {
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,260px),1fr))", gap: 16 }}>
           {visibleTypes.map((t) => {
-            const active = t.name === selectedType;
-            return (
-              <button
-                key={t.name}
-                onClick={() => setSelectedType(t.name)}
-                style={{
-                  background: COLORS.cardBg,
-                  color: COLORS.ink,
-                  border: `1px solid ${active ? COLORS.ink : COLORS.border}`,
-                  boxShadow: active ? `inset 0 -3px 0 ${t.color}` : "none",
-                  borderRadius: 12,
-                  padding: 24,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                  gap: 12,
-                  textAlign: "left",
-                  cursor: "pointer",
-                  font: "inherit",
-                }}
-              >
-                <span style={{ width: 10, height: 10, borderRadius: "50%", background: t.color }} />
-                <span style={{ font: "400 30px/1.05 var(--font-instrument-serif), serif" }}>{t.name}</span>
+            const body = (
+              <>
+                <span style={{ font: CARD_TITLE_FONT, color: COLORS.accentPurple }}>{t.name}</span>
                 <span style={{ color: COLORS.body, fontSize: 15, lineHeight: 1.5 }}>{t.desc}</span>
-                <span style={{ font: "500 12px var(--font-plex-mono)", color: COLORS.muted }}>{t.sources}</span>
-              </button>
+                <span style={{ marginTop: "auto", paddingTop: 10, font: "500 12px var(--font-plex-mono)", color: COLORS.muted }}>
+                  {t.sources}
+                </span>
+                {t.href && (
+                  <span style={{ color: COLORS.accentPurple, fontWeight: 600, fontSize: 15 }}>Browse →</span>
+                )}
+              </>
+            );
+            const cardStyle = {
+              ...CARD_SURFACE,
+              color: COLORS.ink,
+              display: "flex",
+              flexDirection: "column" as const,
+              alignItems: "flex-start",
+              gap: 10,
+              textAlign: "left" as const,
+            };
+            return t.href ? (
+              <Link key={t.name} href={t.href} style={cardStyle}>
+                {body}
+              </Link>
+            ) : (
+              <div key={t.name} style={cardStyle}>
+                {body}
+              </div>
             );
           })}
         </div>

@@ -1,0 +1,57 @@
+# Browse pages (/browse/<slug>)
+#
+# One entry under `pages` per Explore card that has its own browse page. Each
+# page lists its classes down the left and the matching entities in a table.
+# Adding a page — or a class, or a column — is a change here, not in code.
+#
+# `defaults` applies to every page; any page may override graph, columns or
+# queryTemplate by setting its own.
+
+defaults:
+  # Named graph to query, substituted into queryTemplate as {{graph}}.
+  # Change this to whichever graph the data was ingested into.
+  graph: "https://brainkb.org/sandbox-example/"
+
+  # Table columns, in display order. Each `key` must match a variable selected
+  # in queryTemplate; a row with no value for a column renders as "—".
+  columns:
+    - key: "id"
+      label: "ID"
+    - key: "name"
+      label: "Name"
+    - key: "full_name"
+      label: "Full name"
+
+  # Run once per selected class, with {{graph}} and {{category}} substituted.
+  # name/full_name are OPTIONAL so an entity still lists when it only has an id.
+  queryTemplate: |-
+    PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+    PREFIX biolink: <https://w3id.org/biolink/vocab/>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+    SELECT DISTINCT ?id ?name ?full_name
+    WHERE {
+      GRAPH <{{graph}}> {
+        ?id biolink:category "{{category}}"^^xsd:anyURI .
+        OPTIONAL { ?id biolink:name ?name }
+        OPTIONAL { ?id biolink:full_name ?full_name }
+      }
+    }
+    LIMIT 500
+
+pages:
+  - slug: "genes-genomes"
+    title: "Genes & genomes"
+    description: >-
+      Individual genes with their molecular type — protein-coding or noncoding —
+      linked to the versioned genome annotations from ENSEMBL or NCBI and the
+      reference assemblies they came from.
+    classes:
+      - name: "GeneAnnotation"
+        category: "bican:GeneAnnotation"
+      - name: "GenomeAnnotation"
+        category: "bican:GenomeAnnotation"
+      - name: "GenomeAssembly"
+        category: "bican:GenomeAssembly"
+      - name: "AnnotationCollection"
+        category: "bican:AnnotationCollection"
