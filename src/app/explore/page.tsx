@@ -19,6 +19,7 @@ const TYPES = [
   { name: "Cell types", desc: "Taxonomies and cell-type definitions with markers and regions.", sources: "BICAN", programs: ["BICAN"], href: null },
   { name: "Brain regions", desc: "Anatomical regions and atlases, linked to cell types and data.", sources: "BICAN", programs: ["BICAN"], href: null },
   { name: "Genes & genomes", desc: "Individual genes with their molecular type — protein-coding or noncoding — linked to the versioned genome annotations from ENSEMBL or NCBI and the reference assemblies they came from.", sources: "BICAN", programs: ["BICAN"], href: "/browse/genes-genomes" },
+  { name: "Library generation", desc: "The path from donor to sequencing library — brain slabs, tissue samples, the cell samples derived from them, and the cDNA, libraries, and aliquots they produce.", sources: "BICAN", programs: ["BICAN"], href: "/browse/library-generation" },
   { name: "BICAN Resources", desc: "All resources published by the BICAN consortium.", sources: "BICAN", programs: ["BICAN"], href: null },
   { name: "BBQS Resources", desc: "All resources published by the BBQS consortium.", sources: "BBQS", programs: ["BBQS"], href: null },
   { name: "Literature", desc: "Claims extracted from papers, each linked to its source.", sources: "BICAN · BBQS", programs: ["BICAN", "BBQS"], href: null },

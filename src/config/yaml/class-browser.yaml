@@ -55,3 +55,34 @@ pages:
         category: "bican:GenomeAssembly"
       - name: "AnnotationCollection"
         category: "bican:AnnotationCollection"
+
+  # BICAN library generation schema — the specimen-to-library chain. Classes
+  # follow the order of the pipeline rather than the alphabet, so the list
+  # reads as the process it describes.
+  - slug: "library-generation"
+    title: "Library generation"
+    description: >-
+      The path from donor to sequencing library: brain slabs and tissue
+      samples, the dissociated, enriched, and barcoded cell samples derived
+      from them, and the amplified cDNA, libraries, and aliquots they produce.
+    classes:
+      - name: "Donor"
+        category: "bican:Donor"
+      - name: "BrainSlab"
+        category: "bican:BrainSlab"
+      - name: "TissueSample"
+        category: "bican:TissueSample"
+      - name: "DissectionRoiPolygon"
+        category: "bican:DissectionRoiPolygon"
+      - name: "DissociatedCellSample"
+        category: "bican:DissociatedCellSample"
+      - name: "EnrichedCellSample"
+        category: "bican:EnrichedCellSample"
+      - name: "BarcodedCellSample"
+        category: "bican:BarcodedCellSample"
+      - name: "AmplifiedCdna"
+        category: "bican:AmplifiedCdna"
+      - name: "Library"
+        category: "bican:Library"
+      - name: "LibraryAliquot"
+        category: "bican:LibraryAliquot"
