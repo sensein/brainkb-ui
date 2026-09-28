@@ -12,7 +12,8 @@ import { COLORS } from "./tokens";
 const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/mcp", label: "Use with AI" },
-  { href: "/explore", label: "Explore" },
+  { href: "/explore", label: "Explore the graph" },
+  { href: "/skills", label: "Extraction tools" },
 ];
 
 export default function MarketingHeader() {

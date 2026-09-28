@@ -56,7 +56,7 @@ export default function ExplorePage() {
           <h1 style={{ margin: 0, font: "400 clamp(34px,4.2vw,52px)/1.05 var(--font-instrument-serif), serif", letterSpacing: "-.02em", color: COLORS.accent }}>
             Explore the graph.
           </h1>
-          <p style={{ margin: 0, maxWidth: 580, color: COLORS.body, fontSize: 17, lineHeight: 1.55 }}>
+          <p style={{ margin: 0, maxWidth: 900, color: COLORS.body, fontSize: 17, lineHeight: 1.55 }}>
             BrainKB points to data from programs like BICAN and BBQS.
           </p>
           <span style={{ fontSize: 13, fontStyle: "italic", color: COLORS.muted }}>

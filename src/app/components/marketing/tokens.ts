@@ -16,6 +16,9 @@ export const COLORS = {
   // states, secondaryAction is the trial color for CTA button backgrounds
   // (was solid `ink` black).
   accent: "#1f6f5c",
+  // Matches the source-node labels in the hero's FloatingGraph, so the Home
+  // cards echo the figure directly above them.
+  accentPurple: "#4a3f9e",
   secondaryAction: "#30ab8e",
   chipBg: "#e1ece6",
   cellTypes: "#1f6f5c",
