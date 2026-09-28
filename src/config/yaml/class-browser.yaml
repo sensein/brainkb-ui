@@ -10,7 +10,7 @@
 defaults:
   # Named graph to query, substituted into queryTemplate as {{graph}}.
   # Change this to whichever graph the data was ingested into.
-  graph: "https://brainkb.org/sandbox-example/"
+  graph: "https://brainkb.org/sandbox-sample/"
 
   # Table columns, in display order. Each `key` must match a variable selected
   # in queryTemplate; a row with no value for a column renders as "—".
