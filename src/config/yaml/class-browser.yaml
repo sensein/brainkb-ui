@@ -24,16 +24,22 @@ defaults:
 
   # Run once per selected class, with {{graph}} and {{category}} substituted.
   # name/full_name are OPTIONAL so an entity still lists when it only has an id.
+  #
+  # Predicates follow the BICAN JSON-LD context
+  # (brain-bican/models .../library_generation.context.jsonld), which maps
+  # category -> biolink:category (typed xsd:anyURI), full_name ->
+  # biolink:full_name, and name -> rdfs:label (NOT biolink:name).
   queryTemplate: |-
     PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
     PREFIX biolink: <https://w3id.org/biolink/vocab/>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
     SELECT DISTINCT ?id ?name ?full_name
     WHERE {
       GRAPH <{{graph}}> {
         ?id biolink:category "{{category}}"^^xsd:anyURI .
-        OPTIONAL { ?id biolink:name ?name }
+        OPTIONAL { ?id rdfs:label ?name }
         OPTIONAL { ?id biolink:full_name ?full_name }
       }
     }
