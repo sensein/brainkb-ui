@@ -632,6 +632,22 @@ export default function JobStatusPage() {
         return icons[stage || ''] || '•';
     };
 
+    // `current_stage` says how far the pipeline got, not whether it worked: a
+    // job that finishes having ingested nothing still reports stage
+    // "completed", so keying the icon off the stage puts a ✅ next to a failed
+    // job. Once a job has terminated, take the icon from its outcome instead;
+    // while it is still running, the stage is the useful thing to show.
+    const getOutcomeIcon = (job: Job): string => {
+        const status = getNormalizedStatus(job);
+        if (status === 'running' || status === 'pending') {
+            return getStageIcon(job.current_stage);
+        }
+        if (status === 'done') return '✅';
+        if (status === 'partial') return '⚠️';
+        if (status === 'failed' || status === 'error') return '❌';
+        return getStageIcon(job.current_stage);
+    };
+
     // Check if job is recoverable using API
     const checkRecoverableStatus = async (job: Job) => {
         const userId = getUserId();
@@ -1401,8 +1417,18 @@ export default function JobStatusPage() {
                                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
                                     <h3 className="text-lg font-semibold mb-3 dark:text-white">Current Status</h3>
                                     <div className="flex items-start gap-3">
-                                        <span className="text-2xl">{getStageIcon(selectedJob.current_stage)}</span>
+                                        <span className="text-2xl">{getOutcomeIcon(selectedJob)}</span>
                                         <div className="flex-1">
+                                            {/* Contradict a misleading stage_description ("All files
+                                                processed successfully") when nothing actually landed. */}
+                                            {['failed', 'error', 'partial'].includes(getNormalizedStatus(selectedJob)) && (
+                                                <div className="mb-2 text-sm font-semibold text-red-700 dark:text-red-400">
+                                                    Ingest {getNormalizedStatus(selectedJob) === 'partial' ? 'partly failed' : 'failed'}
+                                                    {selectedJob.success_count !== undefined && selectedJob.total_files !== undefined
+                                                        ? ` — ${selectedJob.success_count} of ${selectedJob.total_files} file(s) ingested.`
+                                                        : '.'}
+                                                </div>
+                                            )}
                                             {selectedJob.current_file && (
                                                 <div className="mb-2">
                                                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Current File: </span>
