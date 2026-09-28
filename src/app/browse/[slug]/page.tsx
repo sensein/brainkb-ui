@@ -23,7 +23,9 @@ import { instrumentSerif, plexSans, plexMono } from "../../components/marketing/
 import { COLORS, CARD_SURFACE } from "../../components/marketing/tokens";
 import browserConfig from "@/src/config/yaml/class-browser.yaml";
 
-type ClassEntry = { name: string; category: string };
+// `queryTemplate` on a class overrides the page's, which overrides defaults —
+// useful for diagnostic entries that ask a different shape of question.
+type ClassEntry = { name: string; category: string; queryTemplate?: string };
 type Column = { key: string; label: string };
 type Binding = Record<string, { value?: string } | undefined>;
 type PageConfig = {
@@ -66,7 +68,7 @@ function BrowseView({ page }: { page: PageConfig }) {
       setLoading(true);
       setError(null);
       try {
-        const sparqlQuery = queryTemplate
+        const sparqlQuery = (entry.queryTemplate ?? queryTemplate)
           .replace(/\{\{graph\}\}/g, graph)
           .replace(/\{\{category\}\}/g, entry.category);
         const response = await fetch("/api/knowledge-base", {

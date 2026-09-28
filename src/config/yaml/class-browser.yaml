@@ -56,6 +56,61 @@ pages:
       - name: "AnnotationCollection"
         category: "bican:AnnotationCollection"
 
+  # Diagnostic page, not linked from /explore: visit /browse/diagnostic signed
+  # in to see what is actually in the store. Each entry overrides the query,
+  # reusing the three columns as generic slots, so the labels below say what
+  # each column holds. Keep this — running an arbitrary query otherwise needs
+  # a signed-in session that curl cannot provide.
+  - slug: "diagnostic"
+    title: "Diagnostic"
+    description: >-
+      What is actually in the store, independent of any expected schema. Use
+      this when a browse page returns nothing, to tell "wrong graph" from
+      "wrong predicates" from "nothing ingested".
+    columns:
+      - key: "id"
+        label: "1"
+      - key: "name"
+        label: "2"
+      - key: "full_name"
+        label: "3"
+    classes:
+      - name: "All graphs (1=graph, 2=triples)"
+        category: ""
+        queryTemplate: |-
+          SELECT ?id (COUNT(*) AS ?name) WHERE {
+            GRAPH ?id { ?s ?p ?o }
+          }
+          GROUP BY ?id
+          ORDER BY DESC(?name)
+          LIMIT 50
+      - name: "Predicates here (1=predicate, 2=count)"
+        category: ""
+        queryTemplate: |-
+          SELECT ?id (COUNT(*) AS ?name) WHERE {
+            GRAPH <{{graph}}> { ?s ?id ?o }
+          }
+          GROUP BY ?id
+          ORDER BY DESC(?name)
+          LIMIT 50
+      - name: "Category values (1=category, 2=count)"
+        category: ""
+        queryTemplate: |-
+          PREFIX biolink: <https://w3id.org/biolink/vocab/>
+          SELECT ?id (COUNT(*) AS ?name) WHERE {
+            GRAPH <{{graph}}> { ?s biolink:category ?id }
+          }
+          GROUP BY ?id
+          ORDER BY DESC(?name)
+          LIMIT 50
+      - name: "Raw triples (1=s, 2=p, 3=o)"
+        category: ""
+        queryTemplate: |-
+          SELECT ?id ?name ?full_name WHERE {
+            GRAPH <{{graph}}> { ?id ?name ?full_name }
+          }
+          LIMIT 100
+
   # BICAN library generation schema — the specimen-to-library chain. Classes
   # follow the order of the pipeline rather than the alphabet, so the list
   # reads as the process it describes.
