@@ -27,6 +27,7 @@ import browserConfig from "@/src/config/yaml/class-browser.yaml";
 // useful for diagnostic entries that ask a different shape of question.
 type ClassEntry = { name: string; category: string; queryTemplate?: string };
 type Column = { key: string; label: string };
+type ModelSource = { name?: string; url?: string; classUrlTemplate?: string } | null;
 type Binding = Record<string, { value?: string } | undefined>;
 type PageConfig = {
   slug: string;
@@ -36,10 +37,11 @@ type PageConfig = {
   graph?: string;
   columns?: Column[];
   queryTemplate?: string;
+  model?: ModelSource;
 };
 
 const CONFIG = browserConfig as {
-  defaults: { graph: string; columns: Column[]; queryTemplate: string };
+  defaults: { graph: string; columns: Column[]; queryTemplate: string; model?: ModelSource };
   pages: PageConfig[];
 };
 
@@ -57,6 +59,16 @@ function BrowseView({ page }: { page: PageConfig }) {
   const graph = page.graph ?? CONFIG.defaults.graph;
   const columns = page.columns ?? CONFIG.defaults.columns;
   const queryTemplate = page.queryTemplate ?? CONFIG.defaults.queryTemplate;
+  // Merge the page's model over the defaults, so a page can set just a name
+  // and url and still inherit classUrlTemplate. `model: null` opts out
+  // entirely (the diagnostic page is not a view onto a model).
+  const model =
+    page.model === undefined
+      ? CONFIG.defaults.model
+      : page.model === null
+        ? null
+        : { ...CONFIG.defaults.model, ...page.model };
+  const classTemplate = model?.classUrlTemplate;
 
   const [selected, setSelected] = useState<ClassEntry>(page.classes[0]);
   const [rows, setRows] = useState<Binding[]>([]);
@@ -137,6 +149,16 @@ function BrowseView({ page }: { page: PageConfig }) {
           <p style={{ margin: 0, maxWidth: 900, color: COLORS.body, fontSize: 17, lineHeight: 1.6 }}>
             {page.description}
           </p>
+          {model?.url && (
+            <a
+              href={model.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ alignSelf: "flex-start", fontSize: 14, fontWeight: 500, color: COLORS.accent }}
+            >
+              {model.name || "Model definition"} ↗
+            </a>
+          )}
         </div>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 32, alignItems: "flex-start" }}>
@@ -206,8 +228,29 @@ function BrowseView({ page }: { page: PageConfig }) {
 
             {!loading && !error && rows.length > 0 && (
               <>
-                <div style={{ marginBottom: 12, font: "500 13px var(--font-plex-mono)", color: COLORS.muted }}>
-                  {rows.length} {rows.length === 1 ? "entity" : "entities"}
+                <div
+                  style={{
+                    marginBottom: 12,
+                    display: "flex",
+                    alignItems: "baseline",
+                    justifyContent: "space-between",
+                    gap: 12,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <span style={{ font: "500 13px var(--font-plex-mono)", color: COLORS.muted }}>
+                    {rows.length} {rows.length === 1 ? "entity" : "entities"}
+                  </span>
+                  {classTemplate && (
+                    <a
+                      href={classTemplate.replace(/\{\{class\}\}/g, selected.name)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontSize: 13, fontWeight: 500, color: COLORS.accent }}
+                    >
+                      {selected.name} definition ↗
+                    </a>
+                  )}
                 </div>
                 <div style={{ ...CARD_SURFACE, padding: 0, overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>

@@ -45,6 +45,16 @@ defaults:
     }
     LIMIT 500
 
+  # Where a class's definition is published. {{class}} is the class `name`,
+  # so each class links to its own page in the model docs. Verified
+  # 2026-09-28: every class listed below resolves under this pattern.
+  # Override per page (or drop `url`) if a page's classes come from a
+  # different model.
+  model:
+    name: "BICAN models"
+    url: "https://brain-bican.github.io/models/"
+    classUrlTemplate: "https://brain-bican.github.io/models/{{class}}/"
+
   # Datatypes that mark a literal as a reference to another entity rather than
   # a plain value. The BICAN data does not link entities by IRI: it writes
   #   <…/AC-IFXYBU524334> prov:wasDerivedFrom "BC-QXSSQN569230"^^prov:Entity
@@ -81,6 +91,9 @@ defaults:
 pages:
   - slug: "genes-genomes"
     title: "Genes & genomes"
+    model:
+      name: "BICAN genome annotation schema"
+      url: "https://brain-bican.github.io/models/index_genome_annotation/"
     description: >-
       Individual genes with their molecular type — protein-coding or noncoding —
       linked to the versioned genome annotations from ENSEMBL or NCBI and the
@@ -112,6 +125,7 @@ pages:
   # a signed-in session that curl cannot provide.
   - slug: "diagnostic"
     title: "Diagnostic"
+    model: null
     description: >-
       What is actually in the store, independent of any expected schema. Use
       this when a browse page returns nothing, to tell "wrong graph" from
@@ -165,6 +179,9 @@ pages:
   # reads as the process it describes.
   - slug: "library-generation"
     title: "Library generation"
+    model:
+      name: "BICAN library generation schema"
+      url: "https://brain-bican.github.io/models/index_library_generation/"
     description: >-
       The path from donor to sequencing library: brain slabs and tissue
       samples, the dissociated, enriched, and barcoded cell samples derived

@@ -33,18 +33,25 @@ import { COLORS, CARD_SURFACE } from "../../../components/marketing/tokens";
 import browserConfig from "@/src/config/yaml/class-browser.yaml";
 
 type ClassEntry = { name: string; category: string; description?: string };
+type ModelSource = { name?: string; url?: string; classUrlTemplate?: string } | null;
 type PageConfig = {
   slug: string;
   title: string;
   classes: ClassEntry[];
   graph?: string;
   detailQueryTemplate?: string;
+  model?: ModelSource;
 };
 type Term = { value?: string; type?: string; datatype?: string };
 type Row = { direction?: Term; predicate?: Term; other?: Term };
 
 const CONFIG = browserConfig as {
-  defaults: { graph: string; detailQueryTemplate: string; entityRefDatatypes?: string[] };
+  defaults: {
+    graph: string;
+    detailQueryTemplate: string;
+    entityRefDatatypes?: string[];
+    model?: ModelSource;
+  };
   pages: PageConfig[];
 };
 
@@ -85,6 +92,16 @@ export default function EntityDetailPage() {
 function DetailView({ page, id }: { page: PageConfig; id: string }) {
   const graph = page.graph ?? CONFIG.defaults.graph;
   const template = page.detailQueryTemplate ?? CONFIG.defaults.detailQueryTemplate;
+  // Merge the page's model over the defaults, so a page can set just a name
+  // and url and still inherit classUrlTemplate. `model: null` opts out
+  // entirely (the diagnostic page is not a view onto a model).
+  const model =
+    page.model === undefined
+      ? CONFIG.defaults.model
+      : page.model === null
+        ? null
+        : { ...CONFIG.defaults.model, ...page.model };
+  const classTemplate = model?.classUrlTemplate;
 
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
@@ -176,9 +193,21 @@ function DetailView({ page, id }: { page: PageConfig; id: string }) {
           </code>
           {entityClass && (
             <div style={{ display: "flex", flexDirection: "column", gap: 6, maxWidth: 760 }}>
-              <span style={{ font: "500 12px var(--font-plex-mono)", color: COLORS.accentPurple }}>
-                {entityClass.name}
-              </span>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap" }}>
+                <span style={{ font: "500 12px var(--font-plex-mono)", color: COLORS.accentPurple }}>
+                  {entityClass.name}
+                </span>
+                {classTemplate && (
+                  <a
+                    href={classTemplate.replace(/\{\{class\}\}/g, entityClass.name)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: 13, fontWeight: 500, color: COLORS.accent }}
+                  >
+                    Class definition ↗
+                  </a>
+                )}
+              </div>
               {entityClass.description && (
                 <p style={{ margin: 0, color: COLORS.body, fontSize: 16, lineHeight: 1.6 }}>
                   {entityClass.description}
