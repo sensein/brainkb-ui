@@ -8,9 +8,9 @@
  * following a per-class field list, so a class needs no configuration to get
  * a working detail page.
  *
- * Two sections: Basic information (plain values) and Connections (anything
- * pointing at another entity, in either direction — outgoing links plus the
- * triples that name this entity, which are marked "←").
+ * Two sections: the entity's plain values (untitled, directly under the
+ * header) and Connections — anything pointing at another entity, in either
+ * direction, with incoming references marked "←".
  *
  * Note that "points at another entity" is not the same as "is an IRI":
  * the BICAN data links by typed literal
@@ -225,7 +225,7 @@ function DetailView({ page, id }: { page: PageConfig; id: string }) {
 
         {!loading && !error && rows.length > 0 && (
           <>
-            <TermSection title="Basic information" rows={attributes} pageSlug={page.slug} currentId={id} />
+            <TermSection rows={attributes} pageSlug={page.slug} currentId={id} />
             <TermSection
               title="Connections"
               rows={[...connections, ...incoming]}
@@ -247,7 +247,7 @@ function TermSection({
   pageSlug,
   currentId,
 }: {
-  title: string;
+  title?: string;
   rows: Row[];
   pageSlug: string;
   currentId: string;
@@ -256,9 +256,11 @@ function TermSection({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <h2 style={{ margin: 0, font: "400 24px/1.1 var(--font-instrument-serif), serif", color: COLORS.accentPurple }}>
-        {title}
-      </h2>
+      {title && (
+        <h2 style={{ margin: 0, font: "400 24px/1.1 var(--font-instrument-serif), serif", color: COLORS.accentPurple }}>
+          {title}
+        </h2>
+      )}
       <div style={{ ...CARD_SURFACE, padding: 0, overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
           <tbody>
