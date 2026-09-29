@@ -29,6 +29,7 @@ This document provides comprehensive developer documentation for the BrainKB UI 
    - [SPARQL-Based Pages](#sparql-based-pages)
    - [Page Mapper Configuration](#page-mapper-configuration)
    - [YAML Configuration Reference](#yaml-configuration-reference)
+   - [Class Browser Pages](#class-browser-pages-browseslug)
 
 ---
 
@@ -439,12 +440,18 @@ The configuration system uses the following file structure:
 src/config/yaml/
 ├── page-mapper.yaml              # Maps page slugs to configuration files
 ├── config-knowledgebases.yaml    # SPARQL-based knowledge base configurations
+├── class-browser.yaml            # /browse/<slug> class browser pages
 ├── ner-list.yaml                 # NER list page configuration
 ├── ner-detail.yaml               # NER detail page configuration
 ├── resources-list.yaml           # Resources list page configuration
 ├── resources-detail.yaml         # Resources detail page configuration
 └── [entity]-detail.yaml          # Entity-specific detail configurations
 ```
+
+> **YAML is compiled into the bundle at build time** by the `next-yaml`
+> webpack loader (see `next.config.mjs`) — it is not read from disk at
+> runtime. Editing any file here requires a rebuild before the change shows
+> up on a deployed site.
 
 ### Creating a New List Page
 
@@ -907,6 +914,69 @@ relatedConfig:                # Optional: related items configuration
 - `success`: Success/green badge
 - `warning`: Warning/yellow badge
 - `danger`: Danger/red badge
+
+### Class Browser Pages (`/browse/<slug>`)
+
+`src/config/yaml/class-browser.yaml` drives every `/browse/<slug>` page: a list
+of classes on the left, and the entities of the selected class in a table.
+These are the pages the cards on `/explore` link to. One route
+(`src/app/browse/[slug]/page.tsx`) serves them all, so **adding a page is a
+config change, not a code change**.
+
+#### Structure
+
+```yaml
+defaults:                      # applies to every page; any page may override
+  graph: "https://…/"          # named graph to query, substituted as {{graph}}
+  columns:                     # table columns, in display order
+    - key: "id"                #   key must match a variable SELECTed below
+      label: "ID"
+  queryTemplate: |-            # run once per selected class
+    SELECT ?id ?name ?full_name WHERE {
+      GRAPH <{{graph}}> { ?id biolink:category "{{category}}"^^xsd:anyURI . }
+    }
+
+pages:
+  - slug: "genes-genomes"      # URL: /browse/genes-genomes
+    title: "Genes & genomes"
+    description: "…"           # intro paragraph under the heading
+    classes:
+      - name: "GeneAnnotation"           # shown in the left-hand list
+        category: "bican:GeneAnnotation" # substituted as {{category}}
+```
+
+#### Placeholders
+
+`{{graph}}` and `{{category}}` are substituted into `queryTemplate` before each
+query. Resolution order is **class → page → `defaults`**, so a single class can
+override the query (used by the `diagnostic` page, where each entry asks a
+different question), and a page can point at a different graph or column set.
+
+#### Adding a page
+
+1. Add an entry under `pages:` with a `slug`, `title`, `description`, and its
+   `classes`.
+2. If an `/explore` card should link to it, add `href: "/browse/<slug>"` to
+   that card's entry in `src/app/explore/page.tsx` (`href: null` means the card
+   renders without a link).
+3. Rebuild — the YAML is bundled at build time.
+
+#### Predicates
+
+The default query follows the BICAN JSON-LD context
+(`brain-bican/models/…/library_generation.context.jsonld`), which maps
+`category` → `biolink:category` (typed `xsd:anyURI`), `full_name` →
+`biolink:full_name`, and **`name` → `rdfs:label`** (not `biolink:name`). Data
+ingested under a different context may need a different `queryTemplate`.
+
+#### Debugging an empty page
+
+Visit `/browse/diagnostic` while signed in. Its entries report which graphs
+exist and their triple counts, which predicates and `biolink:category` values
+are present in the target graph, and a raw triple sample — enough to tell
+"wrong graph" from "wrong predicates" from "nothing ingested". Note that
+querying requires a signed-in session (the query service is SSO-only), so this
+cannot be reproduced with `curl`.
 
 ### Environment Variable Configuration
 
