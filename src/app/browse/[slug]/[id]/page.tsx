@@ -4,12 +4,17 @@
  * /browse/<page>/<id> — detail view for a single entity.
  *
  * Deliberately schema-agnostic: one query fetches every triple the entity
- * takes part in, in both directions, and the page sorts them by binding type
- * rather than by a per-class field list. Literal objects become Attributes,
- * IRI objects become Connections (outgoing), and triples pointing at the
- * entity become "Referenced by". So a class needs no configuration to get a
- * working detail page — connections are usually PROV, but nothing here
- * assumes that.
+ * takes part in, in both directions, and the page sorts them rather than
+ * following a per-class field list, so a class needs no configuration to get
+ * a working detail page.
+ *
+ * Plain values become Attributes; anything that points at another entity
+ * becomes a Connection, and triples naming this entity become "Referenced
+ * by". Note that "points at another entity" is not the same as "is an IRI":
+ * the BICAN data links by typed literal
+ * (`prov:wasDerivedFrom "BC-…"^^prov:Entity`) holding the target's local id,
+ * which refTarget() resolves against the current entity's namespace. Which
+ * datatypes count is configured, so IRI-linked data works too.
  *
  * Config lives in src/config/yaml/class-browser.yaml (`detailQueryTemplate`,
  * plus an optional per-class `description`).
@@ -33,13 +38,29 @@ type PageConfig = {
   graph?: string;
   detailQueryTemplate?: string;
 };
-type Term = { value?: string; type?: string };
+type Term = { value?: string; type?: string; datatype?: string };
 type Row = { direction?: Term; predicate?: Term; other?: Term };
 
 const CONFIG = browserConfig as {
-  defaults: { graph: string; detailQueryTemplate: string };
+  defaults: { graph: string; detailQueryTemplate: string; entityRefDatatypes?: string[] };
   pages: PageConfig[];
 };
+
+const ENTITY_REF_DATATYPES = CONFIG.defaults.entityRefDatatypes ?? [];
+
+// Where a term points, or null if it is a plain value. A term is a reference
+// either because it is an IRI, or because it is a literal carrying one of the
+// configured reference datatypes — the BICAN data uses the latter, storing the
+// target's local id, which we resolve against the current entity's namespace.
+function refTarget(term: Term | undefined, currentId: string): string | null {
+  if (!term?.value) return null;
+  if (term.type === "uri") return term.value;
+  if (term.datatype && ENTITY_REF_DATATYPES.includes(term.datatype)) {
+    const base = currentId.slice(0, currentId.lastIndexOf("/") + 1);
+    return base ? `${base}${term.value}` : null;
+  }
+  return null;
+}
 
 // Show the last path segment of a predicate IRI — the full IRI is noise in a
 // label, but keep it as the title attribute so it stays inspectable.
@@ -71,7 +92,11 @@ function DetailView({ page, id }: { page: PageConfig; id: string }) {
     setLoading(true);
     setError(null);
     try {
-      const sparqlQuery = template.replace(/\{\{graph\}\}/g, graph).replace(/\{\{id\}\}/g, id);
+      const localId = id.split("/").filter(Boolean).pop() || id;
+      const sparqlQuery = template
+        .replace(/\{\{graph\}\}/g, graph)
+        .replace(/\{\{localId\}\}/g, localId)
+        .replace(/\{\{id\}\}/g, id);
       const response = await fetch("/api/knowledge-base", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -95,8 +120,8 @@ function DetailView({ page, id }: { page: PageConfig; id: string }) {
   }, [load]);
 
   const outgoing = rows.filter((r) => r.direction?.value === "out");
-  const attributes = outgoing.filter((r) => r.other?.type === "literal");
-  const connections = outgoing.filter((r) => r.other?.type !== "literal");
+  const attributes = outgoing.filter((r) => refTarget(r.other, id) === null);
+  const connections = outgoing.filter((r) => refTarget(r.other, id) !== null);
   const incoming = rows.filter((r) => r.direction?.value === "in");
 
   // The category attribute tells us which of the page's classes this is, so
@@ -198,9 +223,9 @@ function DetailView({ page, id }: { page: PageConfig; id: string }) {
 
         {!loading && !error && rows.length > 0 && (
           <>
-            <TermSection title="Attributes" rows={attributes} pageSlug={page.slug} />
-            <TermSection title="Connections" rows={connections} pageSlug={page.slug} />
-            <TermSection title="Referenced by" rows={incoming} pageSlug={page.slug} incoming />
+            <TermSection title="Attributes" rows={attributes} pageSlug={page.slug} currentId={id} />
+            <TermSection title="Connections" rows={connections} pageSlug={page.slug} currentId={id} />
+            <TermSection title="Referenced by" rows={incoming} pageSlug={page.slug} currentId={id} incoming />
           </>
         )}
       </section>
@@ -214,11 +239,13 @@ function TermSection({
   title,
   rows,
   pageSlug,
+  currentId,
   incoming = false,
 }: {
   title: string;
   rows: Row[];
   pageSlug: string;
+  currentId: string;
   incoming?: boolean;
 }) {
   if (rows.length === 0) return null;
@@ -234,7 +261,11 @@ function TermSection({
             {rows.map((row, i) => {
               const predicate = row.predicate?.value || "";
               const value = row.other?.value || "";
-              const isLink = row.other?.type === "uri";
+              // Incoming rows name the *other* entity, which is always a real
+              // IRI subject; outgoing ones may be literal references.
+              const target = incoming
+                ? (row.other?.type === "uri" ? row.other.value ?? null : refTarget(row.other, currentId))
+                : refTarget(row.other, currentId);
               return (
                 <tr key={`${predicate}-${value}-${i}`}>
                   <th
@@ -263,9 +294,9 @@ function TermSection({
                       wordBreak: "break-word",
                     }}
                   >
-                    {isLink ? (
+                    {target ? (
                       <Link
-                        href={`/browse/${pageSlug}/${encodeURIComponent(value)}`}
+                        href={`/browse/${pageSlug}/${encodeURIComponent(target)}`}
                         style={{ color: COLORS.accentPurple, fontWeight: 500 }}
                       >
                         {value}

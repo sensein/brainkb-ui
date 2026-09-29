@@ -45,12 +45,22 @@ defaults:
     }
     LIMIT 500
 
-  # Detail view for one entity: /browse/<page>/<id>. {{id}} is the entity IRI.
-  # Fetches both directions in one query — outgoing triples become the
-  # entity's attributes (literal objects) and its outgoing connections (IRI
-  # objects), incoming ones become "referenced by". ?direction distinguishes
-  # them; the page decides attribute vs connection from the binding type, so
-  # this works for any class without per-class field lists.
+  # Datatypes that mark a literal as a reference to another entity rather than
+  # a plain value. The BICAN data does not link entities by IRI: it writes
+  #   <…/AC-IFXYBU524334> prov:wasDerivedFrom "BC-QXSSQN569230"^^prov:Entity
+  # i.e. a typed literal holding the target's *local id*. Values typed like
+  # this are shown as Connections and resolved to a full IRI by reusing the
+  # current entity's namespace. Leave empty for data that links by IRI.
+  entityRefDatatypes:
+    - "http://www.w3.org/ns/prov#Entity"
+
+  # Detail view for one entity: /browse/<page>/<id>. Substitutions: {{id}} is
+  # the full entity IRI, {{localId}} its last path segment. Three branches,
+  # because of the literal-reference shape described above:
+  #   out — the entity's own triples (attributes and outgoing connections)
+  #   in  — anything pointing at its IRI (for data that does link by IRI)
+  #   in  — anything whose typed literal names this entity's local id
+  # The third is what actually populates "Referenced by" for BICAN data.
   detailQueryTemplate: |-
     SELECT ?direction ?predicate ?other
     WHERE {
@@ -58,6 +68,12 @@ defaults:
         { BIND("out" AS ?direction) <{{id}}> ?predicate ?other . }
         UNION
         { BIND("in" AS ?direction) ?other ?predicate <{{id}}> . }
+        UNION
+        {
+          BIND("in" AS ?direction)
+          ?other ?predicate ?ref .
+          FILTER(isLiteral(?ref) && STR(?ref) = "{{localId}}")
+        }
       }
     }
     LIMIT 500
