@@ -15,11 +15,15 @@ import { COLORS } from "../components/marketing/tokens";
 
 export type ModelEdge = { from: string; to: string; label: string; cardinality?: string };
 
-const NODE_W = 168;
+// Relationship names are long (`dissection_was_guided_by`), so they are
+// printed above the neighbour node they describe rather than squeezed onto
+// the connecting line, where they used to overflow the arrow.
+const NODE_W = 200;
 const NODE_H = 38;
-const ROW_H = 62;
-const COL_GAP = 96;
-const PAD = 12;
+const ROW_H = 76;
+const COL_GAP = 84;
+const PAD = 14;
+const LABEL_DY = 10;
 
 export default function ModelFigure({ edges, current }: { edges: ModelEdge[]; current: string }) {
   const outgoing = edges.filter((e) => e.from === current);
@@ -28,7 +32,7 @@ export default function ModelFigure({ edges, current }: { edges: ModelEdge[]; cu
 
   const rows = Math.max(outgoing.length, incoming.length, 1);
   const width = NODE_W * 3 + COL_GAP * 2 + PAD * 2;
-  const height = rows * ROW_H + PAD * 2;
+  const height = rows * ROW_H + PAD * 2 + LABEL_DY;
   const midY = height / 2;
 
   const leftX = PAD;
@@ -61,12 +65,7 @@ export default function ModelFigure({ edges, current }: { edges: ModelEdge[]; cu
           return (
             <g key={`out-${edge.to}-${edge.label}`}>
               <Edge x1={centreX} y1={midY} x2={leftX + NODE_W} y2={y} />
-              <EdgeLabel
-                x={(leftX + NODE_W + centreX) / 2}
-                y={(midY + y) / 2}
-                label={edge.label}
-                cardinality={edge.cardinality}
-              />
+              <EdgeLabel x={leftX + NODE_W / 2} y={y - NODE_H / 2} label={edge.label} cardinality={edge.cardinality} />
               <Node x={leftX} y={y} label={edge.to} />
             </g>
           );
@@ -77,12 +76,7 @@ export default function ModelFigure({ edges, current }: { edges: ModelEdge[]; cu
           return (
             <g key={`in-${edge.from}-${edge.label}`}>
               <Edge x1={rightX} y1={y} x2={centreX + NODE_W} y2={midY} />
-              <EdgeLabel
-                x={(centreX + NODE_W + rightX) / 2}
-                y={(midY + y) / 2}
-                label={edge.label}
-                cardinality={edge.cardinality}
-              />
+              <EdgeLabel x={rightX + NODE_W / 2} y={y - NODE_H / 2} label={edge.label} cardinality={edge.cardinality} />
               <Node x={rightX} y={y} label={edge.from} />
             </g>
           );
@@ -123,7 +117,7 @@ function EdgeLabel({
   return (
     <text
       x={x}
-      y={y - 6}
+      y={y - 7}
       textAnchor="middle"
       fontSize="10.5"
       fill={COLORS.muted}
