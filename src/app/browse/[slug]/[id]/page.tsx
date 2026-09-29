@@ -8,9 +8,11 @@
  * following a per-class field list, so a class needs no configuration to get
  * a working detail page.
  *
- * Plain values become Attributes; anything that points at another entity
- * becomes a Connection, and triples naming this entity become "Referenced
- * by". Note that "points at another entity" is not the same as "is an IRI":
+ * Two sections: Basic information (plain values) and Connections (anything
+ * pointing at another entity, in either direction — outgoing links plus the
+ * triples that name this entity, which are marked "←").
+ *
+ * Note that "points at another entity" is not the same as "is an IRI":
  * the BICAN data links by typed literal
  * (`prov:wasDerivedFrom "BC-…"^^prov:Entity`) holding the target's local id,
  * which refTarget() resolves against the current entity's namespace. Which
@@ -223,9 +225,13 @@ function DetailView({ page, id }: { page: PageConfig; id: string }) {
 
         {!loading && !error && rows.length > 0 && (
           <>
-            <TermSection title="Attributes" rows={attributes} pageSlug={page.slug} currentId={id} />
-            <TermSection title="Connections" rows={connections} pageSlug={page.slug} currentId={id} />
-            <TermSection title="Referenced by" rows={incoming} pageSlug={page.slug} currentId={id} incoming />
+            <TermSection title="Basic information" rows={attributes} pageSlug={page.slug} currentId={id} />
+            <TermSection
+              title="Connections"
+              rows={[...connections, ...incoming]}
+              pageSlug={page.slug}
+              currentId={id}
+            />
           </>
         )}
       </section>
@@ -240,13 +246,11 @@ function TermSection({
   rows,
   pageSlug,
   currentId,
-  incoming = false,
 }: {
   title: string;
   rows: Row[];
   pageSlug: string;
   currentId: string;
-  incoming?: boolean;
 }) {
   if (rows.length === 0) return null;
 
@@ -261,6 +265,7 @@ function TermSection({
             {rows.map((row, i) => {
               const predicate = row.predicate?.value || "";
               const value = row.other?.value || "";
+              const incoming = row.direction?.value === "in";
               // Incoming rows name the *other* entity, which is always a real
               // IRI subject; outgoing ones may be literal references.
               const target = incoming
@@ -282,8 +287,7 @@ function TermSection({
                       width: "1%",
                     }}
                   >
-                    {incoming ? "← " : ""}
-                    {shortLabel(predicate)}
+                    {incoming ? `← ${shortLabel(predicate)} of` : shortLabel(predicate)}
                   </th>
                   <td
                     style={{
