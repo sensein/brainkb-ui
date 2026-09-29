@@ -171,6 +171,9 @@ pages:
   - slug: "diagnostic"
     title: "Diagnostic"
     model: null
+    # Column 1 holds graph and predicate IRIs here, not entity ids — leave
+    # them whole and unlinked.
+    linkIds: false
     description: >-
       What is actually in the store, independent of any expected schema. Use
       this when a browse page returns nothing, to tell "wrong graph" from

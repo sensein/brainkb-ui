@@ -38,9 +38,18 @@ type PageConfig = {
   graph?: string;
   columns?: Column[];
   queryTemplate?: string;
+  // Diagnostic-style pages put raw IRIs in the id column, where shortening
+  // and linking would mangle them.
+  linkIds?: boolean;
   model?: ModelSource;
   modelEdges?: ModelEdge[];
 };
+
+// Entity ids are IRIs; the last segment is the part worth reading in a
+// table. The full IRI stays as the link's title.
+function shortId(iri: string): string {
+  return iri.split("/").filter(Boolean).pop() || iri;
+}
 
 const CONFIG = browserConfig as {
   defaults: { graph: string; columns: Column[]; queryTemplate: string; model?: ModelSource };
@@ -295,12 +304,13 @@ function BrowseView({ page }: { page: PageConfig }) {
                                 wordBreak: "break-word",
                               }}
                             >
-                              {col.key === "id" && row.id?.value ? (
+                              {col.key === "id" && row.id?.value && page.linkIds !== false ? (
                                 <Link
                                   href={`/browse/${page.slug}/${encodeURIComponent(row.id.value)}`}
+                                  title={row.id.value}
                                   style={{ color: COLORS.accentPurple, fontWeight: 500 }}
                                 >
-                                  {row.id.value}
+                                  {shortId(row.id.value)}
                                 </Link>
                               ) : (
                                 row[col.key]?.value ?? <span style={{ color: COLORS.muted }}>—</span>
