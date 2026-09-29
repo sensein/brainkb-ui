@@ -71,8 +71,16 @@ defaults:
   #   in  — anything pointing at its IRI (for data that does link by IRI)
   #   in  — anything whose typed literal names this entity's local id
   # The third is what actually populates "Referenced by" for BICAN data.
+  # ?otherCategory is what the neighbour actually is, and it matters: a
+  # TissueSample's was_derived_from may point at a DissectionRoiPolygon even
+  # though the schema declares Donor as the range. Without it the model figure
+  # would have to guess from the predicate name and could show the wrong edge.
+  # {{base}} is the entity's namespace, used to turn a literal local id back
+  # into an IRI so the category can be looked up.
   detailQueryTemplate: |-
-    SELECT ?direction ?predicate ?other
+    PREFIX biolink: <https://w3id.org/biolink/vocab/>
+
+    SELECT ?direction ?predicate ?other ?otherCategory
     WHERE {
       GRAPH <{{graph}}> {
         { BIND("out" AS ?direction) <{{id}}> ?predicate ?other . }
@@ -83,6 +91,10 @@ defaults:
           BIND("in" AS ?direction)
           ?other ?predicate ?ref .
           FILTER(isLiteral(?ref) && STR(?ref) = "{{localId}}")
+        }
+        OPTIONAL {
+          BIND(IF(isIRI(?other), ?other, IRI(CONCAT("{{base}}", STR(?other)))) AS ?otherIri)
+          ?otherIri biolink:category ?otherCategory .
         }
       }
     }

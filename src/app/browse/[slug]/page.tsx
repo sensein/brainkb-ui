@@ -21,6 +21,7 @@ import MarketingHeader from "../../components/marketing/MarketingHeader";
 import MarketingFooter from "../../components/marketing/MarketingFooter";
 import { instrumentSerif, plexSans, plexMono } from "../../components/marketing/fonts";
 import { COLORS, CARD_SURFACE } from "../../components/marketing/tokens";
+import ModelFigure, { type ModelEdge } from "../ModelFigure";
 import browserConfig from "@/src/config/yaml/class-browser.yaml";
 
 // `queryTemplate` on a class overrides the page's, which overrides defaults —
@@ -38,6 +39,7 @@ type PageConfig = {
   columns?: Column[];
   queryTemplate?: string;
   model?: ModelSource;
+  modelEdges?: ModelEdge[];
 };
 
 const CONFIG = browserConfig as {
@@ -71,6 +73,12 @@ function BrowseView({ page }: { page: PageConfig }) {
   const classTemplate = model?.classUrlTemplate;
 
   const [selected, setSelected] = useState<ClassEntry>(page.classes[0]);
+
+  // What the schema says about the selected class, regardless of what has
+  // been ingested. The per-record view on the detail page is data-derived.
+  const modelEdges = (page.modelEdges ?? []).filter(
+    (e) => e.from === selected.name || e.to === selected.name,
+  );
   const [rows, setRows] = useState<Binding[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -308,6 +316,17 @@ function BrowseView({ page }: { page: PageConfig }) {
             )}
           </div>
         </div>
+
+        {modelEdges.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <span style={{ font: "500 12px var(--font-plex-mono)", color: COLORS.muted }}>
+              How {selected.name} relates in the model
+            </span>
+            <div style={{ ...CARD_SURFACE, padding: 18 }}>
+              <ModelFigure edges={modelEdges} current={selected.name} />
+            </div>
+          </div>
+        )}
       </section>
 
       <MarketingFooter />

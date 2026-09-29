@@ -42,10 +42,9 @@ type PageConfig = {
   graph?: string;
   detailQueryTemplate?: string;
   model?: ModelSource;
-  modelEdges?: ModelEdge[];
 };
 type Term = { value?: string; type?: string; datatype?: string };
-type Row = { direction?: Term; predicate?: Term; other?: Term };
+type Row = { direction?: Term; predicate?: Term; other?: Term; otherCategory?: Term };
 
 const CONFIG = browserConfig as {
   defaults: {
@@ -114,9 +113,11 @@ function DetailView({ page, id }: { page: PageConfig; id: string }) {
     setError(null);
     try {
       const localId = id.split("/").filter(Boolean).pop() || id;
+      const base = id.slice(0, id.lastIndexOf("/") + 1);
       const sparqlQuery = template
         .replace(/\{\{graph\}\}/g, graph)
         .replace(/\{\{localId\}\}/g, localId)
+        .replace(/\{\{base\}\}/g, base)
         .replace(/\{\{id\}\}/g, id);
       const response = await fetch("/api/knowledge-base", {
         method: "POST",
@@ -151,12 +152,30 @@ function DetailView({ page, id }: { page: PageConfig; id: string }) {
   const entityClass = page.classes.find((c) => c.category === category);
   const label = attributes.find((r) => r.predicate?.value?.endsWith("#label"))?.other?.value;
 
-  // Only show the schema figure when this class actually appears in the
-  // model edges — otherwise the heading would sit above an empty card.
-  const modelEdges = page.modelEdges ?? [];
-  const hasModelEdges =
-    !!entityClass &&
-    modelEdges.some((e) => e.from === entityClass.name || e.to === entityClass.name);
+  // The figure is built from this record's own connections, not from the
+  // model: the schema says TissueSample.was_derived_from points at a Donor,
+  // but in the data it points at a DissectionRoiPolygon, and the figure
+  // should show what is actually there. Nodes are the neighbours' classes,
+  // taken from ?otherCategory. The model's own view lives on the class list
+  // page instead.
+  const classNameFor = (category?: string) =>
+    page.classes.find((c) => c.category === category)?.name;
+  const modelEdges: ModelEdge[] = [];
+  const seenEdges = new Set<string>();
+  for (const row of [...connections, ...incoming]) {
+    const neighbour = classNameFor(row.otherCategory?.value);
+    const label = row.predicate?.value ? shortLabel(row.predicate.value) : "";
+    if (!neighbour || !label || !entityClass) continue;
+    const isIncoming = row.direction?.value === "in";
+    const edge = isIncoming
+      ? { from: neighbour, to: entityClass.name, label }
+      : { from: entityClass.name, to: neighbour, label };
+    const key = `${edge.from}|${edge.label}|${edge.to}`;
+    if (seenEdges.has(key)) continue;
+    seenEdges.add(key);
+    modelEdges.push(edge);
+  }
+  const hasModelEdges = !!entityClass && modelEdges.length > 0;
 
   return (
     <div
@@ -273,7 +292,7 @@ function DetailView({ page, id }: { page: PageConfig; id: string }) {
             {entityClass && hasModelEdges && (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 <span style={{ font: "500 12px var(--font-plex-mono)", color: COLORS.muted }}>
-                  How {entityClass.name} relates in the model
+                  How this record connects
                 </span>
                 <div style={{ ...CARD_SURFACE, padding: 18 }}>
                   <ModelFigure edges={modelEdges} current={entityClass.name} />
