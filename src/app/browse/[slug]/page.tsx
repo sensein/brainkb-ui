@@ -244,7 +244,16 @@ function BrowseView({ page }: { page: PageConfig }) {
                                 wordBreak: "break-word",
                               }}
                             >
-                              {row[col.key]?.value ?? <span style={{ color: COLORS.muted }}>—</span>}
+                              {col.key === "id" && row.id?.value ? (
+                                <Link
+                                  href={`/browse/${page.slug}/${encodeURIComponent(row.id.value)}`}
+                                  style={{ color: COLORS.accentPurple, fontWeight: 500 }}
+                                >
+                                  {row.id.value}
+                                </Link>
+                              ) : (
+                                row[col.key]?.value ?? <span style={{ color: COLORS.muted }}>—</span>
+                              )}
                             </td>
                           ))}
                         </tr>

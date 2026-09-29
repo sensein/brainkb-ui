@@ -45,6 +45,23 @@ defaults:
     }
     LIMIT 500
 
+  # Detail view for one entity: /browse/<page>/<id>. {{id}} is the entity IRI.
+  # Fetches both directions in one query — outgoing triples become the
+  # entity's attributes (literal objects) and its outgoing connections (IRI
+  # objects), incoming ones become "referenced by". ?direction distinguishes
+  # them; the page decides attribute vs connection from the binding type, so
+  # this works for any class without per-class field lists.
+  detailQueryTemplate: |-
+    SELECT ?direction ?predicate ?other
+    WHERE {
+      GRAPH <{{graph}}> {
+        { BIND("out" AS ?direction) <{{id}}> ?predicate ?other . }
+        UNION
+        { BIND("in" AS ?direction) ?other ?predicate <{{id}}> . }
+      }
+    }
+    LIMIT 500
+
 pages:
   - slug: "genes-genomes"
     title: "Genes & genomes"
@@ -55,10 +72,20 @@ pages:
     classes:
       - name: "GeneAnnotation"
         category: "bican:GeneAnnotation"
+        description: >-
+          A single gene, with the metadata describing it — its molecular type
+          (protein-coding or noncoding) and the genome annotation it was
+          referenced from.
       - name: "GenomeAnnotation"
         category: "bican:GenomeAnnotation"
+        description: >-
+          A genome annotation, with its version, the authority that published
+          it (ENSEMBL or NCBI), and the reference assembly it was built from.
       - name: "GenomeAssembly"
         category: "bican:GenomeAssembly"
+        description: >-
+          A computational representation of a genome sequence, optionally
+          narrowed to a strain or subtype.
       - name: "AnnotationCollection"
         category: "bican:AnnotationCollection"
 
@@ -141,9 +168,21 @@ pages:
         category: "bican:EnrichedCellSample"
       - name: "BarcodedCellSample"
         category: "bican:BarcodedCellSample"
+        description: >-
+          A collection of molecularly barcoded cells, derived from a
+          dissociated or enriched cell sample. Barcodes are unique only within
+          this collection; the sample name plus the cell-level barcode
+          identifies a single cell.
       - name: "AmplifiedCdna"
         category: "bican:AmplifiedCdna"
       - name: "Library"
         category: "bican:Library"
+        description: >-
+          A sequencing library prepared from amplified cDNA. One library may
+          yield several aliquots, for instance when resequencing.
       - name: "LibraryAliquot"
         category: "bican:LibraryAliquot"
+        description: >-
+          One library in the library pool. Each aliquot carries a unique R1/R2
+          index so libraries sequenced together can be separated again by
+          demultiplexing; the resulting fastq files carry the aliquot name.
