@@ -301,11 +301,15 @@ function TermSection({
                     }}
                   >
                     {target ? (
+                      // Both directions render as the local id: outgoing rows
+                      // carry it as a literal, incoming ones as a full IRI.
+                      // The IRI stays available as the title attribute.
                       <Link
                         href={`/browse/${pageSlug}/${encodeURIComponent(target)}`}
+                        title={target}
                         style={{ color: COLORS.accentPurple, fontWeight: 500 }}
                       >
-                        {value}
+                        {shortLabel(target)}
                       </Link>
                     ) : (
                       value
