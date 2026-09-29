@@ -97,11 +97,11 @@ pages:
     # From the genome annotation schema (BrainKB
     # chat_service/notebook/genome_annotation.yaml).
     modelEdges:
-      - { from: "GeneAnnotation", to: "GenomeAnnotation", label: "referenced_in", cardinality: "1" }
-      - { from: "GenomeAnnotation", to: "GenomeAssembly", label: "reference_assembly", cardinality: "1" }
-      - { from: "AnnotationCollection", to: "GeneAnnotation", label: "annotations", cardinality: "n" }
-      - { from: "AnnotationCollection", to: "GenomeAnnotation", label: "genome_annotations", cardinality: "n" }
-      - { from: "AnnotationCollection", to: "GenomeAssembly", label: "genome_assemblies", cardinality: "n" }
+      - { from: "GeneAnnotation", to: "GenomeAnnotation", label: "referenced_in" }
+      - { from: "GenomeAnnotation", to: "GenomeAssembly", label: "reference_assembly" }
+      - { from: "AnnotationCollection", to: "GeneAnnotation", label: "annotations" }
+      - { from: "AnnotationCollection", to: "GenomeAnnotation", label: "genome_annotations" }
+      - { from: "AnnotationCollection", to: "GenomeAssembly", label: "genome_assemblies" }
     description: >-
       Individual genes with their molecular type — protein-coding or noncoding —
       linked to the versioned genome annotations from ENSEMBL or NCBI and the
@@ -195,16 +195,21 @@ pages:
     # in slot_usage, plus the two attribute links). Drives the small model
     # figure on each detail page: `from` is the class that declares the
     # relationship, `to` is its range.
+    #
+    # No cardinality shown: the schema only constrains the target side (and
+    # leaves `required` unset, so "1" would have meant "at most one"), while
+    # nothing declares the inverse. Add a `cardinality` per edge if that is
+    # ever filled in deliberately — the figure renders it when present.
     modelEdges:
-      - { from: "BrainSlab", to: "Donor", label: "was_derived_from", cardinality: "1" }
-      - { from: "TissueSample", to: "Donor", label: "was_derived_from", cardinality: "1" }
-      - { from: "TissueSample", to: "DissectionRoiPolygon", label: "dissection_was_guided_by", cardinality: "1" }
-      - { from: "DissectionRoiPolygon", to: "BrainSlab", label: "annotates", cardinality: "1" }
-      - { from: "DissociatedCellSample", to: "TissueSample", label: "was_derived_from", cardinality: "n" }
-      - { from: "AmplifiedCdna", to: "BarcodedCellSample", label: "was_derived_from", cardinality: "1" }
-      - { from: "Library", to: "AmplifiedCdna", label: "was_derived_from", cardinality: "1" }
-      - { from: "Library", to: "BarcodedCellSample", label: "was_derived_from", cardinality: "1" }
-      - { from: "LibraryAliquot", to: "Library", label: "was_derived_from", cardinality: "1" }
+      - { from: "BrainSlab", to: "Donor", label: "was_derived_from" }
+      - { from: "TissueSample", to: "Donor", label: "was_derived_from" }
+      - { from: "TissueSample", to: "DissectionRoiPolygon", label: "dissection_was_guided_by" }
+      - { from: "DissectionRoiPolygon", to: "BrainSlab", label: "annotates" }
+      - { from: "DissociatedCellSample", to: "TissueSample", label: "was_derived_from" }
+      - { from: "AmplifiedCdna", to: "BarcodedCellSample", label: "was_derived_from" }
+      - { from: "Library", to: "AmplifiedCdna", label: "was_derived_from" }
+      - { from: "Library", to: "BarcodedCellSample", label: "was_derived_from" }
+      - { from: "LibraryAliquot", to: "Library", label: "was_derived_from" }
     description: >-
       The path from donor to sequencing library: brain slabs and tissue
       samples, the dissociated, enriched, and barcoded cell samples derived
