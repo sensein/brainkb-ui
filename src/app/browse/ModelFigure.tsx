@@ -15,15 +15,21 @@ import { COLORS } from "../components/marketing/tokens";
 
 export type ModelEdge = { from: string; to: string; label: string; cardinality?: string };
 
-// Relationship names are long (`dissection_was_guided_by`), so they are
-// printed above the neighbour node they describe rather than squeezed onto
-// the connecting line, where they used to overflow the arrow.
-const NODE_W = 200;
+const NODE_W = 172;
 const NODE_H = 38;
 const ROW_H = 76;
-const COL_GAP = 84;
 const PAD = 14;
-const LABEL_DY = 10;
+// Labels sit above the middle of each arrow. Relationship names are long
+// (`dissection_was_guided_by`), so the column gap is sized to the longest one
+// rather than fixed — otherwise the text overruns the arrow and drifts over
+// the boxes at either end.
+const LABEL_CHAR_W = 6.4;
+const LABEL_LIFT = 9;
+
+function columnGap(labels: string[]): number {
+  const longest = labels.reduce((max, l) => Math.max(max, l.length), 0);
+  return Math.max(110, Math.round(longest * LABEL_CHAR_W) + 24);
+}
 
 export default function ModelFigure({ edges, current }: { edges: ModelEdge[]; current: string }) {
   const outgoing = edges.filter((e) => e.from === current);
@@ -31,8 +37,9 @@ export default function ModelFigure({ edges, current }: { edges: ModelEdge[]; cu
   if (outgoing.length === 0 && incoming.length === 0) return null;
 
   const rows = Math.max(outgoing.length, incoming.length, 1);
+  const COL_GAP = columnGap([...outgoing, ...incoming].map((e) => edgeText(e)));
   const width = NODE_W * 3 + COL_GAP * 2 + PAD * 2;
-  const height = rows * ROW_H + PAD * 2 + LABEL_DY;
+  const height = rows * ROW_H + PAD * 2;
   const midY = height / 2;
 
   const leftX = PAD;
@@ -65,7 +72,7 @@ export default function ModelFigure({ edges, current }: { edges: ModelEdge[]; cu
           return (
             <g key={`out-${edge.to}-${edge.label}`}>
               <Edge x1={centreX} y1={midY} x2={leftX + NODE_W} y2={y} />
-              <EdgeLabel x={leftX + NODE_W / 2} y={y - NODE_H / 2} label={edge.label} cardinality={edge.cardinality} />
+              <EdgeLabel x={(leftX + NODE_W + centreX) / 2} y={(midY + y) / 2} edge={edge} />
               <Node x={leftX} y={y} label={edge.to} />
             </g>
           );
@@ -76,7 +83,7 @@ export default function ModelFigure({ edges, current }: { edges: ModelEdge[]; cu
           return (
             <g key={`in-${edge.from}-${edge.label}`}>
               <Edge x1={rightX} y1={y} x2={centreX + NODE_W} y2={midY} />
-              <EdgeLabel x={rightX + NODE_W / 2} y={y - NODE_H / 2} label={edge.label} cardinality={edge.cardinality} />
+              <EdgeLabel x={(centreX + NODE_W + rightX) / 2} y={(midY + y) / 2} edge={edge} />
               <Node x={rightX} y={y} label={edge.from} />
             </g>
           );
@@ -103,28 +110,21 @@ function Edge({ x1, y1, x2, y2 }: { x1: number; y1: number; x2: number; y2: numb
   );
 }
 
-function EdgeLabel({
-  x,
-  y,
-  label,
-  cardinality,
-}: {
-  x: number;
-  y: number;
-  label: string;
-  cardinality?: string;
-}) {
+function edgeText(edge: ModelEdge): string {
+  return edge.cardinality ? `${edge.label} (${edge.cardinality})` : edge.label;
+}
+
+function EdgeLabel({ x, y, edge }: { x: number; y: number; edge: ModelEdge }) {
   return (
     <text
       x={x}
-      y={y - 7}
+      y={y - LABEL_LIFT}
       textAnchor="middle"
       fontSize="10.5"
       fill={COLORS.muted}
       fontFamily="var(--font-plex-mono, monospace)"
     >
-      {label}
-      {cardinality ? ` (${cardinality})` : ""}
+      {edgeText(edge)}
     </text>
   );
 }
