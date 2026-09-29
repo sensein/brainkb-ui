@@ -30,6 +30,7 @@ import MarketingHeader from "../../../components/marketing/MarketingHeader";
 import MarketingFooter from "../../../components/marketing/MarketingFooter";
 import { instrumentSerif, plexSans, plexMono } from "../../../components/marketing/fonts";
 import { COLORS, CARD_SURFACE } from "../../../components/marketing/tokens";
+import ModelFigure, { type ModelEdge } from "../../ModelFigure";
 import browserConfig from "@/src/config/yaml/class-browser.yaml";
 
 type ClassEntry = { name: string; category: string; description?: string };
@@ -41,6 +42,7 @@ type PageConfig = {
   graph?: string;
   detailQueryTemplate?: string;
   model?: ModelSource;
+  modelEdges?: ModelEdge[];
 };
 type Term = { value?: string; type?: string; datatype?: string };
 type Row = { direction?: Term; predicate?: Term; other?: Term };
@@ -148,6 +150,13 @@ function DetailView({ page, id }: { page: PageConfig; id: string }) {
   const category = attributes.find((r) => r.predicate?.value?.endsWith("/category"))?.other?.value;
   const entityClass = page.classes.find((c) => c.category === category);
   const label = attributes.find((r) => r.predicate?.value?.endsWith("#label"))?.other?.value;
+
+  // Only show the schema figure when this class actually appears in the
+  // model edges — otherwise the heading would sit above an empty card.
+  const modelEdges = page.modelEdges ?? [];
+  const hasModelEdges =
+    !!entityClass &&
+    modelEdges.some((e) => e.from === entityClass.name || e.to === entityClass.name);
 
   return (
     <div
@@ -261,6 +270,16 @@ function DetailView({ page, id }: { page: PageConfig; id: string }) {
               pageSlug={page.slug}
               currentId={id}
             />
+            {entityClass && hasModelEdges && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <span style={{ font: "500 12px var(--font-plex-mono)", color: COLORS.muted }}>
+                  How {entityClass.name} relates in the model
+                </span>
+                <div style={{ ...CARD_SURFACE, padding: 18 }}>
+                  <ModelFigure edges={modelEdges} current={entityClass.name} />
+                </div>
+              </div>
+            )}
           </>
         )}
       </section>
