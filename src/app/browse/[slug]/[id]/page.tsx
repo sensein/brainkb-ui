@@ -141,6 +141,15 @@ function DetailView({ page, id }: { page: PageConfig; id: string }) {
     load();
   }, [load]);
 
+  // "class" rows are not content: they carry each neighbour's category so the
+  // figure can name what this record is actually connected to.
+  const neighbourCategory = new Map<string, string>();
+  for (const row of rows) {
+    if (row.direction?.value === "class" && row.other?.value && row.otherCategory?.value) {
+      neighbourCategory.set(row.other.value, row.otherCategory.value);
+    }
+  }
+
   const outgoing = rows.filter((r) => r.direction?.value === "out");
   const attributes = outgoing.filter((r) => refTarget(r.other, id) === null);
   const connections = outgoing.filter((r) => refTarget(r.other, id) !== null);
@@ -163,11 +172,18 @@ function DetailView({ page, id }: { page: PageConfig; id: string }) {
   const modelEdges: ModelEdge[] = [];
   const seenEdges = new Set<string>();
   for (const row of [...connections, ...incoming]) {
-    const neighbour = classNameFor(row.otherCategory?.value);
+    const isIn = row.direction?.value === "in";
+    const neighbourIri = isIn
+      ? row.other?.type === "uri"
+        ? row.other.value
+        : refTarget(row.other, id)
+      : refTarget(row.other, id);
+    const neighbour = classNameFor(
+      neighbourIri ? neighbourCategory.get(neighbourIri) : undefined,
+    );
     const label = row.predicate?.value ? shortLabel(row.predicate.value) : "";
     if (!neighbour || !label || !entityClass) continue;
-    const isIncoming = row.direction?.value === "in";
-    const edge = isIncoming
+    const edge = isIn
       ? { from: neighbour, to: entityClass.name, label }
       : { from: entityClass.name, to: neighbour, label };
     const key = `${edge.from}|${edge.label}|${edge.to}`;

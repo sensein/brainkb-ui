@@ -71,16 +71,31 @@ defaults:
   #   in  — anything pointing at its IRI (for data that does link by IRI)
   #   in  — anything whose typed literal names this entity's local id
   # The third is what actually populates "Referenced by" for BICAN data.
-  # ?otherCategory is what the neighbour actually is, and it matters: a
-  # TissueSample's was_derived_from may point at a DissectionRoiPolygon even
-  # though the schema declares Donor as the range. Without it the model figure
-  # would have to guess from the predicate name and could show the wrong edge.
-  # {{base}} is the entity's namespace, used to turn a literal local id back
-  # into an IRI so the category can be looked up.
+  # Detail view for one entity: /browse/<page>/<id>. Substitutions: {{id}} is
+  # the full entity IRI, {{localId}} its last path segment, {{base}} its
+  # namespace. Five branches:
+  #   out   — the entity's own triples (attributes and outgoing references)
+  #   in    — anything pointing at its IRI (for data that links by IRI)
+  #   in    — anything whose typed literal names this entity's local id
+  #   class — the class of each entity this one references
+  #   class — the class of each entity that references this one
+  #
+  # The `class` rows exist because the neighbour's class is not knowable from
+  # a reference alone: a TissueSample's was_derived_from can point at a
+  # DissectionRoiPolygon even though the schema declares Donor as the range,
+  # and the detail figure shows what is actually there.
+  #
+  # They are plain joins on purpose. Doing the same lookup in an OPTIONAL
+  # went wrong twice: BIND(IRI(CONCAT(...))) errors on a value like "50 yrs",
+  # leaving the variable unbound so the pattern matched every category in the
+  # graph (multiplying every row by the entity count); and moving the match
+  # into a FILTER inside the OPTIONAL had it evaluated as an inner join,
+  # dropping every row that had no neighbour. Verified against the sample
+  # data with a SPARQL engine rather than by reading the spec.
   detailQueryTemplate: |-
     PREFIX biolink: <https://w3id.org/biolink/vocab/>
 
-    SELECT ?direction ?predicate ?other ?otherCategory
+    SELECT DISTINCT ?direction ?predicate ?other ?otherCategory
     WHERE {
       GRAPH <{{graph}}> {
         { BIND("out" AS ?direction) <{{id}}> ?predicate ?other . }
@@ -92,9 +107,19 @@ defaults:
           ?other ?predicate ?ref .
           FILTER(isLiteral(?ref) && STR(?ref) = "{{localId}}")
         }
-        OPTIONAL {
-          BIND(IF(isIRI(?other), ?other, IRI(CONCAT("{{base}}", STR(?other)))) AS ?otherIri)
-          ?otherIri biolink:category ?otherCategory .
+        UNION
+        {
+          BIND("class" AS ?direction)
+          <{{id}}> ?predicate ?lit .
+          ?other biolink:category ?otherCategory .
+          FILTER(STR(?other) = CONCAT("{{base}}", STR(?lit)))
+        }
+        UNION
+        {
+          BIND("class" AS ?direction)
+          ?other ?predicate ?ref2 .
+          FILTER(isLiteral(?ref2) && STR(?ref2) = "{{localId}}")
+          ?other biolink:category ?otherCategory .
         }
       }
     }
