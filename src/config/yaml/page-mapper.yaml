@@ -1,3 +1,25 @@
+# LEGACY — slated for replacement by the /browse/<slug> pages driven by
+# class-browser.yaml. Kept working for now; see DEVELOPER_DOCUMENTATION.md
+# ("Class Browser Pages") for the replacement.
+#
+# As of 2026-09-28 these pages still work but are unreachable from the site
+# navigation: every inbound link comes from something itself orphaned — the
+# unrendered Navbar.tsx, commented-out entries in SideBarKBFromConfig.tsx,
+# config-home.yaml's use_link (the redesigned home page no longer reads that
+# file), or /hmba-taxonomy, /see/entity, /evidence and /assertions, which are
+# themselves only reachable by typing the URL.
+#
+# Do not move or rename the files referenced below without updating this file:
+# they are resolved by filename at runtime, so a stale path fails silently —
+# no build or type error, the page simply stops resolving. Each *-detail.yaml
+# in turn pulls in a *_card.yaml by name, so those are live too even though
+# nothing imports them directly.
+#
+# When retiring these: migrate the data type to a /browse page, then delete the
+# route, the mapper entry, and its detail/card YAMLs together. Retiring
+# /knowledge-base/[slug] also removes its silent fallback to the "default"
+# config, which renders Barcoded Cell Sample for any unrecognised slug.
+
 PageMapper:
   # SPARQL-based entity detail pages (using detail YAML configs with tabbed interface)
   - type: "detail"
