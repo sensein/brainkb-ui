@@ -14,22 +14,18 @@ import { instrumentSerif, plexSans, plexMono } from "../components/marketing/fon
 import { COLORS, CARD_SURFACE, CARD_TITLE_FONT } from "../components/marketing/tokens";
 
 // `href: null` means that data type has no browse page yet — the card renders
-// as plain text until one exists.
-const TYPES = [
+// as plain text until one exists. `note`, when set, shows as a muted line on the card.
+const TYPES: { name: string; desc: string; sources: string; programs: readonly string[]; href: string | null; note?: string }[] = [
   { name: "Cell types", desc: "Taxonomies and cell-type definitions with markers and regions.", sources: "BICAN", programs: ["BICAN"], href: null },
-  { name: "Brain regions", desc: "Anatomical regions and atlases, linked to cell types and data.", sources: "BICAN", programs: ["BICAN"], href: null },
-  { name: "Genes & genomes", desc: "Individual genes with their molecular type — protein-coding or noncoding — linked to the versioned genome annotations from ENSEMBL or NCBI and the reference assemblies they came from.", sources: "BICAN", programs: ["BICAN"], href: "/browse/genes-genomes" },
-  { name: "Library generation", desc: "The path from donor to sequencing library — brain slabs, tissue samples, the cell samples derived from them, and the cDNA, libraries, and aliquots they produce.", sources: "BICAN", programs: ["BICAN"], href: "/browse/library-generation" },
-  { name: "BICAN Resources", desc: "All resources published by the BICAN consortium.", sources: "BICAN", programs: ["BICAN"], href: null },
-  { name: "BBQS Resources", desc: "All resources published by the BBQS consortium.", sources: "BBQS", programs: ["BBQS"], href: null },
-  { name: "Literature", desc: "Claims extracted from papers, each linked to its source.", sources: "BICAN · BBQS", programs: ["BICAN", "BBQS"], href: null },
-] as const;
+  { name: "Library generation", desc: "The path from donor to sequencing library — brain slabs, tissue samples, the cell samples derived from them, and the cDNA, libraries, and aliquots they produce.", sources: "BICAN", programs: ["BICAN"], href: "/browse/library-generation", note: "Temporary — this card will be removed." },
+  { name: "BICAN Resources", desc: "All resources published by the BICAN consortium.", sources: "BICAN", programs: ["BICAN"], href: "/browse/bican-resources" },
+];
 
 const PROGRAMS = ["All", "BICAN", "BBQS"] as const;
 
 export default function ExplorePage() {
   const [activeProgram, setActiveProgram] = useState<(typeof PROGRAMS)[number]>("All");
-  const visibleTypes = TYPES.filter((t) => activeProgram === "All" || (t.programs as readonly string[]).includes(activeProgram));
+  const visibleTypes = TYPES.filter((t) => activeProgram === "All" || t.programs.includes(activeProgram));
 
   return (
     <div
@@ -100,6 +96,9 @@ export default function ExplorePage() {
                 <span style={{ marginTop: "auto", paddingTop: 10, font: "500 12px var(--font-plex-mono)", color: COLORS.muted }}>
                   {t.sources}
                 </span>
+                {t.note && (
+                  <span style={{ fontSize: 13, fontStyle: "italic", color: COLORS.muted }}>{t.note}</span>
+                )}
                 {t.href && (
                   <span style={{ color: COLORS.accentPurple, fontWeight: 600, fontSize: 15 }}>Browse →</span>
                 )}
