@@ -73,12 +73,13 @@ defaults:
   # The third is what actually populates "Referenced by" for BICAN data.
   # Detail view for one entity: /browse/<page>/<id>. Substitutions: {{id}} is
   # the full entity IRI, {{localId}} its last path segment, {{base}} its
-  # namespace. Five branches:
+  # namespace. Seven branches:
   #   out   — the entity's own triples (attributes and outgoing references)
   #   in    — anything pointing at its IRI (for data that links by IRI)
   #   in    — anything whose typed literal names this entity's local id
   #   class — the class of each entity this one references
   #   class — the class of each entity that references this one
+  #   class — the same two, for data that links by IRI (BICAN resources)
   #
   # The `class` rows exist because the neighbour's class is not knowable from
   # a reference alone: a TissueSample's was_derived_from can point at a
@@ -121,6 +122,10 @@ defaults:
           FILTER(isLiteral(?ref2) && STR(?ref2) = "{{localId}}")
           ?other biolink:category ?otherCategory .
         }
+        UNION
+        { BIND("class" AS ?direction) <{{id}}> ?predicate ?other . ?other biolink:category ?otherCategory . }
+        UNION
+        { BIND("class" AS ?direction) ?other ?predicate <{{id}}> . ?other biolink:category ?otherCategory . }
       }
     }
     LIMIT 500
@@ -287,3 +292,65 @@ pages:
           One library in the library pool. Each aliquot carries a unique R1/R2
           index so libraries sequenced together can be separated again by
           demultiplexing; the resulting fastq files carry the aliquot name.
+
+  # BICAN resource citation list — tools, atlases, pipelines, standards and
+  # the organisations behind them. Test data is generated from the master
+  # list CSV (csv2ttl.py); it links by IRI, not by typed-literal local id.
+  # Not a LinkML model, so no model link; the figure comes from modelEdges.
+  - slug: "bican-resources"
+    title: "BICAN Resources"
+    graph: "https://brainkb.org/bican-resources/"
+    model: null
+    # Printed by csv2ttl.py from the links actually present in the data.
+    # isPartOf and usedBy, and every provider edge, are derived from where
+    # each resource's URL lives; isBasedOn is stated in the sheet itself.
+    modelEdges:
+      - { from: "Resource", to: "Resource", label: "isPartOf" }
+      - { from: "Resource", to: "Resource", label: "usedBy" }
+      - { from: "Resource", to: "Resource", label: "isBasedOn" }
+      - { from: "Resource", to: "Organization", label: "provider" }
+    description: >-
+      Tools, atlases, pipelines, standards and data archives used across the
+      BICAN consortium, with their RRIDs and how to cite them.
+    columns:
+      - key: "id"
+        label: "ID"
+      - key: "name"
+        label: "Name"
+      - key: "type"
+        label: "Type"
+      - key: "rrid"
+        label: "RRID / identifier"
+    # Type is the sheet's own category (Tools, Atlases & Coordinate
+    # Frameworks, ...), kept as an attribute rather than a class.
+    # A resource can carry more than one identifier (the marmoset genome has
+    # a GenBank and a RefSeq accession), so they are joined into one cell
+    # rather than repeating the row.
+    queryTemplate: |-
+      PREFIX biolink: <https://w3id.org/biolink/vocab/>
+      PREFIX brainkb: <https://brainkb.org/vocab/>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      PREFIX schema: <https://schema.org/>
+      PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+      SELECT ?id (SAMPLE(?label) AS ?name) (SAMPLE(?category) AS ?type) (GROUP_CONCAT(?ident; separator=", ") AS ?rrid)
+      WHERE {
+        GRAPH <{{graph}}> {
+          ?id biolink:category "{{category}}"^^xsd:anyURI .
+          OPTIONAL { ?id rdfs:label ?label }
+          OPTIONAL { ?id brainkb:resourceCategory ?category }
+          OPTIONAL { ?id schema:identifier ?ident }
+        }
+      }
+      GROUP BY ?id
+      ORDER BY ?type ?name
+      LIMIT 500
+    classes:
+      - name: "Resource"
+        category: "brainkb:Resource"
+        description: >-
+          A tool, atlas, pipeline, standard, data archive or other resource
+          from the BICAN citation list. Its type is the list's own category.
+      - name: "Organization"
+        category: "brainkb:Organization"
+        description: "Institutes and consortia that provide resources."

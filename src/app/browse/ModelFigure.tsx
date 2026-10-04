@@ -33,7 +33,9 @@ function columnGap(labels: string[]): number {
 
 export default function ModelFigure({ edges, current }: { edges: ModelEdge[]; current: string }) {
   const outgoing = edges.filter((e) => e.from === current);
-  const incoming = edges.filter((e) => e.to === current);
+  // A self-edge (a pipeline that is part of another pipeline) is drawn once,
+  // as outgoing, rather than on both sides.
+  const incoming = edges.filter((e) => e.to === current && e.from !== current);
   if (outgoing.length === 0 && incoming.length === 0) return null;
 
   const rows = Math.max(outgoing.length, incoming.length, 1);

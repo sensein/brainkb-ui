@@ -394,6 +394,12 @@ function TermSection({
                       >
                         {shortLabel(target)}
                       </Link>
+                    ) : /^https?:\/\//.test(value) ? (
+                      // External links (schema:url, RRID resolver) are stored
+                      // as literals so they are not taken for connections.
+                      <a href={value} target="_blank" rel="noopener noreferrer" style={{ color: COLORS.accentPurple }}>
+                        {value}
+                      </a>
                     ) : (
                       value
                     )}
