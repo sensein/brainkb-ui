@@ -22,9 +22,9 @@
  * plus an optional per-class `description`).
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { notFound, useParams } from "next/navigation";
+import { notFound, useParams, useSearchParams } from "next/navigation";
 import { Loader2, AlertCircle } from "lucide-react";
 import MarketingHeader from "../../../components/marketing/MarketingHeader";
 import MarketingFooter from "../../../components/marketing/MarketingFooter";
@@ -87,10 +87,19 @@ export default function EntityDetailPage() {
 
   if (!page) notFound();
 
-  return <DetailView page={page} id={decodeURIComponent(rawId)} />;
+  // useSearchParams needs a Suspense boundary in the app router.
+  return (
+    <Suspense>
+      <DetailView page={page} id={decodeURIComponent(rawId)} />
+    </Suspense>
+  );
 }
 
 function DetailView({ page, id }: { page: PageConfig; id: string }) {
+  // `from` is the list page's query (class and filters), passed along links
+  // between records so the back link returns to the list as it was left.
+  const from = useSearchParams()?.get("from") ?? "";
+  const linkSuffix = from ? `?from=${encodeURIComponent(from)}` : "";
   const graph = page.graph ?? CONFIG.defaults.graph;
   const template = page.detailQueryTemplate ?? CONFIG.defaults.detailQueryTemplate;
   // Merge the page's model over the defaults, so a page can set just a name
@@ -219,7 +228,12 @@ function DetailView({ page, id }: { page: PageConfig; id: string }) {
         }}
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <Link href={`/browse/${page.slug}`} style={{ color: COLORS.muted, fontSize: 14, fontWeight: 500 }}>
+          <Link
+            href={`/browse/${page.slug}${
+              from ? `?${from}` : entityClass ? `?class=${encodeURIComponent(entityClass.name)}` : ""
+            }`}
+            style={{ color: COLORS.muted, fontSize: 14, fontWeight: 500 }}
+          >
             ← {page.title}
           </Link>
           <h1
@@ -298,12 +312,13 @@ function DetailView({ page, id }: { page: PageConfig; id: string }) {
 
         {!loading && !error && rows.length > 0 && (
           <>
-            <TermSection rows={attributes} pageSlug={page.slug} currentId={id} />
+            <TermSection rows={attributes} pageSlug={page.slug} currentId={id} linkSuffix={linkSuffix} />
             <TermSection
               title="Connections"
               rows={[...connections, ...incoming]}
               pageSlug={page.slug}
               currentId={id}
+              linkSuffix={linkSuffix}
             />
             {entityClass && hasModelEdges && (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -329,11 +344,13 @@ function TermSection({
   rows,
   pageSlug,
   currentId,
+  linkSuffix,
 }: {
   title?: string;
   rows: Row[];
   pageSlug: string;
   currentId: string;
+  linkSuffix: string;
 }) {
   if (rows.length === 0) return null;
 
@@ -388,7 +405,7 @@ function TermSection({
                       // carry it as a literal, incoming ones as a full IRI.
                       // The IRI stays available as the title attribute.
                       <Link
-                        href={`/browse/${pageSlug}/${encodeURIComponent(target)}`}
+                        href={`/browse/${pageSlug}/${encodeURIComponent(target)}${linkSuffix}`}
                         title={target}
                         style={{ color: COLORS.accentPurple, fontWeight: 500 }}
                       >

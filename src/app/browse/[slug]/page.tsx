@@ -13,9 +13,9 @@
  * arriving here from /explore stays visually continuous (see SiteChrome).
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { notFound, useParams } from "next/navigation";
+import { notFound, useParams, useRouter, useSearchParams } from "next/navigation";
 import { Loader2, AlertCircle } from "lucide-react";
 import MarketingHeader from "../../components/marketing/MarketingHeader";
 import MarketingFooter from "../../components/marketing/MarketingFooter";
@@ -58,8 +58,9 @@ function shortId(iri: string): string {
 }
 
 // Option value for rows with nothing in the filtered column. GROUP_CONCAT
-// over no values gives "", so empty strings count as missing too.
-const NOT_LISTED = "\u0000none";
+// over no values gives "", so empty strings count as missing too. It appears
+// in the URL, so it is kept readable.
+const NOT_LISTED = "__none__";
 
 function cellValues(row: Binding, spec: FilterSpec): string[] {
   const raw = row[spec.key]?.value;
@@ -80,7 +81,12 @@ export default function BrowsePage() {
 
   if (!page) notFound();
 
-  return <BrowseView page={page} />;
+  // useSearchParams needs a Suspense boundary in the app router.
+  return (
+    <Suspense>
+      <BrowseView page={page} />
+    </Suspense>
+  );
 }
 
 function BrowseView({ page }: { page: PageConfig }) {
@@ -98,7 +104,19 @@ function BrowseView({ page }: { page: PageConfig }) {
         : { ...CONFIG.defaults.model, ...page.model };
   const classTemplate = model?.classUrlTemplate;
 
-  const [selected, setSelected] = useState<ClassEntry>(page.classes[0]);
+  // The selected class and filters live in the URL
+  // (?class=Resource&type=Tools&type=Metadata), so coming back from a detail
+  // page, or reloading, lands on the same view. replace rather than push keeps
+  // these changes out of the back-button history.
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const listQuery = searchParams?.toString() ?? "";
+  const classParam = searchParams?.get("class");
+  const selected = page.classes.find((c) => c.name === classParam) ?? page.classes[0];
+  const replaceQuery = (params: URLSearchParams) =>
+    router.replace(`/browse/${page.slug}?${params.toString()}`, { scroll: false });
+  // Switching class drops the filters: their values belong to the old class.
+  const setSelected = (entry: ClassEntry) => replaceQuery(new URLSearchParams({ class: entry.name }));
 
   // What the schema says about the selected class, regardless of what has
   // been ingested. The per-record view on the detail page is data-derived.
@@ -108,9 +126,6 @@ function BrowseView({ page }: { page: PageConfig }) {
   const [rows, setRows] = useState<Binding[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Selected values per filter key. Values within a filter are OR'd, filters
-  // are AND'd with each other.
-  const [selections, setSelections] = useState<Record<string, Set<string>>>({});
 
   const load = useCallback(
     async (entry: ClassEntry) => {
@@ -141,13 +156,24 @@ function BrowseView({ page }: { page: PageConfig }) {
   );
 
   useEffect(() => {
-    setSelections({});
     load(selected);
   }, [selected, load]);
 
   // Filtering is client-side over the rows already loaded, so it needs no
   // extra query.
   const filterSpecs = page.filters ?? [];
+  // Selected values per filter key, read from the URL. Values within a filter
+  // are OR'd, filters are AND'd with each other.
+  const selections: Record<string, Set<string>> = Object.fromEntries(
+    filterSpecs.map((spec) => [spec.key, new Set(searchParams?.getAll(spec.key) ?? [])]),
+  );
+  const setFilter = (key: string, values: Set<string>) => {
+    const params = new URLSearchParams(listQuery);
+    params.set("class", selected.name);
+    params.delete(key);
+    for (const v of values) params.append(key, v);
+    replaceQuery(params);
+  };
   const matches = (row: Binding, skipKey?: string) =>
     filterSpecs.every((spec) => {
       const chosen = selections[spec.key];
@@ -309,24 +335,9 @@ function BrowseView({ page }: { page: PageConfig }) {
                         label={label}
                         options={options}
                         selected={selections[spec.key] ?? new Set()}
-                        onChange={(next) => setSelections((prev) => ({ ...prev, [spec.key]: next }))}
+                        onChange={(next) => setFilter(spec.key, next)}
                       />
                     ))}
-                    {anyFilterActive && (
-                      <button
-                        onClick={() => setSelections({})}
-                        style={{
-                          border: "none",
-                          background: "transparent",
-                          fontSize: 13,
-                          fontWeight: 500,
-                          color: COLORS.accent,
-                          cursor: "pointer",
-                        }}
-                      >
-                        Clear filters
-                      </button>
-                    )}
                   </div>
                 )}
                 <div
@@ -398,7 +409,9 @@ function BrowseView({ page }: { page: PageConfig }) {
                             >
                               {col.key === "id" && row.id?.value && page.linkIds !== false ? (
                                 <Link
-                                  href={`/browse/${page.slug}/${encodeURIComponent(row.id.value)}`}
+                                  href={`/browse/${page.slug}/${encodeURIComponent(row.id.value)}${
+                                    listQuery ? `?from=${encodeURIComponent(listQuery)}` : ""
+                                  }`}
                                   title={row.id.value}
                                   style={{ color: COLORS.accentPurple, fontWeight: 500 }}
                                 >
