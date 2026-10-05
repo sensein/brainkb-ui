@@ -321,6 +321,13 @@ pages:
         label: "Type"
       - key: "rrid"
         label: "RRID / identifier"
+      - key: "provider"
+        label: "Provider"
+    # Provider names are joined with "; " (a resource could have several).
+    filters:
+      - key: "type"
+      - key: "provider"
+        separator: "; "
     # Type is the sheet's own category (Tools, Atlases & Coordinate
     # Frameworks, ...), kept as an attribute rather than a class.
     # A resource can carry more than one identifier (the marmoset genome has
@@ -333,13 +340,16 @@ pages:
       PREFIX schema: <https://schema.org/>
       PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-      SELECT ?id (SAMPLE(?label) AS ?name) (SAMPLE(?category) AS ?type) (GROUP_CONCAT(?ident; separator=", ") AS ?rrid)
+      SELECT ?id (SAMPLE(?label) AS ?name) (SAMPLE(?category) AS ?type)
+             (GROUP_CONCAT(DISTINCT ?ident; separator=", ") AS ?rrid)
+             (GROUP_CONCAT(DISTINCT ?providerName; separator="; ") AS ?provider)
       WHERE {
         GRAPH <{{graph}}> {
           ?id biolink:category "{{category}}"^^xsd:anyURI .
           OPTIONAL { ?id rdfs:label ?label }
           OPTIONAL { ?id brainkb:resourceCategory ?category }
           OPTIONAL { ?id schema:identifier ?ident }
+          OPTIONAL { ?id schema:provider ?prov . ?prov rdfs:label ?providerName }
         }
       }
       GROUP BY ?id

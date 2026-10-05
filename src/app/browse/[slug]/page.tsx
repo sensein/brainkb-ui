@@ -22,12 +22,16 @@ import MarketingFooter from "../../components/marketing/MarketingFooter";
 import { instrumentSerif, plexSans, plexMono } from "../../components/marketing/fonts";
 import { COLORS, CARD_SURFACE } from "../../components/marketing/tokens";
 import ModelFigure, { type ModelEdge } from "../ModelFigure";
+import FilterMenu, { type FilterOption } from "../FilterMenu";
 import browserConfig from "@/src/config/yaml/class-browser.yaml";
 
 // `queryTemplate` on a class overrides the page's, which overrides defaults —
 // useful for diagnostic entries that ask a different shape of question.
 type ClassEntry = { name: string; category: string; queryTemplate?: string };
 type Column = { key: string; label: string };
+// `separator` splits a cell holding several values (a GROUP_CONCAT) so each
+// value is its own option. The label defaults to the column's.
+type FilterSpec = { key: string; label?: string; separator?: string };
 type ModelSource = { name?: string; url?: string; classUrlTemplate?: string } | null;
 type Binding = Record<string, { value?: string } | undefined>;
 type PageConfig = {
@@ -43,12 +47,25 @@ type PageConfig = {
   linkIds?: boolean;
   model?: ModelSource;
   modelEdges?: ModelEdge[];
+  // Columns that get a multi-select filter above the table.
+  filters?: FilterSpec[];
 };
 
 // Entity ids are IRIs; the last segment is the part worth reading in a
 // table. The full IRI stays as the link's title.
 function shortId(iri: string): string {
   return iri.split("/").filter(Boolean).pop() || iri;
+}
+
+// Option value for rows with nothing in the filtered column. GROUP_CONCAT
+// over no values gives "", so empty strings count as missing too.
+const NOT_LISTED = "\u0000none";
+
+function cellValues(row: Binding, spec: FilterSpec): string[] {
+  const raw = row[spec.key]?.value;
+  if (!raw) return [NOT_LISTED];
+  const values = spec.separator ? raw.split(spec.separator).map((v) => v.trim()).filter(Boolean) : [raw];
+  return values.length ? values : [NOT_LISTED];
 }
 
 const CONFIG = browserConfig as {
@@ -91,6 +108,9 @@ function BrowseView({ page }: { page: PageConfig }) {
   const [rows, setRows] = useState<Binding[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Selected values per filter key. Values within a filter are OR'd, filters
+  // are AND'd with each other.
+  const [selections, setSelections] = useState<Record<string, Set<string>>>({});
 
   const load = useCallback(
     async (entry: ClassEntry) => {
@@ -121,8 +141,44 @@ function BrowseView({ page }: { page: PageConfig }) {
   );
 
   useEffect(() => {
+    setSelections({});
     load(selected);
   }, [selected, load]);
+
+  // Filtering is client-side over the rows already loaded, so it needs no
+  // extra query.
+  const filterSpecs = page.filters ?? [];
+  const matches = (row: Binding, skipKey?: string) =>
+    filterSpecs.every((spec) => {
+      const chosen = selections[spec.key];
+      if (spec.key === skipKey || !chosen?.size) return true;
+      return cellValues(row, spec).some((v) => chosen.has(v));
+    });
+  const visibleRows = rows.filter((r) => matches(r));
+
+  // Each filter's counts reflect the other filters, so they show what picking
+  // that option would leave. A filter is hidden when the column has no values
+  // at all for this class (Organizations have no provider).
+  const filterMenus = filterSpecs
+    .map((spec) => {
+      const counts = new Map<string, number>();
+      for (const row of rows) {
+        if (!matches(row, spec.key)) continue;
+        for (const v of cellValues(row, spec)) counts.set(v, (counts.get(v) ?? 0) + 1);
+      }
+      const hasValues = rows.some((r) => !cellValues(r, spec).includes(NOT_LISTED));
+      // Keep selected options listed even when their count drops to zero.
+      for (const v of selections[spec.key] ?? []) if (!counts.has(v)) counts.set(v, 0);
+      const options: FilterOption[] = [...counts.entries()]
+        .map(([value, count]) => ({ value, count, label: value === NOT_LISTED ? "Not listed" : value }))
+        .sort((x, y) =>
+          x.value === NOT_LISTED ? 1 : y.value === NOT_LISTED ? -1 : x.label.localeCompare(y.label),
+        );
+      const label = spec.label ?? columns.find((c) => c.key === spec.key)?.label ?? spec.key;
+      return { spec, label, options, hasValues };
+    })
+    .filter((m) => m.hasValues);
+  const anyFilterActive = Object.values(selections).some((v) => v.size > 0);
 
   return (
     <div
@@ -245,6 +301,34 @@ function BrowseView({ page }: { page: PageConfig }) {
 
             {!loading && !error && rows.length > 0 && (
               <>
+                {filterMenus.length > 0 && (
+                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 16 }}>
+                    {filterMenus.map(({ spec, label, options }) => (
+                      <FilterMenu
+                        key={spec.key}
+                        label={label}
+                        options={options}
+                        selected={selections[spec.key] ?? new Set()}
+                        onChange={(next) => setSelections((prev) => ({ ...prev, [spec.key]: next }))}
+                      />
+                    ))}
+                    {anyFilterActive && (
+                      <button
+                        onClick={() => setSelections({})}
+                        style={{
+                          border: "none",
+                          background: "transparent",
+                          fontSize: 13,
+                          fontWeight: 500,
+                          color: COLORS.accent,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Clear filters
+                      </button>
+                    )}
+                  </div>
+                )}
                 <div
                   style={{
                     marginBottom: 12,
@@ -256,6 +340,7 @@ function BrowseView({ page }: { page: PageConfig }) {
                   }}
                 >
                   <span style={{ font: "500 13px var(--font-plex-mono)", color: COLORS.muted }}>
+                    {anyFilterActive && `${visibleRows.length} of `}
                     {rows.length} {rows.length === 1 ? "entity" : "entities"}
                   </span>
                   {classTemplate && (
@@ -291,14 +376,21 @@ function BrowseView({ page }: { page: PageConfig }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {rows.map((row, i) => (
+                      {visibleRows.length === 0 && (
+                        <tr>
+                          <td colSpan={columns.length} style={{ padding: "18px", color: COLORS.muted }}>
+                            No entities match the selected filters.
+                          </td>
+                        </tr>
+                      )}
+                      {visibleRows.map((row, i) => (
                         <tr key={row.id?.value ?? i}>
                           {columns.map((col) => (
                             <td
                               key={col.key}
                               style={{
                                 padding: "12px 18px",
-                                borderBottom: i === rows.length - 1 ? "none" : `1px solid ${COLORS.border}`,
+                                borderBottom: i === visibleRows.length - 1 ? "none" : `1px solid ${COLORS.border}`,
                                 color: COLORS.body,
                                 verticalAlign: "top",
                                 wordBreak: "break-word",
@@ -313,7 +405,7 @@ function BrowseView({ page }: { page: PageConfig }) {
                                   {shortId(row.id.value)}
                                 </Link>
                               ) : (
-                                row[col.key]?.value ?? <span style={{ color: COLORS.muted }}>—</span>
+                                row[col.key]?.value || <span style={{ color: COLORS.muted }}>—</span>
                               )}
                             </td>
                           ))}
