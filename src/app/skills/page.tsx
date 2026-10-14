@@ -15,7 +15,6 @@ import SkillInstall from "./SkillInstall";
 import "../components/marketing/landing/landing.css";
 
 const SKILLS_REPO = "https://github.com/sensein/agent_skills";
-const NPM_PACKAGE = "https://www.npmjs.com/package/brainkb";
 
 const SKILLS = [
   {
@@ -46,27 +45,13 @@ const SKILLS = [
     out: "Markdown · SLR-ontology Turtle",
     href: `${SKILLS_REPO}/tree/main/skills/synthscholar`,
   },
-  {
-    name: "BrainKB",
-    icon: "◎",
-    role: "INGEST",
-    summary: "Puts the results into your BrainKB space and answers questions about them.",
-    points: [
-      "Log in, create spaces, and keep them private or share them",
-      "Ingest RDF and completed reviews, and track each ingest job",
-      "Search and read graphs; public spaces need no login",
-      "Ask who changed what and when, down to individual triples",
-    ],
-    out: "Your space · PROV-O provenance",
-    href: `${SKILLS_REPO}/tree/main/skills/brainkb`,
-  },
 ] as const;
 
 const STEPS = [
-  { lbl: "INSTALL", title: "Add the skills", desc: "npx brainkb install for BrainKB, one script for the rest." },
+  { lbl: "INSTALL", title: "Add the skills", desc: "One script copies them into your agent's skills folder." },
   { lbl: "ASK", title: "Ask in plain language", desc: "Point your agent at a paper, a folder of PDFs or a review question." },
   { lbl: "EXTRACT", title: "Get evidence-backed records", desc: "Every entity and claim keeps the sentence and source it came from." },
-  { lbl: "INGEST", title: "Send them to BrainKB", desc: "Validated Turtle goes into your space, with provenance recorded." },
+  { lbl: "INGEST", title: "Send them to BrainKB", desc: "Validated Turtle goes into your space over MCP, with provenance recorded." },
 ];
 
 const WHY = [
@@ -110,11 +95,11 @@ export default function SkillsPage() {
           <div className="section-title">
             <div>
               <span className="eyebrow">The skills</span>
-              <h2>Extract, review,<br />then ingest.</h2>
+              <h2>Extract, then<br />review.</h2>
             </div>
-            <p>Three skills that work on their own or as one pipeline, from a PDF to a fact in the graph.</p>
+            <p>Two skills that work on their own or together, turning papers into sourced records ready for BrainKB.</p>
           </div>
-          <div className="grid3">
+          <div className="grid2">
             {SKILLS.map((s) => (
               <a key={s.name} className="card" href={s.href} target="_blank" rel="noopener noreferrer">
                 <div className="top">
@@ -156,21 +141,15 @@ export default function SkillsPage() {
           <div className="install" style={{ marginTop: 0 }}>
             <div>
               <span className="eyebrow">Install</span>
-              <h2>Two commands,<br />any agent.</h2>
+              <h2>One command,<br />any agent.</h2>
               <p style={{ marginTop: 16 }}>
-                The BrainKB skill is on npm: <code>npx brainkb install</code> adds it and registers the BrainKB MCP
-                server. StructSense and SynthScholar install from GitHub. Both follow the cross-agent Agent Skills
-                format, and both take <code>--scope project</code> to install into the current project instead of your
-                user folder.
+                Each skill is a flat directory with a <code>SKILL.md</code>, following the cross-agent Agent Skills
+                format. Clone the repository and install the ones you want. Add <code>--scope project</code> to
+                install into the current project instead of your user folder.
               </p>
-              <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
-                <a className="go" href={NPM_PACKAGE} target="_blank" rel="noopener noreferrer">
-                  brainkb on npm ↗
-                </a>
-                <a className="go" href={SKILLS_REPO} target="_blank" rel="noopener noreferrer">
-                  All skills on GitHub ↗
-                </a>
-              </div>
+              <a className="go" href={SKILLS_REPO} target="_blank" rel="noopener noreferrer">
+                All skills on GitHub ↗
+              </a>
             </div>
             <SkillInstall repo={SKILLS_REPO} />
           </div>

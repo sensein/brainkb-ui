@@ -36,19 +36,6 @@ const SESSIONS: { tab: string; icon: string; ctx: string; badge: string; lines: 
       ["ok", "✓ review.md + review.ttl (SLR ontology) · screening audit trail kept"],
     ],
   },
-  {
-    tab: "BrainKB",
-    icon: "◎",
-    ctx: "Claude Code · brainkb skill",
-    badge: "INGEST",
-    lines: [
-      ["ask", "Add result.ttl and the review to my lab space"],
-      ["call", '→ brainkb_ingest_upload(space="my-lab")'],
-      ["out", "← job queued · 2 files"],
-      ["call", "→ brainkb_job_status(job_id)"],
-      ["ok", "✓ ingested · PROV-O provenance recorded · attributed to you"],
-    ],
-  },
 ];
 
 export default function SkillsDemo() {

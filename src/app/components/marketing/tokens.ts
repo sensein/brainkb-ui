@@ -42,6 +42,9 @@ export const CARD_TITLE_FONT = "400 25px/1.1 var(--font-instrument-serif), serif
 // Per deployment (sandbox vs prod) — set NEXT_PUBLIC_MCP_BASE_URL; see src/config/env.ts.
 export const MCP_ENDPOINT = env.mcpEndpoint;
 
+// `npx brainkb install` registers production by default; add this on sandbox.
+export const MCP_FLAG = /\/\/mcp\.sandbox\./.test(MCP_ENDPOINT) ? " --mcp sandbox" : "";
+
 export const MCP_CLIENTS = [
   {
     name: "Claude Code",

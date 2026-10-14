@@ -17,7 +17,7 @@ import HeroDemo from "./components/marketing/landing/HeroDemo";
 import CompareSources from "./components/marketing/landing/CompareSources";
 import WhereResultsGo from "./components/marketing/landing/WhereResultsGo";
 import ProvenanceTrace from "./components/marketing/landing/ProvenanceTrace";
-import { MCP_ENDPOINT } from "./components/marketing/tokens";
+import { MCP_ENDPOINT, MCP_FLAG } from "./components/marketing/tokens";
 import "./components/marketing/landing/landing.css";
 
 const PILLARS = [
@@ -228,12 +228,12 @@ export default function HomePage() {
               <p>Run the MCP server locally and point it at your own BrainKB.</p>
               <div className="code">MCP_TRANSPORT=<b>stdio</b></div>
             </div>
-            <Link className="way" href="/skills">
-              <span className="lbl">Agent skills</span>
+            <a className="way" href="https://www.npmjs.com/package/brainkb" target="_blank" rel="noopener noreferrer">
+              <span className="lbl">BrainKB skill</span>
               <h3>Teach your agent</h3>
-              <p>Skills for BrainKB, StructSense and SynthScholar, installed in one step.</p>
-              <div className="code"><b>npx</b> brainkb install</div>
-            </Link>
+              <p>Installs the BrainKB skill and registers the MCP server in one step.</p>
+              <div className="code"><b>npx</b> brainkb install{MCP_FLAG}</div>
+            </a>
             <div className="way">
               <span className="lbl">API</span>
               <h3>Plain HTTP</h3>
