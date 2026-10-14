@@ -3978,6 +3978,11 @@ optionator@^0.9.3:
     type-check "^0.4.0"
     word-wrap "^1.2.5"
 
+oxigraph@^0.5.11:
+  version "0.5.11"
+  resolved "https://registry.npmjs.org/oxigraph/-/oxigraph-0.5.11.tgz"
+  integrity sha512-zKdgmp1tsrutGzC1lCCywwZRPpLJKaJnKSDWoY2hIhMiwiCRRXNN1DU7WUyTInBvgPKT8Y5N+RgwTL8qKXpLng==
+
 p-limit@^3.0.2:
   version "3.1.0"
   resolved "https://registry.npmjs.org/p-limit/-/p-limit-3.1.0.tgz"

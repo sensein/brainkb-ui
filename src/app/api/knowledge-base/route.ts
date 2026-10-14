@@ -3,6 +3,7 @@ import { unstable_cache } from 'next/cache';
 import { getWarmedCache } from '@/src/utils/cache/cache-warm';
 import { getData } from '@/src/app/components/utils/getData';
 import { env } from '../../../config/env';
+import { runSparqlOverSpaces, SpaceReadError } from '@/src/utils/api/space-sparql';
 
 // Force dynamic rendering - this route uses searchParams
 export const dynamic = 'force-dynamic';
@@ -176,7 +177,28 @@ export async function POST(request: NextRequest) {
         // read inside a cache scope — and slug-keyed caching would share
         // access-filtered rows between users. Warmed build-time slugs are
         // still honoured inside fetchKnowledgeBaseData.
-        const result = await fetchKnowledgeBaseData(slug, sparqlQuery, true);
+        let result;
+        try {
+            result = await fetchKnowledgeBaseData(slug, sparqlQuery, true);
+        } catch (sparqlError) {
+            // The query service's SPARQL endpoint is admin-only, so anyone else
+            // (including anonymous visitors) is refused there. They may still
+            // read the spaces they can see: answer the same query over the
+            // space's own data instead.
+            try {
+                const local = await runSparqlOverSpaces(sparqlQuery);
+                result = { ...local, pageTitle: "", pageSubtitle: "", entityPageSlug: "" };
+            } catch (spaceError) {
+                if (spaceError instanceof SpaceReadError) {
+                    return NextResponse.json(
+                        { success: false, error: spaceError.message },
+                        { status: spaceError.status }
+                    );
+                }
+                console.error('[KB API] Space fallback failed:', spaceError);
+                throw sparqlError;
+            }
+        }
 
         const response = {
             success: true,
