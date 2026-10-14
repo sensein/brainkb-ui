@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { MCP_ENDPOINT } from "../tokens";
 
 // Animated, illustrative sessions showing the ways to connect. "ask" and "cmd"
 // lines are typed out character by character, so their content is plain text.
@@ -11,7 +12,7 @@ const SCENES: Scene[] = [
   {
     tab: "Ask an agent",
     icon: "✳",
-    ctx: "Claude · mcp.brainkb.org/mcp",
+    ctx: `Claude · ${MCP_ENDPOINT.replace(/^https?:\/\//, "")}`,
     badge: "NO LOGIN",
     via: <>Works in <b>Claude</b>, <b>ChatGPT</b>, <b>Perplexity</b>, <b>Cursor</b>…</>,
     lines: [

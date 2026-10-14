@@ -17,6 +17,7 @@ import HeroDemo from "./components/marketing/landing/HeroDemo";
 import CompareSources from "./components/marketing/landing/CompareSources";
 import WhereResultsGo from "./components/marketing/landing/WhereResultsGo";
 import ProvenanceTrace from "./components/marketing/landing/ProvenanceTrace";
+import { MCP_ENDPOINT } from "./components/marketing/tokens";
 import "./components/marketing/landing/landing.css";
 
 const PILLARS = [
@@ -219,7 +220,7 @@ export default function HomePage() {
               <span className="lbl">Hosted MCP</span>
               <h3>Connect by URL</h3>
               <p>Add one URL to your client. Log in only when you need private data.</p>
-              <div className="code"><b>https://</b>mcp.brainkb.org/mcp</div>
+              <div className="code"><b>https://</b>{MCP_ENDPOINT.replace(/^https?:\/\//, "")}</div>
             </Link>
             <div className="way">
               <span className="lbl">Local MCP</span>

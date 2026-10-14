@@ -1,3 +1,5 @@
+import { env } from "@/src/config/env";
+
 // Design tokens for the public marketing pages (palette from the landing
 // redesign). Kept as plain values (not Tailwind
 // theme extensions) since these are deliberately scoped to three pages, not
@@ -37,7 +39,8 @@ export const CARD_SURFACE = {
 
 export const CARD_TITLE_FONT = "400 25px/1.1 var(--font-instrument-serif), serif";
 
-export const MCP_ENDPOINT = "https://mcp.brainkb.org/mcp";
+// Per deployment (sandbox vs prod) — set NEXT_PUBLIC_MCP_BASE_URL; see src/config/env.ts.
+export const MCP_ENDPOINT = env.mcpEndpoint;
 
 export const MCP_CLIENTS = [
   {

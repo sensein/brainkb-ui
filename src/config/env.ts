@@ -22,6 +22,8 @@ interface EnvConfig {
   NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE?: string;
   NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE?: string;
   NEXT_PUBLIC_USER_MANAGEMENT_API_BASE?: string;
+  // Host of the BrainKB MCP server; differs per deployment (sandbox vs prod).
+  NEXT_PUBLIC_MCP_BASE_URL?: string;
 
   // Auth Configuration
   NEXT_PUBLIC_USE_BEARER_TOKEN?: string;
@@ -63,6 +65,7 @@ class EnvConfigManager {
         process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE,
       NEXT_PUBLIC_USER_MANAGEMENT_API_BASE:
         process.env.NEXT_PUBLIC_USER_MANAGEMENT_API_BASE,
+      NEXT_PUBLIC_MCP_BASE_URL: process.env.NEXT_PUBLIC_MCP_BASE_URL,
       NEXT_PUBLIC_USE_BEARER_TOKEN: process.env.NEXT_PUBLIC_USE_BEARER_TOKEN,
     };
   }
@@ -122,6 +125,16 @@ class EnvConfigManager {
     return 'http://localhost:8004';
   }
 
+  /**
+   * Public MCP endpoint shown on the marketing pages, e.g.
+   * https://mcp.sandbox.brainkb.org/mcp (sandbox) or
+   * https://mcp.brainkb.org/mcp (production, the default).
+   */
+  public get mcpEndpoint(): string {
+    const base = (this.config.NEXT_PUBLIC_MCP_BASE_URL || 'https://mcp.brainkb.org').replace(/\/+$/, '');
+    return `${base}/mcp`;
+  }
+
   public get taxonomyEndpoint(): string | undefined {
     return this.config.NEXT_PUBLIC_API_QUERY_TAXONOMY_ENDPOINT;
   }
@@ -174,6 +187,7 @@ class EnvConfigManager {
       'NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE': () => this.tokenEndpointQueryService,
       'NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE': () => this.tokenEndpointUserManagementService,
       'NEXT_PUBLIC_API_ADMIN_HOST': () => this.apiHost,
+      'NEXT_PUBLIC_MCP_BASE_URL': () => this.config.NEXT_PUBLIC_MCP_BASE_URL,
       'NEXT_PUBLIC_API_QUERY_ENDPOINT': () => this.config.NEXT_PUBLIC_API_QUERY_ENDPOINT,
     };
 

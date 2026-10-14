@@ -1,24 +1,24 @@
 "use client";
 
 /**
- * Explore — data-type cards. Content is placeholder (see
- * design_handoff_brainkb_site/README.md) — real data to fetch in
- * production: data types with counts.
+ * Explore — data-type cards. Content is placeholder — real data to fetch in
+ * production: data types with counts. Uses the Home page's design (the `.lp`
+ * classes in components/marketing/landing/landing.css).
  */
 
 import { useState } from "react";
 import Link from "next/link";
 import MarketingHeader from "../components/marketing/MarketingHeader";
 import MarketingFooter from "../components/marketing/MarketingFooter";
-import { instrumentSerif, plexSans, plexMono } from "../components/marketing/fonts";
-import { COLORS, CARD_SURFACE, CARD_TITLE_FONT } from "../components/marketing/tokens";
+import { dmSans, plexMono } from "../components/marketing/fonts";
+import "../components/marketing/landing/landing.css";
 
 // `href: null` means that data type has no browse page yet — the card renders
 // as plain text until one exists. `note`, when set, shows as a muted line on the card.
-const TYPES: { name: string; desc: string; sources: string; programs: readonly string[]; href: string | null; note?: string }[] = [
-  { name: "Cell types", desc: "Taxonomies and cell-type definitions with markers and regions.", sources: "BICAN", programs: ["BICAN"], href: null },
-  { name: "Library generation", desc: "The path from donor to sequencing library — brain slabs, tissue samples, the cell samples derived from them, and the cDNA, libraries, and aliquots they produce.", sources: "BICAN", programs: ["BICAN"], href: "/browse/library-generation", note: "Temporary — this card will be removed." },
-  { name: "BICAN Resources", desc: "All resources published by the BICAN consortium.", sources: "BICAN", programs: ["BICAN"], href: "/browse/bican-resources" },
+const TYPES: { name: string; icon: string; desc: string; sources: string; programs: readonly string[]; href: string | null; note?: string }[] = [
+  { name: "Cell types", icon: "◉", desc: "Taxonomies and cell-type definitions with markers and regions.", sources: "BICAN", programs: ["BICAN"], href: null },
+  { name: "Library generation", icon: "▦", desc: "The path from donor to sequencing library — brain slabs, tissue samples, the cell samples derived from them, and the cDNA, libraries, and aliquots they produce.", sources: "BICAN", programs: ["BICAN"], href: "/browse/library-generation", note: "Temporary — this card will be removed." },
+  { name: "BICAN Resources", icon: "▣", desc: "All resources published by the BICAN consortium.", sources: "BICAN", programs: ["BICAN"], href: "/browse/bican-resources" },
 ];
 
 const PROGRAMS = ["All", "BICAN", "BBQS"] as const;
@@ -28,103 +28,55 @@ export default function ExplorePage() {
   const visibleTypes = TYPES.filter((t) => activeProgram === "All" || t.programs.includes(activeProgram));
 
   return (
-    <div
-      className={`${instrumentSerif.variable} ${plexSans.variable} ${plexMono.variable}`}
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        background: COLORS.pageBg,
-        color: COLORS.ink,
-        fontFamily: "var(--font-plex-sans), system-ui, sans-serif",
-      }}
-    >
+    <div className={`lp ${dmSans.variable} ${plexMono.variable}`}>
       <MarketingHeader />
 
-      <section
-        style={{
-          maxWidth: 1200,
-          margin: "0 auto",
-          padding: "80px 28px 104px",
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          gap: 40,
-        }}
-      >
-        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-          <h1 style={{ margin: 0, font: "400 clamp(34px,4.2vw,52px)/1.05 var(--font-instrument-serif), serif", letterSpacing: "-.02em", color: COLORS.accent }}>
-            Explore the graph.
-          </h1>
-          <p style={{ margin: 0, maxWidth: 900, color: COLORS.body, fontSize: 17, lineHeight: 1.55 }}>
-            BrainKB points to data from programs like BICAN and BBQS.
-          </p>
-          <span style={{ fontSize: 13, fontStyle: "italic", color: COLORS.muted }}>
-            TODO: each card will lead to a separate website
-          </span>
-        </div>
+      <main className="wrap">
+        <section className="page-head">
+          <span className="eyebrow">Explore</span>
+          <h1>Explore the graph.</h1>
+          <p className="lead">BrainKB points to data from programs like BICAN and BBQS.</p>
+          <p className="note">TODO: each card will lead to a separate website</p>
+        </section>
 
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {PROGRAMS.map((p) => {
-            const active = p === activeProgram;
-            return (
-              <button
-                key={p}
-                onClick={() => setActiveProgram(p)}
-                style={{
-                  background: active ? COLORS.ink : COLORS.cardBg,
-                  color: active ? COLORS.pageBg : COLORS.body,
-                  border: `1px solid ${active ? COLORS.ink : COLORS.border}`,
-                  borderRadius: 999,
-                  padding: "8px 16px",
-                  font: "500 13px var(--font-plex-mono)",
-                  cursor: "pointer",
-                }}
-              >
+        <section className="page-body">
+          <div className="scopes" role="group" aria-label="Filter by program" style={{ margin: "0 0 22px" }}>
+            {PROGRAMS.map((p) => (
+              <button key={p} type="button" aria-pressed={p === activeProgram} onClick={() => setActiveProgram(p)}>
                 {p}
               </button>
-            );
-          })}
-        </div>
+            ))}
+          </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,260px),1fr))", gap: 16 }}>
-          {visibleTypes.map((t) => {
-            const body = (
-              <>
-                <span style={{ font: CARD_TITLE_FONT, color: COLORS.accentPurple }}>{t.name}</span>
-                <span style={{ color: COLORS.body, fontSize: 15, lineHeight: 1.5 }}>{t.desc}</span>
-                <span style={{ marginTop: "auto", paddingTop: 10, font: "500 12px var(--font-plex-mono)", color: COLORS.muted }}>
-                  {t.sources}
-                </span>
-                {t.note && (
-                  <span style={{ fontSize: 13, fontStyle: "italic", color: COLORS.muted }}>{t.note}</span>
-                )}
-                {t.href && (
-                  <span style={{ color: COLORS.accentPurple, fontWeight: 600, fontSize: 15 }}>Browse →</span>
-                )}
-              </>
-            );
-            const cardStyle = {
-              ...CARD_SURFACE,
-              color: COLORS.ink,
-              display: "flex",
-              flexDirection: "column" as const,
-              alignItems: "flex-start",
-              gap: 10,
-              textAlign: "left" as const,
-            };
-            return t.href ? (
-              <Link key={t.name} href={t.href} style={cardStyle}>
-                {body}
-              </Link>
-            ) : (
-              <div key={t.name} style={cardStyle}>
-                {body}
-              </div>
-            );
-          })}
-        </div>
-      </section>
+          {visibleTypes.length === 0 ? (
+            <div className="empty-card">No data types for {activeProgram} yet.</div>
+          ) : (
+            <div className="grid3">
+              {visibleTypes.map((t) => {
+                const body = (
+                  <>
+                    <div className="ico" aria-hidden="true">{t.icon}</div>
+                    <h3>{t.name}</h3>
+                    <p>{t.desc}</p>
+                    {t.note && <p className="note">{t.note}</p>}
+                    <span className="src-line">{t.sources}</span>
+                    {t.href && <span className="go">Browse →</span>}
+                  </>
+                );
+                return t.href ? (
+                  <Link key={t.name} href={t.href} className="card">
+                    {body}
+                  </Link>
+                ) : (
+                  <div key={t.name} className="card">
+                    {body}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      </main>
 
       <MarketingFooter />
     </div>
