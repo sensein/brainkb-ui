@@ -314,6 +314,13 @@ export default function IngestKnowledgeGraphPage() {
                             </option>
                         ))}
                     </select>
+                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        Who can read this data depends on the space the graph belongs to.{" "}
+                        <a href="/user/spaces" className="text-blue-700 dark:text-blue-400 underline">
+                            Make a space public, private or shared with your team
+                        </a>
+                        .
+                    </p>
                 </div>
 
                 {/* File Upload Section */}

@@ -43,7 +43,7 @@ function DashTools() {
   // role; admins can grant themselves access via /admin/page-access if they
   // need it. Backend check_access also bypasses only for SuperAdmin (see
   // PageAccessRepository.check_access) — this is belt-and-braces.
-  const keys = TOOL_REGISTRY.map((t) => t.pageKey);
+  const keys = TOOL_REGISTRY.filter((t) => !t.openToAll).map((t) => t.pageKey);
   const { loading, allowedMap, refresh } = usePageAccessBatch(keys);
   const { isSuperAdmin } = useCurrentUser();
   const bypass = !ENABLE_PAGE_ACCESS_GATE || isSuperAdmin;
@@ -75,8 +75,8 @@ function DashTools() {
       {/* Mobile: min(280px,100%) lets the auto-fill grid collapse to one column without overflowing narrow phones */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(280px, 100%), 1fr))", gap: 12 }}>
         {TOOL_REGISTRY.map((t) => {
-          const allowed = bypass ? true : allowedMap[t.pageKey];
-          const ready = bypass ? true : !loading;
+          const allowed = bypass || t.openToAll ? true : allowedMap[t.pageKey];
+          const ready = bypass || t.openToAll ? true : !loading;
           const inner = (
             <div
               className="bkb-card"

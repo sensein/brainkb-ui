@@ -22,6 +22,12 @@ export interface ToolEntry {
    * adminOnly is set).
    */
   adminOnly?: boolean;
+  /**
+   * If true, every signed-in user gets this tool without a page-access entry,
+   * because the backend already scopes what each person can do there (e.g.
+   * Spaces: you only manage spaces you own). Skipped by /admin/page-access.
+   */
+  openToAll?: boolean;
 }
 
 /**
@@ -37,6 +43,15 @@ export const ALL_TOOLS: ToolEntry[] = [
     description: "Upload Knowledge Graph files in JSON-LD or Turtle to a named graph.",
     icon: "database",
     color: "var(--bkb-primary)",
+  },
+  {
+    pageKey: "tools.spaces",
+    href: "/user/spaces",
+    title: "Spaces",
+    description: "See your spaces, make them public or private, and share them with your team.",
+    icon: "graph",
+    color: "var(--bkb-evidence)",
+    openToAll: true,
   },
   {
     pageKey: "tools.job-status",

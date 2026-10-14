@@ -132,7 +132,7 @@ export default function AdminPageAccessPage() {
   const knownKeys = new Set(pages.map((p) => p.page_key));
   // Skip admin-only tools — registering them in the page-access table is a
   // no-op since the gate enforces admin via the `adminOnly` prop directly.
-  const seedables = TOOL_REGISTRY.filter((t) => !knownKeys.has(t.pageKey) && !t.adminOnly);
+  const seedables = TOOL_REGISTRY.filter((t) => !knownKeys.has(t.pageKey) && !t.adminOnly && !t.openToAll);
 
   function preFillFromTool(t: typeof TOOL_REGISTRY[number]) {
     setSelectedKey(null);
