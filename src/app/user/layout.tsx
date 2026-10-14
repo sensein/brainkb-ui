@@ -17,7 +17,7 @@ export default function UserRootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <Theme theme="light" style={{ background: "#f0eee9", minHeight: "calc(100vh - 64px)" }}>
+    <Theme theme="light" style={{ background: "#f6f8fb", minHeight: "calc(100vh - 64px)" }}>
       <UserBreadcrumb />
       <AuthGate>
         <UserBanGate>{children}</UserBanGate>

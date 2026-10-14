@@ -209,7 +209,7 @@ export default function DashboardPage() {
   }, [user]);
 
   return (
-    <Theme theme="light" style={{ background: "#f0eee9", minHeight: "calc(100vh - 64px)" }}>
+    <Theme theme="light" style={{ background: "#f6f8fb", minHeight: "calc(100vh - 64px)" }}>
       <div style={{ minHeight: "100%", background: "var(--bkb-bg)" }}>
         <div style={{ background: "var(--bkb-surface)", borderBottom: "1px solid var(--bkb-border)" }}>
           {/* home-pad shrinks the horizontal padding on tablet/phone */}

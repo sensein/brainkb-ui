@@ -16,7 +16,7 @@ import MarketingHeader from "../marketing/MarketingHeader";
 import MarketingFooter from "../marketing/MarketingFooter";
 import { Theme } from "@/src/app/components/design-system";
 
-const MARKETING_ROUTES = new Set(["/", "/mcp", "/skills", "/explore"]);
+const MARKETING_ROUTES = new Set(["/", "/search", "/mcp", "/skills", "/explore"]);
 
 export default function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -34,7 +34,7 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
       {/* No pt-16 spacer here: MarketingHeader is `position: sticky` (in
           document flow), unlike the old Navbar's `position: fixed`, which
           needed that padding to keep from covering page content. */}
-      <Theme theme="light" style={{ background: "#f0eee9" }}>
+      <Theme theme="light" style={{ background: "#f6f8fb" }}>
         <main className="flex min-h-screen flex-col">{children}</main>
       </Theme>
       <MarketingFooter />
