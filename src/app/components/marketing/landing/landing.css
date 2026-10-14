@@ -393,3 +393,8 @@ html:has(.lp){scroll-behavior:smooth}
 @media(max-width:680px){.lp .page-head{padding:44px 0 28px}.lp .page-head h1,.lp .hero.page h1{font-size:36px;letter-spacing:-1.6px}.lp .band-section{padding:58px 0}.lp .hero.page{padding:44px 0 52px}}
 .lp .blue-items .dec-item .di{background:var(--blue-50);color:var(--blue)}
 .lp .blue-items .dec-item:hover{border-color:#bfdbfe;box-shadow:0 12px 28px #1d4ed812}
+.lp .hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:28px}
+.lp .card .top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.lp .grid3.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:1100px){.lp .grid3.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:680px){.lp .grid3.four{grid-template-columns:1fr}}
