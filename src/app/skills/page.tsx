@@ -15,6 +15,7 @@ import SkillInstall from "./SkillInstall";
 import "../components/marketing/landing/landing.css";
 
 const SKILLS_REPO = "https://github.com/sensein/agent_skills";
+const NPM_PACKAGE = "https://www.npmjs.com/package/brainkb";
 
 const SKILLS = [
   {
@@ -62,7 +63,7 @@ const SKILLS = [
 ] as const;
 
 const STEPS = [
-  { lbl: "INSTALL", title: "Add the skills", desc: "One command copies them into your agent's skills folder." },
+  { lbl: "INSTALL", title: "Add the skills", desc: "npx brainkb install for BrainKB, one script for the rest." },
   { lbl: "ASK", title: "Ask in plain language", desc: "Point your agent at a paper, a folder of PDFs or a review question." },
   { lbl: "EXTRACT", title: "Get evidence-backed records", desc: "Every entity and claim keeps the sentence and source it came from." },
   { lbl: "INGEST", title: "Send them to BrainKB", desc: "Validated Turtle goes into your space, with provenance recorded." },
@@ -155,15 +156,21 @@ export default function SkillsPage() {
           <div className="install" style={{ marginTop: 0 }}>
             <div>
               <span className="eyebrow">Install</span>
-              <h2>One command,<br />any agent.</h2>
+              <h2>Two commands,<br />any agent.</h2>
               <p style={{ marginTop: 16 }}>
-                Each skill is a flat directory with a <code>SKILL.md</code>, following the cross-agent Agent Skills
-                format. Clone the repository and install the ones you want. Add <code>--scope project</code> to
-                install into the current project instead of your user folder.
+                The BrainKB skill is on npm: <code>npx brainkb install</code> adds it and registers the BrainKB MCP
+                server. StructSense and SynthScholar install from GitHub. Both follow the cross-agent Agent Skills
+                format, and both take <code>--scope project</code> to install into the current project instead of your
+                user folder.
               </p>
-              <a className="go" href={SKILLS_REPO} target="_blank" rel="noopener noreferrer">
-                All skills on GitHub ↗
-              </a>
+              <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
+                <a className="go" href={NPM_PACKAGE} target="_blank" rel="noopener noreferrer">
+                  brainkb on npm ↗
+                </a>
+                <a className="go" href={SKILLS_REPO} target="_blank" rel="noopener noreferrer">
+                  All skills on GitHub ↗
+                </a>
+              </div>
             </div>
             <SkillInstall repo={SKILLS_REPO} />
           </div>

@@ -126,6 +126,19 @@ class EnvConfigManager {
   }
 
   /**
+   * Origin of the query service (e.g. http://localhost:8010), taken from the
+   * SPARQL endpoint when that is an absolute URL, else NEXT_PUBLIC_API_ADMIN_HOST.
+   */
+  public get queryServiceBase(): string {
+    const endpoint = this.config.NEXT_PUBLIC_API_QUERY_ENDPOINT;
+    try {
+      return new URL(endpoint).origin;
+    } catch {
+      return this.config.NEXT_PUBLIC_API_ADMIN_HOST.replace(/\/+$/, '');
+    }
+  }
+
+  /**
    * Public MCP endpoint shown on the marketing pages, e.g.
    * https://mcp.sandbox.brainkb.org/mcp (sandbox) or
    * https://mcp.brainkb.org/mcp (production, the default).

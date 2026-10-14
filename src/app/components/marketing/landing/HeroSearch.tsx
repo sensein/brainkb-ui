@@ -3,30 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
-const SCOPES = [
-  { key: "all", label: "All" },
-  { key: "entity", label: "Entities" },
-  { key: "cell", label: "Cell types" },
-  { key: "region", label: "Brain regions" },
-  { key: "paper", label: "Papers & reviews" },
-  { key: "space", label: "Spaces" },
-];
-
-const TRY = ["Purkinje cell", "parvalbumin interneurons", "hippocampus", "basal ganglia"];
+const TRY = ["neuron", "cell type", "hippocampus", "single-cell", "taxonomy"];
 
 export const SEARCH_INPUT_ID = "lp-q";
 
-/** Hero search: opens /search; scope chips and "try" links feed the query string. */
+/** Hero search: opens /search; the "try" links run an example query. */
 export default function HeroSearch() {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const [q, setQ] = useState("");
-  const [scope, setScope] = useState("all");
 
-  const go = (term: string, s = scope) => {
+  const go = (term: string) => {
     const t = term.trim();
     if (!t) return;
-    router.push(`/search?${new URLSearchParams({ q: t, scope: s })}`);
+    router.push(`/search?${new URLSearchParams({ q: t })}`);
   };
 
   // "/" focuses the search box from anywhere on the page; Escape clears it.
@@ -75,21 +65,6 @@ export default function HeroSearch() {
           Search
         </button>
       </label>
-      <div className="scopes" role="group" aria-label="Search scope">
-        {SCOPES.map((s) => (
-          <button
-            key={s.key}
-            type="button"
-            aria-pressed={scope === s.key}
-            onClick={() => {
-              setScope(s.key);
-              go(q, s.key);
-            }}
-          >
-            {s.label}
-          </button>
-        ))}
-      </div>
       <div className="try">
         <b>Try it now, no login:</b>
         {TRY.map((t) => (

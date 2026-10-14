@@ -112,3 +112,11 @@
 @media(max-width:1000px){.sp .layout{grid-template-columns:minmax(0,1fr)}.sp aside{position:static}}
 @media(max-width:720px){.sp .wrap{padding:0 16px}.sp .best-b{grid-template-columns:1fr}.sp .facts{border-right:0;border-bottom:1px solid var(--line)}.sp .ideas{grid-template-columns:1fr}.sp .hit{grid-template-columns:auto 1fr}.sp .view{display:none}.sp .searchbox kbd{display:none}.sp .searchbox input{font-size:16px}.sp .searchbox .btn{padding:0 16px}.sp .best h2{font-size:23px}}
 @media(prefers-reduced-motion:reduce){.sp *{transition:none!important}}
+
+/* live results */
+.sp .hit .meta .iri{font-family:var(--font-plex-mono),monospace;font-size:11.5px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sp .hit p.lead-snippet{margin-top:8px}
+.sp button.view{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;font-size:13px}
+.sp button.view:hover{border-color:#bfdbfe;background:var(--blue-50)}
+.sp .btn.more{margin-top:6px;width:100%}
+.sp .start .rel a{font-family:inherit}
