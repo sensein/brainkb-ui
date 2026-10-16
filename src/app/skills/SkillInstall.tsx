@@ -1,10 +1,10 @@
 "use client";
 
-// Install commands per agent, from sensein/agent_skills scripts/install_skills.py.
+// Install commands per agent: SynthScholar ships on npm (npx synthscholar);
+// StructSense is installed from sensein/agent_skills scripts/install_skills.py.
+// Shown as two separate blocks, since they are independent installs.
 
 import { useState } from "react";
-
-const SKILLS = "structsense synthscholar";
 
 const AGENTS = [
   { name: "Claude Code", hint: "# installs to ~/.claude/skills", flag: "--agent claude" },
@@ -14,15 +14,26 @@ const AGENTS = [
 
 export default function SkillInstall({ repo }: { repo: string }) {
   const [i, setI] = useState(0);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
   const a = AGENTS[i];
-  const cmd = `git clone ${repo}\ncd agent_skills\npython scripts/install_skills.py ${a.flag} --skills ${SKILLS}`;
+  const fromGit = (skill: string) =>
+    `git clone ${repo}\ncd agent_skills\npython scripts/install_skills.py ${a.flag} --skills ${skill}`;
+  const blocks = [
+    {
+      skill: "SynthScholar",
+      ways: [
+        { via: "from npm", cmd: `npx synthscholar install ${a.flag}` },
+        { via: "or from GitHub", cmd: fromGit("synthscholar") },
+      ],
+    },
+    { skill: "StructSense", ways: [{ via: "from GitHub", cmd: fromGit("structsense") }] },
+  ];
 
-  const copy = async () => {
+  const copy = async (id: string, cmd: string) => {
     try {
       await navigator.clipboard.writeText(cmd);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      setCopied(id);
+      setTimeout(() => setCopied(null), 1500);
     } catch {
       /* clipboard unavailable — ignore */
     }
@@ -38,7 +49,7 @@ export default function SkillInstall({ repo }: { repo: string }) {
             aria-selected={k === i}
             onClick={() => {
               setI(k);
-              setCopied(false);
+              setCopied(null);
             }}
           >
             <i>›_</i>
@@ -47,12 +58,25 @@ export default function SkillInstall({ repo }: { repo: string }) {
         ))}
       </div>
       <div className="hint">{a.hint}</div>
-      <div className="copybar">
-        <pre>{cmd}</pre>
-        <button type="button" className="btn" onClick={copy}>
-          {copied ? "Copied" : "Copy"}
-        </button>
-      </div>
+      {blocks.map((b) =>
+        b.ways.map((w, n) => {
+          const id = `${b.skill}-${n}`;
+          return (
+            <div key={id} className="install-block">
+              <div className={`install-label${n ? " alt" : ""}`}>
+                {n === 0 && <b>{b.skill}</b>}
+                <span>{w.via}</span>
+              </div>
+              <div className="copybar">
+                <pre>{w.cmd}</pre>
+                <button type="button" className="btn" onClick={() => copy(id, w.cmd)}>
+                  {copied === id ? "Copied" : "Copy"}
+                </button>
+              </div>
+            </div>
+          );
+        }),
+      )}
     </div>
   );
 }

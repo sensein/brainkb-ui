@@ -48,7 +48,7 @@ const SKILLS = [
 ] as const;
 
 const STEPS = [
-  { lbl: "INSTALL", title: "Add the skills", desc: "One script copies them into your agent's skills folder." },
+  { lbl: "INSTALL", title: "Add the skills", desc: "npx for SynthScholar, one script for StructSense, into your agent's skills folder." },
   { lbl: "ASK", title: "Ask in plain language", desc: "Point your agent at a paper, a folder of PDFs or a review question." },
   { lbl: "EXTRACT", title: "Get evidence-backed records", desc: "Every entity and claim keeps the sentence and source it came from." },
   { lbl: "INGEST", title: "Send them to BrainKB", desc: "Validated Turtle goes into your space over MCP, with provenance recorded." },
@@ -144,8 +144,9 @@ export default function SkillsPage() {
               <h2>One command,<br />any agent.</h2>
               <p style={{ marginTop: 16 }}>
                 Each skill is a flat directory with a <code>SKILL.md</code>, following the cross-agent Agent Skills
-                format. Clone the repository and install the ones you want. Add <code>--scope project</code> to
-                install into the current project instead of your user folder.
+                format. SynthScholar installs with <code>npx synthscholar install</code> or from the repository; StructSense
+                installs from the repository with its install script. Add <code>--scope project</code> to either to install into
+                the current project instead of your user folder.
               </p>
               <a className="go" href={SKILLS_REPO} target="_blank" rel="noopener noreferrer">
                 All skills on GitHub ↗

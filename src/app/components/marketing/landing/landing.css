@@ -385,9 +385,13 @@ html:has(.lp){scroll-behavior:smooth}
 
 /* MCP install card: same frame as the hero demo */
 .lp .demo .copybar{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;margin:0 20px 20px;padding:16px 18px;background:var(--pale);border:1px solid var(--line);border-radius:10px}
-.lp .demo .copybar pre{margin:0;font:13px/1.65 var(--font-plex-mono),monospace;color:var(--ink);white-space:pre-wrap;word-break:break-all}
+.lp .demo .copybar pre{margin:0;font:13px/1.65 var(--font-plex-mono),monospace;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere}
 .lp .demo .copybar .btn{flex:none;padding:6px 12px;font-size:12.5px}
 .lp .demo .hint{padding:18px 20px 10px;font:12.5px/1.6 var(--font-plex-mono),monospace;color:var(--muted)}
+.lp .demo .install-label{display:flex;align-items:baseline;gap:10px;margin:6px 20px 8px;font-size:13px}
+.lp .demo .install-label b{color:var(--ink);font-weight:600}
+.lp .demo .install-label span{font:12px var(--font-plex-mono),monospace;color:var(--muted)}
+.lp .demo .install-label.alt{margin-top:-8px}
 
 @media(max-width:900px){.lp .grid2,.lp .install{grid-template-columns:1fr}.lp .page-head h1,.lp .hero.page h1{font-size:44px}}
 @media(max-width:680px){.lp .page-head{padding:44px 0 28px}.lp .page-head h1,.lp .hero.page h1{font-size:36px;letter-spacing:-1.6px}.lp .band-section{padding:58px 0}.lp .hero.page{padding:44px 0 52px}}
