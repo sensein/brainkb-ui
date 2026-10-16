@@ -1,0 +1,373 @@
+# Chapter 2: StructSense. See README.md in this folder for the format.
+id: structsense
+icon: ◆
+name: StructSense
+tagline: Extract from papers
+summary: Extract entities and relations from papers, mapped to ontologies, as validated Turtle.
+facts:
+  Runs on: Your machine
+  Requires: Python 3
+  Output: Turtle + JSON
+prereqs:
+  - Python 3
+  - Git
+  - An AI assistant, or a model API key for headless runs
+  - Basic command line
+links:
+  - label: StructSense on GitHub
+    href: "{{SKILLS_REPO}}/tree/main/skills/structsense"
+  - label: Extended guide
+    href: "{{SKILLS_REPO}}/blob/main/skills/structsense/EXTENDED-GUIDE.md"
+  - label: Worked examples
+    href: "{{SKILLS_REPO}}/tree/main/skills/structsense/examples"
+  - label: Trusted ontologies
+    href: "{{SKILLS_REPO}}/tree/main/skills/structsense/trusted_ontologes"
+help: "{{SKILLS_REPO}}/issues"
+logo: /structsense-logo.png
+tryIt:
+  - label: GitHub
+    cmd: |-
+      git clone {{SKILLS_REPO}}
+      cd agent_skills
+      python scripts/install_skills.py --agent claude --skills structsense
+sections:
+  - title: Overview
+    subtitle: What StructSense extracts, and from what.
+    blocks:
+      - p: >-
+          StructSense pulls named entities and the relations a source states out of papers, notes and web
+          pages. It resolves aliases to stable entities, keeps the evidence sentence for each one, maps them
+          to ontology terms, and writes the result as validated Turtle.
+      - features:
+          - title: Named entities
+            desc: General, neuroscience or CNS cell types, with their mentions and evidence.
+          - title: Research resources
+            desc: Tools, datasets, models and pipelines, as a resource knowledge graph.
+          - title: Your own schema
+            desc: Fill a JSON schema you supply; results stay JSON.
+          - title: ABCD / HBCD studies
+            desc: Study results, with the data dictionaries bundled; no network or R.
+          - title: Allen (AIT) cell types
+            desc: Map a paper's cell types to Allen Institute taxonomies, with evidence.
+          - title: Ontology mapping
+            desc: >-
+              Every entity linked to ontology terms from trusted sources; see [Ontologies it
+              uses](#structsense--ontologies-it-uses).
+  - title: Ontologies it uses
+    subtitle: The shape of the output, and where ontology terms come from.
+    blocks:
+      - h: "The default ontology: the shape of the output"
+      - p: >-
+          Results are written in BrainKB's own ontologies, shipped in `default_ontology/`, and checked against
+          their SHACL shapes before you get them:
+      - table:
+          cols:
+            - Ontology
+            - Used for
+          rows:
+            - - Named Entity Ontology 2.4 (`https://brainkb.org/ner/`)
+              - >-
+                Entities, mentions, evidence, mapping decisions, causal claims, and the record of each
+                extraction run
+            - - BrainKB Resource Ontology 0.5.6
+              - "Resource runs: what a tool or dataset is, what it applies to, inputs/outputs, versions"
+            - - "`ttl_config.json`, `label_class_map.json`"
+              - "The rules: IRI scheme, relation predicates, which label becomes which class"
+      - h: "Trusted ontologies: what entities are mapped to"
+      - p: >-
+          The terms an entity is linked to come from **trusted ontologies**: the same ontologies loaded in
+          BrainKB's graph. 115 files ship in `trusted_ontologies/`; **42 are switched on by default**,
+          including:
+      - table:
+          cols:
+            - Priority
+            - Ontology
+            - Covers
+          rows:
+            - - "1"
+              - BKE (BICAN taxonomy)
+              - BICAN cell-type vocabulary
+            - - "2"
+              - CL
+              - Cell types
+            - - "3"
+              - GO
+              - Biological processes, functions, components
+            - - "4"
+              - UBERON
+              - Anatomy and brain regions
+            - - "5"
+              - PCL
+              - Provisional cell types
+            - - 6–9
+              - MONDO, HP, ChEBI, NCBITaxon
+              - Diseases, phenotypes, chemicals, species
+      - p: >-
+          `python -m scripts.concept_mapping show` lists every ontology and whether it's on. Each entity type
+          only accepts certain ontologies: a **CellType** maps to CL or PCL, a **BrainRegion** to UBERON.
+      - h: If a term isn't in the trusted ontologies
+      - p: >-
+          Mapping falls through a fixed chain of sources. A term only moves to the next source if every
+          earlier one left it unmapped:
+      - include: cascade
+      - p: >-
+          Every link records which source found it (e.g. `trusted:cl`, `local_hybrid`, `ols`, `bioportal`) and
+          how well it matched. To change the order or the sources, see [Mapping commands &
+          configuration](#structsense--mapping-commands-configuration).
+  - title: Mapping commands & configuration
+    subtitle: Map, look up, read match types, and change where StructSense looks.
+    blocks:
+      - h: Commands
+      - step:
+          title: Index the trusted ontologies, once
+          blocks:
+            - code:
+                label: terminal
+                cmd: python -m scripts.concept_mapping index
+      - step:
+          title: Map every entity in a result
+          desc: Add `--only-unmapped` to re-try only what's still unmapped.
+          blocks:
+            - code:
+                label: terminal
+                cmd: python -m scripts.concept_mapping map result.json
+      - step:
+          title: Look up one term
+          blocks:
+            - code:
+                label: terminal
+                cmd: python -m scripts.concept_mapping lookup "SST interneuron" --label CellType
+      - step:
+          title: See the configured sources and ontologies
+          blocks:
+            - code:
+                label: terminal
+                cmd: python -m scripts.concept_mapping show
+      - h: Match types
+      - p: >-
+          Every link records how good a match it is, so close matches can be reviewed rather than treated as
+          identical:
+      - table:
+          cols:
+            - Match
+            - Meaning
+          rows:
+            - - exact
+              - "The same concept: a label, exact synonym or symbol matched"
+            - - close
+              - Similar enough for some uses, but not the same
+            - - broad / narrow
+              - The ontology term is more general / more specific than the entity
+            - - related
+              - Associated, not the same
+      - p: Each link also records its source, e.g. `trusted:cl`, `local_hybrid`, `ols` or `bioportal`.
+      - h: Configure the mapping
+      - table:
+          cols:
+            - To…
+            - Edit
+          rows:
+            - - Reorder, add, or switch an ontology on/off
+              - "`trusted_ontologes/priority.md` (write `off` to disable), then re-run `index`"
+            - - Change the source order, or drop a source
+              - "`sources_priority` in `concept_mapping.json`"
+            - - Point to your semantic concept mapper
+              - "`remote.local_hybrid_url` in `concept_mapping.json`, or `--mapper-url`"
+            - - Fix a term the ontologies get wrong
+              - "`curated_mappings` in `concept_mapping.json`"
+      - note: >-
+          After changing `priority.md`, `python -m scripts.concept_mapping readme` regenerates the ontology
+          list.
+  - title: What you need
+    subtitle: Required to run at all, and optional extras with what they unlock.
+    blocks:
+      - needs:
+          required:
+            - name: Python 3 and the core packages
+              why: PDF reading, RDF and validation. No GPU, no API key, no R.
+              cmd: pip install -r requirements.txt
+            - name: The ontology index, once
+              why: Indexes the trusted ontologies for offline mapping. About 2 minutes, no network.
+              cmd: python -m scripts.concept_mapping index
+            - name: A model
+              why: By default the assistant running the skill is the model, so no LLM key is needed.
+          optional:
+            - name: Semantic concept mapper (local)
+              why: Your own semantic concept mapper service, tried when the trusted ontologies have no match.
+              cmd: "http://localhost:8000  (check: /docs)"
+            - name: Network access
+              why: For OLS and BioPortal, after the offline sources.
+            - name: BioPortal key (free)
+              why: BioPortal as the last mapping source.
+              cmd: export BIOPORTAL_API_KEY=…
+            - name: Docling
+              why: Scanned PDFs (OCR), DOCX, PPTX, XLSX, HTML and images.
+              cmd: pip install docling
+            - name: spaCy
+              why: Sentence-aligned chunking; otherwise a regex splitter is used.
+              cmd: pip install "spacy>=3.7" && python -m spacy download en_core_web_sm
+            - name: NER ensemble
+              why: >-
+                Higher recall with HuggingFace models. Heavy (torch, GBs of weights); use the minimal profile
+                on a laptop.
+              cmd: pip install -r requirements-ner.txt
+            - name: Your own model
+              why: Run headless with OpenRouter, OpenAI, Anthropic, Gemini, or local Ollama/vLLM.
+              cmd: pip install -r requirements-llm.txt
+  - title: Install
+    subtitle: Set up StructSense on your machine and install the required packages.
+    blocks:
+      - step:
+          title: Add the skill
+          desc: >-
+            StructSense installs from GitHub (it isn't on npm). Clone the skills repository and install it
+            into your assistant's skills folder.
+          blocks:
+            - code:
+                label: terminal
+                cmd: |-
+                  git clone {{SKILLS_REPO}}
+                  cd agent_skills
+                  python scripts/install_skills.py --agent claude --skills structsense
+            - note: Use `--agent codex` for Codex, or `--dest /path/to/skills` for any other assistant.
+      - step:
+          title: Install its packages and index the ontologies
+          desc: Install the Python dependencies and build the offline index used for ontology mapping.
+          blocks:
+            - code:
+                label: terminal · in the skill folder, e.g. ~/.claude/skills/structsense
+                cmd: |-
+                  pip install -r requirements.txt
+                  python -m scripts.concept_mapping index
+      - step:
+          title: "Optional: start the semantic concept mapper"
+          desc: >-
+            Run the [semantic concept mapper](#semantic-concept-mapper) on port 8000 if you want it in the
+            mapping chain (see its chapter), and check it's up:
+          blocks:
+            - code:
+                label: terminal
+                cmd: curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8000/docs
+  - title: Run it
+    subtitle: In your assistant, over a folder, or headless with your own model.
+    blocks:
+      - step:
+          title: In your AI assistant
+          desc: "Start the request with the skill's name, then say what you want:"
+          blocks:
+            - ask: Use /structsense to extract the cell types from paper.pdf and map them to ontologies
+            - callSkill: structsense
+      - step:
+          title: A folder of papers
+          desc: "PDF, JATS XML, DOCX, HTML or TXT:"
+          blocks:
+            - code:
+                label: terminal
+                cmd: >-
+                  python -m scripts.batch init --input ~/papers --variants neuroscience,cns-cells --out ~/out
+                  --model <id>
+
+                  python -m scripts.batch run --manifest ~/out/.structsense/batch.json
+
+                  python -m scripts.batch status --manifest ~/out/.structsense/batch.json
+      - step:
+          title: Headless, with your own model
+          blocks:
+            - code:
+                label: terminal
+                cmd: |-
+                  export OPENROUTER_API_KEY=sk-or-v1-...
+                  python -m scripts.pipeline --task ner --input paper.txt \
+                    --extractor openrouter/anthropic/claude-sonnet-4-6 --ner-domain neuroscience \
+                    --mapper-url http://localhost:8000
+      - step:
+          title: Map, convert and validate
+          desc: Validation must report 0 violations.
+          blocks:
+            - code:
+                label: terminal
+                cmd: |-
+                  python -m scripts.concept_mapping map result.json
+                  python -m scripts.json_to_ttl result.json --source paper.pdf
+                  python -m scripts.validate_ttl result.ttl
+  - title: Examples
+    subtitle: Real input and output, from the skill's own worked examples.
+    blocks:
+      - p: >-
+          A short neuroscience passage, from `examples/ner-example.md`. Switch between the outputs to see each
+          stage:
+      - example:
+          input:
+            label: input · paper.txt
+            cmd: |-
+              We recorded from fast-spiking parvalbumin (Pvalb)-expressing interneurons in the mouse
+              medial prefrontal cortex (mPFC) during a delayed alternation task. Pvalb interneurons
+              exhibited elevated firing rates during the delay period (mean = 28 Hz, p < 0.001).
+              Optogenetic silencing of Pvalb interneurons impaired working memory performance, while
+              silencing Sst interneurons had no effect.
+          outputs:
+            - label: Extracted (JSON)
+              cmd: |-
+                {"entity": "Pvalb interneurons", "label": "CellType",
+                 "sentence": "Pvalb interneurons exhibited elevated firing rates during the delay period (mean = 28 Hz, p < 0.001).",
+                 "start": 146, "end": 164}
+
+                {"entity": "medial prefrontal cortex", "label": "BrainRegion", "start": 81, "end": 105}
+                {"entity": "mPFC", "label": "BrainRegion", "start": 107, "end": 111}
+            - label: Mapped (JSON)
+              cmd: |-
+                {
+                  "entity": "medial prefrontal cortex", "label": "BrainRegion",
+                  "ontology_id": "http://purl.obolibrary.org/obo/UBERON_0009834",
+                  "ontology_label": "medial prefrontal cortex",
+                  "ontology": "UBERON",
+                  "concept_mapping_provenance": "tool",
+                  "alignment_method": "direct_tool_call"
+                }
+            - label: Turtle (excerpt)
+              cmd: |-
+                @prefix kb:   <https://brainkb.org/kb/> .
+                @prefix ner:  <https://brainkb.org/ner/> .
+                @prefix obo:  <http://purl.obolibrary.org/obo/> .
+                @prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+                @prefix prov: <http://www.w3.org/ns/prov#> .
+
+                kb:2730cbb2-… a ner:ElectrophysiologyModality, ner:NamedEntity ;
+                    rdfs:label "whole-cell current/voltage clamp recording" ;
+                    skos:exactMatch obo:OBI_0002178 ;
+                    prov:hadPrimarySource kb:41fc1908-… ;
+                    prov:wasGeneratedBy kb:d489112c-… ;
+                    ner:hasMention kb:1eb2a8ce-… ;
+                    ner:normalizedEntityKey "whole_cell_patch_clamp" .
+      - note: >-
+          The Turtle excerpt is from the bundled full-paper example (`examples/ttl/hu2026.ttl`): every entity
+          links to its mentions, its source and the run that produced it.
+  - title: What you get
+    subtitle: The files a run produces.
+    blocks:
+      - features:
+          - title: <stem>.ttl
+            desc: >-
+              One validated Turtle file per paper, in the Named Entity Ontology; failures are renamed
+              .invalid.ttl.
+          - title: Mapping provenance
+            desc: Each ontology link records its source (e.g. trusted:cl, local_hybrid, bioportal) and match type.
+          - title: <stem>.entities.json
+            desc: Entity-focused views (opt-in), also as Turtle.
+          - title: corpus_synthesis
+            desc: A JSON and Markdown summary across a folder of papers.
+          - title: ABCD / AIT outputs
+            desc: abcd_results/<stem>_abcd.*, or 7 AIT tables plus run_report.md.
+  - title: Tips & troubleshooting
+    subtitle: Common problems and how to avoid them.
+    blocks:
+      - tips:
+          - >-
+            "All PDF extractors failed" means no PDF backend is installed: run `pip install -r
+            requirements.txt`.
+          - Scanned PDFs give no text without Docling.
+          - Very small local models often produce malformed JSON.
+          - >-
+            Claude Desktop and other hosted apps can't reach your `localhost`, so the semantic concept mapper
+            won't be used there.
+          - Mappings never invent ontology IDs; unmapped entities are reported as unmapped.

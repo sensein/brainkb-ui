@@ -1,0 +1,51 @@
+# Chapter 6: Explore the graph. See README.md in this folder for the format.
+id: explore
+icon: ⌕
+name: Explore the graph
+tagline: Find knowledge
+summary: Find what's already in BrainKB and check where each fact came from.
+facts:
+  Runs in: Your browser
+  Requires: Nothing
+  Output: Answers + sources
+prereqs:
+  - A web browser
+  - An account only for private spaces
+links:
+  - label: Explore the graph
+    href: /explore
+  - label: Try a search
+    href: /search?q=hippocampus
+  - label: BrainKB docs
+    href: https://docs.brainkb.org
+help: https://github.com/sensein/brainkb/issues
+sections:
+  - title: Overview
+    subtitle: What's open to everyone, without an account.
+    blocks:
+      - p: >-
+          Public spaces in BrainKB are open knowledge: anyone can search them, browse them and download them
+          as RDF.
+      - features:
+          - title: Search
+            desc: Cell types, regions, genes and papers, across every public space.
+          - title: Check the source
+            desc: Each result links to the paper and the sentence it came from.
+          - title: Browse
+            desc: Explore the graph by data type and program.
+  - title: How to use it
+    subtitle: From a search box to the sentence a fact came from.
+    blocks:
+      - step:
+          title: Search
+          blocks:
+            - p: Search from the [home page](/), or go straight to `/search?q=hippocampus`.
+      - step:
+          title: Check the source
+          blocks:
+            - p: "Open a result to see its sources: the paper, and the sentence it was extracted from."
+      - step:
+          title: Browse
+          blocks:
+            - p: Browse by data type on [Explore the graph](/explore).
+      - note: Sign in with Globus, ORCID or GitHub only when you need private spaces. Public data never needs it.

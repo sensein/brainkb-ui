@@ -1,0 +1,278 @@
+# Chapter 3: SynthScholar. See README.md in this folder for the format.
+id: synthscholar
+icon: ▤
+name: SynthScholar
+tagline: Systematic reviews
+summary: PRISMA 2020 systematic and scoping reviews, from protocol to a verified, citable manuscript.
+facts:
+  Runs on: Your machine
+  Requires: Node 18.17+, Python 3.9+
+  Output: Review, Turtle, PDF
+prereqs:
+  - Node.js 18.17+
+  - Python 3.9+
+  - An AI assistant
+  - A contact email
+links:
+  - label: SynthScholar on GitHub
+    href: "{{SKILLS_REPO}}/tree/main/skills/synthscholar"
+  - label: synthscholar on npm
+    href: https://www.npmjs.com/package/synthscholar
+  - label: The original application
+    href: https://github.com/sensein/synthscholar
+help: "{{SKILLS_REPO}}/issues"
+logo: /synthscholar-logo.png
+tryIt:
+  - label: npx
+    cmd: |-
+      npx synthscholar install
+      npx synthscholar doctor
+  - label: GitHub
+    cmd: |-
+      git clone {{SKILLS_REPO}}
+      cd agent_skills
+      python scripts/install_skills.py --agent claude --skills synthscholar
+sections:
+  - title: Overview
+    subtitle: A PRISMA 2020 review with every decision traceable.
+    blocks:
+      - p: >-
+          SynthScholar runs a systematic or scoping review following PRISMA 2020. Every inclusion, exclusion
+          and charted answer keeps its reason and source, and whether it rests on the full text or only the
+          abstract.
+      - features:
+          - title: Protocol intake
+            desc: >-
+              Question, PICO, eligibility, databases, appraisal tool, charting form and registration,
+              validated before anything runs.
+          - title: Wide literature search
+            desc: >-
+              PubMed, Europe PMC, bioRxiv/medRxiv, OpenAlex, Semantic Scholar and arXiv; every query, date and
+              count logged for the Methods.
+          - title: Your own corpus
+            desc: PDFs you supply, or DOIs fetched open access first, then through your institution's library.
+          - title: Peer-reviewed first
+            desc: >-
+              Cites the published version over a preprint, and labels any preprint it has to read as not
+              peer-reviewed.
+          - title: Screen, chart, appraise
+            desc: RoB 2, ROBINS-I, Newcastle-Ottawa, QUADAS-2 or JBI, with GRADE certainty per outcome.
+          - title: Grounded evidence
+            desc: Every evidence span is matched back to its source text; anything not found there is flagged.
+          - title: Verified citations
+            desc: >-
+              Every DOI and PMID checked against Crossref, DataCite and PubMed; APA, Nature, Vancouver or IEEE
+              style.
+          - title: A manuscript
+            desc: >-
+              A journal-style paper with a PRISMA flow diagram, typeset in the ACM layout, after a
+              formal-writing check.
+          - title: Linked data
+            desc: The whole review as SLR-ontology Turtle, ready for BrainKB.
+  - title: What you need
+    subtitle: Required to run at all, and optional extras with what they unlock.
+    blocks:
+      - needs:
+          required:
+            - name: Node.js 18.17+
+              why: For the installer only. It installs nothing else and asks for no key.
+            - name: Python 3.9+
+              why: For the skill's scripts.
+            - name: A contact email
+              why: Unpaywall requires one (it's skipped without); Crossref and NCBI ask for it too.
+              cmd: export SYNTHSCHOLAR_EMAIL=you@lab.org
+          optional:
+            - name: PDF reading
+              why: Read your PDFs; add Docling for scanned ones.
+              cmd: pip install pymupdf docling
+            - name: Library sign-in
+              why: Paywalled papers through your university's EZproxy.
+              cmd: "pip install playwright httpx  # + Chrome, Edge or Chromium"
+            - name: Typeset PDF
+              why: The manuscript PDF. Without TeX it falls back to a plain layout.
+              cmd: pandoc + a TeX engine + rsvg-convert
+            - name: Querying the review
+              why: SPARQL, SQL and export.
+              cmd: pip install rdflib "psycopg[binary]" pydantic
+            - name: Rate-limit keys
+              why: Faster PubMed and Semantic Scholar.
+              cmd: NCBI_API_KEY, SEMANTIC_SCHOLAR_API_KEY
+            - name: The app-driven pipeline
+              why: Run the original SynthScholar application's pipeline instead of your assistant.
+              cmd: the synthscholar Python package + OPENROUTER_API_KEY
+      - note: >-
+          Not sure what's missing? `npx synthscholar doctor` lists what each tool needs and what isn't
+          installed.
+  - title: Install
+    subtitle: npx or GitHub, then check what's missing.
+    blocks:
+      - step:
+          title: Install the skill
+          desc: >-
+            Use npx, or install from GitHub; both give you the same skill. The installer only copies the
+            skill: no Python packages, no TeX, no keys.
+          blocks:
+            - options:
+                - label: npx
+                  cmd: |-
+                    npx synthscholar install                        # Claude Code, your user
+                    npx synthscholar install --scope project        # this project only
+                    npx synthscholar install --agent codex          # Codex
+                    npx synthscholar install --agent both           # Claude Code and Codex
+                    npx synthscholar install --dest ~/my-agent/skills   # any other assistant
+                    npx synthscholar install --dry-run              # show what would happen
+                - label: GitHub
+                  cmd: |-
+                    git clone {{SKILLS_REPO}}
+                    cd agent_skills
+                    python scripts/install_skills.py --agent claude --skills synthscholar
+                    # --agent codex, or --dest /path/to/skills, for other assistants
+            - table:
+                cols:
+                  - Assistant
+                  - Your user
+                  - This project only
+                rows:
+                  - - Claude Code
+                    - "`~/.claude/skills/synthscholar`"
+                    - "`./.claude/skills/synthscholar`"
+                  - - Codex
+                    - "`~/.agents/skills/synthscholar`"
+                    - "`./.agents/skills/synthscholar`"
+            - note: Start a new session after installing so your assistant loads the skill.
+      - step:
+          title: Check what's missing
+          desc: >-
+            `doctor` shows what each tool needs, what's installed, and the command for anything missing.
+            During a review the skill also asks before installing anything.
+          blocks:
+            - code:
+                label: terminal
+                cmd: |-
+                  npx synthscholar doctor      # what's needed, what's missing
+                  npx synthscholar status      # what's installed, which version
+                  npx synthscholar uninstall   # remove the skill
+      - tips:
+          - "**Safe to re-run**: `install` updates a copy it installed and leaves an up-to-date one alone."
+          - >-
+            If you edited the installed skill, `install` stops and lists the changed files. `--force` replaces
+            it and keeps your copy as `synthscholar.bak-<timestamp>`.
+  - title: Run a review
+    subtitle: From a question, a folder of PDFs, or a list of DOIs.
+    blocks:
+      - step:
+          title: Ask your AI assistant
+          desc: "Start the request with the skill's name:"
+          blocks:
+            - ask: Use /synthscholar to scope a systematic review on knowledge graphs in neuroscience
+            - ask: Use /synthscholar to run a review over the PDFs in ./papers
+            - callSkill: synthscholar
+      - step:
+          title: Get full text for DOIs
+          desc: >-
+            Open access first, then your library. See [Full text & library
+            access](#synthscholar--full-text-library-access) for how sign-in works.
+          blocks:
+            - code:
+                label: terminal
+                cmd: python scripts/fetch_ezproxy.py --doi-file dois.txt --pdf-dir ./pdfs
+      - step:
+          title: Build the PDF and PRISMA diagram
+          blocks:
+            - code:
+                label: terminal
+                cmd: |-
+                  python scripts/generate_review_pdf.py --check-deps
+                  python scripts/prisma_flow.py out/review.json --pdf
+  - title: Full text & library access
+    subtitle: Open access first, then your own institution's library, with no proxy settings to configure.
+    blocks:
+      - h: Where full text comes from
+      - steps:
+          - >-
+            **Open access**: Unpaywall, OpenAlex and Semantic Scholar, plus deposited copies such as arXiv and
+            Zenodo. Unpaywall needs `SYNTHSCHOLAR_EMAIL`.
+          - >-
+            **Your institution's library**: for paywalled papers, through your university's EZproxy, signed in
+            as you.
+          - >-
+            **Not reachable?** The paper stays abstract-only and is reported as such; it's never quietly
+            included.
+      - p: >-
+          When a paper exists as both a preprint and a journal article, the published version is cited (with
+          its DOI and PMID). If only the preprint can be read, it's labelled as not peer-reviewed.
+      - h: Signing in to your library
+      - p: >-
+          At the start of the run, a browser window opens at your library's login. You sign in yourself, MFA
+          included; the script never sees your password. It finds your library's proxy for you, so there are
+          no `EZPROXY_*` settings to configure:
+      - options:
+          - label: By institution
+            cmd: "python scripts/fetch_ezproxy.py --login --institution \"University of Michigan\"   # or umich.edu"
+          - label: By library link
+            cmd: >-
+              python scripts/fetch_ezproxy.py --login --library-link
+              "https://www-nature-com.proxy.lib.umich.edu/…"
+          - label: Sign out
+            cmd: python scripts/fetch_ezproxy.py --logout
+      - table:
+          cols:
+            - You give
+            - How the proxy is found
+          rows:
+            - - Your institution's full name
+              - Looked up in ROR, the research-organisation registry; only a single confident match is used
+            - - An email domain (e.g. `umich.edu`)
+              - The usual EZproxy hostnames are tried; a host is accepted only if it answers as EZproxy
+            - - Any off-campus article link from your library
+              - The proxy host is read straight from the link; this covers unusual hostnames
+            - - Nothing
+              - Your saved login, then the domain of your email
+      - h: What is saved, and the limits
+      - tips:
+          - >-
+            Only the proxy's own cookies are saved, in `~/.config/synthscholar/` (owner-only), with a browser
+            profile so MFA isn't asked every time. `--logout` deletes them.
+          - A session lasts hours. An expired one is detected before use and the browser reopens once per run.
+          - >-
+            Library requests go one at a time, with a delay and a per-run cap; three proxied failures in a row
+            stop the run. Staying within your library's terms is up to you.
+          - Libraries that sign in through OpenAthens or Shibboleth instead of EZproxy aren't supported.
+          - "`--oa-only` never touches your library; it uses open access only."
+      - note: >-
+          Library sign-in needs `playwright` and Chrome, Edge or Chromium. `npx synthscholar doctor` tells you
+          if they're missing.
+  - title: What you get
+    subtitle: The files a review produces.
+    blocks:
+      - features:
+          - title: review.md
+            desc: The PRISMA 2020 review; review.manuscript.md is the paper itself.
+          - title: review.ttl / .jsonld
+            desc: The review as SLR-ontology linked data (reusing PROV-O, FaBiO, BIBO), ready for BrainKB.
+          - title: review.json
+            desc: The source of truth for everything else; keep it.
+          - title: Figures
+            desc: >-
+              PRISMA flow, publications per year, study designs and groups, appraisal by domain, full-text
+              retrieval routes.
+          - title: Tables
+            desc: Charting and appraisal, review.bib, and per-record tables as CSV files beside the paper.
+          - title: review.citations.md
+            desc: "The citation check: DOIs, PMIDs, retractions."
+          - title: PDF
+            desc: >-
+              The typeset manuscript with its .tex, capped at 50 pages by default; `--batch` builds PDFs for
+              earlier reviews.
+  - title: Tips
+    subtitle: Limits and what still needs a human.
+    blocks:
+      - tips:
+          - Papers it can't reach stay abstract-only and are reported as such, never quietly included.
+          - The PDF isn't built while citation errors remain.
+          - >-
+            Ask audit questions about a finished review, e.g. which inclusions rest on the full text, which
+            route each paper came through, and why each record was excluded.
+          - Duplicate PDFs aren't removed for you, and the charting form is shaped for biomedical topics.
+          - Every paper is read in full, so long reviews use many model calls.
+          - Read the prose and check what the report flags; it lists what a human still needs to verify.

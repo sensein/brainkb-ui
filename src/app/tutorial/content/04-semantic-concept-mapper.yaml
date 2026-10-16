@@ -1,0 +1,254 @@
+# Chapter 4: Semantic concept mapper. See README.md in this folder for the format.
+id: semantic-concept-mapper
+icon: ⌖
+name: Semantic concept mapper
+tagline: Map terms to ontologies
+summary: >-
+  A self-hosted service that maps terms to ontology concepts with hybrid keyword + semantic search and
+  re-ranking.
+facts:
+  Runs on: Your machine or server
+  Requires: Python 3.10+, the ontology data
+  Output: Ranked ontology concepts
+prereqs:
+  - Python 3.10+ (or Docker)
+  - Git
+  - The ontology database and indexes (Hugging Face)
+  - An OpenRouter key only for the LLM re-ranker
+links:
+  - label: Semantic concept mapper on GitHub
+    href: https://github.com/sensein/search_hybrid
+  - label: Ontology data and indexes
+    href: https://huggingface.co/datasets/sensein/ontology-sqlite-vectorstore
+  - label: How StructSense uses it
+    href: "{{SKILLS_REPO}}/blob/main/skills/structsense/references/ontology-mapping.md"
+help: https://github.com/sensein/search_hybrid/issues
+logo: /semantic_concept_mapper_logo_tr.png
+tryIt:
+  - label: Run
+    cmd: |-
+      git clone https://github.com/sensein/search_hybrid
+      cd search_hybrid
+      pip install -r requirements.txt
+      python -m uvicorn main:app --port 8000
+  - label: Docker
+    cmd: |-
+      git clone https://github.com/sensein/search_hybrid
+      cd search_hybrid
+      docker compose up
+  - label: Map a term
+    cmd: |-
+      curl -s -X POST http://localhost:8000/map/concept \
+        -H 'Content-Type: application/json' \
+        -d '{"text": "SST interneuron", "context": "mouse cortex"}'
+sections:
+  - title: Overview
+    subtitle: What it does, and where it fits.
+    blocks:
+      - p: >-
+          The semantic concept mapper maps an input term to ontology concepts stored in a local SQLite
+          database. It combines **keyword search** (BM25, for exact matches) with **semantic search** (dense
+          embeddings, for meaning), then **re-ranks** the candidates so the best concept comes first.
+      - features:
+          - title: Hybrid retrieval
+            desc: BM25 keyword search plus dense embeddings, weighted together.
+          - title: Re-ranking
+            desc: Local late-interaction and biomedical re-rankers, with an optional LLM.
+          - title: Fast search
+            desc: FAISS vector search, about 50 ms per query.
+          - title: Batch mapping
+            desc: Up to 4,000 terms in one request, each with optional context.
+          - title: Context-aware
+            desc: Pass context to disambiguate, e.g. "cold" → common cold vs cold weather.
+          - title: API first
+            desc: A FastAPI service with interactive docs at /docs.
+      - h: Where it fits with StructSense
+      - p: >-
+          StructSense tries its offline trusted ontologies first. Terms they don't cover go to the semantic
+          concept mapper, if it's running, before the public services:
+      - include: cascade
+  - title: How it works
+    subtitle: Retrieve candidates, re-rank them, return the top concepts.
+    blocks:
+      - steps:
+          - >-
+            **Retrieve**: BM25 and vector search each find candidates; their scores are combined (by default
+            0.3 keyword, 0.7 semantic) into a candidate set of 20.
+          - "**Re-rank**: one or more re-rankers score each candidate against the term and its context."
+          - >-
+            **Return**: the top concepts (5 by default), each with its ontology ID, label, ontology and
+            scores.
+      - table:
+          cols:
+            - Re-ranker
+            - What it does
+            - Needs
+          rows:
+            - - "`biomedical`"
+              - Biomedical keyword boost; fastest
+              - Nothing; local
+            - - "`late_interaction`"
+              - ColBERT-like token matching
+              - Nothing; local
+            - - "`dual_late` (default)"
+              - Late interaction + biomedical
+              - Nothing; fully local
+            - - "`llm`, `llm_late`, `llm_biomedical`"
+              - Adds an LLM's judgement
+              - An OpenRouter key
+            - - "`ensemble`"
+              - All three; best accuracy, slowest
+              - An OpenRouter key
+  - title: What you need
+    subtitle: Required to run it, and optional extras.
+    blocks:
+      - needs:
+          required:
+            - name: Python 3.10+ and its packages
+              why: Or run it with Docker instead.
+              cmd: pip install -r requirements.txt
+            - name: The ontology data
+              why: >-
+                The ontology database, indexes and embeddings, from Hugging Face. Building them yourself can
+                take days.
+              cmd: huggingface.co/datasets/sensein/ontology-sqlite-vectorstore
+          optional:
+            - name: OpenRouter key
+              why: Only for the LLM re-rankers; the default runs fully local.
+              cmd: OPENROUTER_API_KEY=sk-or-v1-…
+            - name: Docker
+              why: Run the service with one command.
+              cmd: docker compose up
+  - title: Install and run
+    subtitle: Get the code and data, then start the service on port 8000.
+    blocks:
+      - step:
+          title: Get the code
+          blocks:
+            - code:
+                label: terminal
+                cmd: |-
+                  git clone https://github.com/sensein/search_hybrid
+                  cd search_hybrid
+                  pip install -r requirements.txt
+                  cp env.example .env
+      - step:
+          title: Download the ontology data
+          desc: >-
+            Download the database, indexes and embeddings from [Hugging
+            Face](https://huggingface.co/datasets/sensein/ontology-sqlite-vectorstore) into `.cache/` (or any
+            folder; point the settings in `.env` at it).
+          blocks:
+            - note: >-
+                If the indexes aren't found, the service builds them itself (`python build_index.py`). That
+                can take days, so download them if you can.
+      - step:
+          title: Start the service
+          blocks:
+            - options:
+                - label: Python
+                  cmd: python -m uvicorn main:app --port 8000
+                - label: Docker
+                  cmd: docker compose up
+      - step:
+          title: Check it's up
+          desc: A `200` means it's ready. Open `http://localhost:8000/docs` to try the API in your browser.
+          blocks:
+            - code:
+                label: terminal
+                cmd: curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8000/docs
+  - title: Use the API
+    subtitle: Map one term, a term with context, or thousands at once.
+    blocks:
+      - table:
+          cols:
+            - Endpoint
+            - Use it for
+          rows:
+            - - "`POST /map/concept`"
+              - One clean term; includes retrieval scores for debugging
+            - - "`POST /map/search`"
+              - One term with rich context, where disambiguation matters (larger candidate pool)
+            - - "`POST /map/batch`"
+              - Up to 4,000 terms in one call, each with optional context
+            - - "`GET /ontologies`, `/stats`, `/config`, `/health`"
+              - Available ontologies, index statistics, settings, readiness
+      - example:
+          input:
+            label: request · POST /map/concept
+            cmd: |-
+              curl -s -X POST http://localhost:8000/map/concept \
+                -H 'Content-Type: application/json' \
+                -d '{"text": "SST interneuron", "context": "mouse cortex", "max_results": 5}'
+          outputs:
+            - label: Response shape
+              cmd: |-
+                {
+                  "query": "SST interneuron",
+                  "type": "single",
+                  "results": [
+                    {
+                      "rank": 1,
+                      "ontology_id": "…",
+                      "ontology_label": "…",
+                      "ontology": "…",
+                      "final_score": …,
+                      "retrieval_scores": { … }
+                    }
+                  ],
+                  "total_results": 5,
+                  "processing_time_ms": …
+                }
+            - label: Batch request
+              cmd: |-
+                curl -s -X POST http://localhost:8000/map/batch \
+                  -H 'Content-Type: application/json' \
+                  -d '{"text": [{"text": "mPFC", "context": "brain region"}, {"text": "astrocyte"}],
+                       "max_results": 5, "ontologies": "UBERON,CL"}'
+      - note: "`ontologies` limits results to the ontologies you list (e.g. `UBERON,CL`)."
+  - title: Configure it
+    subtitle: Settings in `.env`.
+    blocks:
+      - table:
+          cols:
+            - Setting
+            - Default
+            - What it controls
+          rows:
+            - - "`BM25_WEIGHT` / `DENSE_WEIGHT`"
+              - 0.3 / 0.7
+              - Keyword vs semantic search; set one to 0 to use only the other
+            - - "`RERANKER_TYPE`"
+              - "`dual_late`"
+              - Which re-ranker(s) to use (see How it works)
+            - - "`EMBEDDING_MODEL`"
+              - "`BAAI/bge-small-en-v1.5`"
+              - The embedding model for semantic search
+            - - "`VECTOR_BACKEND`"
+              - "`faiss`"
+              - "`faiss`, `numpy` or `chroma` (avoid chroma for large data)"
+            - - "`MAX_CANDIDATES` / `MAX_RESULTS`"
+              - 20 / 5
+              - Candidates before re-ranking / results returned
+            - - "`OPENROUTER_API_KEY`, `OPENROUTER_MODEL`"
+              - none
+              - Only for LLM re-ranking
+  - title: Use it with StructSense
+    subtitle: Make it part of StructSense's mapping chain.
+    blocks:
+      - p: >-
+          StructSense looks for the semantic concept mapper at `http://localhost:8000`. If yours runs
+          elsewhere, set its URL:
+      - options:
+          - label: concept_mapping.json
+            cmd: "\"remote\": { \"local_hybrid_url\": \"http://localhost:8000\" }"
+          - label: Headless run
+            cmd: python -m scripts.pipeline --task ner --input paper.txt --mapper-url http://localhost:8000 …
+      - tips:
+          - >-
+            If the default URL can't be reached, your assistant asks you for one before falling back to OLS
+            and BioPortal.
+          - >-
+            Claude Desktop and other hosted apps can't reach your `localhost`; run the service somewhere they
+            can reach, or rely on the trusted ontologies there.
+          - Each link it produces is recorded with mapping source `local_hybrid`.

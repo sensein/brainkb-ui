@@ -1,0 +1,188 @@
+# Chapter 1: BrainKB skill. See README.md in this folder for the format.
+id: brainkb-skill
+icon: ◉
+name: BrainKB skill
+tagline: Teach your assistant BrainKB
+summary: >-
+  A skill that teaches your AI assistant to work with BrainKB: sign in, ingest, search, ask questions and
+  trace provenance.
+facts:
+  Runs in: Your AI assistant
+  Requires: Node.js 18.17+
+  Output: Actions in BrainKB
+prereqs:
+  - "An AI assistant: Claude Code, Codex, or any SKILL.md agent"
+  - Node.js 18.17+ (for npx)
+  - The Claude Code CLI on your PATH, for automatic MCP registration
+  - A BrainKB account only for private data or changes
+links:
+  - label: BrainKB skill on GitHub
+    href: https://github.com/sensein/agent_skills/tree/main/skills/brainkb
+  - label: brainkb on npm
+    href: https://www.npmjs.com/package/brainkb
+  - label: "Use with AI: every client"
+    href: /mcp
+help: "{{SKILLS_REPO}}/issues"
+logo: /brainkb_logo.png
+tryIt:
+  - label: npx
+    cmd: npx brainkb install{{MCP_FLAG}}
+  - label: GitHub
+    cmd: |-
+      git clone {{SKILLS_REPO}}
+      cd agent_skills
+      python scripts/install_skills.py --agent claude --skills brainkb
+      claude mcp add --scope user --transport http brainkb {{MCP_ENDPOINT}}
+sections:
+  - title: Overview
+    subtitle: What the skill adds on top of the MCP server.
+    blocks:
+      - p: >-
+          The MCP server gives your assistant BrainKB's tools. The **BrainKB skill** teaches it how to use
+          them well: confirm who it's acting as before changing anything, pick the right space and question,
+          ingest large files safely, and answer "who changed what, and when" from provenance.
+      - features:
+          - title: Sign in
+            desc: >-
+              Globus, ORCID or GitHub in your browser, or a personal access token; it confirms your identity
+              first.
+          - title: Spaces
+            desc: Create private or team spaces, register graphs, share them or make them public.
+          - title: Ingest
+            desc: Load RDF as background jobs and follow each job until it finishes.
+          - title: Search and read
+            desc: Search everything you may read, open a space, list the graphs.
+          - title: Ready-made questions
+            desc: Vetted questions about extracted entities, without writing SPARQL.
+          - title: Provenance
+            desc: Who added what and when, and the exact triples each ingest added.
+          - title: SynthScholar reviews
+            desc: Ingest a finished review into a space, once, in its own graph.
+      - note: >-
+          Reading public spaces needs no login. The skill signs you in only when a task needs private data, a
+          change, provenance or admin tools.
+  - title: Install
+    subtitle: npx installs the skill and registers the MCP server in one step.
+    blocks:
+      - step:
+          title: Install the skill
+          desc: Use npx, or install from GitHub; both give you the same skill.
+          blocks:
+            - options:
+                - label: npx
+                  cmd: |-
+                    npx brainkb install{{MCP_FLAG}}                 # Claude Code, your user
+                    npx brainkb install{{MCP_FLAG}} --scope project # this project only
+                    npx brainkb install{{MCP_FLAG}} --agent codex   # Codex
+                    npx brainkb install{{MCP_FLAG}} --agent both    # Claude Code and Codex
+                    npx brainkb install --dest ~/my-agent/skills --mcp none   # any other assistant
+                    npx brainkb install --dry-run              # show what would happen
+                - label: GitHub
+                  cmd: |-
+                    git clone {{SKILLS_REPO}}
+                    cd agent_skills
+                    python scripts/install_skills.py --agent claude --skills brainkb
+                    # --agent codex, or --dest /path/to/skills, for other assistants
+      - step:
+          title: Register the MCP server if needed
+          desc: >-
+            npx registers it with Claude Code automatically. For Codex and other assistants, or after a GitHub
+            install, add the server yourself:
+          blocks:
+            - code:
+                label: Claude Code
+                cmd: claude mcp add --scope user --transport http brainkb {{MCP_ENDPOINT}}
+            - note: >-
+                Codex: add `[mcp_servers.brainkb]` with `url = "{{MCP_ENDPOINT}}"` to `~/.codex/config.toml`.
+                Every other client is on [Use with AI](/mcp).
+      - table:
+          cols:
+            - "`--mcp`"
+            - Registers
+          rows:
+            - - "`production` (default)"
+              - "`mcp.brainkb.org`"
+            - - "`sandbox`"
+              - "`mcp.sandbox.brainkb.org`, for trying things out"
+            - - "`both`"
+              - Production and sandbox
+            - - "`none`"
+              - The skill only
+  - title: Sign in and ask
+    subtitle: Start your assistant and talk to BrainKB in plain language.
+    blocks:
+      - step:
+          title: Sign in
+          desc: "Only needed for private data or changes. Your assistant hands you a browser link:"
+          blocks:
+            - ask: log me in to BrainKB
+      - step:
+          title: Ask
+          desc: "For example:"
+          blocks:
+            - ask: Which papers mention the subthalamic nucleus?
+            - ask: Create a private space for my lab
+            - ask: Ingest result.ttl into my lab space, then show what changed
+            - ask: Who added these triples, and when?
+      - note: >-
+          Codex calls the skill as `$brainkb`; in Claude Code it loads automatically when you ask about
+          BrainKB.
+  - title: A typical session
+    subtitle: What the skill does for "ingest my file, then show what changed".
+    blocks:
+      - steps:
+          - "**Confirms who you are**: checks your identity first, because attribution is permanent."
+          - >-
+            **Finds the space**: lists your spaces and the graph registered to yours; registers one (with a
+            description) if needed.
+          - "**Ingests**: submits your file as a background job and gets a job ID."
+          - "**Follows the job** until it finishes, and reports what succeeded and failed."
+          - "**Shows what changed**: the exact triples this ingest added, and who ran it and when."
+      - p: >-
+          For a SynthScholar review, it ingests `review.ttl` into the review's own graph,
+          `https://brainkb.org/synthscholar/reviews/<review_id>/`, and only once: ingest is append-only.
+  - title: Manage and maintain
+    subtitle: Check, update and remove.
+    blocks:
+      - code:
+          label: terminal
+          cmd: |-
+            npx brainkb status                    # what's installed, which version, MCP registration
+            npx brainkb uninstall                 # remove the skill and its MCP entry
+            npx brainkb mcp-command --mcp both    # just print the registration commands
+      - table:
+          cols:
+            - Assistant
+            - Your user
+            - This project only
+          rows:
+            - - Claude Code
+              - "`~/.claude/skills/brainkb`"
+              - "`./.claude/skills/brainkb` (+ `./.mcp.json`)"
+            - - Codex
+              - "`~/.agents/skills/brainkb`"
+              - "`./.agents/skills/brainkb`"
+      - tips:
+          - "**Safe to re-run**: `install` updates a copy it installed and leaves an up-to-date one alone."
+          - >-
+            An edited copy is never overwritten silently; `--force` replaces it and keeps yours as
+            `brainkb.bak-<timestamp>`.
+          - >-
+            An existing `brainkb` MCP entry that points somewhere else (e.g. a local deployment) is reported,
+            not replaced, unless you pass `--force`.
+  - title: Tips
+    subtitle: Limits and what to expect.
+    blocks:
+      - tips:
+          - >-
+            The hosted server is rate-limited per caller (roughly 8 logins, 40 writes, 120 reads and 30 admin
+            calls a minute). A `429` means wait, not retry.
+          - >-
+            An empty list of spaces can mean you aren't signed in; the skill checks your identity before
+            saying you have none.
+          - >-
+            Free-form SPARQL needs an admin role; the skill uses search, spaces, ready-made questions and
+            provenance tools first.
+          - >-
+            A cloud or hosted assistant can't reach a BrainKB running on your laptop's `localhost`; use the
+            hosted server there.

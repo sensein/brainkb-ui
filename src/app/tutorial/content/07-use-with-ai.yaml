@@ -1,0 +1,77 @@
+# Chapter 7: Use with AI. See README.md in this folder for the format.
+id: use-with-ai
+icon: ✳
+name: Use with AI
+tagline: Connect an assistant
+summary: Connect an AI assistant to BrainKB over MCP, and teach it BrainKB with the skill.
+facts:
+  Runs in: Your assistant
+  Requires: An MCP client
+  Output: Answers in chat
+prereqs:
+  - "An MCP client: Claude Code, Codex, Cursor, VS Code, claude.ai, ChatGPT…"
+  - Node.js 18.17+ for the skill installer
+  - An account only for private data or changes
+links:
+  - label: "Use with AI: every client"
+    href: /mcp
+  - label: MCP setup guide
+    href: "{{MCP_SITE}}"
+  - label: brainkb on npm
+    href: https://www.npmjs.com/package/brainkb
+help: https://github.com/sensein/brainkb/issues
+tryIt:
+  - label: MCP only
+    cmd: claude mcp add --scope user --transport http brainkb {{MCP_ENDPOINT}}
+  - label: npx
+    cmd: npx brainkb install{{MCP_FLAG}}
+  - label: GitHub
+    cmd: |-
+      git clone {{SKILLS_REPO}}
+      cd agent_skills
+      python scripts/install_skills.py --agent claude --skills brainkb
+      claude mcp add --scope user --transport http brainkb {{MCP_ENDPOINT}}
+sections:
+  - title: Overview
+    subtitle: What an assistant can do with BrainKB.
+    blocks:
+      - p: >-
+          The BrainKB MCP server lets an AI assistant work with BrainKB in plain language. Reading public
+          spaces needs no login; anything else runs as you, within your permissions.
+      - features:
+          - title: Search and read
+            desc: Search every space you may read, and open a whole space.
+          - title: Ingest
+            desc: Load RDF into your spaces as background jobs.
+          - title: Ready-made questions
+            desc: Vetted questions about extracted entities, without writing SPARQL.
+          - title: Provenance
+            desc: Who added what, when, and the exact triples each ingest added.
+  - title: Connect via MCP
+    subtitle: Add one URL to your client.
+    blocks:
+      - step:
+          title: Add the server
+          desc: "In Claude Code:"
+          blocks:
+            - code:
+                label: terminal
+                cmd: claude mcp add --scope user --transport http brainkb {{MCP_ENDPOINT}}
+            - note: >-
+                Every other client (Codex, Cursor, VS Code, Copilot, claude.ai, ChatGPT, Perplexity) is set up
+                step by step on [Use with AI](/mcp).
+      - step:
+          title: Sign in and ask
+          desc: "Only needed for private spaces or changes:"
+          blocks:
+            - ask: log me in to BrainKB
+            - ask: Which papers mention the subthalamic nucleus?
+  - title: Add the BrainKB skill
+    subtitle: Teach your assistant how to use BrainKB well.
+    blocks:
+      - p: >-
+          The skill installs alongside the server and teaches your assistant to sign in, pick the right space,
+          ingest safely and answer provenance questions. See the [BrainKB skill](#brainkb-skill) chapter.
+      - code:
+          label: terminal
+          cmd: npx brainkb install{{MCP_FLAG}}

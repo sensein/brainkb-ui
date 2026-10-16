@@ -1,0 +1,90 @@
+# Chapter 5: Ingest & provenance. See README.md in this folder for the format.
+id: ingest
+icon: ⇪
+name: Ingest & provenance
+tagline: Publish and trace
+summary: Put your Turtle into your own space, share it when ready, and trace every change.
+facts:
+  Runs in: BrainKB
+  Requires: An account
+  Output: Graph + history
+prereqs:
+  - A BrainKB account (Globus, ORCID or GitHub)
+  - A space
+  - An RDF file
+links:
+  - label: Use with AI
+    href: /mcp
+  - label: MCP setup guide
+    href: "{{MCP_SITE}}"
+  - label: BrainKB docs
+    href: https://docs.brainkb.org
+help: https://github.com/sensein/brainkb/issues
+tryIt:
+  - label: terminal
+    cmd: python -c "import rdflib; g=rdflib.Graph(); g.parse('review.ttl'); print(len(g), 'triples')"
+sections:
+  - title: Overview
+    subtitle: Spaces, ingest jobs and their history.
+    blocks:
+      - p: >-
+          Each ingest loads RDF (Turtle, N-Triples, JSON-LD) into a space as a background job, attributed to
+          your account and recorded as W3C PROV-O with the exact triples it added.
+      - features:
+          - title: Private by default
+            desc: Spaces start private; share with a team or publish when ready.
+          - title: Attributed
+            desc: Every ingest is tied to the account that ran it.
+          - title: Change history
+            desc: Who ran each ingest, when, and the exact triples it added.
+  - title: What you need
+    subtitle: An account, a space and something to load.
+    blocks:
+      - needs:
+          required:
+            - name: A BrainKB account
+              why: Sign in with Globus, ORCID or GitHub.
+            - name: A space
+              why: Your workspace, private for yourself or a team.
+            - name: RDF to load
+              why: For example StructSense's .ttl or SynthScholar's review.ttl.
+          optional:
+            - name: A personal access token
+              why: To upload from a script; revocable, expires on inactivity.
+            - name: An AI assistant over MCP
+              why: Ingest, share and trace in plain language; see [Use with AI](/mcp).
+  - title: Upload a file
+    subtitle: Stream a file to your space, up to 5 GB.
+    blocks:
+      - step:
+          title: Count the triples
+          desc: "So you can check nothing was lost:"
+          blocks:
+            - code:
+                label: terminal
+                cmd: python -c "import rdflib; g=rdflib.Graph(); g.parse('review.ttl'); print(len(g), 'triples')"
+      - step:
+          title: Upload
+          desc: "The server answers `202` with an `upload_id` and ingests in the background:"
+          blocks:
+            - code:
+                label: python
+                cmd: |-
+                  import requests
+                  requests.post("{{MCP_SITE}}/upload",
+                                params={"filename": "review.ttl", "graph": "<graph_iri>"},
+                                headers={"Authorization": f"Bearer {TOKEN}"},
+                                data=open("review.ttl", "rb"))   # streamed off disk
+      - h: SynthScholar reviews
+      - tips:
+          - "Each review goes in its own graph: `https://brainkb.org/synthscholar/reviews/<review_id>/`."
+          - "Ingest a review **once**: ingest is append-only, so a second upload duplicates its content."
+  - title: Share and trace
+    subtitle: Who can see it, and what changed.
+    blocks:
+      - steps:
+          - >-
+            Give members read or edit access to your space, or make it public. Your name stays on what you
+            added.
+          - "Open a graph's change history: who ran each ingest, when, and the exact triples it added."
+          - Private spaces are visible to their members only; public spaces are readable by anyone.

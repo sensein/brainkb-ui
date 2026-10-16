@@ -1,0 +1,20 @@
+# Blocks reused across chapters: use them with `- include: <name>`.
+cascade:
+  steps:
+    - >-
+      **Curated overrides**: a short list of fixes you can edit (e.g. "mouse" → *Mus musculus*), checked
+      before anything else.
+    - >-
+      **Trusted ontologies** (the default): the ontology files shipped with the skill, searched **offline**
+      after a one-time index. 42 of 115 are switched on by default.
+    - >-
+      **Semantic concept mapper** (local): if a term isn't found, your own [semantic concept
+      mapper](#semantic-concept-mapper) is tried next. It combines keyword and semantic search, runs at
+      `http://localhost:8000` by default, and is skipped if it isn't running.
+    - >-
+      **OLS**: the EMBL-EBI Ontology Lookup Service, through its MCP server. No key; only a class whose label
+      equals the term is accepted.
+    - "**BioPortal**: last, and only with a free `BIOPORTAL_API_KEY`."
+    - >-
+      **Still unmapped?** It asks you for another mapper URL, or stops with a clear error. It never guesses an
+      ID.
