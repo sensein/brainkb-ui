@@ -23,12 +23,17 @@ interface InstallCardProps {
   authNote?: boolean;
   /** Where the "BrainKB skill" tab links to (the skill install section). */
   skillHref?: string;
+  /** Home page: three clients, no steps, and a link to the full setup on /mcp. */
+  compact?: boolean;
 }
 
-export default function InstallCard({ authNote = false, skillHref = "/mcp#skill" }: InstallCardProps) {
+const COMPACT_CLIENTS = ["Claude Code", "Perplexity · claude.ai · ChatGPT", "Cursor"];
+
+export default function InstallCard({ authNote = false, skillHref = "/mcp#skill", compact = false }: InstallCardProps) {
   const [i, setI] = useState(0);
   const [copied, setCopied] = useState(false);
-  const c = MCP_CLIENTS[i];
+  const clients = compact ? MCP_CLIENTS.filter((x) => COMPACT_CLIENTS.includes(x.name)) : MCP_CLIENTS;
+  const c = clients[i];
   const toCopy = "copy" in c && c.copy ? c.copy : c.cmd;
 
   const handleCopy = async () => {
@@ -45,7 +50,7 @@ export default function InstallCard({ authNote = false, skillHref = "/mcp#skill"
     <div className="connect">
       <div className="demo">
         <div className="demo-tabs" role="tablist" aria-label="MCP client">
-          {MCP_CLIENTS.map((x, k) => (
+          {clients.map((x, k) => (
             <button
               key={x.name}
               type="button"
@@ -65,8 +70,9 @@ export default function InstallCard({ authNote = false, skillHref = "/mcp#skill"
               ))}
             </button>
           ))}
+          {compact && <a className="more-tab" href="/mcp">All clients →</a>}
           <a className="skill-tab" href={skillHref}>
-            <i aria-hidden="true">◆</i>BrainKB skill ↓
+            <i aria-hidden="true">◆</i>BrainKB skill {skillHref.startsWith("#") ? "↓" : "→"}
           </a>
         </div>
         <div className="connect-pane" role="tabpanel">
@@ -77,11 +83,13 @@ export default function InstallCard({ authNote = false, skillHref = "/mcp#skill"
             </button>
           </div>
           <pre>{c.cmd}</pre>
-          <ol className="connect-steps">
-            {c.steps.map((t) => (
-              <li key={t}><Step text={t} /></li>
-            ))}
-          </ol>
+          {!compact && (
+            <ol className="connect-steps">
+              {c.steps.map((t) => (
+                <li key={t}><Step text={t} /></li>
+              ))}
+            </ol>
+          )}
         </div>
       </div>
       {authNote && (

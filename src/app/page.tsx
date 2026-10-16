@@ -208,22 +208,19 @@ export default function HomePage() {
           <div className="connect-row">
             <div>
               <p>
-                Point your client at <code>{MCP_ENDPOINT}</code> (streamable HTTP). Every call that needs an account
-                runs as you: the client signs in with your own BrainKB account, never a shared one.
+                Point your client at <code>{MCP_ENDPOINT}</code>. Public data needs no login; for anything else your
+                client signs in as you, never with a shared account.
               </p>
               <p>
-                <b>Just reading open knowledge?</b> No need to log in; see <a href="#open">Open knowledge</a>.
+                Pick your client to get started. Every client, step by step, and the BrainKB skill are on the{" "}
+                <Link href="/mcp">Use with AI</Link> page.
               </p>
-              <p>
-                Apps that connect by URL (Perplexity, claude.ai, ChatGPT) choose <b>OAuth</b> with no client ID or
-                secret, then sign in on the BrainKB page that opens.
-              </p>
-              <p>
-                <span style={{ color: "#16a34a", fontWeight: 700 }}>✓</span> tested with BrainKB · want the agent
-                skill too? See <Link href="/mcp#skill">Skill</Link>.
-              </p>
+              <div className="connect-links">
+                <Link className="btn primary" href="/mcp">Set up your client →</Link>
+                <Link className="btn" href="/mcp#skill">Install the BrainKB skill</Link>
+              </div>
             </div>
-            <InstallCard />
+            <InstallCard compact />
           </div>
           <div className="ways4">
             <Link className="way" href="/mcp">
@@ -238,12 +235,12 @@ export default function HomePage() {
               <p>Run the MCP server locally and point it at your own BrainKB.</p>
               <div className="code">MCP_TRANSPORT=<b>stdio</b></div>
             </div>
-            <a className="way" href="https://www.npmjs.com/package/brainkb" target="_blank" rel="noopener noreferrer">
+            <Link className="way" href="/mcp#skill">
               <span className="lbl">BrainKB skill</span>
               <h3>Teach your agent</h3>
               <p>Installs the BrainKB skill and registers the MCP server in one step.</p>
               <div className="code"><b>npx</b> brainkb install{MCP_FLAG}</div>
-            </a>
+            </Link>
             <div className="way">
               <span className="lbl">API</span>
               <h3>Plain HTTP</h3>
