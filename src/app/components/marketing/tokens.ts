@@ -45,20 +45,88 @@ export const MCP_ENDPOINT = env.mcpEndpoint;
 // `npx brainkb install` registers production by default; add this on sandbox.
 export const MCP_FLAG = /\/\/mcp\.sandbox\./.test(MCP_ENDPOINT) ? " --mcp sandbox" : "";
 
+// The MCP server's own site (full per-client setup, FAQ), e.g. https://mcp.brainkb.org.
+export const MCP_SITE = MCP_ENDPOINT.replace(/\/mcp$/, "");
+
+// Setup per client, as on the MCP server's site (MCP_SITE). `tested` marks the
+// ✓ shown there; steps use `code` for inline code.
 export const MCP_CLIENTS = [
   {
     name: "Claude Code",
-    hint: "# run in your terminal",
-    cmd: `claude mcp add --transport http brainkb ${MCP_ENDPOINT}`,
+    tested: [true],
+    title: "Claude Code · terminal",
+    cmd: `claude mcp add --scope user --transport http brainkb ${MCP_ENDPOINT}`,
+    steps: [
+      "Start `claude` and say “log me in to BrainKB”; it hands you a browser link.",
+      `For the server plus the BrainKB skill in one step, use \`npx brainkb install${MCP_FLAG}\` instead.`,
+    ],
   },
   {
-    name: "Claude Desktop",
-    hint: "# claude_desktop_config.json",
-    cmd: `"brainkb": {\n  "url": "${MCP_ENDPOINT}"\n}`,
+    name: "Codex",
+    tested: [false],
+    title: "Codex · ~/.codex/config.toml",
+    cmd: `[mcp_servers.brainkb]\nurl = "${MCP_ENDPOINT}"`,
+    steps: [
+      "Add it to `~/.codex/config.toml`, start `codex`, and say “log me in to BrainKB”.",
+      `Skill for Codex: \`npx brainkb install${MCP_FLAG} --agent codex\`.`,
+    ],
+  },
+  {
+    name: "Perplexity · claude.ai · ChatGPT",
+    tested: [true, true, false],
+    title: "Connector apps · add a custom connector",
+    copyLabel: "Copy URL",
+    copy: MCP_ENDPOINT,
+    cmd: `1. Open the app's connector settings
+     Perplexity   Settings → Connectors → + Custom connector
+     claude.ai    Settings → Connectors → Add custom connector
+     ChatGPT      Settings → Apps & Connectors → Create (developer mode)
+2. Server URL      ${MCP_ENDPOINT}
+3. Authentication  OAuth (leave client ID and secret empty)
+4. Sign in on the BrainKB page that opens, then allow access`,
+    steps: ["Only reading open knowledge? No need to log in: public spaces can be listed, searched and read without authentication."],
   },
   {
     name: "Cursor",
-    hint: "# .cursor/mcp.json",
-    cmd: `"mcpServers": {\n  "brainkb": { "url": "${MCP_ENDPOINT}" }\n}`,
+    tested: [true],
+    title: "Cursor · ~/.cursor/mcp.json",
+    cmd: `{\n  "mcpServers": {\n    "brainkb": { "url": "${MCP_ENDPOINT}" }\n  }\n}`,
+    steps: [
+      "Open Customize → MCPs → New MCP Server (classic editor: Cursor Settings → MCP → Add new MCP server). Either opens `~/.cursor/mcp.json`.",
+      "Paste the snippet and save. If `brainkb` shows Needs login, click it and sign in on the BrainKB page.",
+      "Start a New Chat and ask; Cursor asks before running each tool.",
+    ],
   },
-] as const;
+  {
+    name: "VS Code",
+    tested: [true],
+    title: "VS Code · .vscode/mcp.json",
+    cmd: `{\n  "servers": {\n    "brainkb": { "type": "http", "url": "${MCP_ENDPOINT}" }\n  }\n}`,
+    steps: [
+      "Create the file, or run MCP: Add Server → HTTP from the Command Palette and paste the URL. For every workspace, use MCP: Open User Configuration.",
+      "Click Start above `brainkb`, accept the sign-in prompt, and sign in on the BrainKB page.",
+      "Open Copilot Chat in Agent mode, enable the BrainKB tools, and ask your question.",
+    ],
+  },
+  {
+    name: "Copilot in VS Code",
+    tested: [true],
+    title: "GitHub Copilot · ~/.copilot/mcp-config.json",
+    cmd: `{\n  "mcpServers": {\n    "brainkb": {\n      "type": "http",\n      "url": "${MCP_ENDPOINT}",\n      "tools": ["*"]\n    }\n  }\n}`,
+    steps: [
+      "Create `~/.copilot/mcp-config.json`. It applies to Copilot everywhere, even with no folder open.",
+      "Paste the snippet and save. `\"tools\": [\"*\"]` enables every BrainKB tool; list tool names to allow only some.",
+      "Open Copilot Chat in Agent mode, sign in when prompted, and ask. Approve each tool call when asked.",
+    ],
+  },
+  {
+    name: "Other clients",
+    tested: [false],
+    title: "Clients that only run local (stdio) servers · via mcp-remote",
+    cmd: `{\n  "mcpServers": {\n    "brainkb": {\n      "command": "npx",\n      "args": ["-y", "mcp-remote", "${MCP_ENDPOINT}"]\n    }\n  }\n}`,
+    steps: [
+      "Paste into the client's MCP config (e.g. Claude Desktop, Windsurf) and restart it. Needs Node.js.",
+      "`mcp-remote` opens the BrainKB sign-in page in your browser on first connect.",
+    ],
+  },
+];

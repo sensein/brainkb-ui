@@ -1,26 +1,32 @@
 "use client";
 
-// MCP install snippets per client. Styled with the Home page's `.demo` frame,
-// so it must render inside an `.lp` root (components/marketing/landing/landing.css).
+// MCP setup per client, laid out like the MCP server's own Connect section:
+// client pills (✓ = tested with BrainKB), then a pane with the config to copy
+// and numbered steps. Must render inside an `.lp` root (landing.css).
 
-import { useState } from "react";
-import { MCP_CLIENTS } from "./tokens";
+import { Fragment, useState } from "react";
+import { MCP_CLIENTS, MCP_SITE } from "./tokens";
 
-interface InstallCardProps {
-  /** Shows a "then ask" example prompt below the code box. */
-  showThenAsk?: boolean;
-  /** Shows a short authentication note below the card. */
-  authNote?: boolean;
+/** Renders `code` spans in a step. */
+function Step({ text }: { text: string }) {
+  return (
+    <>
+      {text.split("`").map((part, n) =>
+        n % 2 ? <code key={n}>{part}</code> : <Fragment key={n}>{part}</Fragment>,
+      )}
+    </>
+  );
 }
 
-export default function InstallCard({ showThenAsk = false, authNote = false }: InstallCardProps) {
-  const [clientName, setClientName] = useState<string>(MCP_CLIENTS[0].name);
+export default function InstallCard({ authNote = false }: { authNote?: boolean }) {
+  const [i, setI] = useState(0);
   const [copied, setCopied] = useState(false);
-  const client = MCP_CLIENTS.find((c) => c.name === clientName) ?? MCP_CLIENTS[0];
+  const c = MCP_CLIENTS[i];
+  const toCopy = "copy" in c && c.copy ? c.copy : c.cmd;
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(client.cmd);
+      await navigator.clipboard.writeText(toCopy);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
@@ -29,48 +35,48 @@ export default function InstallCard({ showThenAsk = false, authNote = false }: I
   };
 
   return (
-    <div>
-      <div className="demo">
-        <div className="demo-tabs" role="tablist" aria-label="MCP client">
-          {MCP_CLIENTS.map((c) => (
-            <button
-              key={c.name}
-              role="tab"
-              aria-selected={c.name === client.name}
-              onClick={() => {
-                setClientName(c.name);
-                setCopied(false);
-              }}
-            >
-              <i>✳</i>
-              {c.name}
-            </button>
-          ))}
-        </div>
-        <div className="demo-head">
-          <span className="dots">●●●</span>
-          <span className="ctx">Add BrainKB to {client.name}</span>
-          <span className="pill pub">NO LOGIN TO READ</span>
-        </div>
-        <div className="hint">{client.hint}</div>
-        <div className="copybar">
-          <pre>{client.cmd}</pre>
-          <button type="button" className="btn" onClick={handleCopy}>
-            {copied ? "Copied" : "Copy"}
+    <div className="connect">
+      <div className="connect-tabs" role="tablist" aria-label="MCP client">
+        {MCP_CLIENTS.map((x, k) => (
+          <button
+            key={x.name}
+            type="button"
+            role="tab"
+            aria-selected={k === i}
+            onClick={() => {
+              setI(k);
+              setCopied(false);
+            }}
+          >
+            {x.name.split(" · ").map((part, n) => (
+              <Fragment key={part}>
+                {n > 0 && <span className="sep"> · </span>}
+                {part}
+                {x.tested[n] && <span className="ok" aria-label="tested"> ✓</span>}
+              </Fragment>
+            ))}
+          </button>
+        ))}
+      </div>
+      <div className="connect-pane" role="tabpanel">
+        <div className="connect-head">
+          <span>{c.title}</span>
+          <button type="button" className="copy" onClick={handleCopy}>
+            {copied ? "Copied" : "copyLabel" in c && c.copyLabel ? c.copyLabel : "Copy"}
           </button>
         </div>
-        {showThenAsk && (
-          <div className="demo-body" style={{ minHeight: 0, paddingTop: 0 }}>
-            <div className="ln out">› then ask</div>
-            <div className="ln ask">Which datasets profile L5 extratelencephalic neurons in human motor cortex?</div>
-          </div>
-        )}
+        <pre>{c.cmd}</pre>
+        <ol className="connect-steps">
+          {c.steps.map((t) => (
+            <li key={t}><Step text={t} /></li>
+          ))}
+        </ol>
       </div>
       {authNote && (
         <p className="muted-p">
-          Sign in once, mint a Personal Access Token (<code>brainkb_create_token()</code> after a one-time Globus
-          login), and send it with each request as <code>Authorization: Bearer brainkb_pat_…</code>. Tokens are
-          revocable and expire on inactivity.
+          <span className="ok">✓</span> tested with BrainKB. No login is needed to read public spaces; for anything
+          else your agent signs you in with Globus, ORCID or GitHub. More detail:{" "}
+          <a href={MCP_SITE} target="_blank" rel="noopener noreferrer">setup guide ↗</a>
         </p>
       )}
     </div>

@@ -1,29 +1,57 @@
 /**
- * MCP — public marketing page for the BrainKB MCP server. Content is the real
- * MCP server details; the look is the Home page's design (the `.lp` classes in
- * components/marketing/landing/landing.css).
+ * MCP — public marketing page for the BrainKB MCP server. Content follows the
+ * MCP server's own site (MCP_SITE), condensed: full per-client setup and the
+ * FAQ stay there and are linked. The look is the Home page's design (the `.lp`
+ * classes in components/marketing/landing/landing.css).
  */
 
+import Link from "next/link";
 import MarketingHeader from "../components/marketing/MarketingHeader";
 import MarketingFooter from "../components/marketing/MarketingFooter";
 import InstallCard from "../components/marketing/InstallCard";
+import WorkflowDemo from "./WorkflowDemo";
 import { dmSans, plexMono } from "../components/marketing/fonts";
-import { MCP_ENDPOINT } from "../components/marketing/tokens";
+import { MCP_ENDPOINT, MCP_SITE } from "../components/marketing/tokens";
 import "../components/marketing/landing/landing.css";
 
 const CAPABILITIES = [
-  { di: "▣", name: "Spaces & graphs", desc: "Create private/team workspaces, register named graphs, manage members and access." },
-  { di: "⇪", name: "Ingest", desc: "Load RDF (Turtle / N-Triples / JSON-LD) — raw text or files up to ~5 GB — as background jobs." },
-  { di: "⌕", name: "Read & search", desc: "Access-filtered full-text search, read a space's RDF, list registered graphs." },
-  { di: "↻", name: "Provenance (PROV-O)", desc: "Per-job provenance, a graph's change history, and the exact triples each ingest added." },
-  { di: "⚿", name: "Personal Access Tokens", desc: "Mint a browser-free token to authenticate the assistant, then revoke it any time." },
-  { di: "◉", name: "Admin (if authorized)", desc: "Manage users, roles, capabilities, and per-space access rules." },
+  {
+    di: "⇪",
+    name: "Ingest",
+    desc: "Load RDF from text, files or large streamed uploads (up to 5 GB). Each ingest runs as a background job, attributed to you.",
+    asks: ["Ingest review.ttl into my lab space", "Did last night's ingest finish?"],
+  },
+  {
+    di: "⌕",
+    name: "Search and read",
+    desc: "Search everything you may read, open a whole space, or list the graphs in the knowledge base.",
+    asks: ["Find anything about Purkinje cells", "What's in the hmba space?"],
+  },
+  {
+    di: "◈",
+    name: "Ready-made questions",
+    desc: "Vetted questions about extracted entities, cells, markers, phenotypes and causal claims, answered without writing SPARQL.",
+    asks: ["How is the neocortex written across papers?", "Which entities do these papers share?"],
+  },
+  {
+    di: "↻",
+    name: "Provenance",
+    desc: "The history of any graph as W3C PROV-O: who added what, when, and the exact triples each ingest contributed.",
+    asks: ["What changed in my space this week?", "Who added these triples?"],
+  },
+  {
+    di: "▣",
+    name: "Workspaces",
+    desc: "Create private or public spaces, for yourself or a team, and choose who can read or edit them.",
+    asks: ["Create a private space for my lab", "Give alice@lab.org edit access"],
+  },
+  {
+    di: "⚿",
+    name: "Identity and access",
+    desc: "Sign in with Globus, ORCID or GitHub, keep a personal access token, and let admins manage roles.",
+    asks: ["Log me in with Globus", "Make me a token for this laptop"],
+  },
 ] as const;
-
-const CLIENTS = [
-  ["✳", "Claude Code"], ["✳", "claude.ai"], ["◎", "ChatGPT"], ["⌕", "Perplexity"],
-  ["▸", "Cursor"], ["◇", "VS Code & Copilot"], ["›_", "Codex"],
-];
 
 export default function McpPage() {
   return (
@@ -34,14 +62,14 @@ export default function McpPage() {
         <section className="hero page">
           <div className="hero-copy">
             <span className="eyebrow">Agent-ready · MCP</span>
-            <h1>The BrainKB MCP server.</h1>
+            <h1>Use BrainKB from your AI agent.</h1>
             <p className="lead">
-              BrainKB exposes an MCP server so an assistant can operate the knowledge graph on your behalf: ingest
-              data, search, explore provenance, and manage spaces, using your own account and permissions.
+              The BrainKB MCP server connects your agent to the knowledge base. Ask in plain language, and it signs in
+              as you, ingests RDF into your workspaces, answers questions over extracted entities, and traces where
+              every triple came from.
             </p>
             <p className="muted-p">
-              Every action is access-controlled server-side exactly as in this web app — a <code>403</code> means a
-              permission is missing, not a broken token.
+              Public spaces can be read without logging in. Everything else runs as you, within your permissions.
             </p>
             <div className="endpoint">
               <span className="lbl">Endpoint</span>
@@ -50,12 +78,10 @@ export default function McpPage() {
                 {MCP_ENDPOINT.replace(/^https?:\/\//, "")}
               </div>
             </div>
-            <div className="clients" aria-label="Supported clients" style={{ margin: "26px 0 0" }}>
-              {CLIENTS.map(([i, name]) => (
-                <span key={name} className="client"><i>{i}</i>{name}</span>
-              ))}
-              <span className="client any">+ any MCP client</span>
-            </div>
+            <p className="muted-p">
+              Works with Claude Code, claude.ai, ChatGPT, Perplexity, Cursor, VS Code and Copilot, Codex, and any other
+              MCP client.
+            </p>
           </div>
           <InstallCard authNote />
         </section>
@@ -66,9 +92,9 @@ export default function McpPage() {
           <div className="section-title">
             <div>
               <span className="eyebrow">Capabilities</span>
-              <h2>What your assistant<br />can do.</h2>
+              <h2>Less SPARQL.<br />More science.</h2>
             </div>
-            <p className="note">TODO: we should provide more description and links to the skills</p>
+            <p>Ask in plain language and your agent picks the right BrainKB tools. For example:</p>
           </div>
           <div className="grid3 tight blue-items">
             {CAPABILITIES.map((c) => (
@@ -76,11 +102,37 @@ export default function McpPage() {
                 <i className="di" aria-hidden="true">{c.di}</i>
                 <h4>{c.name}</h4>
                 <p>{c.desc}</p>
+                <ul className="asks">
+                  {c.asks.map((a) => (
+                    <li key={a}>{a}</li>
+                  ))}
+                </ul>
               </div>
             ))}
           </div>
         </div>
       </section>
+
+      <div className="wrap">
+        <section className="section">
+          <WorkflowDemo />
+        </section>
+
+        <section className="cta">
+          <div>
+            <h2>Every client,<br />step by step.</h2>
+            <p>
+              Setup for VS Code, Copilot, Claude Desktop and more, the BrainKB skill, and answers to common questions.
+            </p>
+          </div>
+          <div className="actions">
+            <a className="btn primary" href={MCP_SITE} target="_blank" rel="noopener noreferrer">
+              Full setup guide ↗
+            </a>
+            <Link className="btn" href="/explore">Explore the graph</Link>
+          </div>
+        </section>
+      </div>
 
       <MarketingFooter />
     </div>

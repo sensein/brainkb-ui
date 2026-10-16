@@ -359,6 +359,9 @@ html:has(.lp){scroll-behavior:smooth}
 .lp .endpoint .lbl{display:block;font:11px var(--font-plex-mono),monospace;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
 .lp .endpoint .code{display:inline-block;margin:0;font-size:14px}
 .lp .muted-p{margin:14px 0 0;font-size:14px;line-height:1.6;color:var(--muted)}
+.lp .muted-p a{color:var(--blue);font-weight:500}
+.lp .dec-item .asks{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:4px;font:12.5px/1.5 var(--font-plex-mono),monospace;color:var(--blue)}
+.lp .dec-item .asks li::before{content:"› ";color:var(--muted)}
 .lp .muted-p code,.lp .card code,.lp .install code{font-size:.9em;color:#1e40af;background:var(--blue-50);border-radius:4px;padding:1px 5px}
 .lp .band-section{background:var(--pale);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:84px 0}
 
@@ -402,3 +405,48 @@ html:has(.lp){scroll-behavior:smooth}
 .lp .grid3.four{grid-template-columns:repeat(4,minmax(0,1fr))}
 @media(max-width:1100px){.lp .grid3.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:680px){.lp .grid3.four{grid-template-columns:1fr}}
+
+/* "From question to answer" replays (MCP page) */
+.lp .workflow{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:48px;align-items:start;padding:52px 56px;background:var(--pale);border:1px solid var(--line);border-radius:20px}
+.lp .workflow>div>p{margin:20px 0 0;font-size:16px;line-height:1.7;color:var(--muted)}
+.lp .wf-tasks{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+.lp .wf-tasks button{position:relative;overflow:hidden;border:1px solid var(--line);background:#fff;color:#596476;font:500 14px var(--font-dm-sans),sans-serif;padding:9px 15px;border-radius:7px;transition:background .2s,color .2s,border-color .2s}
+.lp .wf-tasks button:hover{color:var(--ink)}
+.lp .wf-tasks button[aria-pressed="true"]{background:var(--blue-50);border-color:#bfdbfe;color:var(--blue)}
+.lp .wf-tasks button.playing::after{content:"";position:absolute;left:0;bottom:0;height:2px;width:100%;background:var(--blue);transform-origin:left;animation:lp-dwell var(--dwell) linear forwards}
+@keyframes lp-dwell{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.lp .wf-body{min-height:420px;gap:8px;font:13px/1.65 var(--font-plex-mono),monospace;color:var(--muted)}
+.lp .wf-prompt{color:var(--ink);margin-bottom:8px}
+.lp .wf-log,.lp .wf-result{opacity:0;animation:lp-fadein .3s ease forwards}
+.lp .wf-prompt{animation:lp-fadein .3s ease}
+.lp .wf-log{display:flex;gap:16px}
+.lp .wf-log b{color:var(--blue);font-weight:500}
+.lp .wf-result{margin-top:12px;padding:14px 16px;background:#f2fbf6;border:1px solid #cdeedd;border-radius:8px;color:var(--green-ink)}
+.lp .wf-result b{font-weight:600}
+.lp .wf-table{margin-top:10px;overflow-x:auto}
+.lp .wf-table table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #dcefe4;font-size:12px}
+.lp .wf-table th,.lp .wf-table td{padding:6px 10px;border-bottom:1px solid #e6f2eb;text-align:left;vertical-align:top}
+.lp .wf-table th{font-weight:500;color:var(--green-ink);background:#f7fcf9}
+.lp .wf-table td{color:var(--ink)}
+.lp .wf-table td:first-child{color:var(--blue);white-space:nowrap}
+.lp .wf-table .n{text-align:right;white-space:nowrap}
+.lp .wf-result ul{margin:10px 0 0;padding-left:18px;color:#3d4c69;font-size:12px}
+.lp .wf-result .src{display:block;margin-top:10px;font-size:11.5px;color:#6b8a7b}
+@media(max-width:900px){.lp .workflow{grid-template-columns:1fr;padding:36px 24px;gap:32px}}
+@media(prefers-reduced-motion:reduce){.lp .wf-log,.lp .wf-result,.lp .wf-prompt{animation:none;opacity:1}}
+
+/* MCP client setup (MCP page hero), like the MCP site's Connect section */
+.lp .connect{min-width:0}
+.lp .connect-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.lp .connect-tabs button{border:1px solid var(--line);background:#fff;color:#596476;font:500 13.5px var(--font-dm-sans),sans-serif;padding:8px 13px;border-radius:7px;transition:background .2s,color .2s,border-color .2s}
+.lp .connect-tabs button:hover{color:var(--ink)}
+.lp .connect-tabs button[aria-selected="true"]{background:var(--blue-50);border-color:#bfdbfe;color:var(--blue)}
+.lp .connect-tabs .sep{color:#a3adbd}
+.lp .connect .ok{color:#16a34a;font-weight:700}
+.lp .connect-pane{border:1px solid var(--line);border-radius:12px;background:#fff;box-shadow:0 30px 60px #1d4ed80f;overflow:hidden}
+.lp .connect-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px 10px 18px;background:var(--pale);border-bottom:1px solid var(--line);font:12px var(--font-plex-mono),monospace;color:var(--muted)}
+.lp .connect-head .copy{flex:none;border:1px solid var(--line);background:#fff;color:var(--ink);font:500 12px var(--font-plex-mono),monospace;padding:5px 10px;border-radius:6px}
+.lp .connect-pane pre{margin:0;padding:18px;font:12.5px/1.65 var(--font-plex-mono),monospace;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;border-bottom:1px solid var(--line)}
+.lp .connect-steps{list-style:decimal;margin:0;padding:14px 18px 16px 38px;display:grid;gap:6px;font-size:13.5px;line-height:1.6;color:#3d4a5c}
+.lp .connect-steps li{display:list-item}
+.lp .connect-steps code,.lp .connect .muted-p code{font:.9em var(--font-plex-mono),monospace;color:#1e40af;background:var(--blue-50);border-radius:4px;padding:1px 5px}
