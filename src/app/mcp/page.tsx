@@ -10,6 +10,7 @@ import MarketingHeader from "../components/marketing/MarketingHeader";
 import MarketingFooter from "../components/marketing/MarketingFooter";
 import InstallCard from "../components/marketing/InstallCard";
 import WorkflowDemo from "./WorkflowDemo";
+import SkillSetup from "../components/marketing/SkillSetup";
 import { dmSans, plexMono } from "../components/marketing/fonts";
 import { MCP_ENDPOINT, MCP_SITE } from "../components/marketing/tokens";
 import "../components/marketing/landing/landing.css";
@@ -83,7 +84,7 @@ export default function McpPage() {
               MCP client.
             </p>
           </div>
-          <InstallCard authNote />
+          <InstallCard authNote skillHref="#skill" />
         </section>
       </main>
 
@@ -114,7 +115,22 @@ export default function McpPage() {
       </section>
 
       <div className="wrap">
-        <section className="section">
+        <section className="section" id="skill">
+          <div className="section-title center">
+            <div>
+              <span className="eyebrow">Skill</span>
+              <h2>Connect with the BrainKB skill.</h2>
+              <p>
+                One command installs the BrainKB skill and registers the MCP server. The skill teaches your agent to
+                confirm who it is acting as, ingest large files safely, pick the right workspace and question, and
+                answer provenance questions.
+              </p>
+            </div>
+          </div>
+          <SkillSetup />
+        </section>
+
+        <section className="section flush">
           <WorkflowDemo />
         </section>
 

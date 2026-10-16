@@ -437,16 +437,51 @@ html:has(.lp){scroll-behavior:smooth}
 
 /* MCP client setup (MCP page hero), like the MCP site's Connect section */
 .lp .connect{min-width:0}
-.lp .connect-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
-.lp .connect-tabs button{border:1px solid var(--line);background:#fff;color:#596476;font:500 13.5px var(--font-dm-sans),sans-serif;padding:8px 13px;border-radius:7px;transition:background .2s,color .2s,border-color .2s}
-.lp .connect-tabs button:hover{color:var(--ink)}
-.lp .connect-tabs button[aria-selected="true"]{background:var(--blue-50);border-color:#bfdbfe;color:var(--blue)}
 .lp .connect-tabs .sep{color:#a3adbd}
 .lp .connect .ok{color:#16a34a;font-weight:700}
-.lp .connect-pane{border:1px solid var(--line);border-radius:12px;background:#fff;box-shadow:0 30px 60px #1d4ed80f;overflow:hidden}
+.lp .connect .demo-tabs{flex-wrap:wrap;overflow:visible;row-gap:2px}
+.lp .connect .demo-tabs button:hover{color:var(--ink)}
+.lp .connect .skill-tab{margin-left:auto;align-self:center;display:inline-flex;align-items:center;gap:6px;margin-bottom:6px;padding:6px 11px;border-radius:7px;font:600 13px var(--font-dm-sans),sans-serif;color:#6d28d9;background:#f3efff;border:1px solid #ddd3fb;white-space:nowrap}
+.lp .connect .skill-tab i{font-style:normal;font-size:11px}
+.lp .connect .skill-tab:hover{background:#ebe4ff}
+.lp .connect-pane{background:#fff}
 .lp .connect-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px 10px 18px;background:var(--pale);border-bottom:1px solid var(--line);font:12px var(--font-plex-mono),monospace;color:var(--muted)}
 .lp .connect-head .copy{flex:none;border:1px solid var(--line);background:#fff;color:var(--ink);font:500 12px var(--font-plex-mono),monospace;padding:5px 10px;border-radius:6px}
 .lp .connect-pane pre{margin:0;padding:18px;font:12.5px/1.65 var(--font-plex-mono),monospace;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;border-bottom:1px solid var(--line)}
 .lp .connect-steps{list-style:decimal;margin:0;padding:14px 18px 16px 38px;display:grid;gap:6px;font-size:13.5px;line-height:1.6;color:#3d4a5c}
 .lp .connect-steps li{display:list-item}
 .lp .connect-steps code,.lp .connect .muted-p code{font:.9em var(--font-plex-mono),monospace;color:#1e40af;background:var(--blue-50);border-radius:4px;padding:1px 5px}
+
+/* BrainKB skill setup: segmented agent tabs + three step cards (MCP page) */
+.lp .skill-setup{text-align:center}
+.lp .seg{display:inline-flex;gap:4px;padding:5px;background:var(--pale);border:1px solid var(--line);border-radius:12px;margin:0 auto 28px;max-width:100%;overflow-x:auto}
+.lp .seg button{border:0;background:none;color:#596476;font:500 15px var(--font-dm-sans),sans-serif;padding:9px 20px;border-radius:8px;white-space:nowrap}
+.lp .seg button[aria-selected="true"]{background:#fff;color:var(--ink);box-shadow:0 1px 3px #0b16281a}
+.lp .skill-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;text-align:left}
+.lp .skill-step{min-width:0;display:flex;flex-direction:column;gap:14px;border:1px solid var(--line);border-radius:14px;padding:26px;background:#fff;animation:lp-fadein .25s ease}
+.lp .skill-step.hl{border-color:#c4b5fd;background:linear-gradient(160deg,#fff,#f8f5ff)}
+.lp .skill-step-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.lp .skill-step-head .num{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:#fff;font-weight:600;font-size:14px}
+.lp .skill-step-head h3{margin:0;font-size:18px;font-weight:600}
+.lp .stag{font:600 12px var(--font-plex-mono),monospace;padding:3px 9px;border-radius:999px}
+.lp .stag.skill{color:#6d28d9;background:#f3efff;border:1px solid #ddd3fb}
+.lp .stag.mcp{color:var(--blue);background:var(--blue-50);border:1px solid #bfdbfe}
+.lp .skill-step p{margin:0;font-size:14.5px;line-height:1.65;color:var(--muted)}
+.lp .skill-step p.foot{font-size:13.5px}
+.lp .skill-step .btn{align-self:flex-start}
+.lp .skill-step code,.lp .skill-foot code{font:.9em var(--font-plex-mono),monospace;color:#1e40af}
+.lp .codebox{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.lp .codebox pre{margin:0;padding:14px 16px;font:12.5px/1.65 var(--font-plex-mono),monospace;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere}
+.lp .skill-foot{margin:26px auto 0;max-width:820px;font-size:13.5px;line-height:1.7;color:var(--muted)}
+.lp .skill-foot a{color:var(--blue);font-weight:500}
+@media(max-width:900px){.lp .skill-steps{grid-template-columns:1fr}}
+
+/* Home: connect text + client setup side by side */
+.lp .connect-row{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:44px;align-items:start;margin-bottom:40px}
+.lp .connect-row>div>p{margin:0 0 16px;font-size:15.5px;line-height:1.7;color:var(--muted)}
+.lp .connect-row>div>p b{color:var(--ink);font-weight:600}
+.lp .connect-row>div>p code{font:.9em var(--font-plex-mono),monospace;color:var(--blue)}
+.lp .connect-row>div>p a{color:var(--blue);text-decoration:underline}
+@media(max-width:900px){.lp .connect-row{grid-template-columns:1fr;gap:28px}}
+.lp .section-title.center{justify-content:center;text-align:center}
+.lp .section-title.center p{max-width:720px;margin:16px auto 0;font-size:16px;line-height:1.7;color:var(--muted)}

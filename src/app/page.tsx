@@ -17,6 +17,7 @@ import HeroDemo from "./components/marketing/landing/HeroDemo";
 import CompareSources from "./components/marketing/landing/CompareSources";
 import WhereResultsGo from "./components/marketing/landing/WhereResultsGo";
 import ProvenanceTrace from "./components/marketing/landing/ProvenanceTrace";
+import InstallCard from "./components/marketing/InstallCard";
 import { MCP_ENDPOINT, MCP_FLAG } from "./components/marketing/tokens";
 import "./components/marketing/landing/landing.css";
 
@@ -55,11 +56,6 @@ const DECENTRALIZED = [
   { di: "⚿", title: "Your models, your keys", desc: "Use the model provider you choose, or a local model. Papers and drafts don't have to leave your machine." },
   { di: "▣", title: "Host your own BrainKB", desc: "The full stack (graph store, search, API, MCP) runs from one Docker Compose file, for a lab, a consortium or offline work." },
   { di: "⇪", title: "Share with the community, your call", desc: "Keep it local, share with your team, or contribute to the community graph. Sharing is opt-in, and your name stays on what you add." },
-];
-
-const CLIENTS = [
-  ["✳", "Claude Code"], ["✳", "claude.ai"], ["◎", "ChatGPT"], ["⌕", "Perplexity"],
-  ["▸", "Cursor"], ["◇", "VS Code & Copilot"], ["›_", "Codex"],
 ];
 
 const PROV_POINTS = [
@@ -209,11 +205,25 @@ export default function HomePage() {
             BrainKB is built to be driven by AI agents. Any MCP client can search, read, ingest and trace provenance in
             plain language, and public data needs no login.
           </SectionTitle>
-          <div className="clients" aria-label="Supported clients">
-            {CLIENTS.map(([i, name]) => (
-              <span key={name} className="client"><i>{i}</i>{name}</span>
-            ))}
-            <span className="client any">+ any MCP client</span>
+          <div className="connect-row">
+            <div>
+              <p>
+                Point your client at <code>{MCP_ENDPOINT}</code> (streamable HTTP). Every call that needs an account
+                runs as you: the client signs in with your own BrainKB account, never a shared one.
+              </p>
+              <p>
+                <b>Just reading open knowledge?</b> No need to log in; see <a href="#open">Open knowledge</a>.
+              </p>
+              <p>
+                Apps that connect by URL (Perplexity, claude.ai, ChatGPT) choose <b>OAuth</b> with no client ID or
+                secret, then sign in on the BrainKB page that opens.
+              </p>
+              <p>
+                <span style={{ color: "#16a34a", fontWeight: 700 }}>✓</span> tested with BrainKB · want the agent
+                skill too? See <Link href="/mcp#skill">Skill</Link>.
+              </p>
+            </div>
+            <InstallCard />
           </div>
           <div className="ways4">
             <Link className="way" href="/mcp">
