@@ -95,7 +95,7 @@ function Rich({ text }: { text: string }) {
   );
 }
 
-function CodeBox({ label, cmd }: Box) {
+export function CodeBox({ label, cmd }: Box) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
     try {

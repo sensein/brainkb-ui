@@ -14,6 +14,7 @@ const NAV_LINKS = [
   { href: "/mcp", label: "Use with AI" },
   { href: "/explore", label: "Explore the graph" },
   { href: "/skills", label: "Extraction tools" },
+  { href: "/tutorial", label: "Tutorial" },
 ];
 
 export default function MarketingHeader() {

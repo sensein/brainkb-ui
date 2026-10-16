@@ -461,3 +461,45 @@ html:has(.lp){scroll-behavior:smooth}
 @media(max-width:900px){.lp .connect-row{grid-template-columns:1fr;gap:28px}}
 .lp .section-title.center{justify-content:center;text-align:center}
 .lp .section-title.center p{max-width:720px;margin:16px auto 0;font-size:16px;line-height:1.7;color:var(--muted)}
+
+/* Tutorial page: topic picker + collapsible sections */
+.lp .tut-path{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:28px}
+.lp .tut-path button{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;border:1px solid var(--line);background:#fff;border-radius:12px;padding:16px;font-family:inherit;color:var(--ink);transition:border-color .2s,box-shadow .2s,background .2s}
+.lp .tut-path button:hover{border-color:#bfdbfe;box-shadow:0 10px 24px #1d4ed80f}
+.lp .tut-path button[aria-pressed="true"]{border-color:var(--blue);background:var(--blue-50);box-shadow:0 0 0 1px var(--blue)}
+.lp .tut-path .n{font:11px var(--font-plex-mono),monospace;color:var(--muted)}
+.lp .tut-path .ico{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:var(--blue-50);color:var(--blue);font-size:14px}
+.lp .tut-path button[aria-pressed="true"] .ico{background:#fff}
+.lp .tut-path b{font-size:15px;font-weight:600}
+.lp .tut-path .sum{font-size:12.5px;line-height:1.5;color:var(--muted)}
+.lp .tut-topic{border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden;margin-bottom:56px;animation:lp-fadein .25s ease}
+.lp .tut-topic-head{display:flex;align-items:center;gap:16px;padding:24px 28px;background:var(--pale);border-bottom:1px solid var(--line)}
+.lp .tut-topic-head .ico{flex:none;width:44px;height:44px;border-radius:11px;display:grid;place-items:center;background:#fff;border:1px solid var(--blue-100);color:var(--blue);font-size:20px}
+.lp .tut-topic-head>div{flex:1;min-width:0}
+.lp .tut-topic-head h2{margin:0;font-size:26px;letter-spacing:-.6px}
+.lp .tut-topic-head p{margin:4px 0 0;font-size:15px;color:var(--muted)}
+.lp .tut-sec{border-bottom:1px solid var(--line)}
+.lp .tut-sec:last-child{border-bottom:0}
+.lp .tut-sec summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:18px 28px;font-size:17px;font-weight:600}
+.lp .tut-sec summary::-webkit-details-marker{display:none}
+.lp .tut-sec summary::after{content:"+";font:400 22px var(--font-plex-mono),monospace;color:var(--blue)}
+.lp .tut-sec[open] summary::after{content:"−"}
+.lp .tut-sec summary:hover{background:#fafbfe}
+.lp .tut-sec-body{display:flex;flex-direction:column;gap:12px;padding:0 28px 24px}
+.lp .tut-sec-body p,.lp .tut-list li{margin:0;font-size:15px;line-height:1.7;color:#3d4a5c}
+.lp .tut-list li{display:list-item}
+.lp .tut-list{list-style:disc;margin:0;padding-left:20px;display:grid;gap:6px}
+.lp .tut-sec-body b{color:var(--ink);font-weight:600}
+.lp .tut-sec-body code,.lp .tut-needs code{font:.88em var(--font-plex-mono),monospace;color:#1e40af;background:var(--blue-50);border-radius:4px;padding:1px 5px}
+.lp .tut-sec-body a{color:var(--blue);text-decoration:underline}
+.lp .tut-needs{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+.lp .tut-needs>div{border:1px solid var(--line);border-radius:12px;padding:18px}
+.lp .tut-needs-lbl{display:inline-block;font:600 11px var(--font-plex-mono),monospace;letter-spacing:.8px;text-transform:uppercase;padding:3px 8px;border-radius:5px;margin-bottom:12px}
+.lp .tut-needs-lbl.req{color:var(--green-ink);background:var(--green-50);border:1px solid var(--green-200)}
+.lp .tut-needs-lbl.opt{color:var(--blue);background:var(--blue-50);border:1px solid #bfdbfe}
+.lp .tut-needs dl{margin:0;display:grid;gap:12px}
+.lp .tut-needs dt{font-size:14.5px;font-weight:600;color:var(--ink)}
+.lp .tut-needs dd{margin:2px 0 0;font-size:13.5px;line-height:1.6;color:var(--muted)}
+@media(max-width:1100px){.lp .tut-path{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:900px){.lp .tut-needs{grid-template-columns:1fr}}
+@media(max-width:680px){.lp .tut-path{grid-template-columns:1fr 1fr}.lp .tut-path .sum{display:none}.lp .tut-topic-head{padding:18px}.lp .tut-sec summary{padding:16px 18px}.lp .tut-sec-body{padding:0 18px 18px}}

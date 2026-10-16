@@ -16,7 +16,7 @@ import MarketingHeader from "../marketing/MarketingHeader";
 import MarketingFooter from "../marketing/MarketingFooter";
 import { Theme } from "@/src/app/components/design-system";
 
-const MARKETING_ROUTES = new Set(["/", "/search", "/mcp", "/skills", "/explore"]);
+const MARKETING_ROUTES = new Set(["/", "/search", "/mcp", "/skills", "/explore", "/tutorial"]);
 
 export default function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
