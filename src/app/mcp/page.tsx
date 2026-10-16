@@ -9,7 +9,6 @@ import Link from "next/link";
 import MarketingHeader from "../components/marketing/MarketingHeader";
 import MarketingFooter from "../components/marketing/MarketingFooter";
 import InstallCard from "../components/marketing/InstallCard";
-import WorkflowDemo from "./WorkflowDemo";
 import SkillSetup from "../components/marketing/SkillSetup";
 import { dmSans, plexMono } from "../components/marketing/fonts";
 import { MCP_ENDPOINT, MCP_SITE } from "../components/marketing/tokens";
@@ -80,9 +79,12 @@ export default function McpPage() {
               </div>
             </div>
             <p className="muted-p">
-              Works with Claude Code, claude.ai, ChatGPT, Perplexity, Cursor, VS Code and Copilot, Codex, and any other
-              MCP client.
+              Works with <b>Claude Code</b>, <b>claude.ai</b>, <b>ChatGPT</b>, <b>Perplexity</b>, <b>Cursor</b>,{" "}
+              <b>VS Code</b> and <b>Copilot</b>, <b>Codex</b>, and any other MCP client.
             </p>
+            <div className="hero-actions">
+              <a className="btn primary" href="#skill">Install the BrainKB skill ↓</a>
+            </div>
           </div>
           <InstallCard authNote skillHref="#skill" />
         </section>
@@ -128,10 +130,6 @@ export default function McpPage() {
             </div>
           </div>
           <SkillSetup />
-        </section>
-
-        <section className="section flush">
-          <WorkflowDemo />
         </section>
 
         <section className="cta">

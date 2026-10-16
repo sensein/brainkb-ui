@@ -360,6 +360,7 @@ html:has(.lp){scroll-behavior:smooth}
 .lp .endpoint .code{display:inline-block;margin:0;font-size:14px}
 .lp .muted-p{margin:14px 0 0;font-size:14px;line-height:1.6;color:var(--muted)}
 .lp .muted-p a{color:var(--blue);font-weight:500}
+.lp .muted-p b{color:var(--ink);font-weight:600}
 .lp .dec-item .asks{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:4px;font:12.5px/1.5 var(--font-plex-mono),monospace;color:var(--blue)}
 .lp .dec-item .asks li::before{content:"› ";color:var(--muted)}
 .lp .muted-p code,.lp .card code,.lp .install code{font-size:.9em;color:#1e40af;background:var(--blue-50);border-radius:4px;padding:1px 5px}
