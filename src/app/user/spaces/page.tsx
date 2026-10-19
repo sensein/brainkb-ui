@@ -187,6 +187,127 @@ function Members({ slug, onError }: { slug: string; onError: (m: string) => void
   );
 }
 
+type AccessRule = { id: number; action: string; subject_type: string; subject_value: string };
+
+const RULE_ACTIONS = ["read", "write", "manage"] as const;
+const SUBJECT_TYPES: { value: string; label: string; placeholder: string }[] = [
+  { value: "global_role", label: "people with the role", placeholder: "Lab Member" },
+  { value: "member", label: "the person", placeholder: "name@example.org" },
+  { value: "space_role", label: "members who are at least", placeholder: "editor" },
+];
+// Suggestions only: custom roles/groups created by an admin are valid too.
+const KNOWN_ROLES = ["Lab Member", "Curator", "Submitter", "Annotator", "Mapper", "Knowledge Contributor", "Admin"];
+
+/** Who may read / write / manage this space beyond its members. Space managers
+ *  (owner, admins, assigned managers) edit; the query service enforces it. */
+function AccessRules({ slug, onError }: { slug: string; onError: (m: string) => void }) {
+  const [rules, setRules] = useState<AccessRule[] | null>(null);
+  const [action, setAction] = useState<string>("write");
+  const [subjectType, setSubjectType] = useState<string>("global_role");
+  const [subjectValue, setSubjectValue] = useState("");
+  const [busy, setBusy] = useState(false);
+  const base = `/api/spaces/${encodeURIComponent(slug)}/access-rules`;
+
+  const load = useCallback(() => {
+    api<{ rules: AccessRule[] }>(base).then((b) => setRules(b.rules ?? [])).catch((e) => onError(e.message));
+  }, [base, onError]);
+  useEffect(load, [load]);
+
+  const run = async (fn: () => Promise<{ rules: AccessRule[] }>) => {
+    setBusy(true);
+    try {
+      const b = await fn();
+      setRules(b.rules ?? []);
+    } catch (e: any) {
+      onError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  const describe = (r: AccessRule) => {
+    const who = r.subject_type === "global_role" ? `people with the role ${r.subject_value}`
+      : r.subject_type === "member" ? r.subject_value
+      : `members who are at least ${r.subject_value}`;
+    return <><strong style={{ fontWeight: 600 }}>{r.action}</strong>: {who}</>;
+  };
+  const current = SUBJECT_TYPES.find((t) => t.value === subjectType)!;
+
+  return (
+    <div style={{ display: "grid", gap: 10, borderTop: "1px solid var(--bkb-border)", paddingTop: 12 }}>
+      <div style={{ fontSize: 13, fontWeight: 600 }}>Access rules</div>
+      <div style={{ fontSize: 12, color: "var(--bkb-textMuted)" }}>
+        A rule lets a whole group, or one person, read, write (add data to) or manage this space without adding each
+        of them as a member. Once an action has rules, only people who match one can do it — the owner and admins
+        always can.
+      </div>
+      {rules === null ? (
+        <div style={{ fontSize: 13, color: "var(--bkb-textMuted)" }}>Loading rules…</div>
+      ) : rules.length === 0 ? (
+        <div style={{ fontSize: 13, color: "var(--bkb-textMuted)" }}>No rules: membership alone decides who can do what.</div>
+      ) : (
+        rules.map((r) => (
+          <div key={r.id} className="bkb-hover-row" style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 8px", borderRadius: 6, fontSize: 13 }}>
+            <span style={{ flex: 1, minWidth: 0 }}>{describe(r)}</span>
+            <button
+              className="bkb-btn bkb-btn-ghost" type="button" disabled={busy} style={{ fontSize: 12, padding: "4px 10px" }}
+              onClick={() => {
+                if (confirm("Remove this access rule?")) run(() => api(`${base}/${r.id}`, { method: "DELETE" }));
+              }}
+            >
+              Remove
+            </button>
+          </div>
+        ))
+      )}
+      <form
+        style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}
+        onSubmit={(e) => {
+          e.preventDefault();
+          const value = subjectValue.trim();
+          if (!value) return;
+          run(async () => {
+            const b = await api<{ rules: AccessRule[] }>(base, {
+              method: "POST",
+              body: JSON.stringify({ action, subject_type: subjectType, subject_value: value }),
+            });
+            setSubjectValue("");
+            return b;
+          });
+        }}
+      >
+        <span style={{ fontSize: 13 }}>Allow</span>
+        <select className="bkb-input" value={subjectType} aria-label="Who the rule applies to"
+                onChange={(e) => { setSubjectType(e.target.value); setSubjectValue(""); }} style={{ width: "auto" }}>
+          {SUBJECT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+        </select>
+        {subjectType === "space_role" ? (
+          <select className="bkb-input" value={subjectValue} aria-label="Minimum space role"
+                  onChange={(e) => setSubjectValue(e.target.value)} style={{ width: "auto" }}>
+            <option value="">choose…</option>
+            {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+          </select>
+        ) : (
+          <>
+            <input
+              className="bkb-input" required value={subjectValue} onChange={(e) => setSubjectValue(e.target.value)}
+              placeholder={current.placeholder} aria-label={current.label}
+              type={subjectType === "member" ? "email" : "text"}
+              list={subjectType === "global_role" ? "known-roles" : undefined}
+              style={{ flex: "1 1 180px" }}
+            />
+            <datalist id="known-roles">{KNOWN_ROLES.map((r) => <option key={r} value={r} />)}</datalist>
+          </>
+        )}
+        <span style={{ fontSize: 13 }}>to</span>
+        <select className="bkb-input" value={action} aria-label="Action" onChange={(e) => setAction(e.target.value)} style={{ width: "auto" }}>
+          {RULE_ACTIONS.map((a) => <option key={a} value={a}>{a}</option>)}
+        </select>
+        <button className="bkb-btn bkb-btn-primary" type="submit" disabled={busy || !subjectValue.trim()}>Add rule</button>
+      </form>
+    </div>
+  );
+}
+
 type Deleted = { slug: string; dropped_graphs: string[]; dropped_delta_graphs: string[]; members_removed: number };
 
 /** SuperAdmin only. Typing the slug is the confirmation the API also requires. */
@@ -343,6 +464,7 @@ function SpaceRow({ space, canManage, canDelete, hasSubspaces, onChanged, onDele
         )}
       </div>
       {canManage && open && <Members slug={space.slug} onError={onError} />}
+      {canManage && open && <AccessRules slug={space.slug} onError={onError} />}
       {canManage && addingSub && (
         <CreateSpace
           parent={space}

@@ -18,6 +18,7 @@ const ADMIN_NAV: { href: string; label: string; icon: string }[] = [
   { href: "/admin/dashboard", label: "Statistics", icon: "dash" },
   { href: "/admin/users", label: "Users", icon: "person" },
   { href: "/admin/roles", label: "Roles & permissions", icon: "shield" },
+  { href: "/admin/capabilities", label: "Capabilities", icon: "shield" },
   { href: "/admin/page-access", label: "Page access", icon: "lock" },
   { href: "/admin/reserved-graphs", label: "Reserved graphs", icon: "lock" },
   { href: "/admin/guide", label: "Guide", icon: "info" },
