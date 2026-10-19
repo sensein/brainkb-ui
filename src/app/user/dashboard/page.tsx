@@ -17,6 +17,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { FONTS, Icon, Theme } from "@/src/app/components/design-system";
 import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 import { usePageAccessBatch } from "@/src/hooks/usePageAccess";
@@ -44,9 +45,12 @@ function DashTools() {
   // need it. Backend check_access also bypasses only for SuperAdmin (see
   // PageAccessRepository.check_access) — this is belt-and-braces.
   const keys = TOOL_REGISTRY.filter((t) => !t.openToAll).map((t) => t.pageKey);
-  const { loading, allowedMap, refresh } = usePageAccessBatch(keys);
+  const { loading, revalidating, error, access, refresh } = usePageAccessBatch(keys);
   const { isSuperAdmin } = useCurrentUser();
   const bypass = !ENABLE_PAGE_ACCESS_GATE || isSuperAdmin;
+  // A failed re-check keeps the last known answers (see accessState.ts); say so
+  // instead of silently showing them, and never show a failure as "disabled".
+  const anyUnverified = !bypass && TOOL_REGISTRY.some((t) => !t.openToAll && access(t.pageKey) === "unverified");
 
   return (
     <div>
@@ -64,19 +68,39 @@ function DashTools() {
         <button
           className="bkb-btn bkb-btn-ghost"
           onClick={refresh}
-          disabled={loading}
+          disabled={loading || revalidating}
           title="Re-check tool access — useful right after an admin grants you a new tool."
           style={{ padding: "4px 10px", fontSize: 12 }}
         >
-          <Icon name="arrow" size={11} /> {loading ? "Refreshing…" : "Refresh"}
+          <Icon name="arrow" size={11} /> {loading || revalidating ? "Refreshing…" : "Refresh"}
         </button>
       </div>
+
+      {error && !bypass && (
+        <div
+          role="status"
+          style={{
+            marginBottom: 12,
+            padding: "8px 12px",
+            fontSize: 12,
+            borderRadius: 6,
+            border: "1px solid var(--bkb-border)",
+            background: "var(--bkb-surfaceAlt)",
+            color: "var(--bkb-textMuted)",
+          }}
+        >
+          {anyUnverified
+            ? "Couldn't verify tool access right now — your permissions have not changed. Try Refresh in a moment."
+            : "Couldn't refresh tool access — showing your last known access."}
+        </div>
+      )}
 
       {/* Mobile: min(280px,100%) lets the auto-fill grid collapse to one column without overflowing narrow phones */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(280px, 100%), 1fr))", gap: 12 }}>
         {TOOL_REGISTRY.map((t) => {
-          const allowed = bypass || t.openToAll ? true : allowedMap[t.pageKey];
-          const ready = bypass || t.openToAll ? true : !loading;
+          const state = bypass || t.openToAll ? "available" : access(t.pageKey);
+          const allowed = state === "available";
+          const ready = state === "available" || state === "disabled";
           const inner = (
             <div
               className="bkb-card"
@@ -117,7 +141,7 @@ function DashTools() {
                     color: ready ? (allowed ? "var(--bkb-accent)" : "var(--bkb-textMuted)") : "var(--bkb-textMuted)",
                   }}
                 >
-                  {ready ? (allowed ? "available" : "disabled") : "checking…"}
+                  {state === "checking" ? "checking…" : state === "unverified" ? "not verified" : state}
                 </span>
               </div>
               <div style={{ fontSize: 12, color: "var(--bkb-textMuted)", lineHeight: 1.5, marginBottom: 12 }}>
@@ -133,7 +157,10 @@ function DashTools() {
               {inner}
             </Link>
           ) : (
-            <div key={t.pageKey} title="Disabled — request access from an admin">
+            <div
+              key={t.pageKey}
+              title={state === "unverified" ? "Access could not be checked — try Refresh" : "Disabled — request access from an admin"}
+            >
               {inner}
             </div>
           );
@@ -192,21 +219,26 @@ function DashKeys() {
 // ─── Page ─────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
-  const { user, loading } = useCurrentUser();
+  const { user, loading, error, stale } = useCurrentUser();
   const [tab, setTab] = React.useState<DashTab>("tools");
 
+  const { data: session, status: sessionStatus } = useSession();
   const greetingName = React.useMemo(() => {
-    if (loading) return "—";
-    if (!user) return "Guest";
-    if (user.name) return user.name.split(/\s+/)[0];
-    return user.email.split("@")[0];
-  }, [user, loading]);
+    // Identity comes from the session, so it shows even while membership loads.
+    const name = user?.name ?? session?.user?.name ?? null;
+    const email = user?.email ?? session?.user?.email ?? null;
+    if (name) return name.split(/\s+/)[0];
+    if (email) return email.split("@")[0];
+    return sessionStatus === "loading" || loading ? "—" : "Guest";
+  }, [user, loading, session, sessionStatus]);
 
   const subtitle = React.useMemo(() => {
-    if (!user) return "Sign in to see your tools.";
+    if (sessionStatus !== "authenticated") return sessionStatus === "loading" ? "—" : "Sign in to see your tools.";
+    // Signed in, but membership hasn't loaded: say so rather than "Member · —".
+    if (!user) return loading ? "Loading membership…" : `Couldn't load membership${error ? ` (${error})` : ""}.`;
     const role = user.roles?.[0] ?? "Member";
-    return `${role} · ${user.auth_source ?? "—"}`;
-  }, [user]);
+    return `${role} · ${user.auth_source ?? "—"}${stale ? " · not refreshed" : ""}`;
+  }, [user, loading, error, stale, sessionStatus]);
 
   return (
     <Theme theme="light" style={{ background: "#f6f8fb", minHeight: "calc(100vh - 64px)" }}>

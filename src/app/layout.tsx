@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import SessionProvider from "./components/auth/SessionProvider";
 import SessionExpiryWatcher from "./components/auth/SessionExpiryWatcher";
 import dynamic from "next/dynamic"; // Required for Client Component import
@@ -41,7 +42,12 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession();
+  // authOptions is required: without it NextAuth renders with an empty config, so
+  // the session handed to the client has only name/email — no backendToken, roles
+  // or error. SessionProvider trusts this initial session and skips its own fetch,
+  // so after every full page load the UI ran signed-in but tokenless (roles empty,
+  // every gated tool "disabled") until the next refetch or tab focus.
+  const session = await getServerSession(authOptions);
 
   return (
     <html lang="en">
