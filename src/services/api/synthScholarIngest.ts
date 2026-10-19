@@ -5,18 +5,15 @@
  * review.json, review.ttl, the manuscript, PDF, figures, tables and verification
  * reports. Ingesting it puts the review's RDF and an import record into its own
  * graph in a space, and keeps the files (all but work/) so the review can be shown.
- * Everything runs as the signed-in user against the query service, so the space's
- * write and read rules apply; this client grants nothing.
+ * Calls go through the UI server (/api/synthscholar/reviews), which forwards them
+ * to the query service as the signed-in user — the query service's address is
+ * internal — so the space's write and read rules apply; this client grants nothing.
  *
  * Separate from ./synthScholar.ts, which talks to ml_service about reviews run on
  * BrainKB.
  */
 
-import { getSession } from "next-auth/react";
-import { env } from "@/src/config/env";
-import { getAuthTokenForService } from "@/src/utils/api/auth";
-
-const base = () => `${env.queryServiceBase}/api/synthscholar/reviews`;
+const BASE = "/api/synthscholar/reviews";
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -93,32 +90,15 @@ export interface IngestResult {
   left_out: number;
 }
 
-// ── Auth ─────────────────────────────────────────────────────────────
-
-/** The caller's query-service token, or null when not signed in (public reads). */
-async function token(required: boolean): Promise<string | null> {
-  const session = await getSession();
-  if (!(session as any)?.backendToken) {
-    if (required) throw new Error("Sign in to ingest a review.");
-    return null;
-  }
-  const t = await getAuthTokenForService("query");
-  if (!t && required) throw new Error("Could not authenticate with the query service — sign in again.");
-  return t;
-}
-
 async function errorOf(res: Response): Promise<string> {
   const body = await res.json().catch(() => ({}));
-  const d = (body as any)?.detail ?? (body as any)?.error;
-  if (res.status === 404 && !d) return "Not found — the query service may not have SynthScholar ingest yet.";
+  const d = (body as any)?.error ?? (body as any)?.detail;
+  if (res.status === 404 && (!d || d === "Not Found")) return "Not found — the query service may not have SynthScholar ingest yet.";
   return typeof d === "string" ? d : d ? JSON.stringify(d) : `HTTP ${res.status}`;
 }
 
-async function get(path: string, init: RequestInit = {}): Promise<Response> {
-  const t = await token(false);
-  const res = await fetch(`${base()}${path}`, {
-    ...init, headers: { ...(t ? { Authorization: `Bearer ${t}` } : {}), ...(init.headers || {}) },
-  });
+async function get(path: string): Promise<Response> {
+  const res = await fetch(`${BASE}${path}`, { cache: "no-store" });
   if (!res.ok) throw new Error(await errorOf(res));
   return res;
 }
@@ -177,14 +157,14 @@ export function selectReviewFiles(files: File[]): ImportSelection {
 
 /** Ingest the kept files into a space. `userId` owns the ingest job, as for RDF uploads. */
 export async function ingestReview(selection: ImportSelection, spaceSlug: string, userId?: string | null): Promise<IngestResult> {
-  const t = await token(true);
   const form = new FormData();
   form.append("space_slug", spaceSlug);
   if (userId) form.append("user_id", userId);
   // The filename carries the path inside the review's folder (figures/…, tables).
   for (const { file, path } of selection.keep) form.append("files", file, path);
   if (selection.skipped.length) form.append("left_out", JSON.stringify(selection.skipped.slice(0, 5000)));
-  const res = await fetch(base(), { method: "POST", headers: { Authorization: `Bearer ${t}` }, body: form });
+  const res = await fetch(BASE, { method: "POST", body: form });
+  if (res.status === 401) throw new Error("Sign in to ingest a review.");
   if (res.status === 405) throw new Error("The query service does not support SynthScholar ingest yet — it needs updating.");
   if (!res.ok) throw new Error(await errorOf(res));
   return res.json();
@@ -201,8 +181,8 @@ export async function getIngestedReview(reviewId: string): Promise<IngestedRevie
 
 const filePath = (path: string) => path.split("/").map(encodeURIComponent).join("/");
 
-/** A file's bytes. Fetched with the caller's token (private spaces), so images are
- *  shown from object URLs rather than linked. */
+/** A file's bytes, as the caller (private spaces need membership). Images are
+ *  shown from object URLs. */
 export async function fetchIngestedFile(reviewId: string, path: string): Promise<Blob> {
   return (await get(`/${encodeURIComponent(reviewId)}/files/${filePath(path)}`)).blob();
 }
