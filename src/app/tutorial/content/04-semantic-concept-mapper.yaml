@@ -23,7 +23,7 @@ links:
   - label: How StructSense uses it
     href: "{{SKILLS_REPO}}/blob/main/skills/structsense/references/ontology-mapping.md"
 help: https://github.com/sensein/search_hybrid/issues
-logo: /semantic_concept_mapper_logo_tr.png
+wordmark: /semantic-concept-mapper-horizontal.png
 tryIt:
   - label: Run
     cmd: |-

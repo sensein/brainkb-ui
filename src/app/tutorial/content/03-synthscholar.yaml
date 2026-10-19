@@ -21,7 +21,7 @@ links:
   - label: The original application
     href: https://github.com/sensein/synthscholar
 help: "{{SKILLS_REPO}}/issues"
-logo: /synthscholar-logo.png
+wordmark: /synthscholar-horizontal.png
 tryIt:
   - label: npx
     cmd: |-
@@ -168,22 +168,23 @@ sections:
             - ask: Use /synthscholar to run a review over the PDFs in ./papers
             - callSkill: synthscholar
       - step:
-          title: Get full text for DOIs
+          title: Give it papers by DOI
           desc: >-
-            Open access first, then your library. See [Full text & library
-            access](#synthscholar--full-text-library-access) for how sign-in works.
+            Your assistant fetches the full text for you: open access first, then your library. You only
+            sign in if it opens your library's login. See [Full text & library
+            access](#synthscholar--full-text-library-access).
           blocks:
-            - code:
-                label: terminal
-                cmd: python scripts/fetch_ezproxy.py --doi-file dois.txt --pdf-dir ./pdfs
+            - ask: Use /synthscholar to run a review over the DOIs in dois.txt
       - step:
-          title: Build the PDF and PRISMA diagram
+          title: Get the PDF
+          desc: >-
+            Your assistant builds the typeset manuscript and PRISMA diagram at the end of the run. It checks
+            what the PDF needs first and asks before installing anything.
           blocks:
-            - code:
-                label: terminal
-                cmd: |-
-                  python scripts/generate_review_pdf.py --check-deps
-                  python scripts/prisma_flow.py out/review.json --pdf
+            - ask: Use /synthscholar to build the PDF of my review
+            - note: >-
+                Running it yourself? From the skill folder: `python scripts/generate_review_pdf.py --check-deps`,
+                and `python scripts/prisma_flow.py out/review.json --pdf` for the PRISMA diagram on its own.
   - title: Full text & library access
     subtitle: Open access first, then your own institution's library, with no proxy settings to configure.
     blocks:
@@ -203,22 +204,20 @@ sections:
           its DOI and PMID). If only the preprint can be read, it's labelled as not peer-reviewed.
       - h: Signing in to your library
       - p: >-
-          At the start of the run, a browser window opens at your library's login. You sign in yourself, MFA
-          included; the script never sees your password. It finds your library's proxy for you, so there are
-          no `EZPROXY_*` settings to configure:
-      - options:
-          - label: By institution
-            cmd: "python scripts/fetch_ezproxy.py --login --institution \"University of Michigan\"   # or umich.edu"
-          - label: By library link
-            cmd: >-
-              python scripts/fetch_ezproxy.py --login --library-link
-              "https://www-nature-com.proxy.lib.umich.edu/…"
-          - label: Sign out
-            cmd: python scripts/fetch_ezproxy.py --logout
+          Your assistant handles this. When a paper is paywalled, it opens a browser window at your library's
+          login at the start of the run. You sign in yourself, MFA included; the assistant never sees your
+          password. There are no proxy settings to configure.
+      - steps:
+          - "**Your assistant finds your library's proxy**: from your saved login, or the domain of your email."
+          - >-
+            **If it can't, it asks you**: give your institution's full name (e.g. "University of Michigan"),
+            your email domain (`umich.edu`), or any off-campus article link from your library.
+          - "**You sign in** in the browser window that opens. The session is kept, so you aren't asked again for hours."
+      - ask: My library is University of Michigan
       - table:
           cols:
-            - You give
-            - How the proxy is found
+            - If you give
+            - How your library's proxy is found
           rows:
             - - Your institution's full name
               - Looked up in ROR, the research-organisation registry; only a single confident match is used
@@ -226,19 +225,32 @@ sections:
               - The usual EZproxy hostnames are tried; a host is accepted only if it answers as EZproxy
             - - Any off-campus article link from your library
               - The proxy host is read straight from the link; this covers unusual hostnames
-            - - Nothing
-              - Your saved login, then the domain of your email
+      - h: Running it yourself (optional)
+      - p: >-
+          Outside an assistant, or to sign in ahead of a run or sign out, you can run the same script from the
+          skill folder:
+      - options:
+          - label: Sign in
+            cmd: "python scripts/fetch_ezproxy.py --login --institution \"University of Michigan\"   # or umich.edu"
+          - label: By library link
+            cmd: >-
+              python scripts/fetch_ezproxy.py --login --library-link
+              "https://www-nature-com.proxy.lib.umich.edu/…"
+          - label: Fetch DOIs
+            cmd: python scripts/fetch_ezproxy.py --doi-file dois.txt --pdf-dir ./pdfs
+          - label: Sign out
+            cmd: python scripts/fetch_ezproxy.py --logout
       - h: What is saved, and the limits
       - tips:
           - >-
             Only the proxy's own cookies are saved, in `~/.config/synthscholar/` (owner-only), with a browser
-            profile so MFA isn't asked every time. `--logout` deletes them.
+            profile so MFA isn't asked every time. Ask your assistant to sign you out (or run `--logout`) to delete them.
           - A session lasts hours. An expired one is detected before use and the browser reopens once per run.
           - >-
             Library requests go one at a time, with a delay and a per-run cap; three proxied failures in a row
             stop the run. Staying within your library's terms is up to you.
           - Libraries that sign in through OpenAthens or Shibboleth instead of EZproxy aren't supported.
-          - "`--oa-only` never touches your library; it uses open access only."
+          - Want open access only? Tell your assistant not to use your library (the script's `--oa-only`).
       - note: >-
           Library sign-in needs `playwright` and Chrome, Edge or Chromium. `npx synthscholar doctor` tells you
           if they're missing.

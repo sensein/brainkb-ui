@@ -23,7 +23,7 @@ links:
   - label: Trusted ontologies
     href: "{{SKILLS_REPO}}/tree/main/skills/structsense/trusted_ontologes"
 help: "{{SKILLS_REPO}}/issues"
-logo: /structsense-logo.png
+wordmark: /structsense-horizontal.png
 tryIt:
   - label: GitHub
     cmd: |-

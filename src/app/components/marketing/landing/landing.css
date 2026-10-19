@@ -482,9 +482,12 @@ html:has(.lp){scroll-behavior:smooth}
 .lp .book-main{min-width:0;max-width:900px;padding:40px clamp(24px,4vw,64px) 80px;font-family:Georgia,"Times New Roman",serif}
 .lp .book-main .eyebrow{font-family:var(--font-plex-mono),monospace}
 .lp .book-main h1{font:700 clamp(40px,4.4vw,58px)/1.05 Georgia,"Times New Roman",serif;letter-spacing:-.03em;margin:12px 0 12px}
-.lp .book-head{display:flex;flex-direction:column}
-.lp .book-logo{order:-1;align-self:flex-start;height:96px;width:auto;max-width:280px;object-fit:contain;margin:0 0 18px -6px;mix-blend-mode:multiply}
-@media(max-width:760px){.lp .book-logo{height:72px}}
+.lp .book-title-row{display:flex;align-items:center;gap:18px;margin:12px 0 12px}
+.lp .book-title-row h1{margin:0}
+.lp .book-logo{flex:none;width:clamp(56px,5.2vw,76px);height:clamp(56px,5.2vw,76px);object-fit:contain}
+@media(max-width:760px){.lp .book-title-row{gap:12px}.lp .book-logo{width:48px;height:48px}}
+.lp .book-wordmark{margin:16px 0 14px;line-height:0}
+.lp .book-wordmark img{height:clamp(56px,6vw,88px);width:auto;max-width:100%;object-fit:contain;object-position:left center}
 .lp .book-lead{font-size:21px;line-height:1.5;color:var(--muted);margin:0 0 20px}
 .lp .book-main hr{border:0;border-top:1px solid var(--line);margin:32px 0}
 .lp .book-sec{scroll-margin-top:96px;display:flex;flex-direction:column;gap:14px;padding-bottom:28px}
@@ -511,7 +514,7 @@ html:has(.lp){scroll-behavior:smooth}
 .lp .book-panel h6{margin:0 0 10px;font:700 15px Georgia,"Times New Roman",serif;color:var(--ink)}
 .lp .book-panel p{margin:0 0 12px;color:var(--muted);line-height:1.55}
 .lp .book-panel .btn{width:100%}
-.lp .book-try{margin-top:22px;font-family:var(--font-dm-sans),sans-serif}
+.lp .book-try{margin-top:28px;font-family:var(--font-dm-sans),sans-serif}
 .lp .book-try h6{margin:0 0 10px;font:600 11px var(--font-plex-mono),monospace;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
 .lp .book-panel .pre,.lp .book-panel .lnk{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .lp .book-panel .pre li{display:flex;gap:8px;line-height:1.45;color:#3d4a5c}
@@ -519,9 +522,8 @@ html:has(.lp){scroll-behavior:smooth}
 .lp .book-panel .lnk a{color:var(--blue)}
 .lp .book-panel .lnk a:hover{text-decoration:underline}
 /* shared tutorial blocks */
-.lp .tut-facts{display:inline-flex;flex-wrap:wrap;margin:0;border:1px solid var(--line);border-radius:12px;background:#fff;overflow:hidden}
-.lp .tut-facts>div{padding:10px 16px;border-left:1px solid var(--line)}
-.lp .tut-facts>div:first-child{border-left:0}
+.lp .tut-facts{display:flex;flex-wrap:wrap;gap:1px;width:fit-content;max-width:100%;margin:0;border:1px solid var(--line);border-radius:12px;background:var(--line);overflow:hidden}
+.lp .tut-facts>div{flex:1 1 auto;padding:10px 16px;background:#fff}
 .lp .tut-facts dt{font:10.5px var(--font-plex-mono),monospace;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
 .lp .tut-facts dd{margin:3px 0 0;font-size:13.5px;font-weight:600;color:var(--ink)}
 .lp .tut-p{margin:0}

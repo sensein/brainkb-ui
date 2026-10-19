@@ -334,25 +334,32 @@ export default function TutorialHub({ topics: TOPICS }: { topics: Topic[] }) {
       </aside>
 
       <article className="book-main" id="tut-chapter" key={topic.id}>
-        <header className={`book-head${topic.logo ? " has-logo" : ""}`}>
-          <div>
-            <div className="eyebrow">Chapter {ci + 1}</div>
-            <h1>{topic.name}</h1>
-            <p className="book-lead">{topic.summary}</p>
-          </div>
-          {topic.logo && (
-            // eslint-disable-next-line @next/next/no-img-element -- static logo from /public
-            <img className="book-logo" src={topic.logo} alt={`${topic.name} logo`} />
-          )}
-        </header>
-        <dl className="tut-facts">
-          {Object.entries(topic.facts).map(([k, v]) => (
-            <div key={k}>
-              <dt>{k}</dt>
-              <dd>{v}</dd>
+        <header className="book-head">
+          <div className="eyebrow">Chapter {ci + 1}</div>
+          {topic.wordmark ? (
+            <h1 className="book-wordmark">
+              {/* eslint-disable-next-line @next/next/no-img-element -- static logo from /public */}
+              <img src={topic.wordmark} alt={topic.name} />
+            </h1>
+          ) : (
+            <div className="book-title-row">
+              {topic.logo && (
+                // eslint-disable-next-line @next/next/no-img-element -- static logo from /public
+                <img className="book-logo" src={topic.logo} alt="" />
+              )}
+              <h1>{topic.name}</h1>
             </div>
-          ))}
-        </dl>
+          )}
+          <p className="book-lead">{topic.summary}</p>
+          <dl className="tut-facts">
+            {Object.entries(topic.facts).map(([k, v]) => (
+              <div key={k}>
+                <dt>{k}</dt>
+                <dd>{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </header>
         {topic.tryIt && (
           <div className="book-try">
             <h6>Try it yourself</h6>

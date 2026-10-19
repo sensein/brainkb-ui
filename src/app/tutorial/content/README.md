@@ -17,7 +17,8 @@ icon: ◆                         # one character, shown in places without the l
 name: StructSense               # chapter title
 tagline: Extract from papers    # short label
 summary: One sentence under the title.
-logo: /structsense-logo.png     # optional; a file in /public
+wordmark: /structsense-horizontal.png  # optional; horizontal logo shown as the title (in /public)
+logo: /brainkb_logo.png         # optional; small logo before the title text (if no wordmark)
 facts:                          # optional chips under the title
   Runs on: Your machine
   Requires: Python 3

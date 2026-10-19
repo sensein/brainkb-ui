@@ -32,8 +32,10 @@ export type Topic = {
   prereqs: string[];
   links: { label: string; href: string }[];
   help: string;
-  /** Logo shown in the chapter header (a path under /public). */
+  /** Small logo shown before the chapter title (a path under /public). */
   logo?: string;
+  /** Horizontal logo (symbol + name) shown instead of the title text (a path under /public). */
+  wordmark?: string;
   /** One or more ways to start (e.g. npx and GitHub), shown as tabs. */
   tryIt?: Code[];
   sections: Section[];
