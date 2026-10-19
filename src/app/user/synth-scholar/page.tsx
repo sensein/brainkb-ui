@@ -52,13 +52,6 @@ import { FIELD_GUIDES } from "@/src/app/components/synth-scholar/fieldGuides";
 import { ReviewFormGuide } from "@/src/app/components/synth-scholar/ReviewFormGuide";
 import { MarkdownContent } from "@/src/app/components/synth-scholar/MarkdownContent";
 import { ProvenanceTimelineOwner } from "@/src/app/components/synth-scholar/ProvenanceTimelineOwner";
-import {
-  ReviewManuscript,
-  ReviewFiles,
-  ReviewProvenanceDetails,
-  hasManuscript,
-} from "@/src/app/components/synth-scholar/ReviewOutputs";
-import { AddToGraph } from "@/src/app/components/synth-scholar/AddToGraph";
 
 // OpenRouter model catalogue. Slugs use Anthropic's API-ID format (hyphens, not
 // dots) — `anthropic/claude-opus-4.7` is NOT a valid OpenRouter slug; OpenRouter
@@ -1641,16 +1634,6 @@ function ReviewListItem({
                 cache shared
               </span>
             )}
-            {review.source === "import" && (
-              <span className="bkb-chip" style={{ fontSize: 9 }} title="Imported from a local SynthScholar run's output directory.">
-                imported
-              </span>
-            )}
-            {review.in_graph && (
-              <span className="bkb-chip" style={{ fontSize: 9 }} title="The review's RDF is in the knowledge graph.">
-                in graph
-              </span>
-            )}
           </div>
           {review.stage && (
             <div style={{ fontSize: 11, color: "var(--bkb-textMuted)", marginTop: 4 }}>
@@ -1685,11 +1668,11 @@ function ReviewDetail({ reviewId }: { reviewId: string }) {
   const [pendingPlan, setPendingPlan] = React.useState<ReviewPlan | null>(null);
   const [planIteration, setPlanIteration] = React.useState(0);
 
-  // Local tab state for completed reviews: review content (default), the run's
-  // manuscript and files (imported runs), and provenance. Not URL-synced because
-  // the user-side review detail is part of a 2-column layout where the URL is
-  // already used for ?review=<id> selection.
-  const [resultTab, setResultTab] = React.useState<"review" | "manuscript" | "files" | "provenance">("review");
+  // Local tab state for completed reviews. Two tabs: review content (default)
+  // and provenance timeline. Not URL-synced because the user-side review
+  // detail is part of a 2-column layout where the URL is already used for
+  // ?review=<id> selection.
+  const [resultTab, setResultTab] = React.useState<"review" | "provenance">("review");
 
   const isLive = detail.data
     ? ["running", "pending", "plan_pending"].includes(detail.data.status)
@@ -1829,7 +1812,7 @@ function ReviewDetail({ reviewId }: { reviewId: string }) {
                 className="bkb-btn bkb-btn-ghost"
                 onClick={() => exportMut.mutate({ reviewId, format: "pdf" })}
                 disabled={exportMut.isPending}
-                title="The run's own manuscript PDF when it has one; otherwise generated from the review"
+                title="The review rendered as PDF"
               >
                 <Icon name="evidence" size={11} />{" "}
                 {exportMut.isPending && exportMut.variables?.format === "pdf" ? "PDF…" : "PDF"}
@@ -1912,7 +1895,6 @@ function ReviewDetail({ reviewId }: { reviewId: string }) {
                   <Icon name="evidence" size={11} /> Narrative (json)
                 </button>
               )}
-              <AddToGraph reviewId={reviewId} ingests={r.provenance?.graph_ingests ?? []} />
             </>
           )}
           <button
@@ -2130,12 +2112,7 @@ function ReviewDetail({ reviewId }: { reviewId: string }) {
               role="tablist"
               aria-label="Review result tabs"
             >
-              {([
-                "review",
-                ...(hasManuscript(r.artifacts) ? ["manuscript"] as const : []),
-                ...((r.artifacts?.length ?? 0) > 0 ? ["files"] as const : []),
-                "provenance",
-              ] as const).map((tab) => {
+              {(["review", "provenance"] as const).map((tab) => {
                 const on = resultTab === tab;
                 return (
                   <button
@@ -2160,9 +2137,8 @@ function ReviewDetail({ reviewId }: { reviewId: string }) {
                       transition: "color 120ms ease, border-color 120ms ease",
                     }}
                   >
-                    <Icon name={tab === "provenance" ? "agent" : "evidence"} size={12} />
-                    {tab === "review" ? "Review" : tab === "manuscript" ? "Manuscript"
-                      : tab === "files" ? `Files (${r.artifacts?.length ?? 0})` : "Provenance"}
+                    <Icon name={tab === "review" ? "evidence" : "agent"} size={12} />
+                    {tab === "review" ? "Review" : "Provenance"}
                   </button>
                 );
               })}
@@ -2171,28 +2147,11 @@ function ReviewDetail({ reviewId }: { reviewId: string }) {
 
           {/* Provenance tab */}
           {resultTab === "provenance" && (
-            <>
-              <ReviewProvenanceDetails review={r} />
-              {(reviewLog.data?.log?.length ?? 0) > 0 && (
-                <ProvenanceTimelineOwner
-                  review={r}
-                  logEvents={reviewLog.data?.log_events ?? []}
-                  log={reviewLog.data?.log ?? []}
-                />
-              )}
-            </>
-          )}
-
-          {resultTab === "manuscript" && (
-            <DetailCard title="Manuscript">
-              <ReviewManuscript access={{ reviewId, isPublic: false }} artifacts={r.artifacts ?? []} />
-            </DetailCard>
-          )}
-
-          {resultTab === "files" && (
-            <DetailCard title="Files kept with this review">
-              <ReviewFiles access={{ reviewId, isPublic: false }} artifacts={r.artifacts ?? []} />
-            </DetailCard>
+            <ProvenanceTimelineOwner
+              review={r}
+              logEvents={reviewLog.data?.log_events ?? []}
+              log={reviewLog.data?.log ?? []}
+            />
           )}
 
           {/* Review tab — full long-form content */}
@@ -2525,9 +2484,9 @@ export default function SynthScholarPage() {
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {/* A review run locally with the synthscholar skill comes in through ingestion. */}
+          {/* A review run with the synthscholar skill is ingested into a space. */}
           <a href="/user/ingest-kg?kind=synthscholar" className="bkb-btn bkb-btn-ghost" style={{ fontSize: 13 }}>
-            Import a local run
+            Ingest a local run
           </a>
           <button
             type="button"

@@ -21,6 +21,7 @@ import Link from "next/link";
 import { Search, Loader2, AlertCircle } from "lucide-react";
 import { usePublicReviews } from "@/src/hooks/useSynthScholar";
 import type { ReviewSummary } from "@/src/types/synthScholar";
+import { IngestedReviewsList } from "@/src/app/components/synth-scholar/IngestedReviewsList";
 
 export default function PublicReviewsListPage() {
   const { data, isLoading, error } = usePublicReviews();
@@ -176,6 +177,8 @@ export default function PublicReviewsListPage() {
             </div>
           </div>
         )}
+
+        <IngestedReviewsList searchQuery={searchQuery} />
       </div>
     </div>
   );

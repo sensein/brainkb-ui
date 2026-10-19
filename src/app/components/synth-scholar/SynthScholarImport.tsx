@@ -1,23 +1,23 @@
 "use client";
 
 /**
- * Ingest a locally-run SynthScholar review: the user picks the run's output
- * directory (the folder holding review.json). Everything except intermediate work
- * (work/, caches) is uploaded and kept with the review — manuscript, PDF, figures,
- * tables, RDF, verification reports — and the review appears with the others in
- * SynthScholar, private to its owner until they publish it. Optionally its RDF also
- * goes into a space's graph, as the user, under that space's write rules.
+ * Ingest a SynthScholar review: the user picks a run's output directory (the
+ * folder holding review.json and review.ttl) and a space. Everything except
+ * intermediate work (work/, caches) is uploaded to the query service, which puts
+ * the review's RDF and an import record into the review's own graph in that space
+ * (as a normal ingest job, as the user, under the space's write rules) and keeps
+ * the files — manuscript, PDF, figures, tables, verification reports — so the
+ * review can be read on its page by whoever can read the space.
  */
 
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import {
   selectReviewFiles,
-  importReview,
-  addReviewToGraph,
-  IMPORT_MAX_FILES,
+  ingestReview,
+  INGEST_MAX_FILES,
   type ImportSelection,
-} from "@/src/services/api/synthScholar";
+} from "@/src/services/api/synthScholarIngest";
 
 export interface SpaceOption {
   slug: string;
@@ -46,18 +46,20 @@ function describe(sel: ImportSelection) {
 export default function SynthScholarImport({
   spaces,
   cannotIngest,
+  userId,
 }: {
   spaces: SpaceOption[] | null;
   cannotIngest: string | null;
+  /** Owner of the ingest job, as for RDF uploads (so it shows on Job Status). */
+  userId: string | null;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [selection, setSelection] = useState<ImportSelection | null>(null);
   const [folderName, setFolderName] = useState("");
-  const [toGraph, setToGraph] = useState(true);
   const [spaceSlug, setSpaceSlug] = useState("");
-  const [busy, setBusy] = useState<"" | "uploading" | "graph">("");
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<{ reviewId: string; title: string; graph?: { space: string; iri: string; job?: string | null }; graphError?: string; warning?: string } | null>(null);
+  const [done, setDone] = useState<{ reviewId: string; title: string; space: string; iri: string; job: string } | null>(null);
   const [showFiles, setShowFiles] = useState(false);
 
   // webkitdirectory is not in React's input typings; set it on the element.
@@ -66,8 +68,13 @@ export default function SynthScholarImport({
     inputRef.current?.setAttribute("directory", "");
   }, []);
 
-  const graphPossible = !cannotIngest && (spaces?.length ?? 0) > 0;
-  const wantGraph = toGraph && graphPossible;
+  // Leaving mid-upload loses it (the files are on this computer): ask first.
+  useEffect(() => {
+    if (!busy) return;
+    const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [busy]);
 
   const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
@@ -82,43 +89,32 @@ export default function SynthScholarImport({
       setError("This folder has no review.json — choose the output directory of a SynthScholar run (the folder that holds review.json).");
       return;
     }
-    if (sel.keep.length > IMPORT_MAX_FILES) {
+    if (!sel.keep.some((k) => k.path === "review.ttl")) {
       setSelection(null);
-      setError(`The review has ${sel.keep.length} files; at most ${IMPORT_MAX_FILES} can be imported at once.`);
+      setError("This folder has no review.ttl — export the review with --formats ttl (the synthscholar skill's export_review.py), then choose the folder again.");
+      return;
+    }
+    if (sel.keep.length > INGEST_MAX_FILES) {
+      setSelection(null);
+      setError(`The review has ${sel.keep.length} files; at most ${INGEST_MAX_FILES} can be ingested at once.`);
       return;
     }
     setSelection(sel);
   };
 
   const submit = async () => {
-    if (!selection) return;
-    if (wantGraph && !spaceSlug) {
-      setError("Choose the space to put the review's RDF in, or untick the knowledge-graph option.");
-      return;
-    }
+    if (!selection || !spaceSlug) return;
     setError(null);
-    setBusy("uploading");
+    setBusy(true);
     try {
-      const review = await importReview(selection);
-      const result: NonNullable<typeof done> = { reviewId: review.review_id, title: review.title };
-      if (wantGraph) {
-        setBusy("graph");
-        try {
-          const g = await addReviewToGraph(review.review_id, spaceSlug);
-          result.graph = { space: g.space_slug, iri: g.graph_iri, job: g.job_id };
-          result.warning = g.warning;
-        } catch (err) {
-          // The review is imported either way; it can go into the graph later from its page.
-          result.graphError = err instanceof Error ? err.message : String(err);
-        }
-      }
-      setDone(result);
+      const r = await ingestReview(selection, spaceSlug, userId);
+      setDone({ reviewId: r.review_id, title: r.title || r.review_id, space: r.space_slug, iri: r.graph_iri, job: r.job_id });
       setSelection(null);
       if (inputRef.current) inputRef.current.value = "";
     } catch (err) {
-      setError(`Import failed: ${err instanceof Error ? err.message : String(err)}`);
+      setError(`Ingest failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
-      setBusy("");
+      setBusy(false);
     }
   };
 
@@ -134,7 +130,7 @@ export default function SynthScholarImport({
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Review output folder</label>
         <div className="border-2 border-dashed rounded-lg p-6 text-center border-gray-300 dark:border-gray-700">
-          <input ref={inputRef} type="file" id="synthscholar-folder" className="hidden" multiple onChange={onPick} disabled={!!busy} />
+          <input ref={inputRef} type="file" id="synthscholar-folder" className="hidden" multiple onChange={onPick} disabled={busy} />
           <label htmlFor="synthscholar-folder" className="cursor-pointer flex flex-col items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
@@ -183,66 +179,56 @@ export default function SynthScholarImport({
         </div>
       )}
 
-      <div className="space-y-3">
-        <label className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-200">
-          <input type="checkbox" className="mt-1" checked={wantGraph} disabled={!graphPossible || !!busy} onChange={(e) => setToGraph(e.target.checked)} />
-          <span>
-            Also add the review to the knowledge graph
-            <span className="block text-xs text-gray-500 dark:text-gray-400">
-              Its RDF goes into its own graph, <code className="font-mono">https://brainkb.org/synthscholar/reviews/&lt;review id&gt;/</code> (the id the run gave it), in the space you
-              choose. Who can read it is set by the space.
-              {cannotIngest ? ` ${cannotIngest}` : spaces !== null && !spaces.length ? " You have no space you can add data to yet." : ""}
-            </span>
-          </span>
-        </label>
-        {wantGraph && (
+      <div className="space-y-2">
+        <label htmlFor="synthscholar-space" className="block text-sm font-medium text-gray-700 dark:text-gray-200">Space</label>
+        {cannotIngest ? (
+          <div className="text-sm p-3 rounded-lg bg-amber-50 text-amber-900 dark:bg-amber-900/20 dark:text-amber-200">{cannotIngest}</div>
+        ) : (
           <select
-            aria-label="Space for the review's graph"
+            id="synthscholar-space"
             value={spaceSlug}
             onChange={(e) => setSpaceSlug(e.target.value)}
-            disabled={!!busy}
+            disabled={busy}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
           >
-            <option value="">{spaces === null ? "Loading your spaces…" : "Select a space"}</option>
+            <option value="">{spaces === null ? "Loading your spaces…" : spaces.length ? "Select a space" : "No space you can add data to"}</option>
             {(spaces ?? []).map((s) => (
               <option key={s.slug} value={s.slug}>{s.label}</option>
             ))}
           </select>
         )}
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          The review goes into its own graph, <code className="font-mono">https://brainkb.org/synthscholar/reviews/&lt;review id&gt;/</code> (the
+          id the run gave it), registered in this space — you need to be its owner or an editor. Who can read the review and its files
+          is set by the space. Each review can be ingested once.
+        </p>
       </div>
 
       {error && <div className="text-red-600 dark:text-red-300 text-sm p-3 bg-red-100 dark:bg-red-900/20 rounded-lg">{error}</div>}
       {done && (
         <div className="text-sm p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 space-y-1">
           <p>
-            Imported <strong>{done.title || done.reviewId}</strong>. It is private to you until you publish it.{" "}
-            <Link href={`/user/synth-scholar?review=${encodeURIComponent(done.reviewId)}`} className="underline font-medium">Open the review →</Link>
+            Ingesting <strong>{done.title}</strong> into <code className="font-mono">{done.iri}</code> in{" "}
+            <strong>{done.space}</strong> (job <Link href="/user/job-status" className="underline font-mono">{done.job.slice(0, 8)}</Link>).
+            The upload is done; you can close this page.
           </p>
-          {done.graph && (
-            <p>
-              Its RDF is being ingested into <code className="font-mono">{done.graph.iri}</code> in{" "}
-              <Link href={`/user/spaces`} className="underline">{done.graph.space}</Link>
-              {done.graph.job ? <> (job <Link href="/user/job-status" className="underline font-mono">{done.graph.job.slice(0, 8)}</Link>)</> : null}.
-            </p>
-          )}
-          {done.warning && <p className="text-amber-800 dark:text-amber-200">{done.warning}</p>}
-          {done.graphError && (
-            <p className="text-amber-800 dark:text-amber-200">
-              Not added to the knowledge graph: {done.graphError}. You can add it later from the review&apos;s page.
-            </p>
-          )}
+          <p>
+            <Link href={`/knowledge-base/synth-scholar/ingested/${encodeURIComponent(done.reviewId)}`} className="underline font-medium">
+              Open the review →
+            </Link>
+          </p>
         </div>
       )}
 
       <button
         type="button"
         onClick={submit}
-        disabled={!selection || !!busy || (wantGraph && !spaceSlug)}
+        disabled={!selection || busy || !spaceSlug}
         className={`w-full px-4 py-3 text-white rounded-lg font-semibold transition-colors duration-200 ${
-          !selection || busy || (wantGraph && !spaceSlug) ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+          !selection || busy || !spaceSlug ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
         }`}
       >
-        {busy === "uploading" ? `Uploading ${selection ? size(selection.bytes) : ""}…` : busy === "graph" ? "Adding to the knowledge graph…" : "Import review"}
+        {busy ? `Uploading ${selection ? size(selection.bytes) : ""}… keep this page open` : "Ingest review"}
       </button>
     </div>
   );

@@ -29,7 +29,7 @@ const UNMAPPED = "__unmapped__";
 type IngestKind = "rdf" | "synthscholar";
 const INGEST_KINDS: { id: IngestKind; title: string; detail: string }[] = [
     { id: "rdf", title: "RDF files", detail: "Turtle (.ttl) or JSON-LD (.jsonld) files into a named graph of a space." },
-    { id: "synthscholar", title: "SynthScholar review", detail: "The output folder of a local SynthScholar run — kept with its manuscript, PDF, figures and provenance, and optionally put into a space's graph." },
+    { id: "synthscholar", title: "SynthScholar review", detail: "The output folder of a SynthScholar run — its RDF goes into the review's own graph in a space, with its manuscript, PDF, figures and provenance kept for its page." },
 ];
 
 /** Spaces in tree order (parents before their subspaces), with depth for indenting. */
@@ -316,6 +316,7 @@ export default function IngestKnowledgeGraphPage() {
             {kind === "synthscholar" ? (
                 <SynthScholarImport
                     cannotIngest={cannotIngest}
+                    userId={getUserId()}
                     spaces={spaces === null ? null : treeOrder(spaces).map(({ space: s, depth }) => ({
                         slug: s.slug,
                         label: `${"\u00a0\u00a0\u00a0".repeat(depth)}${depth ? "└ " : ""}${s.name} (${s.slug}) · ${s.visibility}`,

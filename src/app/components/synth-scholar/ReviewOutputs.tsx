@@ -1,24 +1,24 @@
 "use client";
 
 /**
- * What a review brings beyond its result fields: the files kept with it (an
- * imported local run's manuscript, PDF, figures, tables, RDF and verification
- * reports) and its provenance record — where it came from, which SynthScholar
- * version and model produced it, how the search ran, what each screening decision
- * was judged on, how full texts were obtained, and where it went in the graph.
+ * An ingested SynthScholar review beyond its text: the files kept from its output
+ * directory (manuscript, PDF, figures, tables, RDF, verification reports) and its
+ * provenance — who ingested it and when, into which space and graph, how the run
+ * searched, what each screening decision was judged on, how full texts were
+ * obtained, and its own verification checks.
  *
- * Shared by the public review page and the owner's review view. Public reviews'
- * files load from their public URLs; an owner's private files need the bearer
- * token, so they are fetched and shown from object URLs.
+ * Files are fetched through `load` (with the caller's token, so private spaces
+ * work) and shown from object URLs.
  */
 
 import React from "react";
 import { Download, FileText, Image as ImageIcon, Loader2 } from "lucide-react";
 import { MarkdownContent } from "./MarkdownContent";
-import { fetchArtifact, publicArtifactUrl } from "@/src/services/api/synthScholar";
-import type { ReviewArtifact, ReviewDetail, ReviewProvenance } from "@/src/types/synthScholar";
+import type { IngestedFile, IngestedReview } from "@/src/services/api/synthScholarIngest";
 
-type Access = { reviewId: string; isPublic: boolean };
+/** How to get a file's bytes. */
+export type FileLoader = (path: string) => Promise<Blob>;
+type ReviewArtifact = IngestedFile;
 
 const MB = 1024 * 1024;
 export const formatBytes = (n?: number | null) =>
@@ -27,7 +27,7 @@ const when = (s?: string | null) => (s ? new Date(s).toLocaleString() : "—");
 const isImage = (a: ReviewArtifact) => /^image\//.test(a.media_type);
 
 export const MANUSCRIPT = "review.manuscript.md";
-export const hasManuscript = (artifacts?: ReviewArtifact[]) => !!artifacts?.some((a) => a.path === MANUSCRIPT);
+export const hasManuscript = (files?: ReviewArtifact[]) => !!files?.some((a) => a.path === MANUSCRIPT);
 
 const KIND_LABEL: Record<string, string> = {
   review_result: "Review result", manuscript_pdf: "Manuscript (PDF)", manuscript_markdown: "Manuscript (Markdown)",
@@ -40,21 +40,16 @@ const KIND_LABEL: Record<string, string> = {
 
 // ── Loading files ────────────────────────────────────────────────────
 
-/** Object/public URLs for the review's images, keyed by path. */
-function useImageUrls({ reviewId, isPublic }: Access, artifacts: ReviewArtifact[]) {
+/** Object URLs for the review's images, keyed by path. */
+function useImageUrls(load: FileLoader, files: ReviewArtifact[]) {
   const [urls, setUrls] = React.useState<Record<string, string>>({});
-  const key = artifacts.filter(isImage).map((a) => a.path + a.sha256).join("|");
+  const key = files.filter(isImage).map((a) => a.path + a.sha256).join("|");
   React.useEffect(() => {
-    const images = artifacts.filter(isImage);
-    if (isPublic) {
-      setUrls(Object.fromEntries(images.map((a) => [a.path, publicArtifactUrl(reviewId, a.path)])));
-      return;
-    }
     let live = true;
     const made: string[] = [];
-    Promise.all(images.map(async (a) => {
+    Promise.all(files.filter(isImage).map(async (a) => {
       try {
-        const u = URL.createObjectURL(await fetchArtifact(reviewId, a.path));
+        const u = URL.createObjectURL(await load(a.path));
         made.push(u);
         return [a.path, u] as const;
       } catch {
@@ -68,41 +63,41 @@ function useImageUrls({ reviewId, isPublic }: Access, artifacts: ReviewArtifact[
       made.forEach((u) => URL.revokeObjectURL(u));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reviewId, isPublic, key]);
+  }, [key]);
   return urls;
 }
 
-function useArtifactText({ reviewId, isPublic }: Access, path: string, enabled: boolean) {
+function useFileText(load: FileLoader, path: string, enabled: boolean) {
   const [state, setState] = React.useState<{ text?: string; error?: string; loading: boolean }>({ loading: enabled });
   React.useEffect(() => {
     if (!enabled) return;
     let live = true;
     setState({ loading: true });
-    fetchArtifact(reviewId, path, { isPublic })
+    load(path)
       .then((b) => b.text())
       .then((text) => live && setState({ text, loading: false }))
       .catch((e) => live && setState({ error: e instanceof Error ? e.message : String(e), loading: false }));
     return () => { live = false; };
-  }, [reviewId, isPublic, path, enabled]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [path, enabled]);
   return state;
 }
 
-async function download({ reviewId, isPublic }: Access, a: ReviewArtifact) {
-  const name = a.path.split("/").pop() || "file";
-  const href = isPublic ? publicArtifactUrl(reviewId, a.path, true) : URL.createObjectURL(await fetchArtifact(reviewId, a.path));
+export async function downloadFile(load: FileLoader, path: string) {
+  const href = URL.createObjectURL(await load(path));
   const link = document.createElement("a");
   link.href = href;
-  link.download = name;
+  link.download = path.split("/").pop() || "file";
   link.click();
-  if (!isPublic) setTimeout(() => URL.revokeObjectURL(href), 1000);
+  setTimeout(() => URL.revokeObjectURL(href), 1000);
 }
 
 // ── Manuscript ───────────────────────────────────────────────────────
 
 /** The manuscript a local run wrote (review.manuscript.md), with its figures. */
-export function ReviewManuscript({ access, artifacts }: { access: Access; artifacts: ReviewArtifact[] }) {
-  const { text, error, loading } = useArtifactText(access, MANUSCRIPT, hasManuscript(artifacts));
-  const images = useImageUrls(access, artifacts);
+export function ReviewManuscript({ load, files }: { load: FileLoader; files: ReviewArtifact[] }) {
+  const { text, error, loading } = useFileText(load, MANUSCRIPT, hasManuscript(files));
+  const images = useImageUrls(load, files);
   if (loading) return <Busy label="Loading the manuscript…" />;
   if (error) return <p className="text-sm text-red-600">Could not load the manuscript: {error}</p>;
   if (!text) return null;
@@ -120,11 +115,12 @@ export function ReviewManuscript({ access, artifacts }: { access: Access; artifa
 
 // ── Files ────────────────────────────────────────────────────────────
 
-export function ReviewFiles({ access, artifacts }: { access: Access; artifacts: ReviewArtifact[] }) {
-  const images = useImageUrls(access, artifacts);
+export function ReviewFiles({ load, files }: { load: FileLoader; files: ReviewArtifact[] }) {
+  const artifacts = files;
+  const images = useImageUrls(load, files);
   const [err, setErr] = React.useState<string | null>(null);
   const figures = artifacts.filter((a) => isImage(a) && images[a.path]);
-  const grab = (a: ReviewArtifact) => download(access, a).catch((e) => setErr(e instanceof Error ? e.message : String(e)));
+  const grab = (a: ReviewArtifact) => downloadFile(load, a.path).catch((e) => setErr(e instanceof Error ? e.message : String(e)));
   if (!artifacts.length) return <p className="text-sm text-gray-500">No files are kept with this review.</p>;
   return (
     <div className="space-y-6">
@@ -184,42 +180,33 @@ export function ReviewFiles({ access, artifacts }: { access: Access; artifacts: 
 
 // ── Provenance ───────────────────────────────────────────────────────
 
-/** The review's provenance record (ml_service provenance_view), as readable cards. */
-export function ReviewProvenanceDetails({ review }: { review: ReviewDetail }) {
-  const p: ReviewProvenance | null | undefined = review.provenance;
-  if (!p) return null;
-  const o = p.origin;
-  const lr = o.local_run ?? {};
-  const imported = o.source === "import";
+/** The ingested review's provenance, as readable cards. */
+export function ReviewProvenanceDetails({ review }: { review: IngestedReview }) {
+  const m = review.manifest || {};
+  const lr = m.local_run ?? {};
+  const d = review.detail;
   return (
     <div className="space-y-4">
       <Card title="Origin">
         <Facts rows={[
-          ["Source", imported ? "Imported from a local SynthScholar run (its output directory)" : "Run on BrainKB"],
-          ...(imported ? [
-            ["Run completed", when(o.run_completed_at)],
-            ["Imported", when(o.imported_at)],
-            ...(o.imported_by ? [["Imported by", o.imported_by]] : []),
-            ["Original review id", o.original_review_id || "—"],
-            ["Files kept", `${o.file_count ?? "—"} (${formatBytes(o.total_bytes)})`],
-            ["Left out", o.skipped?.length ? `${o.skipped.length} file(s) — ${Array.from(new Set(o.skipped.map((s) => s.reason))).join("; ")}` : "nothing"],
-          ] as [string, string][] : [
-            ["Created", when(o.created_at)],
-            ["Completed", when(o.completed_at)],
-          ] as [string, string][]),
+          ["Source", "A SynthScholar run's output directory, ingested into BrainKB"],
+          ["Review id", review.review_id],
+          ["Run completed", when(review.run_completed_at)],
+          ["Ingested", when(review.imported_at)],
+          ...(m.imported_by ? [["Ingested by", m.imported_by] as [string, string]] : []),
+          ["Files kept", `${m.file_count ?? review.files.length} (${formatBytes(m.total_bytes)})`],
+          ["Left out", m.skipped_count ? `${m.skipped_count} file(s) — ${(m.skipped_reasons ?? []).join("; ")}` : "nothing"],
         ]} />
       </Card>
 
-      {p.software && (
-        <Card title="Software">
-          <Facts rows={[
-            ["SynthScholar", p.software.synthscholar_version || "—"],
-            ["Model", p.software.model_name || "—"],
-            ["Started", when(p.software.started_at)],
-            ...Object.entries(p.software.pipeline_settings ?? {}).slice(0, 12).map(([k, v]) => [k, String(v)] as [string, string]),
-          ]} />
-        </Card>
-      )}
+      <Card title="Knowledge graph">
+        <Facts rows={[
+          ["Space", `${review.space_slug}${review.space_visibility ? ` (${review.space_visibility})` : ""}`],
+          ["Graph", review.graph_iri],
+          ["Ingest job", review.job_id || "—"],
+          ["What went in", "review.ttl, and an import record (PROV-O) linking every kept file with its media type, size and SHA-256"],
+        ]} />
+      </Card>
 
       {(lr.search_log?.length ?? 0) > 0 && (
         <Card title="Searches (as recorded by the run)">
@@ -229,48 +216,24 @@ export function ReviewProvenanceDetails({ review }: { review: ReviewDetail }) {
         </Card>
       )}
 
-      {(p.search_iterations?.length ?? 0) > 0 && (
-        <Card title="Search iterations">
-          <Table head={["#", "Kind", "Database", "Query", "New", "Cumulative"]} rows={p.search_iterations!.map((s) => [
-            s.iteration, s.kind, s.database, <code key="q" className="font-mono text-[11px] break-words">{s.query}</code>, s.new_records, s.cumulative,
-          ])} />
-        </Card>
-      )}
-
-      {(p.plan_iterations?.length ?? 0) > 0 && (
-        <Card title="Search plan">
-          <Table head={["Iteration", "Decision", "Model", "When", "Feedback"]} rows={p.plan_iterations!.map((x) => [
-            x.iteration, x.decision, x.model_name || "—", when(x.generated_at), x.feedback || "—",
-          ])} />
-        </Card>
-      )}
-
-      {p.screening && p.screening.decisions > 0 && (
+      {d.screening && d.screening.decisions > 0 && (
         <Card title="Screening — what each decision was judged on">
-          <Table head={["Stage", "Judged on", "Decisions"]} rows={Object.entries(p.screening.basis_by_stage).flatMap(([stage, c]) =>
+          <Table head={["Stage", "Judged on", "Decisions"]} rows={Object.entries(d.screening.basis_by_stage).flatMap(([stage, c]) =>
             Object.entries(c).map(([basis, n]) => [stage, basis.replace(/_/g, " ") || "—", n]))} />
-          {Object.keys(p.screening.full_text_sources).length > 0 && (
-            <p className="text-xs text-gray-600 mt-2">Full texts from: {pairs(p.screening.full_text_sources)}</p>
+          {Object.keys(d.screening.full_text_sources).length > 0 && (
+            <p className="text-xs text-gray-600 mt-2">Full texts from: {pairs(d.screening.full_text_sources)}</p>
           )}
         </Card>
       )}
 
-      {p.retrieval && p.retrieval.included > 0 && (
+      {d.retrieval && d.retrieval.included > 0 && (
         <Card title="Full-text retrieval (included studies)">
           <Facts rows={[
-            ["Included", String(p.retrieval.included)],
-            ["Read in full text", String(p.retrieval.with_full_text)],
-            ["Abstract only", String(p.retrieval.abstract_only)],
-            ["Routes", pairs(p.retrieval.routes)],
+            ["Included", String(d.retrieval.included)],
+            ["Read in full text", String(d.retrieval.with_full_text)],
+            ["Abstract only", String(d.retrieval.abstract_only)],
+            ["Routes", pairs(d.retrieval.routes)],
           ]} />
-        </Card>
-      )}
-
-      {(p.agents?.length ?? 0) > 0 && (
-        <Card title="Agents">
-          <Table head={["Agent", "Step", "Model", "Calls", "Tokens", "Failures"]} rows={p.agents!.map((a) => [
-            a.agent, a.step, a.model_name, a.calls, a.tokens.toLocaleString(), a.failures,
-          ])} />
         </Card>
       )}
 
@@ -289,17 +252,6 @@ export function ReviewProvenanceDetails({ review }: { review: ReviewDetail }) {
           ]} />
         </Card>
       )}
-
-      <Card title="Knowledge graph">
-        {p.graph_ingests.length ? (
-          <Table head={["Space", "Graph", "Ingested", "From", "Job"]} rows={p.graph_ingests.map((g) => [
-            g.space_slug, <code key="g" className="font-mono text-[11px] break-all">{g.graph_iri}</code>, when(g.ingested_at),
-            g.source_file ?? "—", g.job_id ? <code key="j" className="font-mono text-[11px]">{g.job_id.slice(0, 8)}</code> : "—",
-          ])} />
-        ) : (
-          <p className="text-sm text-gray-500">Not in the knowledge graph yet.</p>
-        )}
-      </Card>
     </div>
   );
 }
