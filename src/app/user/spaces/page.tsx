@@ -7,8 +7,10 @@
  * and admins, can switch it between private and public and share it with
  * people (viewer, editor, owner) — sharing is how a team gets access. Anyone
  * may create an individual space; team spaces need the create_team_space
- * capability (Admin/SuperAdmin by default). Only a SuperAdmin can delete a
- * space, after typing its slug. The query service enforces all of this; the UI
+ * capability (Admin/SuperAdmin by default). Spaces nest: whoever manages a
+ * space can create subspaces in it (any depth), and a space's members have the
+ * same role in every subspace below it. Only a SuperAdmin can delete a space,
+ * after typing its slug, and only once it has no subspaces. The query service enforces all of this; the UI
  * only hides controls a caller couldn't use.
  */
 
@@ -22,10 +24,16 @@ type Space = {
   visibility: "public" | "private";
   space_type: "individual" | "team";
   your_role: "owner" | "editor" | "viewer" | null;
+  role_inherited?: boolean;
+  parent_slug?: string | null;
   is_owner: boolean;
 };
 
-type Manifest = { members: { member: string; role: string }[]; graphs: string[] };
+type Manifest = {
+  members: { member: string; role: string }[];
+  inherited_members?: { member: string; role: string; inherited_from: string }[];
+  graphs: string[];
+};
 
 const ROLES = ["viewer", "editor", "owner"] as const;
 const ROLE_HELP: Record<string, string> = {
@@ -88,9 +96,24 @@ function Members({ slug, onError }: { slug: string; onError: (m: string) => void
   };
 
   if (!manifest) return <div style={{ fontSize: 13, color: "var(--bkb-textMuted)" }}>Loading people…</div>;
+  const inherited = manifest.inherited_members ?? [];
 
   return (
     <div style={{ display: "grid", gap: 12 }}>
+      {inherited.length > 0 && (
+        <div style={{ display: "grid", gap: 4 }}>
+          <div style={{ fontSize: 12, color: "var(--bkb-textMuted)" }}>
+            From parent spaces (change these in the space they come from)
+          </div>
+          {inherited.map((m) => (
+            <div key={m.member} style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 8px", fontSize: 13 }}>
+              <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{m.member}</span>
+              <Chip>{m.role}</Chip>
+              <span style={{ fontSize: 12, color: "var(--bkb-textMuted)" }}>from <span className="bkb-mono">{m.inherited_from}</span></span>
+            </div>
+          ))}
+        </div>
+      )}
       <div style={{ display: "grid", gap: 6 }}>
         {manifest.members.map((m) => (
           <div key={m.member} className="bkb-hover-row" style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 8px", borderRadius: 6 }}>
@@ -234,15 +257,17 @@ function DeleteSpace({ space, onDeleted, onError, onCancel }: {
   );
 }
 
-function SpaceRow({ space, canManage, canDelete, onChanged, onDeleted, onError }: {
+function SpaceRow({ space, canManage, canDelete, hasSubspaces, onChanged, onDeleted, onError }: {
   space: Space;
   canManage: boolean;
   canDelete: boolean;
+  hasSubspaces: boolean;
   onChanged: () => void;
   onDeleted: (d: Deleted) => void;
   onError: (m: string) => void;
 }) {
   const [deleting, setDeleting] = useState(false);
+  const [addingSub, setAddingSub] = useState(false);
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -271,7 +296,7 @@ function SpaceRow({ space, canManage, canDelete, onChanged, onDeleted, onError }
             <span style={{ fontSize: 15, fontWeight: 600 }}>{space.name}</span>
             <Chip tone={space.visibility === "public" ? "accent" : undefined}>{space.visibility}</Chip>
             <Chip>{space.space_type === "team" ? "team" : "individual"}</Chip>
-            {space.your_role && <Chip>you: {space.your_role}</Chip>}
+            {space.your_role && <Chip>you: {space.your_role}{space.role_inherited ? " (from parent)" : ""}</Chip>}
           </div>
           <div className="bkb-mono" style={{ fontSize: 11, color: "var(--bkb-textSubtle)", marginTop: 4 }}>{space.slug}</div>
           {space.description && <div style={{ fontSize: 13, color: "var(--bkb-textMuted)", marginTop: 6 }}>{space.description}</div>}
@@ -297,6 +322,9 @@ function SpaceRow({ space, canManage, canDelete, onChanged, onDeleted, onError }
             <button className="bkb-btn" type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} style={{ fontSize: 12, padding: "5px 12px" }}>
               {open ? "Close" : "Manage access"}
             </button>
+            <button className="bkb-btn" type="button" onClick={() => setAddingSub((a) => !a)} aria-expanded={addingSub} style={{ fontSize: 12, padding: "5px 12px" }}>
+              {addingSub ? "Cancel subspace" : "New subspace"}
+            </button>
             {canDelete && !deleting && (
               <button
                 type="button"
@@ -315,18 +343,35 @@ function SpaceRow({ space, canManage, canDelete, onChanged, onDeleted, onError }
         )}
       </div>
       {canManage && open && <Members slug={space.slug} onError={onError} />}
-      {canDelete && deleting && (
-        <DeleteSpace space={space} onDeleted={onDeleted} onError={onError} onCancel={() => setDeleting(false)} />
+      {canManage && addingSub && (
+        <CreateSpace
+          parent={space}
+          canCreateTeam={false}
+          onError={onError}
+          onCreated={() => { setAddingSub(false); onChanged(); }}
+        />
       )}
+      {canDelete && deleting && (hasSubspaces ? (
+        <div style={{ fontSize: 13, color: "var(--bkb-danger)", borderTop: "1px solid var(--bkb-border)", paddingTop: 12, display: "flex", justifyContent: "space-between", gap: 12 }}>
+          <span>This space still has subspaces. Delete them first, then this one.</span>
+          <button type="button" className="bkb-btn bkb-btn-ghost" style={{ fontSize: 12, padding: "2px 8px" }} onClick={() => setDeleting(false)}>OK</button>
+        </div>
+      ) : (
+        <DeleteSpace space={space} onDeleted={onDeleted} onError={onError} onCancel={() => setDeleting(false)} />
+      ))}
     </div>
   );
 }
 
-function CreateSpace({ canCreateTeam, onCreated, onError }: {
+function CreateSpace({ canCreateTeam, onCreated, onError, parent }: {
   canCreateTeam: boolean;
   onCreated: () => void;
   onError: (m: string) => void;
+  /** Create a subspace of this space: it takes the parent's type, and the
+   *  parent's members get the same roles in it. */
+  parent?: Space;
 }) {
+  const slugFor = (n: string) => (parent ? slugify(`${parent.slug}-${n}`) : slugify(n));
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
@@ -341,7 +386,11 @@ function CreateSpace({ canCreateTeam, onCreated, onError }: {
     try {
       await api("/api/spaces", {
         method: "POST",
-        body: JSON.stringify({ name: name.trim(), slug, description: description.trim() || null, visibility, space_type: type }),
+        body: JSON.stringify({
+          name: name.trim(), slug, description: description.trim() || null, visibility,
+          space_type: parent ? parent.space_type : type,
+          ...(parent ? { parent_slug: parent.slug } : {}),
+        }),
       });
       setName(""); setSlug(""); setSlugEdited(false); setDescription(""); setVisibility("private"); setType("individual");
       onCreated();
@@ -353,12 +402,18 @@ function CreateSpace({ canCreateTeam, onCreated, onError }: {
   };
 
   return (
-    <form onSubmit={submit} className="bkb-card" style={{ padding: 18, display: "grid", gap: 12 }}>
-      <div style={{ fontSize: 14, fontWeight: 600 }}>New space</div>
+    <form
+      onSubmit={submit}
+      className={parent ? undefined : "bkb-card"}
+      style={parent ? { display: "grid", gap: 12, borderTop: "1px solid var(--bkb-border)", paddingTop: 12 } : { padding: 18, display: "grid", gap: 12 }}
+    >
+      <div style={{ fontSize: 14, fontWeight: 600 }}>
+        {parent ? <>New subspace in <span className="bkb-mono">{parent.slug}</span></> : "New space"}
+      </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(240px, 100%), 1fr))", gap: 10 }}>
         <label style={{ display: "grid", gap: 4, fontSize: 12, color: "var(--bkb-textMuted)" }}>
           Name
-          <input className="bkb-input" required value={name} onChange={(e) => { setName(e.target.value); if (!slugEdited) setSlug(slugify(e.target.value)); }} />
+          <input className="bkb-input" required value={name} onChange={(e) => { setName(e.target.value); if (!slugEdited) setSlug(slugFor(e.target.value)); }} />
         </label>
         <label style={{ display: "grid", gap: 4, fontSize: 12, color: "var(--bkb-textMuted)" }}>
           Slug (used in links and graph names)
@@ -385,7 +440,7 @@ function CreateSpace({ canCreateTeam, onCreated, onError }: {
             </label>
           ))}
         </fieldset>
-        <fieldset style={{ border: 0, padding: 0, margin: 0, display: "flex", gap: 14, alignItems: "center" }}>
+        {!parent && <fieldset style={{ border: 0, padding: 0, margin: 0, display: "flex", gap: 14, alignItems: "center" }}>
           <legend style={{ fontSize: 12, color: "var(--bkb-textMuted)", float: "left", marginRight: 10 }}>Type</legend>
           <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <input type="radio" name="type" checked={type === "individual"} onChange={() => setType("individual")} /> Individual
@@ -395,17 +450,19 @@ function CreateSpace({ canCreateTeam, onCreated, onError }: {
               <input type="radio" name="type" checked={type === "team"} onChange={() => setType("team")} /> Team
             </label>
           )}
-        </fieldset>
+        </fieldset>}
       </div>
       <div style={{ fontSize: 12, color: "var(--bkb-textMuted)" }}>
         {visibility === "public"
           ? "Public: anyone can read it, even without signing in. Only members can add data."
           : "Private: only the people you add can read it."}
-        {!canCreateTeam && " Team spaces are created by an admin; ask one to set one up or to share a space with you."}
+        {parent
+          ? ` Everyone with a role in ${parent.slug} gets the same role here; you can add more people to the subspace.`
+          : !canCreateTeam && " Team spaces are created by an admin; ask one to set one up or to share a space with you."}
       </div>
       <div>
         <button className="bkb-btn bkb-btn-primary" type="submit" disabled={busy || !name.trim() || !slug}>
-          {busy ? "Creating…" : "Create space"}
+          {busy ? "Creating…" : parent ? "Create subspace" : "Create space"}
         </button>
       </div>
     </form>
@@ -435,8 +492,39 @@ export default function SpacesPage() {
     load();
   }, [load]);
   const canManage = (s: Space) => isAdmin || s.is_owner || s.your_role === "owner";
-  const mine = (spaces ?? []).filter((s) => s.your_role);
-  const others = (spaces ?? []).filter((s) => !s.your_role);
+  // Spaces form a tree: a subspace sits under its parent when the caller can see
+  // the parent; otherwise it is shown at the top level.
+  const all = spaces ?? [];
+  const slugs = new Set(all.map((s) => s.slug));
+  const childrenOf = new Map<string, Space[]>();
+  for (const s of all) {
+    if (s.parent_slug && slugs.has(s.parent_slug)) {
+      childrenOf.set(s.parent_slug, [...(childrenOf.get(s.parent_slug) ?? []), s]);
+    }
+  }
+  const roots = all.filter((s) => !s.parent_slug || !slugs.has(s.parent_slug));
+  const mine = roots.filter((s) => s.your_role);
+  const others = roots.filter((s) => !s.your_role);
+  const renderTree = (s: Space, depth = 0, seen = new Set<string>()): React.ReactNode => {
+    if (seen.has(s.slug)) return null;          // defensive: the API never returns a cycle
+    const kids = childrenOf.get(s.slug) ?? [];
+    const next = new Set(seen).add(s.slug);
+    return (
+      <div key={s.slug} style={{ display: "grid", gap: 10 }}>
+        <SpaceRow space={s} canManage={canManage(s)} canDelete={isSuperAdmin} hasSubspaces={kids.length > 0}
+                  onChanged={load} onDeleted={onDeleted} onError={showError} />
+        {kids.length > 0 && (
+          <div
+            role="group"
+            aria-label={`Subspaces of ${s.name}`}
+            style={{ display: "grid", gap: 10, marginLeft: depth < 6 ? 22 : 0, paddingLeft: 12, borderLeft: "2px solid var(--bkb-border)" }}
+          >
+            {kids.map((k) => renderTree(k, depth + 1, next))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "8px clamp(16px, 3vw, 32px) 64px", display: "grid", gap: 18 }}>
@@ -446,6 +534,7 @@ export default function SpacesPage() {
           <p style={{ margin: "6px 0 0", fontSize: 14, color: "var(--bkb-textMuted)", maxWidth: 680 }}>
             A space holds one or more graphs and decides who can read them. Make a space public so anyone can read it,
             or keep it private and add the people who should have access.
+            {" Spaces can hold subspaces; people with a role in a space have the same role in its subspaces."}
             {isAdmin && " As an admin you can change any space you can see here."}
           </p>
         </div>
@@ -485,7 +574,7 @@ export default function SpacesPage() {
               Your spaces {user?.email && <span style={{ fontWeight: 400 }}>· {user.email}</span>}
             </h2>
             {mine.length ? (
-              mine.map((s) => <SpaceRow key={s.slug} space={s} canManage={canManage(s)} canDelete={isSuperAdmin} onChanged={load} onDeleted={onDeleted} onError={showError} />)
+              mine.map((s) => renderTree(s))
             ) : (
               <div className="bkb-card" style={{ padding: 18, fontSize: 13, color: "var(--bkb-textMuted)" }}>
                 You aren&apos;t a member of any space yet. Create one, or ask a space owner to add you.
@@ -495,7 +584,7 @@ export default function SpacesPage() {
           {others.length > 0 && (
             <section style={{ display: "grid", gap: 10 }}>
               <h2 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--bkb-textMuted)" }}>Public spaces</h2>
-              {others.map((s) => <SpaceRow key={s.slug} space={s} canManage={canManage(s)} canDelete={isSuperAdmin} onChanged={load} onDeleted={onDeleted} onError={showError} />)}
+              {others.map((s) => renderTree(s))}
             </section>
           )}
         </>
