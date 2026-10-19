@@ -19,6 +19,8 @@ const TYPES: { name: string; icon: string; desc: string; sources: string; progra
   { name: "Cell types", icon: "◉", desc: "Taxonomies and cell-type definitions with markers and regions.", sources: "BICAN", programs: ["BICAN"], href: null },
   { name: "Library generation", icon: "▦", desc: "The path from donor to sequencing library — brain slabs, tissue samples, the cell samples derived from them, and the cDNA, libraries, and aliquots they produce.", sources: "BICAN", programs: ["BICAN"], href: "/browse/library-generation", note: "Temporary — this card will be removed." },
   { name: "BICAN Resources", icon: "▣", desc: "All resources published by the BICAN consortium.", sources: "BICAN", programs: ["BICAN"], href: "/browse/bican-resources" },
+  // Not tied to one program: shown under "All".
+  { name: "Literature reviews", icon: "▤", desc: "PRISMA-guided SynthScholar reviews — published reviews run on BrainKB, and reviews ingested from SynthScholar runs with their manuscript, files and provenance.", sources: "SynthScholar", programs: [], href: "/knowledge-base/synth-scholar" },
 ];
 
 const PROGRAMS = ["All", "BICAN", "BBQS"] as const;
