@@ -7,8 +7,9 @@
  * and admins, can switch it between private and public and share it with
  * people (viewer, editor, owner) — sharing is how a team gets access. Anyone
  * may create an individual space; team spaces need the create_team_space
- * capability (Admin/SuperAdmin by default). The query service enforces all of
- * this; the UI only hides controls a caller couldn't use.
+ * capability (Admin/SuperAdmin by default). Only a SuperAdmin can delete a
+ * space, after typing its slug. The query service enforces all of this; the UI
+ * only hides controls a caller couldn't use.
  */
 
 import { useCallback, useEffect, useState } from "react";
@@ -163,12 +164,85 @@ function Members({ slug, onError }: { slug: string; onError: (m: string) => void
   );
 }
 
-function SpaceRow({ space, canManage, onChanged, onError }: {
+type Deleted = { slug: string; dropped_graphs: string[]; dropped_delta_graphs: string[]; members_removed: number };
+
+/** SuperAdmin only. Typing the slug is the confirmation the API also requires. */
+function DeleteSpace({ space, onDeleted, onError, onCancel }: {
+  space: Space;
+  onDeleted: (d: Deleted) => void;
+  onError: (m: string) => void;
+  onCancel: () => void;
+}) {
+  const [typed, setTyped] = useState("");
+  const [busy, setBusy] = useState(false);
+  const matches = typed === space.slug;
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!matches) return;
+    setBusy(true);
+    try {
+      const d = await api<Deleted>(
+        `/api/spaces/${encodeURIComponent(space.slug)}?confirm=${encodeURIComponent(typed)}`,
+        { method: "DELETE" },
+      );
+      onDeleted(d);
+    } catch (err: any) {
+      onError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <form onSubmit={submit} style={{ display: "grid", gap: 10, borderTop: "1px solid var(--bkb-border)", paddingTop: 12 }}>
+      <div style={{ fontSize: 13, color: "var(--bkb-danger)", fontWeight: 600 }}>Delete this space permanently</div>
+      <div style={{ fontSize: 13, color: "var(--bkb-textMuted)" }}>
+        This drops every graph in the space and the ingestion history copies of its data, and removes its members,
+        access rules and search entries. It cannot be undone. The deletion itself is kept in the provenance record.
+      </div>
+      <label style={{ fontSize: 13, display: "grid", gap: 6 }}>
+        <span>Type <span className="bkb-mono">{space.slug}</span> to confirm</span>
+        <input
+          value={typed}
+          onChange={(e) => setTyped(e.target.value)}
+          autoComplete="off"
+          spellCheck={false}
+          aria-label={`Type ${space.slug} to confirm deletion`}
+          className="bkb-mono"
+          style={{ fontSize: 13, padding: "6px 8px", border: "1px solid var(--bkb-border)", borderRadius: 6, maxWidth: 420 }}
+        />
+      </label>
+      <div style={{ display: "flex", gap: 8 }}>
+        <button
+          type="submit"
+          disabled={!matches || busy}
+          className="bkb-btn"
+          style={{
+            fontSize: 12, padding: "5px 12px",
+            color: matches ? "#fff" : "var(--bkb-danger)",
+            background: matches ? "var(--bkb-danger)" : "transparent",
+            borderColor: "var(--bkb-danger)",
+            opacity: busy ? 0.6 : 1,
+          }}
+        >
+          {busy ? "Deleting…" : "Delete space"}
+        </button>
+        <button type="button" className="bkb-btn bkb-btn-ghost" onClick={onCancel} style={{ fontSize: 12, padding: "5px 12px" }}>
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function SpaceRow({ space, canManage, canDelete, onChanged, onDeleted, onError }: {
   space: Space;
   canManage: boolean;
+  canDelete: boolean;
   onChanged: () => void;
+  onDeleted: (d: Deleted) => void;
   onError: (m: string) => void;
 }) {
+  const [deleting, setDeleting] = useState(false);
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -223,6 +297,16 @@ function SpaceRow({ space, canManage, onChanged, onError }: {
             <button className="bkb-btn" type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} style={{ fontSize: 12, padding: "5px 12px" }}>
               {open ? "Close" : "Manage access"}
             </button>
+            {canDelete && !deleting && (
+              <button
+                type="button"
+                className="bkb-btn bkb-btn-ghost"
+                onClick={() => setDeleting(true)}
+                style={{ fontSize: 12, padding: "5px 12px", color: "var(--bkb-danger)" }}
+              >
+                Delete
+              </button>
+            )}
           </div>
         ) : (
           <span style={{ fontSize: 12, color: "var(--bkb-textMuted)", alignSelf: "center" }}>
@@ -231,6 +315,9 @@ function SpaceRow({ space, canManage, onChanged, onError }: {
         )}
       </div>
       {canManage && open && <Members slug={space.slug} onError={onError} />}
+      {canDelete && deleting && (
+        <DeleteSpace space={space} onDeleted={onDeleted} onError={onError} onCancel={() => setDeleting(false)} />
+      )}
     </div>
   );
 }
@@ -326,9 +413,10 @@ function CreateSpace({ canCreateTeam, onCreated, onError }: {
 }
 
 export default function SpacesPage() {
-  const { user, isAdmin, loading: userLoading } = useCurrentUser();
+  const { user, isAdmin, isSuperAdmin, loading: userLoading } = useCurrentUser();
   const [spaces, setSpaces] = useState<Space[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
 
   const load = useCallback(() => {
@@ -339,6 +427,13 @@ export default function SpacesPage() {
   useEffect(load, [load]);
 
   const showError = useCallback((m: string) => setError(m), []);
+  const onDeleted = useCallback((d: Deleted) => {
+    const n = d.dropped_graphs.length;
+    setNotice(`Deleted space "${d.slug}": ${n} graph${n === 1 ? "" : "s"}` +
+      (d.dropped_delta_graphs.length ? ` and ${d.dropped_delta_graphs.length} ingestion history cop${d.dropped_delta_graphs.length === 1 ? "y" : "ies"}` : "") +
+      ` removed, ${d.members_removed} member${d.members_removed === 1 ? "" : "s"} unshared.`);
+    load();
+  }, [load]);
   const canManage = (s: Space) => isAdmin || s.is_owner || s.your_role === "owner";
   const mine = (spaces ?? []).filter((s) => s.your_role);
   const others = (spaces ?? []).filter((s) => !s.your_role);
@@ -366,6 +461,13 @@ export default function SpacesPage() {
         </div>
       )}
 
+      {notice && (
+        <div role="status" className="bkb-card" style={{ padding: "10px 14px", fontSize: 13, display: "flex", justifyContent: "space-between", gap: 12 }}>
+          <span>{notice}</span>
+          <button className="bkb-btn bkb-btn-ghost" style={{ fontSize: 12, padding: "2px 8px" }} onClick={() => setNotice(null)}>Dismiss</button>
+        </div>
+      )}
+
       {creating && (
         <CreateSpace
           canCreateTeam={isAdmin}
@@ -383,7 +485,7 @@ export default function SpacesPage() {
               Your spaces {user?.email && <span style={{ fontWeight: 400 }}>· {user.email}</span>}
             </h2>
             {mine.length ? (
-              mine.map((s) => <SpaceRow key={s.slug} space={s} canManage={canManage(s)} onChanged={load} onError={showError} />)
+              mine.map((s) => <SpaceRow key={s.slug} space={s} canManage={canManage(s)} canDelete={isSuperAdmin} onChanged={load} onDeleted={onDeleted} onError={showError} />)
             ) : (
               <div className="bkb-card" style={{ padding: 18, fontSize: 13, color: "var(--bkb-textMuted)" }}>
                 You aren&apos;t a member of any space yet. Create one, or ask a space owner to add you.
@@ -393,7 +495,7 @@ export default function SpacesPage() {
           {others.length > 0 && (
             <section style={{ display: "grid", gap: 10 }}>
               <h2 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--bkb-textMuted)" }}>Public spaces</h2>
-              {others.map((s) => <SpaceRow key={s.slug} space={s} canManage={canManage(s)} onChanged={load} onError={showError} />)}
+              {others.map((s) => <SpaceRow key={s.slug} space={s} canManage={canManage(s)} canDelete={isSuperAdmin} onChanged={load} onDeleted={onDeleted} onError={showError} />)}
             </section>
           )}
         </>
