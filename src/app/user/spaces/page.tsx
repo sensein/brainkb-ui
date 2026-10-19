@@ -542,7 +542,7 @@ function CreateSpace({ canCreateTeam, onCreated, onError, parent }: {
           <input
             className="bkb-input bkb-mono"
             required
-            pattern="[a-z0-9][a-z0-9-]{1,62}[a-z0-9]"
+            pattern="[a-z0-9][a-z0-9\-]{1,62}[a-z0-9]"
             title="3–64 characters: lowercase letters, digits and hyphens"
             value={slug}
             onChange={(e) => { setSlug(e.target.value); setSlugEdited(true); }}

@@ -348,6 +348,11 @@ export async function importReview(selection: ImportSelection, retried = false):
     body: form,
   });
   if (res.status === 401 && !retried) return importReview(selection, true);
+  if (res.status === 405 || res.status === 404) {
+    // /reviews/import exists only from the release that added importing; an older
+    // ml_service matches the path against /reviews/{review_id} and answers 405.
+    throw new Error("The review service does not support importing yet — ml_service needs to be updated to the version with review import.");
+  }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(formatApiDetail((body as any)?.detail, res.status));
