@@ -42,7 +42,8 @@ export type ExportFormat =
   | "appraisal_markdown"
   | "appraisal_json"
   | "narrative_summary_markdown"
-  | "narrative_summary_json";
+  | "narrative_summary_json"
+  | "pdf";
 
 export type SynthesisStyle = "paragraph" | "question_answer" | "bullet_list" | "table";
 
@@ -173,6 +174,10 @@ export interface ScreeningLogEntry {
   decision: string;
   reason: string;
   stage: string;
+  /** What the decision was judged on: "title_abstract" | "full_text" | … */
+  assessed_on?: string;
+  /** How the full text was obtained, when assessed_on is "full_text". */
+  full_text_source?: string;
 }
 
 export interface EvidenceSpan {
@@ -208,6 +213,12 @@ export interface ReviewSummary {
   included_count: number;
   is_public: boolean;
   share_to_cache: boolean;
+  /** "pipeline" (run here) or "import" (a local run's output directory). */
+  source?: ReviewSource;
+  /** True once the review's RDF has been put into the graph database. */
+  in_graph?: boolean;
+  /** The review's graph in BrainKB (named by the review's own id). */
+  graph_iri?: string;
   error?: string | null;
   stage?: string | null;
   stage_index?: number | null;
@@ -249,6 +260,81 @@ export interface ReviewDetail {
   per_group_analysis?: unknown | null;
   error?: string | null;
   compare_result?: unknown | null;
+  source?: ReviewSource;
+  provenance?: ReviewProvenance | null;
+  /** Files kept with the review (an imported run's output directory, generated PDFs). */
+  artifacts?: ReviewArtifact[];
+}
+
+// ── Import, artifacts, provenance ────────────────────────────────────
+
+export type ReviewSource = "pipeline" | "import";
+
+export interface ReviewArtifact {
+  path: string;
+  /** review_result, manuscript_pdf, manuscript_markdown, figure, table, rdf, … */
+  kind: string;
+  media_type: string;
+  size_bytes: number;
+  sha256: string;
+  created_at?: string | null;
+}
+
+export interface GraphIngest {
+  space_slug: string;
+  graph_iri: string;
+  job_id?: string | null;
+  ingested_at?: string;
+  ingested_by?: string;
+  triples?: number;
+  source_file?: string;
+  sha256?: string;
+}
+
+export interface LocalRunProvenance {
+  search_log?: { database: string; query: string; count?: number | null; date?: string | null }[];
+  citation_verification?: Record<string, unknown>;
+  url_verification?: { checked: number; reachable: number; statuses: Record<string, number>; checked_at?: string | null };
+  manuscript_check?: Record<string, number | string | null>;
+}
+
+export interface ReviewProvenance {
+  origin: {
+    source: ReviewSource;
+    created_at?: string;
+    completed_at?: string | null;
+    imported_at?: string | null;
+    imported_by?: string | null;
+    original_review_id?: string | null;
+    run_completed_at?: string | null;
+    file_count?: number | null;
+    total_bytes?: number | null;
+    skipped?: { path: string; reason: string }[];
+    local_run?: LocalRunProvenance;
+  };
+  graph_ingests: GraphIngest[];
+  software?: {
+    synthscholar_version: string;
+    model_name: string;
+    started_at?: string;
+    environment?: Record<string, boolean>;
+    pipeline_settings?: Record<string, string | number | boolean>;
+  };
+  plan_iterations?: { iteration: number; decision: string; generated_at?: string; model_name?: string; feedback?: string }[];
+  search_iterations?: {
+    iteration: number; kind: string; database: string; query: string;
+    new_records: number; cumulative: number; started_at?: string; duration_ms?: number;
+  }[];
+  agents?: {
+    agent: string; step: string; model_name: string; calls: number; requests: number;
+    tokens: number; duration_ms: number; failures: number; first_at: string; last_at: string;
+  }[];
+  screening?: {
+    decisions: number;
+    basis_by_stage: Record<string, Record<string, number>>;
+    full_text_sources: Record<string, number>;
+  };
+  retrieval?: { included: number; with_full_text: number; abstract_only: number; routes: Record<string, number> };
 }
 
 export type ProgressEventKind =

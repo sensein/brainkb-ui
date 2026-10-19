@@ -26,6 +26,8 @@ import type {
   ReviewPlan,
   ReviewStatus,
   LogEvent,
+  ReviewArtifact,
+  GraphIngest,
 } from "@/src/types/synthScholar";
 
 const API_BASE = (process.env.NEXT_PUBLIC_ML_SERVICE_API_BASE || "http://localhost:8007").replace(/\/+$/, "") + "/api/synth-scholar";
@@ -281,6 +283,123 @@ export async function exportReview(
     throw new Error(detail || `Export failed (HTTP ${res.status})`);
   }
   return res.blob();
+}
+
+// ── Import a local run ────────────────────────────────────────────────
+// A local SynthScholar run (the synthscholar skill) leaves an output directory:
+// review.json plus manuscript, PDF, figures, tables, RDF and verification reports.
+// The user picks that folder; everything but intermediate work is uploaded and kept
+// with the review. The server makes the same choice again (and is the authority) —
+// filtering here only avoids uploading work/, which can run to hundreds of MB.
+
+/** Folders the server skips: intermediate scripts and raw records, not the review. */
+const SKIPPED_DIRS = new Set(["work", ".git", "__pycache__", "node_modules", ".ipynb_checkpoints", ".venv"]);
+const SKIPPED_NAMES = new Set([".DS_Store", "Thumbs.db"]);
+export const IMPORT_MAX_FILES = 1000;
+
+/** A browser File with the path it had inside the chosen folder. */
+export const relativePathOf = (f: File) => (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name;
+
+export interface ImportSelection {
+  /** The folder holding review.json, as the browser names it ("" when none). */
+  root: string;
+  keep: { file: File; path: string }[];
+  skipped: { path: string; reason: string }[];
+  bytes: number;
+  /** Bytes left out (not uploaded). */
+  skippedBytes: number;
+}
+
+export function selectReviewFiles(files: File[]): ImportSelection {
+  const withPath = files.map((file) => ({ file, full: relativePathOf(file) }));
+  const roots = withPath
+    .filter(({ full }) => full.split("/").pop() === "review.json")
+    .map(({ full }) => full.split("/").slice(0, -1).join("/"))
+    .sort((a, b) => a.length - b.length);
+  const root = roots[0] ?? "";
+  const out: ImportSelection = { root, keep: [], skipped: [], bytes: 0, skippedBytes: 0 };
+  if (!roots.length) return out;
+  const prefix = root ? `${root}/` : "";
+  for (const { file, full } of withPath) {
+    if (prefix && !full.startsWith(prefix)) { out.skipped.push({ path: full, reason: "outside the review's folder" }); out.skippedBytes += file.size; continue; }
+    const rel = full.slice(prefix.length);
+    const parts = rel.split("/");
+    if (SKIPPED_NAMES.has(parts[parts.length - 1])) continue;
+    if (parts.slice(0, -1).some((p) => SKIPPED_DIRS.has(p))) { out.skipped.push({ path: rel, reason: `intermediate files (${parts[0]}/)` }); out.skippedBytes += file.size; continue; }
+    out.keep.push({ file, path: rel });
+    out.bytes += file.size;
+  }
+  out.keep.sort((a, b) => a.path.localeCompare(b.path));
+  return out;
+}
+
+/** Upload the kept files; the review is created private and owned by the caller. */
+export async function importReview(selection: ImportSelection, retried = false): Promise<ReviewDetail> {
+  const token = await getMlServiceToken(retried);
+  const form = new FormData();
+  // The filename carries the path inside the review's folder — that is how the
+  // server keeps figures/…, tables and the manuscript in their places.
+  for (const { file, path } of selection.keep) form.append("files", file, path);
+  // What was not uploaded still belongs in the import record.
+  if (selection.skipped.length) form.append("left_out", JSON.stringify(selection.skipped.slice(0, 5000)));
+  const res = await fetch(`${API_BASE}/reviews/import`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+  });
+  if (res.status === 401 && !retried) return importReview(selection, true);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(formatApiDetail((body as any)?.detail, res.status));
+  }
+  return res.json();
+}
+
+// ── Artifacts (files kept with a review) ──────────────────────────────
+
+export async function listArtifacts(reviewId: string): Promise<ReviewArtifact[]> {
+  return fetchJSON(`/reviews/${reviewId}/artifacts`);
+}
+
+const artifactPath = (path: string) => path.split("/").map(encodeURIComponent).join("/");
+
+/** An artifact's bytes. Owner files need the bearer token, so they are fetched,
+ *  not linked; public reviews' files have a plain URL (publicArtifactUrl). */
+export async function fetchArtifact(reviewId: string, path: string, opts: { isPublic?: boolean } = {}): Promise<Blob> {
+  const url = opts.isPublic
+    ? publicArtifactUrl(reviewId, path)
+    : `${API_BASE}/reviews/${reviewId}/artifacts/${artifactPath(path)}`;
+  const headers: Record<string, string> = {};
+  if (!opts.isPublic) headers.Authorization = `Bearer ${await getMlServiceToken()}`;
+  const res = await fetch(url, { headers });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(formatApiDetail((body as any)?.detail, res.status));
+  }
+  return res.blob();
+}
+
+export function publicArtifactUrl(reviewId: string, path: string, download = false): string {
+  return `${API_BASE}/public/reviews/${reviewId}/artifacts/${artifactPath(path)}${download ? "?download=true" : ""}`;
+}
+
+// ── Knowledge graph ───────────────────────────────────────────────────
+// Runs through the UI server (/api/synth-scholar/reviews/<id>/graph), which acts
+// as the signed-in user against ml_service and the query service — the space's
+// write rules and the user's ingest role decide, not this client.
+
+export async function addReviewToGraph(
+  reviewId: string,
+  spaceSlug: string,
+): Promise<{ space_slug: string; graph_iri: string; job_id?: string | null; graph_ingests?: GraphIngest[]; warning?: string }> {
+  const res = await fetch(`/api/synth-scholar/reviews/${encodeURIComponent(reviewId)}/graph`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ space_slug: spaceSlug }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error((body as any)?.error || `HTTP ${res.status}`);
+  return body;
 }
 
 // ── SSE Progress Stream ──────────────────────────────────────────────

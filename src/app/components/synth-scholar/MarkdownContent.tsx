@@ -24,9 +24,12 @@ type Props = {
   className?: string;
   /** Inline styles for the wrapper (e.g. fontSize / lineHeight overrides). */
   style?: React.CSSProperties;
+  /** Map an image's src (e.g. a manuscript's "figures/fig_prisma.svg") to a
+   *  URL the browser can load; images it cannot resolve are not rendered. */
+  resolveImage?: (src: string) => string | undefined;
 };
 
-export function MarkdownContent({ children, className, style }: Props) {
+export function MarkdownContent({ children, className, style, resolveImage }: Props) {
   return (
     <div className={className} style={{ ...DEFAULT_STYLE, ...style }}>
       <ReactMarkdown
@@ -131,6 +134,12 @@ export function MarkdownContent({ children, className, style }: Props) {
               }}
             />
           ),
+          img: ({ src, alt }) => {
+            const url = typeof src === "string" ? (resolveImage ? resolveImage(src) : src) : undefined;
+            if (!url) return null;
+            // eslint-disable-next-line @next/next/no-img-element
+            return <img src={url} alt={alt || ""} style={{ maxWidth: "100%", height: "auto", margin: "0.8em auto", display: "block" }} />;
+          },
           // Links open in a new tab; keep the visual subtle
           a: ({ ...p }) => (
             <a

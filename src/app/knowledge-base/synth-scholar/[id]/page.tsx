@@ -9,8 +9,11 @@
  *
  * The Review tab renders the full long-form content (abstract → intro →
  * methods → flow → studies → synthesis → RoB → GRADE → limitations →
- * conclusions → references). The Provenance tab renders the animated
- * pipeline timeline component.
+ * conclusions → references). A review imported from a local run also has a
+ * Manuscript tab (the run's review.manuscript.md, with its figures) and a Files
+ * tab (everything kept from its output directory). The Provenance tab shows the
+ * provenance record (origin, software, searches, screening basis, retrieval,
+ * verification, knowledge graph) and the pipeline timeline.
  */
 
 import React from "react";
@@ -24,6 +27,8 @@ import {
   AlertCircle,
   Activity,
   FileText,
+  FolderOpen,
+  ScrollText,
 } from "lucide-react";
 // Public (unauthenticated) reads — see usePublicReview*. The authenticated hooks
 // cannot serve this page: they need a session to exchange for an ml_service token,
@@ -36,11 +41,20 @@ import {
 } from "@/src/hooks/useSynthScholar";
 import { MarkdownContent } from "@/src/app/components/synth-scholar/MarkdownContent";
 import { ProvenanceTimelinePublic } from "@/src/app/components/synth-scholar/ProvenanceTimelinePublic";
+import {
+  ReviewManuscript,
+  ReviewFiles,
+  ReviewProvenanceDetails,
+  hasManuscript,
+} from "@/src/app/components/synth-scholar/ReviewOutputs";
 import type {
   ArticleSummary,
   GRADEAssessment,
   ReviewDetail,
 } from "@/src/types/synthScholar";
+
+type Tab = "review" | "manuscript" | "files" | "provenance";
+const TABS: Tab[] = ["review", "manuscript", "files", "provenance"];
 
 export default function PublicReviewDetailPage() {
   const params = useParams();
@@ -53,23 +67,33 @@ export default function PublicReviewDetailPage() {
     data?.is_public === true && data?.status === "completed";
 
   // Tab state synced to URL hash so it's shareable + survives refresh.
-  const [activeTab, setActiveTab] = React.useState<"review" | "provenance">("review");
+  const [activeTab, setActiveTab] = React.useState<Tab>("review");
   React.useEffect(() => {
     if (typeof window === "undefined") return;
-    const sync = () =>
-      setActiveTab(window.location.hash === "#provenance" ? "provenance" : "review");
+    const sync = () => {
+      const h = window.location.hash.replace(/^#/, "") as Tab;
+      setActiveTab(TABS.includes(h) ? h : "review");
+    };
     sync();
     window.addEventListener("hashchange", sync);
     return () => window.removeEventListener("hashchange", sync);
   }, []);
-  const switchTab = (tab: "review" | "provenance") => {
+  const switchTab = (tab: Tab) => {
     setActiveTab(tab);
     if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
-      url.hash = tab === "provenance" ? "provenance" : "";
+      url.hash = tab === "review" ? "" : tab;
       window.history.replaceState(null, "", url.toString());
     }
   };
+  const artifacts = data?.artifacts ?? [];
+  const access = { reviewId, isPublic: true };
+  const tabs: { id: Tab; label: string; icon: React.ReactNode; accent: string }[] = [
+    { id: "review", label: "Review", icon: <FileText className="w-4 h-4" />, accent: "border-sky-500 text-sky-700" },
+    ...(hasManuscript(artifacts) ? [{ id: "manuscript" as Tab, label: "Manuscript", icon: <ScrollText className="w-4 h-4" />, accent: "border-sky-500 text-sky-700" }] : []),
+    ...(artifacts.length ? [{ id: "files" as Tab, label: `Files (${artifacts.length})`, icon: <FolderOpen className="w-4 h-4" />, accent: "border-sky-500 text-sky-700" }] : []),
+    { id: "provenance", label: "Provenance", icon: <Activity className="w-4 h-4" />, accent: "border-emerald-500 text-emerald-700" },
+  ];
 
   return (
     <div className="kb-page-margin">
@@ -143,39 +167,40 @@ export default function PublicReviewDetailPage() {
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
               <div className="border-b border-gray-200 px-2 flex items-center justify-between flex-wrap gap-2">
                 <nav className="flex" role="tablist" aria-label="Review tabs">
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={activeTab === "review"}
-                    onClick={() => switchTab("review")}
-                    className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px ${
-                      activeTab === "review"
-                        ? "border-sky-500 text-sky-700"
-                        : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
-                    }`}
-                  >
-                    <FileText className="w-4 h-4" /> Review
-                  </button>
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={activeTab === "provenance"}
-                    onClick={() => switchTab("provenance")}
-                    className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px ${
-                      activeTab === "provenance"
-                        ? "border-emerald-500 text-emerald-700"
-                        : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
-                    }`}
-                  >
-                    <Activity className="w-4 h-4" /> Provenance
-                  </button>
+                  {tabs.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={activeTab === t.id}
+                      onClick={() => switchTab(t.id)}
+                      className={`flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                        activeTab === t.id
+                          ? t.accent
+                          : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
+                      }`}
+                    >
+                      {t.icon} {t.label}
+                    </button>
+                  ))}
                 </nav>
                 <div className="flex flex-wrap gap-2 px-3 py-2">
                   <button
                     type="button"
+                    onClick={() => exportMut.mutate({ reviewId, format: "pdf" })}
+                    disabled={exportMut.isPending}
+                    title="The run's own manuscript PDF when it has one; otherwise generated from the review"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 text-white rounded hover:bg-sky-700 transition-colors text-xs font-medium disabled:opacity-50"
+                  >
+                    {exportMut.isPending && exportMut.variables?.format === "pdf"
+                      ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      : <Download className="w-3.5 h-3.5" />} PDF
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => exportMut.mutate({ reviewId, format: "markdown" })}
                     disabled={exportMut.isPending}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 text-white rounded hover:bg-sky-700 transition-colors text-xs font-medium disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-sky-600 text-sky-700 rounded hover:bg-sky-50 transition-colors text-xs font-medium disabled:opacity-50"
                   >
                     <BookOpen className="w-3.5 h-3.5" /> Markdown
                   </button>
@@ -206,11 +231,28 @@ export default function PublicReviewDetailPage() {
 
             {/* ── Provenance tab ───────────────────────────────────── */}
             {activeTab === "provenance" && (
-              <ProvenanceTimelinePublic
-                review={data}
-                logEvents={log.data?.log_events ?? []}
-                log={log.data?.log ?? []}
-              />
+              <>
+                <ReviewProvenanceDetails review={data} />
+                {(log.data?.log?.length ?? 0) > 0 && (
+                  <ProvenanceTimelinePublic
+                    review={data}
+                    logEvents={log.data?.log_events ?? []}
+                    log={log.data?.log ?? []}
+                  />
+                )}
+              </>
+            )}
+
+            {activeTab === "manuscript" && (
+              <section className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 sm:p-10">
+                <ReviewManuscript access={access} artifacts={artifacts} />
+              </section>
+            )}
+
+            {activeTab === "files" && (
+              <Section title="Files kept with this review">
+                <ReviewFiles access={access} artifacts={artifacts} />
+              </Section>
             )}
 
             {/* ── Review tab ──────────────────────────────────────── */}
