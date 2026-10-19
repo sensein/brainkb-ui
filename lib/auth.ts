@@ -61,7 +61,7 @@ const SESSION_MAX_AGE_SEC = (() => {
 // old code returned null for both and cleared the credentials either way, so a
 // few-second backend hiccup permanently signed everyone out.
 type RefreshResult =
-  | { status: "ok"; token: string }
+  | { status: "ok"; token: string; refresh?: string }
   | { status: "rejected" }
   | { status: "unavailable" };
 
@@ -78,7 +78,10 @@ async function refreshBackendToken(refreshToken: string): Promise<RefreshResult>
     if (res.ok) {
       const data = await res.json();
       const access = (data.access_token as string) ?? null;
-      return access ? { status: "ok", token: access } : { status: "rejected" };
+      // A browser-session refresh token past half its life comes back renewed
+      // (sliding session): keep it, so an active session never hits a fixed expiry.
+      const renewed = (data.refresh_token as string) || undefined;
+      return access ? { status: "ok", token: access, refresh: renewed } : { status: "rejected" };
     }
     // Only the auth codes are a verdict on the token.
     return res.status === 401 || res.status === 403
@@ -137,7 +140,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       // On first sign-in, hydrate the NextAuth JWT with backend claims.
       if (user) {
         const u = user as any;
@@ -160,8 +163,12 @@ export const authOptions: NextAuthOptions = {
       const refresh = (token as any).backendRefreshToken as string | undefined;
       const SKEW_MS = 60_000; // renew ~1 min before expiry
 
-      if (!(token as any).backendToken) return token; // already expired; see below
-      if (exp && Date.now() < exp - SKEW_MS) return token; // still valid
+      // `update()` from the browser (after a 401) forces a renewal even when `exp`
+      // says the token is still good: the backend may have rejected it for another
+      // reason, e.g. a restart with a new signing key.
+      const forced = trigger === "update";
+      if (!(token as any).backendToken && !(forced && refresh)) return token; // already expired; see below
+      if (!forced && exp && Date.now() < exp - SKEW_MS) return token; // still valid
 
       if (!refresh) {
         // Signed in without a refresh token — an older backend build, or a login
@@ -179,6 +186,7 @@ export const authOptions: NextAuthOptions = {
       if (res.status === "ok") {
         (token as any).backendToken = res.token;
         (token as any).backendTokenExp = jwtExpMs(res.token);
+        if (res.refresh) (token as any).backendRefreshToken = res.refresh;
         (token as any).error = undefined;
       } else if (res.status === "rejected") {
         // The refresh token is expired, revoked, or the account was deactivated.

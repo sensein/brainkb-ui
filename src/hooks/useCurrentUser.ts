@@ -14,6 +14,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { env } from "@/src/config/env";
+import { useBackendFetch } from "@/src/hooks/useBackendFetch";
 
 export interface CurrentUser {
   email: string;
@@ -60,6 +61,7 @@ export function useCurrentUser(): State {
   const [bump, setBump] = useState(0);
 
   const backendToken = (session as any)?.backendToken as string | undefined;
+  const backendFetch = useBackendFetch();
   const sessionName = (session?.user?.name as string | undefined) ?? null;
   const sessionEmail = (session?.user?.email as string | undefined) ?? null;
   const key = backendToken ?? `anon:${sessionEmail ?? ""}`;
@@ -88,9 +90,9 @@ export function useCurrentUser(): State {
     setLoading(true);
     (async () => {
       try {
-        const res = await fetch(`${env.userManagementApiBase}/api/users/me`, {
-          headers: { Authorization: `Bearer ${backendToken}`, Accept: "application/json" },
-          cache: "no-store",
+        // Renews an expired session token and retries once (useBackendFetch).
+        const res = await backendFetch(`${env.userManagementApiBase}/api/users/me`, {
+          headers: { Accept: "application/json" },
         });
         if (res.status === 403) {
           // Backend may return either a raw error string or a structured
@@ -133,6 +135,9 @@ export function useCurrentUser(): State {
         }
       } catch (e: any) {
         if (!cancelled) {
+          // A transient failure must not read as "no roles": keep the identity we
+          // already know for this same person until a real answer arrives.
+          if (cachedUser && cachedUser.email === sessionEmail) setUser(cachedUser);
           setError(e?.message ?? "request failed");
           setLoading(false);
         }
@@ -141,7 +146,7 @@ export function useCurrentUser(): State {
     return () => {
       cancelled = true;
     };
-  }, [key, backendToken, sessionEmail, sessionName, status, bump]);
+  }, [key, backendToken, backendFetch, sessionEmail, sessionName, status, bump]);
 
   const refresh = () => {
     cachedUser = null;

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useBackendFetch } from "@/src/hooks/useBackendFetch";
 import { env } from "@/src/config/env";
 
 /**
@@ -55,6 +56,7 @@ export function usePageAccess(
   options?: { skip?: boolean },
 ): UsePageAccessState {
   const { data: session, status } = useSession();
+  const backendFetch = useBackendFetch();
   const refreshNoop = useCallback(() => {}, []);
   // When `skip` is set (e.g. an admin-only gate that doesn't need backend
   // RBAC), short-circuit to a settled "allowed=false" state without firing a
@@ -76,12 +78,10 @@ export function usePageAccess(
     let cancelled = false;
     (async () => {
       try {
-        const headers: Record<string, string> = { Accept: "application/json" };
-        const backendToken = (session as any)?.backendToken as string | undefined;
-        if (backendToken) headers["Authorization"] = `Bearer ${backendToken}`;
-        const res = await fetch(
+        // Renews an expired session token and retries once (useBackendFetch).
+        const res = await backendFetch(
           `${env.userManagementApiBase}/api/access/page/${encodeURIComponent(pageKey)}`,
-          { headers, cache: "no-store" },
+          { headers: { Accept: "application/json" } },
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = (await res.json()) as PageAccessCheck;
@@ -97,7 +97,7 @@ export function usePageAccess(
     return () => {
       cancelled = true;
     };
-  }, [pageKey, status, session, options?.skip, bump]);
+  }, [pageKey, status, session, backendFetch, options?.skip, bump]);
 
   useRevalidateOnFocus(options?.skip ? refreshNoop : refresh);
 
@@ -116,6 +116,7 @@ export function usePageAccessBatch(pageKeys: string[]): {
   refresh: () => void;
 } {
   const { data: session, status } = useSession();
+  const backendFetch = useBackendFetch();
   const [results, setResults] = useState<PageAccessCheck[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -137,17 +138,10 @@ export function usePageAccessBatch(pageKeys: string[]): {
       setLoading(true);
       setError(null);
       try {
-        const headers: Record<string, string> = {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        };
-        const backendToken = (session as any)?.backendToken as string | undefined;
-        if (backendToken) headers["Authorization"] = `Bearer ${backendToken}`;
-        const res = await fetch(`${env.userManagementApiBase}/api/access/pages`, {
+        const res = await backendFetch(`${env.userManagementApiBase}/api/access/pages`, {
           method: "POST",
-          headers,
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
           body: JSON.stringify(serialized.split(",")),
-          cache: "no-store",
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = (await res.json()) as PageAccessCheck[];
