@@ -2,7 +2,8 @@
 
 // Live full-text search over public spaces, via /api/search (which proxies the
 // query service). Results are paged with `offset`; the space chips re-run the
-// search scoped to one space.
+// search scoped to one space. Matching literature reviews (/api/search/reviews)
+// are shown above the records.
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -45,6 +46,49 @@ function Suggestions({ title, text }: { title: string; text: string }) {
           <Link key={q} href={href(q)}>{q}</Link>
         ))}
       </div>
+    </div>
+  );
+}
+
+type ReviewHit = { id: string; title: string; question?: string; articles: number; source: "BrainKB" | "Ingested"; space?: string; href: string };
+
+/** Literature reviews whose title or research question matches. */
+function Reviews({ term }: { term: string }) {
+  const [reviews, setReviews] = useState<ReviewHit[]>([]);
+  const [more, setMore] = useState(false);
+  useEffect(() => {
+    setReviews([]);
+    if (!term) return;
+    const ctrl = new AbortController();
+    fetch(`/api/search/reviews?${new URLSearchParams({ q: term })}`, { signal: ctrl.signal })
+      .then((r) => (r.ok ? r.json() : { reviews: [] }))
+      .then((b) => { setReviews(b.reviews ?? []); setMore(!!b.more); })
+      .catch(() => { /* reviews are extra; the record search stands on its own */ });
+    return () => ctrl.abort();
+  }, [term]);
+  if (!reviews.length) return null;
+  return (
+    <div style={{ marginBottom: 24 }}>
+      <p className="count"><b>Literature reviews</b> matching “{term}”</p>
+      <div className="list" style={{ marginTop: 0 }}>
+        {reviews.map((r) => (
+          <article className="hit" key={`${r.source}:${r.id}`}>
+            <span className="tico kind k-entity" aria-hidden="true">LR</span>
+            <div>
+              <span className="kind k-entity">Literature review</span>
+              <h3><Link href={r.href}>{r.title || r.id}</Link></h3>
+              {r.question && <p>{r.question}</p>}
+              <div className="meta">
+                <span className="src">{r.source === "BrainKB" ? "Run on BrainKB" : `Ingested · ${r.space}`}</span>
+                <span>{r.articles} studies</span>
+                <span className="iri">{r.id}</span>
+              </div>
+            </div>
+            <Link className="view" href={r.href}>Open</Link>
+          </article>
+        ))}
+      </div>
+      {more && <p className="count"><Link href="/knowledge-base/synth-scholar">All literature reviews →</Link></p>}
     </div>
   );
 }
@@ -237,7 +281,10 @@ export default function SearchView() {
 
       <main className="wrap">
         <div className="layout">
-          <section aria-live="polite">{results}</section>
+          <section aria-live="polite">
+            {!space && <Reviews term={term} />}
+            {results}
+          </section>
           <aside>
             <div className="card blue">
               <h4>Ask your AI agent instead</h4>
