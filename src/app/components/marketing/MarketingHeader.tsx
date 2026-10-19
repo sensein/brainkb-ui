@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/mcp", label: "Use with AI" },
   { href: "/explore", label: "Explore the graph" },
+  { href: "/knowledge-base/synth-scholar", label: "Literature reviews" },
   { href: "/skills", label: "Extraction tools" },
   { href: "/tutorial", label: "Tutorial" },
 ];
@@ -63,7 +64,8 @@ export default function MarketingHeader() {
         </Link>
         <nav aria-label="Main navigation" style={{ display: "flex", gap: 28, fontSize: 14, flexWrap: "wrap", alignItems: "center", color: "#596476" }}>
           {NAV_LINKS.map((link) => {
-            const active = pathname === link.href;
+            // A section's pages count too (e.g. one review under Literature reviews).
+            const active = pathname === link.href || (link.href !== "/" && !!pathname?.startsWith(`${link.href}/`));
             return (
               <Link
                 key={link.href}
