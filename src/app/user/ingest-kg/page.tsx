@@ -7,9 +7,40 @@ import Link from "next/link";
 import StatusIndicator, { StatusType } from "../../components/ui/StatusIndicator";
 import { clientEnv } from "../../../config/env";
 
-interface NamedGraph {
-    graph: string;
+interface SpaceGraph {
+    iri: string;
     description: string;
+}
+
+/** A space the user may ingest into (GET /api/spaces/writable). */
+interface WritableSpace {
+    slug: string;
+    name: string;
+    visibility: "public" | "private";
+    parent_slug: string | null;
+    access: string;
+    graphs: SpaceGraph[];
+}
+
+const UNMAPPED = "__unmapped__";
+
+/** Spaces in tree order (parents before their subspaces), with depth for indenting. */
+function treeOrder(spaces: WritableSpace[]): { space: WritableSpace; depth: number }[] {
+    const bySlug = new Set(spaces.map((s) => s.slug));
+    const kids = new Map<string, WritableSpace[]>();
+    for (const s of spaces) {
+        if (s.parent_slug && bySlug.has(s.parent_slug)) kids.set(s.parent_slug, [...(kids.get(s.parent_slug) ?? []), s]);
+    }
+    const out: { space: WritableSpace; depth: number }[] = [];
+    const seen = new Set<string>();
+    const walk = (s: WritableSpace, depth: number) => {
+        if (seen.has(s.slug)) return;
+        seen.add(s.slug);
+        out.push({ space: s, depth });
+        for (const k of kids.get(s.slug) ?? []) walk(k, depth + 1);
+    };
+    for (const s of spaces) if (!s.parent_slug || !bySlug.has(s.parent_slug)) walk(s, 0);
+    return out;
 }
 
 
@@ -17,8 +48,14 @@ export default function IngestKnowledgeGraphPage() {
     const { data: session } = useSession();
     const router = useRouter();
 
-    const [namedGraphs, setNamedGraphs] = useState<NamedGraph[]>([]);
+    const [spaces, setSpaces] = useState<WritableSpace[] | null>(null);
+    const [unmapped, setUnmapped] = useState<SpaceGraph[]>([]);
+    const [cannotIngest, setCannotIngest] = useState<string | null>(null);
+    const [selectedSpace, setSelectedSpace] = useState<string>('');
     const [selectedGraph, setSelectedGraph] = useState<string>('');
+    const [newGraphIri, setNewGraphIri] = useState<string>('');
+    const [newGraphDescription, setNewGraphDescription] = useState<string>('');
+    const [addingGraph, setAddingGraph] = useState<boolean>(false);
     const [files, setFiles] = useState<File[]>([]);
     const [isUploading, setIsUploading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
@@ -33,50 +70,61 @@ export default function IngestKnowledgeGraphPage() {
         }
     }, [session, router]);
 
-    // Fetch named graphs on component mount
-    useEffect(() => {
-        const fetchNamedGraphs = async () => {
-            try {
-                // Use Next.js API route to proxy the request (avoids CORS issues)
-                // The API route handles the server-side call to the microservice
-                const response = await fetch('/api/registered-named-graphs');
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-                    throw new Error(errorData.error || `HTTP ${response.status}`);
-                }
-
-                const data = await response.json();
-
-                if (data && typeof data === 'object') {
-                    // Handle different response formats
-                    // If it's an object with keys, convert to array
-                    let graphs: NamedGraph[] = [];
-                    
-                    if (Array.isArray(data)) {
-                        graphs = data;
-                    } else {
-                        // Convert object to array
-                        graphs = Object.values(data) as NamedGraph[];
-                    }
-                    
-                    setNamedGraphs(graphs);
-                    // Don't auto-select the first graph, let user choose
-                } else {
-                    throw new Error("Invalid response format for named graphs.");
-                }
-
-            } catch (err) {
-                console.error("Failed to fetch named graphs:", err);
-                const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
-                setError(`Failed to load named graphs: ${errorMessage}`);
-            }
-        };
-
-        if (session) {
-            fetchNamedGraphs();
+    // The spaces this user may ingest into, with their graphs — permission-based:
+    // the query service applies the same checks ingestion does.
+    const loadWritable = async (selectSlug?: string, selectGraph?: string) => {
+        try {
+            const response = await fetch('/api/spaces/writable');
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+            setCannotIngest(data.can_ingest === false ? (data.reason || "You can't ingest data yet.") : null);
+            setSpaces(data.spaces ?? []);
+            setUnmapped(data.unmapped_graphs ?? []);
+            if (selectSlug) setSelectedSpace(selectSlug);
+            if (selectGraph) setSelectedGraph(selectGraph);
+        } catch (err) {
+            console.error("Failed to load spaces:", err);
+            setSpaces([]);
+            setError(`Failed to load your spaces: ${err instanceof Error ? err.message : "unknown error"}`);
         }
+    };
+
+    useEffect(() => {
+        if (session) loadWritable();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [session]);
+
+    const space = spaces?.find((s) => s.slug === selectedSpace) ?? null;
+    const graphsForSpace: SpaceGraph[] = selectedSpace === UNMAPPED ? unmapped : space?.graphs ?? [];
+
+    const chooseSpace = (slug: string) => {
+        setSelectedSpace(slug);
+        const chosen = slug === UNMAPPED ? unmapped : spaces?.find((s) => s.slug === slug)?.graphs ?? [];
+        setSelectedGraph(chosen.length === 1 ? chosen[0].iri : '');   // one graph: pick it
+        setNewGraphIri(slug && slug !== UNMAPPED ? `https://brainkb.org/graph/${slug}/` : '');
+        setNewGraphDescription('');
+    };
+
+    const addGraph = async () => {
+        if (!space) return;
+        setAddingGraph(true);
+        setError(null);
+        try {
+            const response = await fetch(`/api/spaces/${encodeURIComponent(space.slug)}/graphs`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ named_graph_url: newGraphIri.trim(), description: newGraphDescription.trim() }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+            const iri = newGraphIri.trim().endsWith('/') ? newGraphIri.trim() : `${newGraphIri.trim()}/`;
+            await loadWritable(space.slug, iri);
+        } catch (err) {
+            setError(`Could not add the graph: ${err instanceof Error ? err.message : "unknown error"}`);
+        } finally {
+            setAddingGraph(false);
+        }
+    };
 
     const validateAndSetFile = (selectedFile: File) => {
         const fileType = selectedFile.name.split('.').pop()?.toLowerCase();
@@ -294,33 +342,104 @@ export default function IngestKnowledgeGraphPage() {
             {/* p-4 on phones, full p-8 padding at sm+ so the card doesn't crowd narrow screens */}
             <form onSubmit={handleSubmit} className="space-y-6 bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-8 shadow-md">
                 
-                {/* Named Graph Selection */}
-                <div>
-                    <label htmlFor="named-graph" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                        Select Named Graph
-                    </label>
-                    <select
-                        id="named-graph"
-                        value={selectedGraph}
-                        onChange={(e) => setSelectedGraph(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                        disabled={namedGraphs.length === 0 || isUploading}
-                    >
-                        <option value="">Select named graph</option>
-                        {namedGraphs.length === 0 && <option disabled>Loading graphs...</option>}
-                        {namedGraphs.map((ng) => (
-                            <option key={ng.graph} value={ng.graph}>
-                                {ng.graph} ({ng.description})
-                            </option>
-                        ))}
-                    </select>
-                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                        Who can read this data depends on the space the graph belongs to.{" "}
-                        <a href="/user/spaces" className="text-blue-700 dark:text-blue-400 underline">
-                            Make a space public, private or shared with your team
-                        </a>
-                        .
-                    </p>
+                {/* Space, then graph: only spaces this user may write to */}
+                <div className="space-y-4">
+                    {cannotIngest ? (
+                        <div className="text-sm p-3 rounded-lg bg-amber-50 text-amber-900 dark:bg-amber-900/20 dark:text-amber-200">
+                            {cannotIngest}
+                        </div>
+                    ) : (
+                        <>
+                            <div>
+                                <label htmlFor="space" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                                    Space
+                                </label>
+                                <select
+                                    id="space"
+                                    value={selectedSpace}
+                                    onChange={(e) => chooseSpace(e.target.value)}
+                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                                    disabled={spaces === null || isUploading}
+                                >
+                                    <option value="">
+                                        {spaces === null ? "Loading your spaces…" : spaces.length ? "Select a space" : "No space you can add data to"}
+                                    </option>
+                                    {treeOrder(spaces ?? []).map(({ space: s, depth }) => (
+                                        <option key={s.slug} value={s.slug}>
+                                            {"\u00a0\u00a0\u00a0".repeat(depth)}{depth ? "└ " : ""}{s.name} ({s.slug}) · {s.visibility}
+                                            {s.graphs.length ? "" : " · no graph yet"}
+                                        </option>
+                                    ))}
+                                    {unmapped.length > 0 && <option value={UNMAPPED}>Graphs not in any space ({unmapped.length})</option>}
+                                </select>
+                                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                    Only spaces you can add data to are listed — as a member (owner or editor, including a role
+                                    from a parent space), through an access rule, or as an admin.{" "}
+                                    <Link href="/user/spaces" className="text-blue-700 dark:text-blue-400 underline">
+                                        Manage spaces
+                                    </Link>
+                                    {spaces !== null && spaces.length === 0 && " — create one, or ask a space owner to make you an editor."}
+                                </p>
+                            </div>
+
+                            {selectedSpace && graphsForSpace.length > 0 && (
+                                <div>
+                                    <label htmlFor="named-graph" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                                        Named graph
+                                    </label>
+                                    <select
+                                        id="named-graph"
+                                        value={selectedGraph}
+                                        onChange={(e) => setSelectedGraph(e.target.value)}
+                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                                        disabled={isUploading}
+                                    >
+                                        <option value="">Select a graph</option>
+                                        {graphsForSpace.map((g) => (
+                                            <option key={g.iri} value={g.iri}>
+                                                {g.iri}{g.description ? ` (${g.description})` : ""}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                        {selectedSpace === UNMAPPED
+                                            ? "These graphs belong to no space, so no space's members or visibility govern them."
+                                            : `Who can read this data is set by the space (${space?.visibility}).`}
+                                    </p>
+                                </div>
+                            )}
+
+                            {space && (graphsForSpace.length === 0 || addingGraph) && (
+                                <div className="rounded-lg border border-dashed border-gray-300 dark:border-gray-600 p-4 space-y-3">
+                                    <div className="text-sm text-gray-700 dark:text-gray-200">
+                                        <strong>{space.name}</strong> has no graph yet. Add one to hold the data:
+                                    </div>
+                                    <input
+                                        value={newGraphIri}
+                                        onChange={(e) => setNewGraphIri(e.target.value)}
+                                        aria-label="New graph IRI"
+                                        placeholder="https://brainkb.org/graph/my-space/"
+                                        className="w-full px-3 py-2 font-mono text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                                    />
+                                    <input
+                                        value={newGraphDescription}
+                                        onChange={(e) => setNewGraphDescription(e.target.value)}
+                                        aria-label="Description of the new graph"
+                                        placeholder="What this graph holds (shown in the registry)"
+                                        className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={addGraph}
+                                        disabled={addingGraph || !newGraphIri.trim() || !newGraphDescription.trim()}
+                                        className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white disabled:bg-gray-400"
+                                    >
+                                        {addingGraph ? "Adding…" : "Add graph to this space"}
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
 
                 {/* File Upload Section */}

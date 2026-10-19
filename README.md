@@ -638,6 +638,7 @@ query service enforces every rule (the UI only hides controls you couldn't use).
   role in every subspace below it (marked "from parent"); a subspace can add its own
   members. Inherited members appear read-only under Manage access, with the space
   they come from. Visibility is per space.
+- **Ingesting** (`/user/ingest-kg`). You pick a space, then one of its graphs. Only spaces you can add data to are listed — as an owner or editor (including a role from a parent space), through a write access rule, or as an admin — shown as a tree. A space with no graph yet gets an "Add graph to this space" form; graphs in no space are listed separately.
 - **Access rules** (Manage access → Access rules). Allow a whole group (by role), one
   person, or members of at least a given space role to **read**, **write** (add data)
   or **manage** a space, without adding each of them as a member. Once an action has
