@@ -378,11 +378,13 @@ function DeleteSpace({ space, onDeleted, onError, onCancel }: {
   );
 }
 
-function SpaceRow({ space, canManage, canDelete, hasSubspaces, onChanged, onDeleted, onError }: {
+function SpaceRow({ space, canManage, canDelete, hasSubspaces, publicAbove, onChanged, onDeleted, onError }: {
   space: Space;
   canManage: boolean;
   canDelete: boolean;
   hasSubspaces: boolean;
+  /** Nearest public space above this one: everything in a public space is public. */
+  publicAbove?: string;
   onChanged: () => void;
   onDeleted: (d: Deleted) => void;
   onError: (m: string) => void;
@@ -394,7 +396,7 @@ function SpaceRow({ space, canManage, canDelete, hasSubspaces, onChanged, onDele
 
   const setVisibility = async (visibility: Space["visibility"]) => {
     if (visibility === space.visibility) return;
-    if (visibility === "public" && !confirm(`Make "${space.name}" public? Anyone, including people who aren't signed in, will be able to read it.`)) return;
+    if (visibility === "public" && !confirm(`Make "${space.name}" public${hasSubspaces ? " — and all of its subspaces" : ""}? Anyone, including people who aren't signed in, will be able to read ${hasSubspaces ? "them" : "it"}.`)) return;
     setBusy(true);
     try {
       await api(`/api/spaces/${encodeURIComponent(space.slug)}/visibility`, {
@@ -420,6 +422,11 @@ function SpaceRow({ space, canManage, canDelete, hasSubspaces, onChanged, onDele
             {space.your_role && <Chip>you: {space.your_role}{space.role_inherited ? " (from parent)" : ""}</Chip>}
           </div>
           <div className="bkb-mono" style={{ fontSize: 11, color: "var(--bkb-textSubtle)", marginTop: 4 }}>{space.slug}</div>
+          {publicAbove && (
+            <div style={{ fontSize: 12, color: "var(--bkb-textMuted)", marginTop: 4 }}>
+              Public because <span className="bkb-mono">{publicAbove}</span> is public.
+            </div>
+          )}
           {space.description && <div style={{ fontSize: 13, color: "var(--bkb-textMuted)", marginTop: 6 }}>{space.description}</div>}
         </div>
 
@@ -430,7 +437,8 @@ function SpaceRow({ space, canManage, canDelete, hasSubspaces, onChanged, onDele
                 <button
                   key={v}
                   type="button"
-                  disabled={busy}
+                  disabled={busy || (v === "private" && !!publicAbove)}
+                  title={v === "private" && publicAbove ? `Public because ${publicAbove} is public — everything in a public space is public` : undefined}
                   aria-pressed={space.visibility === v}
                   onClick={() => setVisibility(v)}
                   className={space.visibility === v ? "bkb-btn bkb-btn-primary" : "bkb-btn bkb-btn-ghost"}
@@ -468,6 +476,7 @@ function SpaceRow({ space, canManage, canDelete, hasSubspaces, onChanged, onDele
       {canManage && addingSub && (
         <CreateSpace
           parent={space}
+          parentPublic={space.visibility === "public" || !!publicAbove}
           canCreateTeam={false}
           onError={onError}
           onCreated={() => { setAddingSub(false); onChanged(); }}
@@ -485,8 +494,10 @@ function SpaceRow({ space, canManage, canDelete, hasSubspaces, onChanged, onDele
   );
 }
 
-function CreateSpace({ canCreateTeam, onCreated, onError, parent }: {
+function CreateSpace({ canCreateTeam, onCreated, onError, parent, parentPublic = false }: {
   canCreateTeam: boolean;
+  /** The parent is public (or inside a public space): the subspace is public too. */
+  parentPublic?: boolean;
   onCreated: () => void;
   onError: (m: string) => void;
   /** Create a subspace of this space: it takes the parent's type, and the
@@ -498,7 +509,7 @@ function CreateSpace({ canCreateTeam, onCreated, onError, parent }: {
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
   const [description, setDescription] = useState("");
-  const [visibility, setVisibility] = useState<Space["visibility"]>("private");
+  const [visibility, setVisibility] = useState<Space["visibility"]>(parentPublic ? "public" : "private");
   const [type, setType] = useState<Space["space_type"]>("individual");
   const [busy, setBusy] = useState(false);
 
@@ -514,7 +525,7 @@ function CreateSpace({ canCreateTeam, onCreated, onError, parent }: {
           ...(parent ? { parent_slug: parent.slug } : {}),
         }),
       });
-      setName(""); setSlug(""); setSlugEdited(false); setDescription(""); setVisibility("private"); setType("individual");
+      setName(""); setSlug(""); setSlugEdited(false); setDescription(""); setVisibility(parentPublic ? "public" : "private"); setType("individual");
       onCreated();
     } catch (e: any) {
       onError(e.message);
@@ -558,7 +569,8 @@ function CreateSpace({ canCreateTeam, onCreated, onError, parent }: {
           <legend style={{ fontSize: 12, color: "var(--bkb-textMuted)", float: "left", marginRight: 10 }}>Visibility</legend>
           {(["private", "public"] as const).map((v) => (
             <label key={v} style={{ display: "flex", gap: 6, alignItems: "center", textTransform: "capitalize" }}>
-              <input type="radio" name="visibility" checked={visibility === v} onChange={() => setVisibility(v)} /> {v}
+              <input type="radio" name="visibility" checked={visibility === v} onChange={() => setVisibility(v)}
+                     disabled={parentPublic && v === "private"} /> {v}
             </label>
           ))}
         </fieldset>
@@ -575,9 +587,11 @@ function CreateSpace({ canCreateTeam, onCreated, onError, parent }: {
         </fieldset>}
       </div>
       <div style={{ fontSize: 12, color: "var(--bkb-textMuted)" }}>
-        {visibility === "public"
-          ? "Public: anyone can read it, even without signing in. Only members can add data."
-          : "Private: only the people you add can read it."}
+        {parentPublic
+          ? `Public, like ${parent?.slug}: everything in a public space is public. Only members can add data.`
+          : visibility === "public"
+            ? "Public: anyone can read it, even without signing in. Only members can add data."
+            : "Private: only the people you add can read it."}
         {parent
           ? ` Everyone with a role in ${parent.slug} gets the same role here; you can add more people to the subspace.`
           : !canCreateTeam && " Team spaces are created by an admin; ask one to set one up or to share a space with you."}
@@ -627,13 +641,14 @@ export default function SpacesPage() {
   const roots = all.filter((s) => !s.parent_slug || !slugs.has(s.parent_slug));
   const mine = roots.filter((s) => s.your_role);
   const others = roots.filter((s) => !s.your_role);
-  const renderTree = (s: Space, depth = 0, seen = new Set<string>()): React.ReactNode => {
+  const renderTree = (s: Space, depth = 0, seen = new Set<string>(), publicAbove?: string): React.ReactNode => {
     if (seen.has(s.slug)) return null;          // defensive: the API never returns a cycle
     const kids = childrenOf.get(s.slug) ?? [];
     const next = new Set(seen).add(s.slug);
     return (
       <div key={s.slug} style={{ display: "grid", gap: 10 }}>
         <SpaceRow space={s} canManage={canManage(s)} canDelete={isSuperAdmin} hasSubspaces={kids.length > 0}
+                  publicAbove={publicAbove}
                   onChanged={load} onDeleted={onDeleted} onError={showError} />
         {kids.length > 0 && (
           <div
@@ -641,7 +656,7 @@ export default function SpacesPage() {
             aria-label={`Subspaces of ${s.name}`}
             style={{ display: "grid", gap: 10, marginLeft: depth < 6 ? 22 : 0, paddingLeft: 12, borderLeft: "2px solid var(--bkb-border)" }}
           >
-            {kids.map((k) => renderTree(k, depth + 1, next))}
+            {kids.map((k) => renderTree(k, depth + 1, next, s.visibility === "public" ? s.slug : publicAbove))}
           </div>
         )}
       </div>
@@ -657,6 +672,7 @@ export default function SpacesPage() {
             A space holds one or more graphs and decides who can read them. Make a space public so anyone can read it,
             or keep it private and add the people who should have access.
             {" Spaces can hold subspaces; people with a role in a space have the same role in its subspaces."}
+            {" Everything in a public space is public; under a private space, each subspace can be made public on its own."}
             {isAdmin && " As an admin you can change any space you can see here."}
           </p>
         </div>
