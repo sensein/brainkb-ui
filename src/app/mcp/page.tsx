@@ -28,9 +28,9 @@ const MANAGE: Cap[] = [
   { di: "⚿", name: "Control", line: "Manage access", desc: "Sign in with Globus, ORCID or GitHub, keep a personal access token, and choose who can read or edit.", asks: ["Give alice@lab.org edit access", "Make me a token for this laptop"] },
 ];
 
-function Group({ title, caps }: { title: string; caps: Cap[] }) {
+function Group({ id, title, caps }: { id: string; title: string; caps: Cap[] }) {
   return (
-    <div className="cap-group">
+    <div className="cap-group" id={id}>
       <span className="cap-k">{title}</span>
       <div className="grid3 tight blue-items">
         {caps.map((c) => (
@@ -65,19 +65,19 @@ export default function McpPage() {
               language.
             </p>
             <ul className="chips" aria-label="What you get">
-              <li>MCP server</li>
-              <li>Optional skill</li>
-              <li>Public + private spaces</li>
+              <li><a href="#setup-mcp">MCP server</a></li>
+              <li><a href="#setup-skill">Optional skill</a></li>
+              <li><a href="#manage">Public + private spaces</a></li>
             </ul>
             <div className="two-parts">
-              <div>
-                <b>MCP server</b>
+              <a href="#setup-mcp">
+                <b>MCP server <span aria-hidden="true">↓</span></b>
                 <span>Connects your agent to BrainKB&apos;s tools and knowledge. This is what you add to your client.</span>
-              </div>
-              <div>
-                <b>BrainKB skill</b>
+              </a>
+              <a href="#setup-skill">
+                <b>BrainKB skill <span aria-hidden="true">↓</span></b>
                 <span>Optional. Adds instructions and workflows for using those tools well.</span>
-              </div>
+              </a>
             </div>
             <div className="endpoint">
               <span className="lbl">Endpoint</span>
@@ -100,8 +100,8 @@ export default function McpPage() {
             </div>
             <p>Ask in plain language and your agent picks the right BrainKB tools. For example:</p>
           </div>
-          <Group title="Research with your agent" caps={RESEARCH} />
-          <Group title="Manage knowledge" caps={MANAGE} />
+          <Group id="research" title="Research with your agent" caps={RESEARCH} />
+          <Group id="manage" title="Manage knowledge" caps={MANAGE} />
         </div>
       </section>
 

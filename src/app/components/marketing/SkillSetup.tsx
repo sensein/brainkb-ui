@@ -7,7 +7,7 @@
 // Advanced flags and troubleshooting are folded away. `code` in text renders as
 // inline code. Must render inside an `.lp` root (landing.css).
 
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { MCP_ENDPOINT, MCP_FLAG } from "./tokens";
 
 type Box = { label: string; cmd: string };
@@ -132,10 +132,33 @@ function Steps({ steps, keyPrefix }: { steps: StepDef[]; keyPrefix: string }) {
   );
 }
 
+// Links to #setup-skill / #setup-mcp anywhere on the page open that option and
+// scroll here; handled on click (not only on hashchange) so a second click on the
+// same link still works, and a hash already in the URL is honoured on load.
+const OPTION_HASH: Record<string, "skill" | "mcp"> = { "#setup-skill": "skill", "#setup-mcp": "mcp" };
+
 export default function SkillSetup() {
   const [mode, setMode] = useState<"skill" | "mcp">("skill");
   const [i, setI] = useState(0);
   const a = AGENTS[i];
+
+  useEffect(() => {
+    const open = (hash: string) => {
+      const m = OPTION_HASH[hash];
+      if (!m) return false;
+      setMode(m);
+      history.replaceState(null, "", hash);
+      requestAnimationFrame(() => document.getElementById("setup")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+      return true;
+    };
+    const onClick = (e: MouseEvent) => {
+      const link = (e.target as Element | null)?.closest?.("a[href^='#setup-']");
+      if (link && open(link.getAttribute("href") ?? "")) e.preventDefault();
+    };
+    open(location.hash);
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, []);
 
   return (
     <div className="skill-setup">

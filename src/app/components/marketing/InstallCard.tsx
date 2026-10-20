@@ -97,7 +97,7 @@ export default function InstallCard({ authNote = false, skillHref = "/mcp#skill"
       {!compact && (
         <p className="muted-p">
           This connects the <b>MCP server</b>: your agent gets BrainKB&apos;s tools. The <b>BrainKB skill</b> is
-          optional and adds instructions and workflows for using them; <a href={skillHref}>set it up below ↓</a>
+          optional and adds instructions and workflows for using them; <a href={skillHref.startsWith("#") ? "#setup-skill" : skillHref}>set it up below ↓</a>
         </p>
       )}
       {authNote && (
