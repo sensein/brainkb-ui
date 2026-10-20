@@ -23,6 +23,7 @@ import { Search, Loader2, AlertCircle } from "lucide-react";
 import { usePublicReviews } from "@/src/hooks/useSynthScholar";
 import type { ReviewSummary } from "@/src/types/synthScholar";
 import { listIngestedReviews, type IngestedSummary } from "@/src/services/api/synthScholarIngest";
+import LiteratureShell from "./LiteratureShell";
 
 type Row = {
   id: string;
@@ -77,23 +78,13 @@ export default function PublicReviewsListPage() {
   ].filter(Boolean) as string[];
 
   return (
-    <div className="kb-page-margin">
-      {/* Hero — matches /knowledge-base/ner */}
-      <div className="grid fix-left-margin grid-cols-1 mb-8">
-        <div className="relative overflow-hidden bg-gradient-to-br from-sky-500 via-blue-500 to-emerald-500 rounded-2xl shadow-xl">
-          <div className="absolute inset-0 bg-gradient-to-r from-sky-600/20 to-transparent"></div>
-          <div className="relative px-8 py-12">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-4">SynthScholar — Literature Reviews</h1>
-            <p className="text-sky-100 text-base leading-relaxed">
-              PRISMA-guided literature reviews: published reviews run on BrainKB, and reviews ingested from
-              SynthScholar runs with their manuscript, files and provenance. Read their synthesis and download
-              the report, bibliography or RDF.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid fix-left-margin grid-cols-1">
+    <LiteratureShell
+      eyebrow="Literature reviews"
+      title="Literature reviews."
+      lead={<p className="lead">PRISMA-guided SynthScholar reviews: published reviews run on BrainKB, and reviews ingested
+        from SynthScholar runs with their manuscript, files and provenance.</p>}
+    >
+      <div>
         {!loading && rows.length > 0 && (
           <div className="mb-6">
             <div className="relative">
@@ -180,6 +171,6 @@ export default function PublicReviewsListPage() {
           </div>
         )}
       </div>
-    </div>
+    </LiteratureShell>
   );
 }

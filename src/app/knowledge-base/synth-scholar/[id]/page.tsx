@@ -17,7 +17,6 @@ import React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
-  ArrowLeft,
   Download,
   BookOpen,
   Loader2,
@@ -35,6 +34,7 @@ import {
   useExportPublicReview,
 } from "@/src/hooks/useSynthScholar";
 import { MarkdownContent } from "@/src/app/components/synth-scholar/MarkdownContent";
+import LiteratureShell from "../LiteratureShell";
 import { ProvenanceTimelinePublic } from "@/src/app/components/synth-scholar/ProvenanceTimelinePublic";
 import type {
   ArticleSummary,
@@ -72,35 +72,19 @@ export default function PublicReviewDetailPage() {
   };
 
   return (
-    <div className="kb-page-margin">
-      {/* Hero */}
-      <div className="grid fix-left-margin grid-cols-1 mb-8">
-        <div className="relative overflow-hidden bg-gradient-to-br from-sky-500 via-blue-500 to-emerald-500 rounded-2xl shadow-xl">
-          <div className="absolute inset-0 bg-gradient-to-r from-sky-600/20 to-transparent" />
-          <div className="relative px-8 py-10">
-            <Link
-              href="/knowledge-base/synth-scholar"
-              className="inline-flex items-center gap-1 text-sky-100 hover:text-white text-sm mb-4"
-            >
-              <ArrowLeft className="w-4 h-4" /> Back to public reviews
-            </Link>
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-100 mb-2">
-              SynthScholar · PRISMA-guided literature review
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3">
-              {data?.title || (isLoading ? "Loading…" : "Review")}
-            </h1>
-            <p className="font-mono text-xs text-sky-100/90">{reviewId}</p>
-            {data?.completed_at && (
-              <p className="text-xs text-sky-100/80 mt-2">
-                Completed {new Date(data.completed_at).toLocaleString()}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="grid fix-left-margin grid-cols-1 gap-6">
+    <LiteratureShell
+      compact
+      back={{ href: "/knowledge-base/synth-scholar", label: "All literature reviews" }}
+      eyebrow="Literature review · run on BrainKB"
+      title={data?.title || (isLoading ? "Loading…" : "Review")}
+      lead={
+        <p className="lead" style={{ fontSize: 14 }}>
+          <span className="font-mono">{reviewId}</span>
+          {data?.completed_at ? ` · completed ${new Date(data.completed_at).toLocaleDateString()}` : ""}
+        </p>
+      }
+    >
+      <div className="grid grid-cols-1 gap-6">
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="w-12 h-12 text-sky-500 animate-spin mb-4" />
@@ -382,7 +366,7 @@ export default function PublicReviewDetailPage() {
           </>
         )}
       </div>
-    </div>
+    </LiteratureShell>
   );
 }
 

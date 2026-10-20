@@ -13,7 +13,7 @@
 import React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Activity, AlertCircle, ArrowLeft, Download, FileText, FolderOpen, Loader2, ScrollText } from "lucide-react";
+import { Activity, AlertCircle, Download, FileText, FolderOpen, Loader2, ScrollText } from "lucide-react";
 import { MarkdownContent } from "@/src/app/components/synth-scholar/MarkdownContent";
 import {
   ReviewFiles,
@@ -28,6 +28,7 @@ import {
   type IngestedArticle,
   type IngestedReview,
 } from "@/src/services/api/synthScholarIngest";
+import LiteratureShell from "../../LiteratureShell";
 
 type Tab = "review" | "manuscript" | "files" | "provenance";
 const TABS: Tab[] = ["review", "manuscript", "files", "provenance"];
@@ -77,29 +78,24 @@ export default function IngestedReviewPage() {
   const d = review?.detail;
 
   return (
-    <div className="kb-page-margin">
-      <div className="grid fix-left-margin grid-cols-1 mb-8">
-        <div className="relative overflow-hidden bg-gradient-to-br from-sky-500 via-blue-500 to-emerald-500 rounded-2xl shadow-xl">
-          <div className="relative px-8 py-10">
-            <Link href="/knowledge-base/synth-scholar" className="inline-flex items-center gap-1 text-sky-100 hover:text-white text-sm mb-4">
-              <ArrowLeft className="w-4 h-4" /> Back to reviews
-            </Link>
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-100 mb-2">
-              SynthScholar · PRISMA-guided literature review
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3">{review?.title || (error ? "Review" : "Loading…")}</h1>
-            <p className="font-mono text-xs text-sky-100/90">{reviewId}</p>
-            {review && (
-              <p className="text-xs text-sky-100/80 mt-2">
-                {review.run_completed_at ? `Completed ${new Date(review.run_completed_at).toLocaleString()} · ` : ""}
-                In space {review.space_slug}{review.space_visibility ? ` (${review.space_visibility})` : ""}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="grid fix-left-margin grid-cols-1 gap-6">
+    <LiteratureShell
+      compact
+      back={{ href: "/knowledge-base/synth-scholar", label: "All literature reviews" }}
+      eyebrow="Literature review · ingested"
+      title={review?.title || (error ? "Review" : "Loading…")}
+      lead={
+        <p className="lead" style={{ fontSize: 14 }}>
+          <span className="font-mono">{reviewId}</span>
+          {review && (
+            <>
+              {review.run_completed_at ? ` · completed ${new Date(review.run_completed_at).toLocaleDateString()}` : ""}
+              {` · in space ${review.space_slug}${review.space_visibility ? ` (${review.space_visibility})` : ""}`}
+            </>
+          )}
+        </p>
+      }
+    >
+      <div className="grid grid-cols-1 gap-6">
         {!review && !error && (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 className="w-12 h-12 text-sky-500 animate-spin mb-4" />
@@ -159,7 +155,7 @@ export default function IngestedReviewPage() {
           </>
         )}
       </div>
-    </div>
+    </LiteratureShell>
   );
 }
 
