@@ -16,14 +16,15 @@ const SCENES: Scene[] = [
     badge: "NO LOGIN",
     via: <>Works in <b>Claude</b>, <b>ChatGPT</b>, <b>Perplexity</b>, <b>Cursor</b>…</>,
     lines: [
-      ["ask", "Which cell types express PVALB in the neocortex?"],
-      ["call", '→ brainkb_search(q="PVALB neocortex")'],
-      ["out", "← 27 papers · 4 cell types · public spaces"],
+      ["ask", "Which genes are linked to disease-associated microglia in Alzheimer’s disease?"],
+      ["call", '→ brainkb_search(q="disease-associated microglia Alzheimer")'],
+      ["out", "← linked entities, papers and evidence · public spaces"],
       ["ans", <>
-        <b>Parvalbumin-positive basket and chandelier cells</b>, mostly layers 2–6, mapped to the Cell Ontology.
+        <b>TREM2</b> and <b>APOE</b>. The disease-associated microglia response depends on TREM2, and these
+        microglia switch on Apoe; both genes carry variants associated with Alzheimer’s risk.
         <br />
-        <span className="src">27 PAPERS</span>
-        <span className="src">PROV-O</span>
+        <span className="src">KEREN-SHAUL 2017</span>
+        <span className="src">EVIDENCE · PROV-O</span>
       </>],
     ],
   },

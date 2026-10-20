@@ -2,16 +2,18 @@
 <html><head><meta charset="utf-8">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>html,body{margin:0;background:transparent}svg{display:block}
-.lbl{font:700 17.5px 'IBM Plex Sans',sans-serif;fill:#10202B}
-.ex{font:400 14.5px 'IBM Plex Sans',sans-serif;fill:#3A2A20}
-.ring{font:700 23px 'IBM Plex Sans',sans-serif;fill:#10202B}
-.role{font:500 17px 'IBM Plex Mono',monospace;letter-spacing:3px;fill:#7D432B}
-.core1{font:700 23px 'IBM Plex Sans',sans-serif;fill:#F6F5F0}
-.core2{font:400 18px 'IBM Plex Sans',sans-serif;fill:#D9E2E8}
+.rr-lbl{font:700 17.5px 'IBM Plex Sans',sans-serif;fill:#10202B}
+.rr-big{font-size:19.5px}
+.rr-ex{font:400 14.5px 'IBM Plex Sans',sans-serif;fill:#3A2A20}
+.rr-ring{font:700 23px 'IBM Plex Sans',sans-serif;fill:#10202B}
+.rr-role{font:500 17px 'IBM Plex Mono',monospace;letter-spacing:3px;fill:#7D432B}
+.rr-core1{font:700 23px 'IBM Plex Sans',sans-serif;fill:#F6F5F0}
+.rr-core2{font:400 18px 'IBM Plex Sans',sans-serif;fill:#D9E2E8}
 </style></head>
 <body>
 <svg id="fig" xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000"></svg>
 <script>
+const WEB = location.hash === "#web";   // titles-only, larger type: the interactive home-page version
 // BrainKB "The missing link" figure: one finding (disease-associated microglia at
 // amyloid plaques, Keren-Shaul et al., Cell 2017) and the knowledge it connects to.
 // Rings show reach, not a hierarchy. Links are illustrative, each one a relationship
@@ -62,6 +64,8 @@ const NODES = {
   drug:    { a: -14,  r: 436, t: ["Therapeutic", "approaches"], ex: ["e.g. TREM2-", "targeting", "antibodies"], lab: "down" },
   clin:    { a: 90,   r: 424, t: ["Clinical neurology"], ex: ["e.g. Alzheimer’s dementia"], lab: "left" },
 };
+// titles-only web version: Therapeutic approaches fits best beside its icon near the top
+if (WEB) { NODES.drug.fs = 17.5; Object.assign(NODES.infl, { lab: "right" }); Object.assign(NODES.act, { a: -26, lab: "down" }); Object.assign(NODES.degen, { lab: "left" }); Object.assign(NODES.imm, { a: -124, lab: "right" }); }
 // links between scientifically related concepts (relationships reported in published work); [from, to, preferred bend]
 const EDGES = [
   ["core", "act", .25],      // disease-associated microglia are an activation state of microglia
@@ -80,15 +84,15 @@ const lines = g({ fill: "none", stroke: "#10202B", "stroke-width": 2.6, "stroke-
 const dots = g({ fill: "#10202B" });
 
 const ringLabel = (y, name, role) => {
-  el("text", { x: C, y, "text-anchor": "middle", class: "ring" }).textContent = name;
-  el("text", { x: C, y: y + 26, "text-anchor": "middle", class: "role" }).textContent = role;
+  el("text", { x: C, y, "text-anchor": "middle", class: "rr-ring" }).textContent = name;
+  el("text", { x: C, y: y + 26, "text-anchor": "middle", class: "rr-role" }).textContent = role;
 };
 ringLabel(686, "Cellular neuroscience", "SUBFIELD");
 ringLabel(812, "Neuroscience", "FIELD");
-el("text", { x: C, y: 972, "text-anchor": "middle", class: "role" }).textContent = "ADJACENT FIELDS";
+el("text", { x: C, y: 972, "text-anchor": "middle", class: "rr-role" }).textContent = "ADJACENT FIELDS";
 
-el("circle", { cx: C, cy: C, r: R0, fill: "#10202B" });
-[["Your finding", "core1", 448], ["Disease-associated", "core2", 478], ["microglia at amyloid", "core2", 500], ["plaques, mouse model", "core2", 522]]
+el("circle", { cx: C, cy: C, r: R0, fill: "#10202B", "data-node": "core", class: "rr-node rr-core" });
+[["Your finding", "rr-core1", 448], ["Disease-associated", "rr-core2", 478], ["microglia at amyloid", "rr-core2", 500], ["plaques, mouse model", "rr-core2", 522]]
   .forEach(([t, c, y]) => { el("text", { x: C, y, "text-anchor": "middle", class: c }).textContent = t; });
 g({ transform: `translate(${C} 560) scale(.95)` }).innerHTML = ICON.mouse;
 
@@ -101,14 +105,22 @@ const rad = ([x, y]) => Math.hypot(x - C, y - C);
 const minRad = (b) => { const cx = Math.min(Math.max(C, b[2]), b[4]), cy = Math.min(Math.max(C, b[3]), b[5]); return Math.hypot(cx - C, cy - C); };
 const ov = (a, b, m = M) => a[2] < b[4] + m && b[2] < a[4] + m && a[3] < b[5] + m && b[3] < a[5] + m;
 const whichBand = (b) => { const lo = minRad(b), hi = Math.max(...corners(b).map(rad)); return BANDS.findIndex(([l, h]) => lo >= l + M && hi <= h - M); };
-const ringBoxes = [...svg.querySelectorAll("text.ring, text.role")].map((t) => { const bb = t.getBBox(); return ["ring label", t.textContent, bb.x - 4, bb.y, bb.x + bb.width + 4, bb.y + bb.height]; });
+const ringBoxes = [...svg.querySelectorAll("text.rr-ring, text.rr-role")].map((t) => { const bb = t.getBBox(); return ["ring label", t.textContent, bb.x - 4, bb.y, bb.x + bb.width + 4, bb.y + bb.height]; });
 
-function textRows(n) { return [...n.t.map((t) => ["lbl", t, 19.5]), ...n.ex.map((t) => ["ex", t, 16.5])]; }
+// #web: the interactive home-page version shows titles only (examples appear on hover), in larger type
+function textRows(n) {
+  if (WEB) return n.t.map((t) => ["rr-lbl rr-big", t, 22]);
+  return [...n.t.map((t) => ["rr-lbl", t, 19.5]), ...n.ex.map((t) => ["rr-ex", t, 16.5])];
+}
 function drawText(n, lab, parent) {
   const rows = textRows(n), h = rows.reduce((s_, r_) => s_ + r_[2], 0);
   const pos = { up: [0, -IR - 10 - h + 16, "middle"], down: [0, IR + 22, "middle"], left: [-IR - 10, -h / 2 + 15, "end"], right: [IR + 10, -h / 2 + 15, "start"] }[lab];
   const tg = g({}, parent); let yy = pos[1];
-  for (const [cls, t, lh] of rows) { el("text", { x: pos[0], y: yy, "text-anchor": pos[2], class: cls }, tg).textContent = t; yy += lh; }
+  for (const [cls, t, lh] of rows) {
+    const te = el("text", { x: pos[0], y: yy, "text-anchor": pos[2], class: cls }, tg); te.textContent = t;
+    if (WEB && n.fs) te.style.fontSize = n.fs + "px";     // one long title, a touch smaller so it fits its ring
+    yy += lh;
+  }
   return tg;
 }
 const LABS = ["up", "down", "left", "right"];
@@ -145,7 +157,8 @@ for (const k of ORDER) {
 const boxes = [];
 for (const k in NODES) {
   const n = NODES[k], [x, y] = pt(n.a, n.r);
-  const ng = g({ transform: `translate(${x.toFixed(1)} ${y.toFixed(1)})` });
+  const ng = g({ transform: `translate(${x.toFixed(1)} ${y.toFixed(1)})`, "data-node": k, class: "rr-node" });
+  el("circle", { r: IR + 8, fill: "transparent", class: "rr-hit" }, ng);
   g({ transform: "scale(.78)" }, ng).innerHTML = ICON[k];
   const bb = drawText(n, n.lab, ng).getBBox();
   boxes.push(["icon", k, x - IR, y - IR, x + IR, y + IR], ["text", k, x + bb.x, y + bb.y, x + bb.x + bb.width, y + bb.y + bb.height]);
@@ -189,9 +202,9 @@ for (const [a, b, pref] of EDGES) {
     if (!fewest || hits.size < fewest[1].size) fewest = [d, hits];
   }
   if (chosen === null) { report.push(`path ${a}→${b} touches: ${[...fewest[1]].join(", ")}`); chosen = fewest[0]; }
-  el("path", { d: chosen }, lines);
-  el("circle", { cx: x1, cy: y1, r: 5.5 }, dots);
-  el("circle", { cx: x2, cy: y2, r: 5.5 }, dots);
+  el("path", { d: chosen, "data-a": a, "data-b": b, class: "rr-link" }, lines);
+  el("circle", { cx: x1, cy: y1, r: 5.5, "data-a": a, "data-b": b, class: "rr-dot" }, dots);
+  el("circle", { cx: x2, cy: y2, r: 5.5, "data-a": a, "data-b": b, class: "rr-dot" }, dots);
 }
 report.push("at: " + Object.entries(NODES).map(([k, n]) => `${k} ${n.a}/${n.r}/${n.lab}`).join("; "));
 const pre = document.createElement("pre"); pre.id = "report"; pre.style.display = "none"; pre.textContent = report.join("\n"); document.body.appendChild(pre);
