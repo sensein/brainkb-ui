@@ -15,6 +15,7 @@ import { dmSans, plexMono } from "./components/marketing/fonts";
 import HeroSearch, { FocusSearchLink } from "./components/marketing/landing/HeroSearch";
 import HeroDemo from "./components/marketing/landing/HeroDemo";
 import CompareSources from "./components/marketing/landing/CompareSources";
+import ReachRings from "./components/marketing/landing/ReachRings";
 import WhereResultsGo from "./components/marketing/landing/WhereResultsGo";
 import ProvenanceTrace from "./components/marketing/landing/ProvenanceTrace";
 import InstallCard from "./components/marketing/InstallCard";
@@ -129,6 +130,15 @@ export default function HomePage() {
             related facts are one query apart.
           </SectionTitle>
           <CompareSources />
+        </section>
+
+        <section className="section flush" id="reach">
+          <SectionTitle eyebrow="From narrow to broad" color="#0e7490" title={["Deep in one subfield,", "linked to the whole field."]}>
+            Most studies go deep on one cell type, one region, one species, and their findings rarely travel past the
+            subfield. BrainKB tags each finding with shared ontology terms, so it reaches related work across
+            neuroscience and the biomedical fields around it.
+          </SectionTitle>
+          <ReachRings />
         </section>
 
         <section className="section flush" id="who">
