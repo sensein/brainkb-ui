@@ -151,10 +151,17 @@ export function MarkdownContent({ children, className, style, resolveImage }: Pr
           ),
         }}
       >
-        {children}
+        {stripHtmlComments(children)}
       </ReactMarkdown>
     </div>
   );
+}
+
+/** Raw HTML is not rendered (XSS-safe by construction), so an HTML comment — e.g.
+ *  the manuscript's "<!-- manuscript: 8247 words … -->" note to its own checks —
+ *  would show as literal text. Comments are for tools, never for readers: drop them. */
+function stripHtmlComments(md: string): string {
+  return (md || "").replace(/<!--[\s\S]*?-->/g, "");
 }
 
 const DEFAULT_STYLE: React.CSSProperties = {
