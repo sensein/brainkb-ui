@@ -12,6 +12,7 @@ import { dmSans, plexMono } from "../components/marketing/fonts";
 import TutorialHub from "./TutorialHub";
 import { loadTutorial } from "./content";
 import "../components/marketing/landing/landing.css";
+import "./tutorial.css";
 
 export default function TutorialPage() {
   return (

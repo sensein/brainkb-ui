@@ -1,7 +1,7 @@
-# Chapter 6: Explore the graph. See README.md in this folder for the format.
+# Chapter 7: Explore knowledge. See README.md in this folder for the format.
 id: explore
 icon: ⌕
-name: Explore the graph
+name: Explore knowledge
 tagline: Find knowledge
 summary: Find what's already in BrainKB and check where each fact came from.
 facts:
@@ -12,7 +12,7 @@ prereqs:
   - A web browser
   - An account only for private spaces
 links:
-  - label: Explore the graph
+  - label: Explore knowledge
     href: /explore
   - label: Try a search
     href: /search?q=hippocampus
@@ -32,7 +32,7 @@ sections:
           - title: Check the source
             desc: Each result links to the paper and the sentence it came from.
           - title: Browse
-            desc: Explore the graph by data type and program.
+            desc: Browse knowledge by data type and program.
   - title: How to use it
     subtitle: From a search box to the sentence a fact came from.
     blocks:
@@ -47,5 +47,9 @@ sections:
       - step:
           title: Browse
           blocks:
-            - p: Browse by data type on [Explore the graph](/explore).
+            - p: Browse by data type on [Explore knowledge](/explore).
       - note: Sign in with Globus, ORCID or GitHub only when you need private spaces. Public data never needs it.
+      - outcome:
+          expect: >-
+            Search results from public spaces, and for a result, the paper and sentence it was extracted from
+            where BrainKB records them. Prefer your assistant? [Start here](#start-here) does the same over MCP.

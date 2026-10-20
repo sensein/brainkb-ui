@@ -8,7 +8,7 @@
 import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import { CodeBox } from "../components/marketing/SkillSetup";
-import type { Block, Code, Need, Section, Topic } from "./types";
+import type { AgentId, Block, Code, Need, Section, Topic } from "./types";
 
 const slug = (s: string) => `t-${s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`;
 
@@ -132,6 +132,31 @@ function NeedRows({ rows, kind }: { rows: Need[]; kind: "req" | "opt" }) {
   );
 }
 
+const AGENTS: { id: AgentId; name: string; hint?: string }[] = [
+  { id: "claude", name: "Claude Code" },
+  { id: "codex", name: "Codex" },
+  { id: "other", name: "Another assistant", hint: "Cursor, VS Code, claude.ai, ChatGPT…" },
+];
+const AGENT_KEY = "brainkb-tutorial-agent";
+const agentName = (a: AgentId) => AGENTS.find((x) => x.id === a)?.name ?? a;
+
+/** "Which assistant do you use?" — commands that differ per assistant wait for this choice. */
+function AgentPicker({ agent, onPick, compact }: { agent: AgentId | null; onPick: (a: AgentId) => void; compact?: boolean }) {
+  return (
+    <div className={`tut-agent${compact ? " compact" : ""}`}>
+      <span className="q">{agent ? "Your assistant" : "Which assistant do you use?"}</span>
+      <div role="radiogroup" aria-label="Your assistant">
+        {AGENTS.map((a) => (
+          <button key={a.id} type="button" role="radio" aria-checked={a.id === agent} onClick={() => onPick(a.id)}>
+            {a.name}
+            {a.hint && !compact && <small>{a.hint}</small>}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const sectionId = (topic: Topic, n: number) => `${topic.id}--${slug(topic.sections[n].title).slice(2)}`;
 
 export default function TutorialHub({ topics: TOPICS }: { topics: Topic[] }) {
@@ -139,6 +164,7 @@ export default function TutorialHub({ topics: TOPICS }: { topics: Topic[] }) {
   const [active, setActive] = useState("");
   const [filter, setFilter] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [agent, setAgent] = useState<AgentId | null>(null);
   const ci = Math.max(0, TOPICS.findIndex((t) => t.id === id));
   const topic = TOPICS[ci];
   const next = TOPICS[ci + 1];
@@ -171,6 +197,24 @@ export default function TutorialHub({ topics: TOPICS }: { topics: Topic[] }) {
     window.addEventListener("hashchange", fromHash);
     return () => window.removeEventListener("hashchange", fromHash);
   }, [TOPICS]);
+
+  // Remember the chosen assistant for this reader (a convenience only).
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(AGENT_KEY);
+      if (saved === "claude" || saved === "codex" || saved === "other") setAgent(saved);
+    } catch {
+      /* storage unavailable — ignore */
+    }
+  }, []);
+  const pickAgent = (a: AgentId) => {
+    setAgent(a);
+    try {
+      window.localStorage.setItem(AGENT_KEY, a);
+    } catch {
+      /* storage unavailable — ignore */
+    }
+  };
 
   // Highlight the section being read.
   useEffect(() => {
@@ -206,6 +250,43 @@ export default function TutorialHub({ topics: TOPICS }: { topics: Topic[] }) {
       if ("code" in b) return <CodeBox key={k} {...b.code} />;
       if ("example" in b) return <Example key={k} {...b.example} />;
       if ("options" in b) return <CodeTabs key={k} items={b.options} />;
+      if ("agents" in b) {
+        const blocks = agent ? b.agents[agent] : undefined;
+        return (
+          <div key={k} className="tut-per-agent">
+            <AgentPicker agent={agent} onPick={pickAgent} compact />
+            {!agent && <p className="tut-agent-wait">Choose your assistant to see the commands for it.</p>}
+            {agent && !blocks && <p className="tut-agent-wait">Nothing extra is needed for {agentName(agent)} here.</p>}
+            {blocks?.map(renderBlock)}
+          </div>
+        );
+      }
+      if ("details" in b) {
+        return (
+          <details key={k} className="tut-details">
+            <summary><Rich text={b.details.summary} /></summary>
+            <div className="tut-details-body">{b.details.blocks.map(renderBlock)}</div>
+          </details>
+        );
+      }
+      if ("callout" in b) {
+        return (
+          <div key={k} className="tut-callout" role="note">
+            <b><Rich text={b.callout.title} onHash={open} /></b>
+            <p><Rich text={b.callout.text} onHash={open} /></p>
+          </div>
+        );
+      }
+      if ("outcome" in b) {
+        const trouble = b.outcome.trouble ?? "#start-here--troubleshooting";
+        return (
+          <div key={k} className="tut-outcome">
+            <span className="tut-lbl">Expected outcome</span>
+            <p><Rich text={b.outcome.expect} onHash={open} /></p>
+            <p className="tr"><Rich text={`Not what you see? [Troubleshooting →](${trouble})`} onHash={open} /></p>
+          </div>
+        );
+      }
       if ("step" in b) {
         stepNo += 1;
         return (
@@ -288,7 +369,7 @@ export default function TutorialHub({ topics: TOPICS }: { topics: Topic[] }) {
   return (
     <div className="book">
       <button type="button" className="book-menu" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>
-        ☰ Chapters · {ci + 1}. {topic.name}
+        ☰ Chapters · {ci + 1}/{TOPICS.length} {topic.name}
       </button>
 
       <aside className={`book-side${menuOpen ? " open" : ""}`} aria-label="Chapters">
@@ -360,12 +441,23 @@ export default function TutorialHub({ topics: TOPICS }: { topics: Topic[] }) {
             ))}
           </dl>
         </header>
-        {topic.tryIt && (
-          <div className="book-try">
-            <h6>Try it yourself</h6>
-            <CodeTabs items={topic.tryIt} />
-          </div>
-        )}
+        {topic.chooseAgent && <AgentPicker agent={agent} onPick={pickAgent} />}
+        {(() => {
+          if (!topic.tryIt) return null;
+          const perAgent = topic.tryIt.some((c) => c.agent);
+          const items = topic.tryIt.filter((c) => !c.agent || c.agent === agent);
+          if (!items.length && !perAgent) return null;
+          return (
+            <div className="book-try">
+              <h6>Try it yourself{agent && perAgent ? ` · ${agentName(agent)}` : ""}</h6>
+              {items.length ? (
+                <CodeTabs key={agent ?? "none"} items={items} />
+              ) : (
+                <p className="tut-agent-wait">Choose your assistant above to see the commands for it.</p>
+              )}
+            </div>
+          );
+        })()}
         <hr />
         {topic.sections.map(renderSection)}
         <hr />

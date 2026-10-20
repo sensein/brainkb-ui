@@ -1,4 +1,4 @@
-# Chapter 2: StructSense. See README.md in this folder for the format.
+# Chapter 3: StructSense. See README.md in this folder for the format.
 id: structsense
 icon: ◆
 name: StructSense
@@ -24,12 +24,26 @@ links:
     href: "{{SKILLS_REPO}}/tree/main/skills/structsense/trusted_ontologes"
 help: "{{SKILLS_REPO}}/issues"
 wordmark: /structsense-horizontal.png
+chooseAgent: true
 tryIt:
   - label: GitHub
+    agent: claude
     cmd: |-
       git clone {{SKILLS_REPO}}
       cd agent_skills
       python scripts/install_skills.py --agent claude --skills structsense
+  - label: GitHub
+    agent: codex
+    cmd: |-
+      git clone {{SKILLS_REPO}}
+      cd agent_skills
+      python scripts/install_skills.py --agent codex --skills structsense
+  - label: GitHub
+    agent: other
+    cmd: |-
+      git clone {{SKILLS_REPO}}
+      cd agent_skills
+      python scripts/install_skills.py --dest /path/to/skills --skills structsense
 sections:
   - title: Overview
     subtitle: What StructSense extracts, and from what.
@@ -223,13 +237,36 @@ sections:
             StructSense installs from GitHub (it isn't on npm). Clone the skills repository and install it
             into your assistant's skills folder.
           blocks:
-            - code:
-                label: terminal
-                cmd: |-
-                  git clone {{SKILLS_REPO}}
-                  cd agent_skills
-                  python scripts/install_skills.py --agent claude --skills structsense
-            - note: Use `--agent codex` for Codex, or `--dest /path/to/skills` for any other assistant.
+            - agents:
+                claude:
+                  - code:
+                      label: terminal
+                      cmd: |-
+                        git clone {{SKILLS_REPO}}
+                        cd agent_skills
+                        python scripts/install_skills.py --agent claude --skills structsense
+                codex:
+                  - code:
+                      label: terminal
+                      cmd: |-
+                        git clone {{SKILLS_REPO}}
+                        cd agent_skills
+                        python scripts/install_skills.py --agent codex --skills structsense
+                other:
+                  - code:
+                      label: terminal
+                      cmd: |-
+                        git clone {{SKILLS_REPO}}
+                        cd agent_skills
+                        python scripts/install_skills.py --dest /path/to/skills --skills structsense
+            - details:
+                summary: "Reference: this project only, or a dry run"
+                blocks:
+                  - code:
+                      label: terminal · from your project's root
+                      cmd: |-
+                        python /path/to/agent_skills/scripts/install_skills.py --agent claude --scope project --skills structsense
+                        python /path/to/agent_skills/scripts/install_skills.py --agent claude --skills structsense --dry-run
       - step:
           title: Install its packages and index the ontologies
           desc: Install the Python dependencies and build the offline index used for ontology mapping.
@@ -248,6 +285,24 @@ sections:
             - code:
                 label: terminal
                 cmd: curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8000/docs
+      - step:
+          title: Verify
+          desc: Start a new session so your assistant loads the skill.
+          blocks:
+            - agents:
+                claude:
+                  - code:
+                      label: in Claude Code
+                      cmd: /skills
+                codex:
+                  - p: "Ask Codex:"
+                other:
+                  - p: "Ask your assistant:"
+            - ask: Describe the structsense skill and what it needs
+      - outcome:
+          expect: >-
+            `structsense` is listed with its one-line description (Claude Code's `/skills`), or the assistant
+            describes StructSense from its SKILL.md.
   - title: Run it
     subtitle: In your assistant, over a folder, or headless with your own model.
     blocks:
