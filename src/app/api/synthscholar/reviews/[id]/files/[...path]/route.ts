@@ -9,9 +9,12 @@ const PASS = ['content-type', 'content-disposition', 'content-security-policy', 
 
 export async function GET(req: Request, { params }: { params: { id: string; path: string[] } }) {
     const path = params.path.map(encodeURIComponent).join('/');
-    const download = new URL(req.url).searchParams.get('download') === 'true' ? '?download=true' : '';
+    const incoming = new URL(req.url).searchParams;
+    const qs = new URLSearchParams();
+    if (incoming.get('download') === 'true') qs.set('download', 'true');
+    if (incoming.get('space')) qs.set('space', incoming.get('space') as string);   // which space's copy
     try {
-        const res = await queryServiceFetch(`/synthscholar/reviews/${encodeURIComponent(params.id)}/files/${path}${download}`);
+        const res = await queryServiceFetch(`/synthscholar/reviews/${encodeURIComponent(params.id)}/files/${path}${qs.size ? `?${qs}` : ''}`);
         if (!res.ok) {
             const body = await res.json().catch(() => ({}));
             return NextResponse.json({ error: body?.detail || body?.error || `Request failed (${res.status})` }, { status: res.status });

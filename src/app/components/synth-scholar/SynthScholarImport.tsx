@@ -16,6 +16,7 @@ import {
   selectReviewFiles,
   ingestReview,
   INGEST_MAX_FILES,
+  ingestedReviewHref,
   type ImportSelection,
 } from "@/src/services/api/synthScholarIngest";
 
@@ -213,7 +214,7 @@ export default function SynthScholarImport({
             The upload is done; you can close this page.
           </p>
           <p>
-            <Link href={`/knowledge-base/synth-scholar/ingested/${encodeURIComponent(done.reviewId)}`} className="underline font-medium">
+            <Link href={ingestedReviewHref(done.reviewId, done.space)} className="underline font-medium">
               Open the review →
             </Link>
           </p>

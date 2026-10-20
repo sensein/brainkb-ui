@@ -72,7 +72,7 @@ function Reviews({ term }: { term: string }) {
       <p className="count"><b>Literature reviews</b> matching “{term}”</p>
       <div className="list" style={{ marginTop: 0 }}>
         {reviews.map((r) => (
-          <article className="hit" key={`${r.source}:${r.id}`}>
+          <article className="hit" key={`${r.source}:${r.space ?? ""}:${r.id}`}>
             <span className="tico kind k-entity" aria-hidden="true">LR</span>
             <div>
               <span className="kind k-entity">Literature review</span>

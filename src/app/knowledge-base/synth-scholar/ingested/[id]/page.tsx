@@ -12,7 +12,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { Activity, AlertCircle, Download, FileText, FolderOpen, Loader2, ScrollText } from "lucide-react";
 import { MarkdownContent } from "@/src/app/components/synth-scholar/MarkdownContent";
 import {
@@ -36,6 +36,8 @@ const TABS: Tab[] = ["review", "manuscript", "files", "provenance"];
 export default function IngestedReviewPage() {
   const params = useParams();
   const reviewId = decodeURIComponent((params?.id as string) || "");
+  // A review is unique per space: ?space= says which copy (links from the list carry it).
+  const space = useSearchParams()?.get("space") || null;
   const [review, setReview] = React.useState<IngestedReview | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [tab, setTab] = React.useState<Tab>("review");
@@ -43,8 +45,8 @@ export default function IngestedReviewPage() {
 
   React.useEffect(() => {
     if (!reviewId) return;
-    getIngestedReview(reviewId).then(setReview).catch((e) => setError(e instanceof Error ? e.message : String(e)));
-  }, [reviewId]);
+    getIngestedReview(reviewId, space).then(setReview).catch((e) => setError(e instanceof Error ? e.message : String(e)));
+  }, [reviewId, space]);
 
   React.useEffect(() => {
     const sync = () => {
@@ -62,7 +64,9 @@ export default function IngestedReviewPage() {
     window.history.replaceState(null, "", url.toString());
   };
 
-  const load = React.useCallback((path: string) => fetchIngestedFile(reviewId, path), [reviewId]);
+  // Files come from the copy actually shown (its space), even when the link had none.
+  const shownSpace = review?.space_slug || space;
+  const load = React.useCallback((path: string) => fetchIngestedFile(reviewId, path, shownSpace), [reviewId, shownSpace]);
   const files = review?.files ?? [];
   const has = (p: string) => files.some((f) => f.path === p);
   const grab = (path: string) => {

@@ -175,14 +175,22 @@ export async function listIngestedReviews(space?: string): Promise<IngestedSumma
   return (await res.json()).reviews ?? [];
 }
 
-export async function getIngestedReview(reviewId: string): Promise<IngestedReview> {
-  return (await get(`/${encodeURIComponent(reviewId)}`)).json();
+/** `?space=` for a review: a review is unique per space, so the same id can be in
+ *  several; the space says which one (omitted: the one readable copy). */
+const inSpace = (space?: string | null) => (space ? `?space=${encodeURIComponent(space)}` : "");
+
+/** The page of an ingested review. */
+export const ingestedReviewHref = (reviewId: string, space?: string | null) =>
+  `/knowledge-base/synth-scholar/ingested/${encodeURIComponent(reviewId)}${inSpace(space)}`;
+
+export async function getIngestedReview(reviewId: string, space?: string | null): Promise<IngestedReview> {
+  return (await get(`/${encodeURIComponent(reviewId)}${inSpace(space)}`)).json();
 }
 
 const filePath = (path: string) => path.split("/").map(encodeURIComponent).join("/");
 
 /** A file's bytes, as the caller (private spaces need membership). Images are
  *  shown from object URLs. */
-export async function fetchIngestedFile(reviewId: string, path: string): Promise<Blob> {
-  return (await get(`/${encodeURIComponent(reviewId)}/files/${filePath(path)}`)).blob();
+export async function fetchIngestedFile(reviewId: string, path: string, space?: string | null): Promise<Blob> {
+  return (await get(`/${encodeURIComponent(reviewId)}/files/${filePath(path)}${inSpace(space)}`)).blob();
 }

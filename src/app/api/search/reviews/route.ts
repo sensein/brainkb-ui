@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
         for (const r of ingested.value?.reviews ?? []) {
             out.push({ id: r.review_id, title: r.title, question: r.research_question || undefined, articles: r.included_count ?? 0,
                        source: 'Ingested', space: r.space_slug,
-                       href: `/knowledge-base/synth-scholar/ingested/${encodeURIComponent(r.review_id)}` });
+                       href: `/knowledge-base/synth-scholar/ingested/${encodeURIComponent(r.review_id)}?space=${encodeURIComponent(r.space_slug)}` });
         }
     }
     return NextResponse.json({ query: q, reviews: out.slice(0, MAX), more: out.length > MAX });

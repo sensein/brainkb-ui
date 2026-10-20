@@ -22,7 +22,7 @@ import Link from "next/link";
 import { Search, Loader2, AlertCircle } from "lucide-react";
 import { usePublicReviews } from "@/src/hooks/useSynthScholar";
 import type { ReviewSummary } from "@/src/types/synthScholar";
-import { listIngestedReviews, type IngestedSummary } from "@/src/services/api/synthScholarIngest";
+import { ingestedReviewHref, listIngestedReviews, type IngestedSummary } from "@/src/services/api/synthScholarIngest";
 import LiteratureShell from "./LiteratureShell";
 
 type Row = {
@@ -59,7 +59,7 @@ export default function PublicReviewsListPage() {
       }));
     const fromIngest: Row[] = (ingested ?? []).map((r) => ({
       id: r.review_id, title: r.title, articles: r.included_count, date: r.imported_at,
-      href: `/knowledge-base/synth-scholar/ingested/${encodeURIComponent(r.review_id)}`, source: "Ingested",
+      href: ingestedReviewHref(r.review_id, r.space_slug), source: "Ingested",
       where: `${r.space_slug}${r.space_visibility === "private" ? " · private" : ""}`,
     }));
     return [...fromRuns, ...fromIngest].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
@@ -142,7 +142,7 @@ export default function PublicReviewsListPage() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filtered.map((r) => (
-                    <tr key={`${r.source}:${r.id}`} className="hover:bg-sky-50/50 transition-colors duration-150">
+                    <tr key={`${r.source}:${r.where ?? ""}:${r.id}`} className="hover:bg-sky-50/50 transition-colors duration-150">
                       <td className="px-6 py-4">
                         <Link href={r.href} className="font-medium text-sky-600 hover:text-sky-700 hover:underline">
                           {r.title || "(untitled)"}
