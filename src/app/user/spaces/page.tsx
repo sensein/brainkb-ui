@@ -4,7 +4,8 @@
  * /user/spaces — the spaces you can see, and the controls your role allows.
  *
  * Everyone sees their own spaces plus every public one. The owner of a space,
- * and admins, can rename it (name and description; the slug stays), switch it
+ * and admins, can rename it (name, description and slug; a new slug moves the
+ * graphs named after the old one, which keep working as aliases), switch it
  * between private and public and share it with
  * people (viewer, editor, owner) — sharing is how a team gets access. Anyone
  * may create an individual space; team spaces need the create_team_space
@@ -309,26 +310,50 @@ function AccessRules({ slug, onError }: { slug: string; onError: (m: string) => 
   );
 }
 
-/** Rename a space or change its description. The slug stays: it is the space's
- *  IRI, and links, graph bindings and provenance point at it. */
+// BrainKB IRIs that carry the space slug (as in the query service's rename): graphs
+// bound to the space under these move with a new slug; any other IRI stays.
+const SLUG_IRI_BASES = ["https://brainkb.org/graph/", "https://brainkb.org/synthscholar/"];
+const movedIri = (iri: string, oldSlug: string, newSlug: string): string | null => {
+  for (const base of SLUG_IRI_BASES) {
+    if (iri === base + oldSlug) return base + newSlug;
+    if (iri.startsWith(`${base}${oldSlug}/`)) return base + newSlug + iri.slice((base + oldSlug).length);
+  }
+  return null;
+};
+
+/** Rename a space: its name, description and slug. A new slug moves the space's
+ *  graphs named after the old slug to the new one; the old slug and IRIs keep
+ *  working as aliases. The form shows exactly which graphs will move. */
 function EditDetails({ space, onSaved, onError, onCancel }: {
   space: Space;
   onSaved: () => void;
   onError: (m: string) => void;
   onCancel: () => void;
 }) {
+  // a subspace's slug is prefixed with its parent's (as when it was created)
+  const prefixed = !!space.parent_slug && space.slug.startsWith(`${space.parent_slug}-`);
+  const slugFor = (n: string) => (prefixed ? slugify(`${space.parent_slug}-${n}`) : slugify(n));
   const [name, setName] = useState(space.name);
   const [description, setDescription] = useState(space.description ?? "");
+  const [slug, setSlug] = useState(space.slug);
+  const [slugEdited, setSlugEdited] = useState(false);
+  const [graphs, setGraphs] = useState<string[] | null>(null);
   const [busy, setBusy] = useState(false);
-  const unchanged = name.trim() === space.name && description.trim() === (space.description ?? "");
+  useEffect(() => {
+    api<Manifest>(`/api/spaces/${encodeURIComponent(space.slug)}`).then((m) => setGraphs(m.graphs ?? [])).catch(() => setGraphs([]));
+  }, [space.slug]);
+  const slugChanged = slug !== space.slug;
+  const moves = slugChanged ? (graphs ?? []).map((g) => [g, movedIri(g, space.slug, slug)] as const).filter(([, n]) => n) : [];
+  const unchanged = name.trim() === space.name && description.trim() === (space.description ?? "") && !slugChanged;
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (unchanged) return onCancel();
+    if (slugChanged && !confirm(`Change the slug to "${slug}"? ${moves.length} graph${moves.length === 1 ? "" : "s"} will move to new IRIs. Old links keep working.`)) return;
     setBusy(true);
     try {
       await api(`/api/spaces/${encodeURIComponent(space.slug)}`, {
         method: "PATCH",
-        body: JSON.stringify({ name: name.trim(), description: description.trim() }),
+        body: JSON.stringify({ name: name.trim(), description: description.trim(), ...(slugChanged ? { slug } : {}) }),
       });
       onSaved();
     } catch (err: any) {
@@ -343,18 +368,38 @@ function EditDetails({ space, onSaved, onError, onCancel }: {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(240px, 100%), 1fr))", gap: 10 }}>
         <label style={{ display: "grid", gap: 4, fontSize: 12, color: "var(--bkb-textMuted)" }}>
           Name
-          <input className="bkb-input" required maxLength={200} value={name} onChange={(e) => setName(e.target.value)} />
+          <input className="bkb-input" required maxLength={200} value={name}
+                 onChange={(e) => { setName(e.target.value); if (!slugEdited) setSlug(slugFor(e.target.value) || space.slug); }} />
         </label>
         <label style={{ display: "grid", gap: 4, fontSize: 12, color: "var(--bkb-textMuted)" }}>
-          Description (optional)
-          <input className="bkb-input" maxLength={2000} value={description} onChange={(e) => setDescription(e.target.value)} />
+          Slug (used in links and graph names)
+          <input className="bkb-input bkb-mono" required pattern="[a-z0-9][a-z0-9\-]{1,62}[a-z0-9]"
+                 title="3–64 characters: lowercase letters, digits and hyphens" value={slug}
+                 onChange={(e) => { setSlug(e.target.value); setSlugEdited(true); }} />
         </label>
       </div>
-      <div style={{ fontSize: 12, color: "var(--bkb-textMuted)" }}>
-        The slug <span className="bkb-mono">{space.slug}</span> stays the same, so links and graph names keep working.
-      </div>
+      <label style={{ display: "grid", gap: 4, fontSize: 12, color: "var(--bkb-textMuted)" }}>
+        Description (optional)
+        <input className="bkb-input" maxLength={2000} value={description} onChange={(e) => setDescription(e.target.value)} />
+      </label>
+      {slugChanged ? (
+        <div style={{ fontSize: 12, color: "var(--bkb-textMuted)", display: "grid", gap: 6 }}>
+          <span>
+            The space&apos;s IRI and {moves.length ? `these ${moves.length} graph${moves.length === 1 ? "" : "s"}` : "no graphs"} move to the new slug,
+            with their history and literature reviews. The old slug and IRIs keep working as aliases.
+            {graphs && graphs.length > moves.length && " Graphs with other IRIs keep theirs."}
+          </span>
+          {moves.map(([o, n]) => (
+            <span key={o} className="bkb-mono" style={{ fontSize: 11, overflowWrap: "anywhere" }}>{o} → {n}</span>
+          ))}
+        </div>
+      ) : (
+        <div style={{ fontSize: 12, color: "var(--bkb-textMuted)" }}>
+          Changing the name updates the slug <span className="bkb-mono">{space.slug}</span> too, unless you edit it.
+        </div>
+      )}
       <div style={{ display: "flex", gap: 8 }}>
-        <button className="bkb-btn bkb-btn-primary" type="submit" disabled={busy || !name.trim()} style={{ fontSize: 12, padding: "5px 12px" }}>
+        <button className="bkb-btn bkb-btn-primary" type="submit" disabled={busy || !name.trim() || !slug} style={{ fontSize: 12, padding: "5px 12px" }}>
           {busy ? "Saving…" : "Save"}
         </button>
         <button type="button" className="bkb-btn bkb-btn-ghost" onClick={onCancel} style={{ fontSize: 12, padding: "5px 12px" }}>
