@@ -308,11 +308,16 @@ function AccessRules({ slug, onError }: { slug: string; onError: (m: string) => 
   );
 }
 
-type Deleted = { slug: string; dropped_graphs: string[]; dropped_delta_graphs: string[]; members_removed: number };
+type Deleted = {
+  slug: string; dropped_graphs: string[]; dropped_delta_graphs: string[]; members_removed: number;
+  subspaces_deleted?: string[]; synthscholar_reviews_removed?: number;
+};
 
 /** SuperAdmin only. Typing the slug is the confirmation the API also requires. */
-function DeleteSpace({ space, onDeleted, onError, onCancel }: {
+function DeleteSpace({ space, subspaces, onDeleted, onError, onCancel }: {
   space: Space;
+  /** Every subspace below this one (any depth): they are deleted with it. */
+  subspaces: string[];
   onDeleted: (d: Deleted) => void;
   onError: (m: string) => void;
   onCancel: () => void;
@@ -341,8 +346,15 @@ function DeleteSpace({ space, onDeleted, onError, onCancel }: {
       <div style={{ fontSize: 13, color: "var(--bkb-danger)", fontWeight: 600 }}>Delete this space permanently</div>
       <div style={{ fontSize: 13, color: "var(--bkb-textMuted)" }}>
         This drops every graph in the space and the ingestion history copies of its data, and removes its members,
-        access rules and search entries. It cannot be undone. The deletion itself is kept in the provenance record.
+        access rules, search entries and literature reviews. It cannot be undone. The deletion itself is kept in the
+        provenance record.
       </div>
+      {subspaces.length > 0 && (
+        <div style={{ fontSize: 13, color: "var(--bkb-danger)" }}>
+          Its {subspaces.length} subspace{subspaces.length === 1 ? "" : "s"} — and all their data — are deleted with it:{" "}
+          <span className="bkb-mono">{subspaces.join(", ")}</span>
+        </div>
+      )}
       <label style={{ fontSize: 13, display: "grid", gap: 6 }}>
         <span>Type <span className="bkb-mono">{space.slug}</span> to confirm</span>
         <input
@@ -368,7 +380,7 @@ function DeleteSpace({ space, onDeleted, onError, onCancel }: {
             opacity: busy ? 0.6 : 1,
           }}
         >
-          {busy ? "Deleting…" : "Delete space"}
+          {busy ? "Deleting…" : subspaces.length ? `Delete space and ${subspaces.length} subspace${subspaces.length === 1 ? "" : "s"}` : "Delete space"}
         </button>
         <button type="button" className="bkb-btn bkb-btn-ghost" onClick={onCancel} style={{ fontSize: 12, padding: "5px 12px" }}>
           Cancel
@@ -378,11 +390,13 @@ function DeleteSpace({ space, onDeleted, onError, onCancel }: {
   );
 }
 
-function SpaceRow({ space, canManage, canDelete, hasSubspaces, publicAbove, onChanged, onDeleted, onError }: {
+function SpaceRow({ space, canManage, canDelete, hasSubspaces, subspaces = [], publicAbove, onChanged, onDeleted, onError }: {
   space: Space;
   canManage: boolean;
   canDelete: boolean;
   hasSubspaces: boolean;
+  /** Every subspace below this one that the caller can see. */
+  subspaces?: string[];
   /** Nearest public space above this one: everything in a public space is public. */
   publicAbove?: string;
   onChanged: () => void;
@@ -482,14 +496,9 @@ function SpaceRow({ space, canManage, canDelete, hasSubspaces, publicAbove, onCh
           onCreated={() => { setAddingSub(false); onChanged(); }}
         />
       )}
-      {canDelete && deleting && (hasSubspaces ? (
-        <div style={{ fontSize: 13, color: "var(--bkb-danger)", borderTop: "1px solid var(--bkb-border)", paddingTop: 12, display: "flex", justifyContent: "space-between", gap: 12 }}>
-          <span>This space still has subspaces. Delete them first, then this one.</span>
-          <button type="button" className="bkb-btn bkb-btn-ghost" style={{ fontSize: 12, padding: "2px 8px" }} onClick={() => setDeleting(false)}>OK</button>
-        </div>
-      ) : (
-        <DeleteSpace space={space} onDeleted={onDeleted} onError={onError} onCancel={() => setDeleting(false)} />
-      ))}
+      {canDelete && deleting && (
+        <DeleteSpace space={space} subspaces={subspaces} onDeleted={onDeleted} onError={onError} onCancel={() => setDeleting(false)} />
+      )}
     </div>
   );
 }
@@ -622,9 +631,12 @@ export default function SpacesPage() {
   const showError = useCallback((m: string) => setError(m), []);
   const onDeleted = useCallback((d: Deleted) => {
     const n = d.dropped_graphs.length;
-    setNotice(`Deleted space "${d.slug}": ${n} graph${n === 1 ? "" : "s"}` +
+    const subs = d.subspaces_deleted ?? [];
+    setNotice(`Deleted space "${d.slug}"` + (subs.length ? ` and ${subs.length} subspace${subs.length === 1 ? "" : "s"} (${subs.join(", ")})` : "") +
+      `: ${n} graph${n === 1 ? "" : "s"}` +
       (d.dropped_delta_graphs.length ? ` and ${d.dropped_delta_graphs.length} ingestion history cop${d.dropped_delta_graphs.length === 1 ? "y" : "ies"}` : "") +
-      ` removed, ${d.members_removed} member${d.members_removed === 1 ? "" : "s"} unshared.`);
+      ` removed, ${d.members_removed} member${d.members_removed === 1 ? "" : "s"} unshared` +
+      (d.synthscholar_reviews_removed ? `, ${d.synthscholar_reviews_removed} literature review${d.synthscholar_reviews_removed === 1 ? "" : "s"} removed` : "") + ".");
     load();
   }, [load]);
   const canManage = (s: Space) => isAdmin || s.is_owner || s.your_role === "owner";
@@ -641,6 +653,12 @@ export default function SpacesPage() {
   const roots = all.filter((s) => !s.parent_slug || !slugs.has(s.parent_slug));
   const mine = roots.filter((s) => s.your_role);
   const others = roots.filter((s) => !s.your_role);
+  // Every subspace below a space, any depth (what its deletion takes with it).
+  const below = (slug: string, seen = new Set<string>()): string[] => {
+    if (seen.has(slug)) return [];
+    seen.add(slug);
+    return (childrenOf.get(slug) ?? []).flatMap((k) => [k.slug, ...below(k.slug, seen)]);
+  };
   const renderTree = (s: Space, depth = 0, seen = new Set<string>(), publicAbove?: string): React.ReactNode => {
     if (seen.has(s.slug)) return null;          // defensive: the API never returns a cycle
     const kids = childrenOf.get(s.slug) ?? [];
@@ -648,6 +666,7 @@ export default function SpacesPage() {
     return (
       <div key={s.slug} style={{ display: "grid", gap: 10 }}>
         <SpaceRow space={s} canManage={canManage(s)} canDelete={isSuperAdmin} hasSubspaces={kids.length > 0}
+                  subspaces={below(s.slug)}
                   publicAbove={publicAbove}
                   onChanged={load} onDeleted={onDeleted} onError={showError} />
         {kids.length > 0 && (

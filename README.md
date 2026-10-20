@@ -650,9 +650,9 @@ query service enforces every rule (the UI only hides controls you couldn't use).
   or **manage** a space, without adding each of them as a member. Once an action has
   rules, only people who match one can do it; the owner and admins always can.
 - **Deleting a space** (SuperAdmin): "Delete" on the space, then type its slug. It
-  removes the space's graphs, their ingestion history copies, members, rules and
-  search entries; the deletion itself is kept in the provenance record. A space that
-  still has subspaces can't be deleted — delete those first.
+  removes the space's graphs, their ingestion history copies, members, rules, search
+  entries and literature reviews; the deletion itself is kept in the provenance record.
+  Its subspaces, at any depth, are deleted with it (the confirmation lists them).
 - **Capabilities** (`/admin/capabilities`, Admin/SuperAdmin). Look up a person to see
   their roles and what they can do, then grant or revoke an extra capability — e.g.
   create or manage team spaces, ingest, recover jobs, read private content — for that
