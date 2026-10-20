@@ -12,7 +12,7 @@ import { COLORS } from "./tokens";
 const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/mcp", label: "Use with AI" },
-  { href: "/explore", label: "Explore the graph" },
+  { href: "/explore", label: "Explore knowledge" },
   { href: "/knowledge-base/synth-scholar", label: "Literature reviews" },
   { href: "/skills", label: "Extraction tools" },
   { href: "/tutorial", label: "Tutorial" },

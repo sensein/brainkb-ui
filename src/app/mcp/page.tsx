@@ -136,7 +136,7 @@ export default function McpPage() {
               This shows the workflow. What comes back depends on what has been ingested into the spaces you can read.
             </p>
             <div className="connect-links">
-              <Link className="btn primary" href="/explore">Explore the graph</Link>
+              <Link className="btn primary" href="/explore">Explore knowledge</Link>
               <a className="btn" href="#setup">Try it in your agent ↓</a>
             </div>
           </div>
