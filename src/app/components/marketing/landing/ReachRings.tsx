@@ -3,13 +3,12 @@
  * Keren-Shaul et al., Cell 2017) and the wider knowledge it connects to. The figure
  * (public/reach-rings.png, drawn from docs/figures/reach-rings.html) tells the story;
  * the rings show reach, not a hierarchy, and each dotted link is a relationship
- * reported in published work, shown as an illustration.
+ * reported in published work.
  */
 export default function ReachRings() {
   return (
     <div className="missing">
       <div className="missing-copy">
-        <span className="missing-k">The missing link</span>
         <h2>From your narrow domain to the whole field</h2>
         <p>
           A study of disease-associated microglia in Alzheimer&apos;s disease begins with a specific cellular
@@ -18,8 +17,7 @@ export default function ReachRings() {
           relationships.
         </p>
         <p className="missing-note">
-          The rings show how far a finding can reach, not a strict hierarchy. Links are illustrative, drawn from
-          published work.
+          The rings show how far a finding can reach, not a strict hierarchy.
         </p>
       </div>
       <img

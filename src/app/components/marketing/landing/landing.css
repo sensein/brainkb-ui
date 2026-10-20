@@ -590,8 +590,7 @@ html:has(.lp){scroll-behavior:smooth}
 @media(max-width:760px){.lp .book{display:block;margin:0 -16px}.lp .book-menu{display:block;width:calc(100% - 32px);margin:16px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:10px 14px;text-align:left;font:600 14px var(--font-dm-sans),sans-serif}.lp .book-side{display:none;position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}.lp .book-side.open{display:block}.lp .book-main{padding:24px 20px 60px}.lp .book-sec h2{font-size:24px}.lp .tut-ask{flex-wrap:wrap}}
 /* The missing link: one finding and the wider knowledge it reaches (ReachRings) */
 .lp .missing{display:grid;grid-template-columns:minmax(0,.72fr) minmax(0,1.28fr);gap:32px;align-items:center;background:#e27a3f;color:#102330;border-radius:22px;padding:56px 48px}
-.lp .missing-k{font:13px var(--font-plex-mono),monospace;letter-spacing:4px;text-transform:uppercase}
-.lp .missing h2{margin:18px 0 22px;font-size:42px;line-height:1.1;letter-spacing:-1.2px;color:#102330}
+.lp .missing h2{margin:0 0 22px;font-size:42px;line-height:1.1;letter-spacing:-1.2px;color:#102330}
 .lp .missing p{margin:0;font-size:17px;line-height:1.65;max-width:520px}
 .lp .missing .missing-note{margin-top:18px;font-size:13.5px;color:#3a1d0c}
 .lp .missing-fig{width:100%;max-width:780px;height:auto;justify-self:center}
