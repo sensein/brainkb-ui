@@ -2,8 +2,8 @@
 <html><head><meta charset="utf-8">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>html,body{margin:0;background:transparent}svg{display:block}
-.lbl{font:700 21px 'IBM Plex Sans',sans-serif;fill:#10202B}
-.ex{font:400 17px 'IBM Plex Sans',sans-serif;fill:#3A2A20}
+.lbl{font:700 17.5px 'IBM Plex Sans',sans-serif;fill:#10202B}
+.ex{font:400 14.5px 'IBM Plex Sans',sans-serif;fill:#3A2A20}
 .ring{font:700 23px 'IBM Plex Sans',sans-serif;fill:#10202B}
 .role{font:500 17px 'IBM Plex Mono',monospace;letter-spacing:3px;fill:#7D432B}
 .core1{font:700 23px 'IBM Plex Sans',sans-serif;fill:#F6F5F0}
@@ -20,14 +20,12 @@ const C = 500, NS = "http://www.w3.org/2000/svg", svg = document.getElementById(
 const el = (tag, a, p = svg) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); p.appendChild(e); return e; };
 const g = (a, p = svg) => el("g", a, p);
 
-el("circle", { cx: C, cy: C, r: 497, fill: "#F8F7F3" });
-el("circle", { cx: C, cy: C, r: 362, fill: "#F3DDCD" });
-el("circle", { cx: C, cy: C, r: 258, fill: "#F0B890" });
-// ring outlines are masked: each label cuts a gap in the line behind it
-const mask = el("mask", { id: "cut", maskUnits: "userSpaceOnUse", x: 0, y: 0, width: 1000, height: 1000 }, el("defs", {}));
-el("rect", { x: 0, y: 0, width: 1000, height: 1000, fill: "#fff" }, mask);
-const outlines = g({ fill: "none", stroke: "#10202B", "stroke-width": 2, mask: "url(#cut)" });
-for (const r of [497, 362, 258]) el("circle", { cx: C, cy: C, r }, outlines);
+const R0 = 108, R1 = 250, R2 = 374, R3 = 497;   // core and ring radii (unchanged)
+el("circle", { cx: C, cy: C, r: R3, fill: "#F8F7F3" });
+el("circle", { cx: C, cy: C, r: R2, fill: "#F3DDCD" });
+el("circle", { cx: C, cy: C, r: R1, fill: "#F0B890" });
+const outlines = g({ fill: "none", stroke: "#10202B", "stroke-width": 2 });
+for (const r of [R3, R2, R1]) el("circle", { cx: C, cy: C, r }, outlines);
 
 // icons, ~60px, drawn around 0,0
 const BRAIN = (f, s) => `<path d="M-4 -24c-8-8-22-4-23 6-9 1-13 11-8 18-5 6-1 16 8 16 2 8 14 9 19 3 4 5 11 5 14 0V-21c-3-4-6-5-10-3z" fill="${f}" stroke="${s}" stroke-width="2.4"/><path d="M4 -24c8-8 22-4 23 6 9 1 13 11 8 18 5 6 1 16-8 16-2 8-14 9-19 3-4 5-11 5-14 0V-21c3-4 6-5 10-3z" fill="${f}" stroke="${s}" stroke-width="2.4"/><path d="M-19 -8c5 2 8 8 6 13M-23 8c5-1 10 1 11 5M19 -8c-5 2-8 8-6 13M23 8c-5-1-10 1-11 5" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round"/>`;
@@ -47,73 +45,155 @@ const ICON = {
 };
 
 const pt = (a, r) => [C + r * Math.cos(a * Math.PI / 180), C + r * Math.sin(a * Math.PI / 180)];
-// lab: where the text goes relative to the icon
+// a: angle (0 right, -90 top); r: distance from the centre; lab: text above, below, left or right of the icon
 const NODES = {
   // subfield: cellular neuroscience
-  infl:    { a: -128, r: 182, t: ["Neuroinflammation"], ex: "cytokine release", lab: "up" },
-  act:     { a: -52,  r: 182, t: ["Microglial", "activation"], ex: "DAM state", lab: "right" },
-  phago:   { a: 18,   r: 182, t: ["Phagocytosis"], ex: "amyloid uptake", lab: "down" },
-  prune:   { a: 176,  r: 186, t: ["Synaptic", "pruning"], ex: "C1q tagging", lab: "up" },
+  infl:    { a: -128, r: 182, t: ["Neuroinflammation"], ex: ["e.g. cytokine", "release"], lab: "up" },
+  act:     { a: -48,  r: 182, t: ["Microglial", "activation"], ex: ["e.g. activation", "states"], lab: "right" },
+  phago:   { a: 18,   r: 182, t: ["Phagocytosis"], ex: ["e.g. amyloid", "uptake"], lab: "down" },
+  prune:   { a: 176,  r: 186, t: ["Synaptic", "pruning"], ex: ["e.g. C1q tagging"], lab: "up" },
   // field: neuroscience
-  plaque:  { a: -12,  r: 312, t: ["Amyloid", "pathology"], ex: "Aβ plaques", lab: "right" },
-  degen:   { a: 118,  r: 312, t: ["Neurodegeneration"], ex: "neuron loss", lab: "left" },
-  synloss: { a: 156,  r: 312, t: ["Synapse loss"], ex: "early sign", lab: "left" },
+  plaque:  { a: -12,  r: 312, t: ["Amyloid", "pathology"], ex: ["e.g. Aβ plaques"], lab: "up" },
+  degen:   { a: -104, r: 312, t: ["Neurodegeneration"], ex: ["e.g. neuron loss"], lab: "left" },
+  synloss: { a: 180, r: 312, t: ["Synapse", "loss"], ex: ["e.g. synaptic", "degeneration"], lab: "down" },
   // adjacent fields
-  gen:     { a: -90,  r: 432, t: ["Genetics"], ex: "TREM2, APOE risk variants", lab: "left" },
-  imm:     { a: -150, r: 432, t: ["Immunology"], ex: "innate immunity", lab: "down" },
-  drug:    { a: -36,  r: 432, t: ["Drug targets"], ex: "TREM2 antibodies", lab: "down" },
-  clin:    { a: 30,   r: 430, t: ["Clinical neurology"], ex: "Alzheimer’s dementia", lab: "left" },
+  gen:     { a: -90,  r: 432, t: ["Genetics"], ex: ["e.g. TREM2 and APOE genes;", "AD-associated variants"], lab: "left" },
+  imm:     { a: -150, r: 432, t: ["Immunology"], ex: ["e.g. innate", "immunity"], lab: "down" },
+  drug:    { a: -14,  r: 436, t: ["Therapeutic", "approaches"], ex: ["e.g. TREM2-", "targeting", "antibodies"], lab: "down" },
+  clin:    { a: 90,   r: 424, t: ["Clinical neurology"], ex: ["e.g. Alzheimer’s dementia"], lab: "left" },
 };
-// Each link is a relationship reported in published work (illustrative):
+// links between scientifically related concepts (relationships reported in published work); [from, to, preferred bend]
 const EDGES = [
-  ["core", "act", .25], ["act", "gen", -.3],      // the DAM program depends on TREM2; DAM upregulate Apoe
-  ["gen", "drug", -.25],                           // TREM2 is targeted by antibodies in trials
-  ["core", "infl", -.25], ["infl", "imm", -.3],     // neuroinflammation is innate immune signaling in the brain
-  ["core", "phago", -.25], ["phago", "plaque", .3], ["plaque", "clin", -.3], // DAM take up Aβ near plaques; plaques are a hallmark of AD
-  ["core", "prune", .25], ["prune", "synloss", -.3], ["synloss", "degen", .3], // complement-tagged synapses are engulfed early; synapse loss precedes neuron loss
+  ["core", "act", .25],      // disease-associated microglia are an activation state of microglia
+  ["act", "gen", -.3],       // TREM2 shapes microglial function; DAM depend on TREM2
+  ["gen", "drug", -.25],     // TREM2-targeting antibodies
+  ["core", "infl", -.25],    // microglia drive neuroinflammation
+  ["infl", "imm", -.3],      // neuroinflammation is innate immune signalling in the brain
+  ["core", "phago", -.25],   // DAM upregulate phagocytic programs
+  ["phago", "plaque", .3],   // DAM take up Aβ next to plaques
+  ["plaque", "clin", -.3],   // amyloid plaques are a pathological hallmark of Alzheimer's disease
+  ["core", "prune", .25],    // microglia prune synapses (complement-dependent)
+  ["prune", "synloss", -.3], // excess pruning removes synapses early in disease
+  ["infl", "degen", .25],    // neuroinflammation contributes to neurodegenerative processes
 ];
-const P = (k) => (k === "core" ? [C, C] : pt(NODES[k].a, NODES[k].r));
-const off = (k) => (k === "core" ? 116 : 44);
 const lines = g({ fill: "none", stroke: "#10202B", "stroke-width": 2.6, "stroke-dasharray": "4 7", "stroke-linecap": "round" });
 const dots = g({ fill: "#10202B" });
-for (const [a, b, bend] of EDGES) {
-  let [x1, y1] = P(a), [x2, y2] = P(b);
-  const L = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / L, uy = (y2 - y1) / L;
-  x1 += ux * off(a); y1 += uy * off(a); x2 -= ux * off(b); y2 -= uy * off(b);
-  const dx = x2 - x1, dy = y2 - y1, mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
-  // a gentle S-curve: two control points bowing to opposite sides
-  el("path", { d: `M${x1} ${y1}C${x1 + dx * .33 - dy * bend} ${y1 + dy * .33 + dx * bend} ${x1 + dx * .67 + dy * bend * .4} ${y1 + dy * .67 - dx * bend * .4} ${x2} ${y2}` }, lines);
-  el("circle", { cx: x1, cy: y1, r: 5.5 }, dots);
-  el("circle", { cx: x2, cy: y2, r: 5.5 }, dots);
-}
 
 const ringLabel = (y, name, role) => {
   el("text", { x: C, y, "text-anchor": "middle", class: "ring" }).textContent = name;
   el("text", { x: C, y: y + 26, "text-anchor": "middle", class: "role" }).textContent = role;
 };
-ringLabel(690, "Cellular neuroscience", "SUBFIELD");
-ringLabel(808, "Neuroscience", "FIELD");
-ringLabel(920, "Genetics, immunology, clinical research", "ADJACENT FIELDS");
+ringLabel(686, "Cellular neuroscience", "SUBFIELD");
+ringLabel(812, "Neuroscience", "FIELD");
+el("text", { x: C, y: 972, "text-anchor": "middle", class: "role" }).textContent = "ADJACENT FIELDS";
 
-el("circle", { cx: C, cy: C, r: 112, fill: "#10202B" });
-[["Your finding", "core1", 446], ["Disease-associated", "core2", 476], ["microglia at amyloid", "core2", 499], ["plaques, mouse model", "core2", 522]]
+el("circle", { cx: C, cy: C, r: R0, fill: "#10202B" });
+[["Your finding", "core1", 448], ["Disease-associated", "core2", 478], ["microglia at amyloid", "core2", 500], ["plaques, mouse model", "core2", 522]]
   .forEach(([t, c, y]) => { el("text", { x: C, y, "text-anchor": "middle", class: c }).textContent = t; });
 g({ transform: `translate(${C} 560) scale(.95)` }).innerHTML = ICON.mouse;
 
+const IR = 25;   // icon half-size
+const M = 6;     // clearance from borders and neighbours
+const BANDS = [[R0, R1], [R1, R2], [R2, R3]];
+const bandIdx = (r) => (r < R1 ? 0 : r < R2 ? 1 : 2);
+const corners = (b) => [[b[2], b[3]], [b[4], b[3]], [b[2], b[5]], [b[4], b[5]]];
+const rad = ([x, y]) => Math.hypot(x - C, y - C);
+const minRad = (b) => { const cx = Math.min(Math.max(C, b[2]), b[4]), cy = Math.min(Math.max(C, b[3]), b[5]); return Math.hypot(cx - C, cy - C); };
+const ov = (a, b, m = M) => a[2] < b[4] + m && b[2] < a[4] + m && a[3] < b[5] + m && b[3] < a[5] + m;
+const whichBand = (b) => { const lo = minRad(b), hi = Math.max(...corners(b).map(rad)); return BANDS.findIndex(([l, h]) => lo >= l + M && hi <= h - M); };
+const ringBoxes = [...svg.querySelectorAll("text.ring, text.role")].map((t) => { const bb = t.getBBox(); return ["ring label", t.textContent, bb.x - 4, bb.y, bb.x + bb.width + 4, bb.y + bb.height]; });
+
+function textRows(n) { return [...n.t.map((t) => ["lbl", t, 19.5]), ...n.ex.map((t) => ["ex", t, 16.5])]; }
+function drawText(n, lab, parent) {
+  const rows = textRows(n), h = rows.reduce((s_, r_) => s_ + r_[2], 0);
+  const pos = { up: [0, -IR - 10 - h + 16, "middle"], down: [0, IR + 22, "middle"], left: [-IR - 10, -h / 2 + 15, "end"], right: [IR + 10, -h / 2 + 15, "start"] }[lab];
+  const tg = g({}, parent); let yy = pos[1];
+  for (const [cls, t, lh] of rows) { el("text", { x: pos[0], y: yy, "text-anchor": pos[2], class: cls }, tg).textContent = t; yy += lh; }
+  return tg;
+}
+const LABS = ["up", "down", "left", "right"];
+const rel = {};
+for (const k in NODES) { rel[k] = {}; for (const lab of LABS) { const tg = drawText(NODES[k], lab, svg); const bb = tg.getBBox(); rel[k][lab] = [bb.x, bb.y, bb.x + bb.width, bb.y + bb.height]; tg.remove(); } }
+
+// small moves only: within 30 degrees of the current angle, same ring
+const placed = [];
+const ORDER = ["synloss", "degen", "gen", "drug", "plaque", "clin", "imm", "infl", "act", "phago", "prune"];
+const unplaced = [];
+for (const k of ORDER) {
+  const n = NODES[k], own = bandIdx(n.r), [lo, hi] = BANDS[own];
+  let best = null;
+  for (const span of [30]) { if (best) break;
+  for (let da = -span; da <= span; da += 2) for (let r_ = lo + IR + M; r_ <= hi - IR - M; r_ += 2) {
+    const [x, y] = pt(n.a + da, r_);
+    const ib = ["icon", k, x - IR, y - IR, x + IR, y + IR];
+    if (whichBand(ib) !== own) continue;
+    for (const lab of LABS) {
+      const q = rel[k][lab], tb = ["text", k, x + q[0], y + q[1], x + q[2], y + q[3]];
+      const tbBand = whichBand(tb);
+      if (tbBand < 0) continue;
+      if ([...placed, ...ringBoxes].some((o) => ov(ib, o) || ov(tb, o))) continue;
+      // text facing the centre sits in the way of the link from the finding: avoid it
+      const facesIn = rad([(tb[2] + tb[4]) / 2, (tb[3] + tb[5]) / 2]) < rad([x, y]) - 20 ? 3 : 0;
+      const score = Math.abs(da) / 3 + Math.abs(r_ - n.r) / 12 + (lab === n.lab ? 0 : 6) + (tbBand === own ? 0 : 4) + facesIn;
+      if (!best || score < best.score) best = { score, a: n.a + da, r: r_, lab, ib, tb };
+    }
+  } }
+  if (!best) { unplaced.push(k); continue; }
+  Object.assign(n, { a: best.a, r: best.r, lab: best.lab });
+  placed.push(best.ib, best.tb);
+}
+const boxes = [];
 for (const k in NODES) {
   const n = NODES[k], [x, y] = pt(n.a, n.r);
   const ng = g({ transform: `translate(${x.toFixed(1)} ${y.toFixed(1)})` });
-  g({}, ng).innerHTML = ICON[k];
-  const lines_ = [...n.t.map((t) => ["lbl", t]), ["ex", `e.g. ${n.ex}`]];
-  const h = n.t.length * 23 + 20;
-  const pos = { up: [0, -40 - h + 18, "middle"], down: [0, 54, "middle"], left: [-42, 6 - h / 2 + 14, "end"], right: [42, 6 - h / 2 + 14, "start"] }[n.lab];
-  let yy = pos[1];
-  for (const [cls, t] of lines_) {
-    el("text", { x: pos[0], y: yy, "text-anchor": pos[2], class: cls }, ng).textContent = t;
-    const m = el("text", { x: pos[0], y: yy, "text-anchor": pos[2], class: cls, fill: "#000", stroke: "#000", "stroke-width": 10, "stroke-linejoin": "round", transform: ng.getAttribute("transform") }, mask);
-    m.textContent = t; m.style.fill = "#000";
-    yy += cls === "lbl" ? 23 : 20;
-  }
+  g({ transform: "scale(.78)" }, ng).innerHTML = ICON[k];
+  const bb = drawText(n, n.lab, ng).getBBox();
+  boxes.push(["icon", k, x - IR, y - IR, x + IR, y + IR], ["text", k, x + bb.x, y + bb.y, x + bb.x + bb.width, y + bb.y + bb.height]);
 }
+// ---------- layout check, printed into #report (read with --dump-dom) ----------
+const report = unplaced.map((k) => `could not place ${k}`);
+for (const b of boxes) {
+  // no icon or text block may straddle a ring border (it may sit wholly in a neighbouring ring)
+  const rmax = Math.max(...corners(b).map(rad)), rmin = minRad(b);
+  for (const R of [R0, R1, R2, R3]) if (rmin < R + M && rmax > R - M) report.push(`${b[0]} ${b[1]}: on the r=${R} border (spans ${rmin.toFixed(0)}–${rmax.toFixed(0)})`);
+}
+const all = [...boxes, ...ringBoxes];
+for (let i = 0; i < all.length; i++) for (let j = i + 1; j < all.length; j++)
+  if (all[i][1] !== all[j][1] && !(all[i][0] === "ring label" && all[j][0] === "ring label") && ov(all[i], all[j])) report.push(`overlap: ${all[i][0]} ${all[i][1]} / ${all[j][0]} ${all[j][1]}`);
+
+// links: keep the S-curve style; if the preferred bend runs into text or another icon, try others
+const P = (k) => (k === "core" ? [C, C] : pt(NODES[k].a, NODES[k].r));
+const off = (k) => (k === "core" ? R0 + 4 : 44);
+for (const [a, b, pref] of EDGES) {
+  let [x1, y1] = P(a), [x2, y2] = P(b);
+  const L = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / L, uy = (y2 - y1) / L;
+  x1 += ux * off(a); y1 += uy * off(a); x2 -= ux * off(b); y2 -= uy * off(b);
+  const dx = x2 - x1, dy = y2 - y1;
+  const tries = [pref, ...[.1, .2, .3, .4, .5, .6, .7, .8].flatMap((v) => [pref + v, pref - v])];
+  let chosen = null, fewest = null;
+  for (const bend of tries) for (const tw of [-.4, .5, 1]) {
+    // tw < 0: gentle S-curve (the house style); tw > 0: one smooth bow
+    const d = `M${x1} ${y1}C${x1 + dx * .33 - dy * bend} ${y1 + dy * .33 + dx * bend} ${x1 + dx * .67 - dy * bend * tw} ${y1 + dy * .67 + dx * bend * tw} ${x2} ${y2}`;
+    const pth = el("path", { d }, lines), len = pth.getTotalLength(), hits = new Set();
+    for (let s_ = 0; s_ <= len; s_ += 3) {
+      const q = pth.getPointAtLength(s_);
+      if (a !== "core" && Math.hypot(q.x - C, q.y - C) < R0 + 4) hits.add("core");
+      if (Math.hypot(q.x - C, q.y - C) > R3 - 10) hits.add("outside the circle");
+      for (const bx of all) {
+        if (bx[0] === "icon" && (bx[1] === a || bx[1] === b)) continue;
+        if (q.x > bx[2] - 6 && q.x < bx[4] + 6 && q.y > bx[3] - 6 && q.y < bx[5] + 6) hits.add(`${bx[0]} ${bx[1]}`);
+      }
+    }
+    pth.remove();
+    if (!hits.size) { chosen = d; break; }
+    if (!fewest || hits.size < fewest[1].size) fewest = [d, hits];
+  }
+  if (chosen === null) { report.push(`path ${a}→${b} touches: ${[...fewest[1]].join(", ")}`); chosen = fewest[0]; }
+  el("path", { d: chosen }, lines);
+  el("circle", { cx: x1, cy: y1, r: 5.5 }, dots);
+  el("circle", { cx: x2, cy: y2, r: 5.5 }, dots);
+}
+report.push("at: " + Object.entries(NODES).map(([k, n]) => `${k} ${n.a}/${n.r}/${n.lab}`).join("; "));
+const pre = document.createElement("pre"); pre.id = "report"; pre.style.display = "none"; pre.textContent = report.join("\n"); document.body.appendChild(pre);
 </script>
 </body></html>
