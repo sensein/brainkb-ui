@@ -133,10 +133,10 @@ export default function HomePage() {
         </section>
 
         <section className="section flush" id="reach">
-          <SectionTitle eyebrow="From narrow to broad" color="#0e7490" title={["Deep in one subfield,", "linked to the whole field."]}>
-            Most studies go deep on one cell type, one region, one species, and their findings rarely travel past the
-            subfield. BrainKB tags each finding with shared ontology terms, so it reaches related work across
-            neuroscience and the biomedical fields around it.
+          <SectionTitle eyebrow="From narrow to broad" color="#0e7490" title={["One observation.", "Connections across neuroscience."]}>
+            An observation about microglia in Alzheimer&apos;s disease can connect to research on neuroinflammation,
+            genetics, aging and other neurological conditions. BrainKB makes these relationships discoverable through
+            shared entities, ontologies and evidence-linked knowledge.
           </SectionTitle>
           <ReachRings />
         </section>

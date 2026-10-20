@@ -588,20 +588,21 @@ html:has(.lp){scroll-behavior:smooth}
 @media(max-width:1100px){.lp .book{margin:0 -24px}}
 @media(max-width:900px){.lp .tut-needs-wrap{grid-template-columns:1fr}}
 @media(max-width:760px){.lp .book{display:block;margin:0 -16px}.lp .book-menu{display:block;width:calc(100% - 32px);margin:16px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:10px 14px;text-align:left;font:600 14px var(--font-dm-sans),sans-serif}.lp .book-side{display:none;position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}.lp .book-side.open{display:block}.lp .book-main{padding:24px 20px 60px}.lp .book-sec h2{font-size:24px}.lp .tut-ask{flex-wrap:wrap}}
-/* From narrow to broad: one study and the rings around it (ReachRings) */
-.lp .reach{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:center}
-.lp .reach-fig{width:100%;max-width:520px;height:auto;justify-self:center;overflow:visible}
-.lp .reach-ring{transition:stroke .2s,stroke-width .2s}
-.lp .reach-c{font:11px var(--font-dm-sans),sans-serif}
-.lp .reach-l .nm{font:600 12px var(--font-dm-sans),sans-serif;fill:var(--ink)}
-.lp .reach-l .rl{font:9px var(--font-plex-mono),monospace;letter-spacing:1px;fill:var(--blue)}
-.lp .reach-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
-.lp .reach-list button{width:100%;text-align:left;display:grid;gap:6px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:16px 18px;font:inherit;color:var(--ink);cursor:pointer;transition:border-color .2s,box-shadow .2s}
-.lp .reach-list button:hover,.lp .reach-list button[aria-pressed="true"]{border-color:#bfdbfe;box-shadow:0 12px 28px #1d4ed812}
-.lp .reach-list button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+/* From narrow to broad: one observation and the rings around it (ReachRings) */
+.lp .reach{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:44px;align-items:center}
+.lp .reach-fig{width:100%;max-width:620px;height:auto;justify-self:center}
+.lp .reach-list{list-style:none;margin:0;padding:0;display:grid;gap:0;position:relative}
+.lp .reach-list::before{content:"";position:absolute;left:17px;top:20px;bottom:20px;width:2px;background:linear-gradient(var(--blue),#bfdbfe)}
+.lp .reach-list li{display:grid;grid-template-columns:36px minmax(0,1fr);gap:16px;padding:0 0 14px;position:relative}
+.lp .reach-list li:last-child{padding-bottom:0}
+.lp .reach-list .n{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:#fff;border:2px solid var(--blue);font:600 12px var(--font-plex-mono),monospace;color:var(--blue);margin-top:14px;position:relative}
+.lp .reach-list li:first-child .n{background:var(--blue);color:#fff}
+.lp .reach-list .body{display:grid;gap:6px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px 18px;transition:border-color .2s,box-shadow .2s}
+.lp .reach-list .body:hover{border-color:#bfdbfe;box-shadow:0 12px 28px #1d4ed812}
 .lp .reach-list .rl{font:11px var(--font-plex-mono),monospace;letter-spacing:1.3px;text-transform:uppercase;color:var(--blue)}
-.lp .reach-list .nm{font-size:16px;font-weight:600}
+.lp .reach-list .nm{font-size:16px;font-weight:600;line-height:1.35}
 .lp .reach-list .ex{display:flex;flex-wrap:wrap;gap:6px}
 .lp .reach-list .ex i{font-style:normal;font-size:12.5px;color:#3d4c69;background:var(--pale);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
 .lp .reach-list .how{font-size:13px;line-height:1.55;color:var(--muted)}
-@media(max-width:900px){.lp .reach{grid-template-columns:minmax(0,1fr);gap:28px}.lp .reach-fig{max-width:420px}}
+.lp .reach-note{margin:16px 0 0 52px;font-size:12.5px;line-height:1.6;color:var(--muted)}
+@media(max-width:900px){.lp .reach{grid-template-columns:minmax(0,1fr);gap:28px}.lp .reach-fig{max-width:460px}}

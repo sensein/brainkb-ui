@@ -1,91 +1,64 @@
-"use client";
+/**
+ * From narrow to broad: one observation in the middle, and the subfield, field
+ * and adjacent fields it can reach once its entities carry shared ontology terms.
+ * The figure (public/reach-rings.png) is drawn from the same four steps as the
+ * cards, which read from the specific study outwards.
+ */
 
-import { useState } from "react";
-
-type Ring = "study" | "subfield" | "field" | "adjacent";
-
-const RINGS: { id: Ring; role: string; name: string; examples: string[]; how: string }[] = [
+const STEPS = [
   {
-    id: "adjacent", role: "Adjacent fields", name: "Biomedicine, genetics, psychiatry",
-    examples: ["Genetics", "Psychiatry", "Neurology", "AI models of vision"],
-    how: "Reached through gene and disease terms (MONDO).",
+    role: "Your study", name: "Disease-associated microglia in an Alzheimer's mouse model",
+    examples: ["Cell type", "Brain region", "Species", "Disease"],
+    how: "Its entities are tagged with shared cell-type, region, species and disease terms when it is ingested.",
   },
   {
-    id: "field", role: "Field", name: "Neuroscience",
-    examples: ["Sst cells in hippocampus", "Human cortex", "Macaque vision"],
-    how: "Reached through cell-type taxonomies that span regions and species.",
+    role: "Subfield", name: "Cellular neuroscience",
+    examples: ["Microglial activation", "Neuroinflammation", "Synaptic pruning"],
+    how: "Linked to other work on the same cell type and biological processes.",
   },
   {
-    id: "subfield", role: "Subfield", name: "Visual neuroscience",
-    examples: ["V1 circuits", "Pvalb and Vip interneurons", "Visual behavior"],
-    how: "Reached through the same cell-type and brain-region terms (CL, UBERON).",
+    role: "Field", name: "Neuroscience",
+    examples: ["Neurodegeneration", "Amyloid pathology", "Brain aging"],
+    how: "Linked through shared disease and pathology concepts.",
   },
   {
-    id: "study", role: "Your study", name: "Sst interneurons in mouse V1",
-    examples: ["cell type", "brain region", "species"],
-    how: "Extracted entities are tagged with ontology terms when the paper is ingested.",
+    role: "Adjacent fields", name: "Genetics, immunology, neurology",
+    examples: ["TREM2 and APOE", "Innate immunity", "Dementia research"],
+    how: "Linked through gene, immune-process and disease terms.",
   },
 ];
 
-// Outer radius of each ring, and where its label sits (distance below the centre).
-const R: Record<Ring, number> = { adjacent: 198, field: 155, subfield: 105, study: 50 };
-const LABEL: Partial<Record<Ring, { y: number; name: string; role: string }>> = {
-  subfield: { y: 72, name: "Visual neuroscience", role: "SUBFIELD" },
-  field: { y: 126, name: "Neuroscience", role: "FIELD" },
-  adjacent: { y: 172, name: "Biomedicine", role: "ADJACENT FIELDS" },
-};
-const FILL: Record<Ring, string> = { adjacent: "#f5f7fc", field: "#eaf1fe", subfield: "#dbeafe", study: "#0b1628" };
-// Findings reached in each ring: decoration that echoes the list.
-const DOTS: [number, number][] = [[0, -80], [-62, 37], [65, -93], [115, 65], [-115, -31], [165, -34]];
-const LINKS: [number, number, number, number][] = [
-  [0, 0, 0, -80], [0, 0, -62, 37], [0, -80, 65, -93], [65, -93, 165, -34], [-62, 37, -115, -31], [0, 0, 115, 65],
-];
-
-/** One study in the middle, its subfield, its field and the fields around it:
- *  a finding tagged with shared ontology terms reaches every ring. */
 export default function ReachRings() {
-  const [active, setActive] = useState<Ring | null>(null);
   return (
     <div className="reach">
-      <svg className="reach-fig" viewBox="-200 -200 400 400" role="img"
-           aria-label="Nested rings: a study of Sst interneurons in mouse V1, inside visual neuroscience, inside neuroscience, next to biomedicine, genetics and psychiatry">
-        {(["adjacent", "field", "subfield"] as Ring[]).map((r) => (
-          <circle key={r} r={R[r]} fill={FILL[r]}
-                  stroke={active === r ? "var(--blue)" : "#bfdbfe"} strokeWidth={active === r ? 3 : 1.2}
-                  className="reach-ring" />
-        ))}
-        <g stroke="#0b1628" strokeWidth={1.4} strokeDasharray="3 4" fill="none" opacity={0.7}>
-          {LINKS.map(([x1, y1, x2, y2], i) => <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} />)}
-        </g>
-        {DOTS.map(([x, y], i) => <circle key={i} cx={x} cy={y} r={5} fill="#0b1628" />)}
-        <circle r={R.study} fill={FILL.study} stroke={active === "study" ? "var(--blue)" : "none"} strokeWidth={3} />
-        <text textAnchor="middle" fill="#fff" className="reach-c">
-          <tspan x={0} y={-10} fontWeight={600}>Your study</tspan>
-          <tspan x={0} y={6}>Sst cells,</tspan>
-          <tspan x={0} y={21}>mouse V1</tspan>
-        </text>
-        {Object.entries(LABEL).map(([r, l]) => (
-          <text key={r} textAnchor="middle" className="reach-l">
-            <tspan x={0} y={l!.y} className="nm">{l!.name}</tspan>
-            <tspan x={0} y={l!.y + 13} className="rl">{l!.role}</tspan>
-          </text>
-        ))}
-      </svg>
-      <ul className="reach-list">
-        {RINGS.map((r) => (
-          <li key={r.id}>
-            <button type="button" aria-pressed={active === r.id}
-                    onMouseEnter={() => setActive(r.id)} onMouseLeave={() => setActive(null)}
-                    onFocus={() => setActive(r.id)} onBlur={() => setActive(null)}
-                    onClick={() => setActive((a) => (a === r.id ? null : r.id))}>
-              <span className="rl">{r.role}</span>
-              <span className="nm">{r.name}</span>
-              <span className="ex">{r.examples.map((e) => <i key={e}>{e}</i>)}</span>
-              <span className="how">{r.how}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
+      <img
+        className="reach-fig"
+        src="/reach-rings.png"
+        width={700}
+        height={700}
+        alt="Concentric rings. At the centre, a study of microglia in an Alzheimer's mouse model. The first ring, cellular neuroscience, holds microglial activation, neuroinflammation, synaptic pruning and phagocytosis. The second, neuroscience, holds neural circuits, neurodegeneration, amyloid pathology, memory and brain aging. The outer ring of adjacent fields holds human genetics, immunology, brain imaging, neurology, pharmacology and other disorders such as Parkinson's and MS."
+        loading="lazy"
+      />
+      <div>
+        <ol className="reach-list" aria-label="From a specific study to broader fields">
+          {STEPS.map((s, i) => (
+            <li key={s.role}>
+              <span className="n" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+              <div className="body">
+                <span className="rl">{s.role}</span>
+                <span className="nm">{s.name}</span>
+                <span className="ex">{s.examples.map((e) => <i key={e}>{e}</i>)}</span>
+                <span className="how">{s.how}</span>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <p className="reach-note">
+          The rings show how far a finding can reach, not a strict hierarchy: a study can link straight to genetics or
+          another subfield through a shared concept. They are connections BrainKB makes discoverable, backed by
+          evidence, not causal claims or a promise that every link is already in the graph.
+        </p>
+      </div>
     </div>
   );
 }
