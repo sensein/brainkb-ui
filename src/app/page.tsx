@@ -224,7 +224,7 @@ export default function HomePage() {
             <Link className="way" href="/mcp#skill">
               <span className="lbl">BrainKB skill</span>
               <h3>Teach your agent</h3>
-              <p>Installs the BrainKB skill and registers the MCP server in one step.</p>
+              <p>Installs the BrainKB skill and registers the MCP server with Claude Code; other agents add the server themselves.</p>
               <div className="code"><b>npx</b> brainkb install{MCP_FLAG}</div>
             </Link>
             <div className="way">
