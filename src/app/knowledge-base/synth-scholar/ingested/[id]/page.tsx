@@ -6,14 +6,14 @@
  *
  * Who may see it is the space's rule: public spaces are open to anyone, private
  * ones to their members (the query service answers 404 otherwise). Tabs, synced to
- * the URL hash: Review (the review's own text and studies), Manuscript (the run's
+ * the URL hash: Review (an overview, then the review's own text and studies), Manuscript (the run's
  * review.manuscript.md with its figures), Files (everything kept) and Provenance.
  */
 
 import React from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { Activity, AlertCircle, Download, FileText, FolderOpen, Loader2, ScrollText } from "lucide-react";
+import { Activity, AlertCircle, FileText, FolderOpen, Loader2, ScrollText } from "lucide-react";
 import { MarkdownContent } from "@/src/app/components/synth-scholar/MarkdownContent";
 import {
   ReviewFiles,
@@ -29,6 +29,29 @@ import {
   type IngestedReview,
 } from "@/src/services/api/synthScholarIngest";
 import LiteratureShell from "../../LiteratureShell";
+import {
+  CopyableId,
+  DownloadMenu,
+  MethodNote,
+  OverviewSection,
+  Section,
+  SectionNav,
+  StudiesTable,
+  formatDate,
+  methodStatements,
+  readableSlug,
+  searchDateRange,
+  type Fact,
+  type NavItem,
+} from "../../reviewParts";
+
+const DOWNLOADS = [
+  { key: "review.pdf", label: "PDF", hint: "manuscript" },
+  { key: "review.md", label: "Markdown", hint: ".md" },
+  { key: "review.bib", label: "BibTeX", hint: "references" },
+  { key: "review.ttl", label: "Turtle", hint: "RDF" },
+  { key: "review.json", label: "JSON", hint: "full data" },
+];
 
 type Tab = "review" | "manuscript" | "files" | "provenance";
 const TABS: Tab[] = ["review", "manuscript", "files", "provenance"];
@@ -42,6 +65,7 @@ export default function IngestedReviewPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [tab, setTab] = React.useState<Tab>("review");
   const [busy, setBusy] = React.useState<string | null>(null);
+  const [spaceName, setSpaceName] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (!reviewId) return;
@@ -64,6 +88,19 @@ export default function IngestedReviewPage() {
     window.history.replaceState(null, "", url.toString());
   };
 
+  // The space's display name (GET /api/spaces lists the spaces the caller may see).
+  React.useEffect(() => {
+    const slug = review?.space_slug;
+    if (!slug) return;
+    fetch("/api/spaces", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((body) => {
+        const hit = ((body?.spaces ?? []) as { slug?: string; name?: string }[]).find((x) => x.slug === slug);
+        if (hit?.name) setSpaceName(hit.name);
+      })
+      .catch(() => undefined);
+  }, [review?.space_slug]);
+
   // Files come from the copy actually shown (its space), even when the link had none.
   const shownSpace = review?.space_slug || space;
   const load = React.useCallback((path: string) => fetchIngestedFile(reviewId, path, shownSpace), [reviewId, shownSpace]);
@@ -85,18 +122,20 @@ export default function IngestedReviewPage() {
     <LiteratureShell
       compact
       back={{ href: "/knowledge-base/synth-scholar", label: "All literature reviews" }}
-      eyebrow="Literature review · ingested"
+      eyebrow="Literature review · imported into BrainKB"
       title={review?.title || (error ? "Review" : "Loading…")}
       lead={
-        <p className="lead" style={{ fontSize: 14 }}>
-          <span className="font-mono">{reviewId}</span>
+        <div className="lead flex flex-wrap items-center gap-x-4 gap-y-1" style={{ fontSize: 14 }}>
           {review && (
-            <>
-              {review.run_completed_at ? ` · completed ${new Date(review.run_completed_at).toLocaleDateString()}` : ""}
-              {` · in space ${review.space_slug}${review.space_visibility ? ` (${review.space_visibility})` : ""}`}
-            </>
+            <span>
+              In {spaceName || readableSlug(review.space_slug)}
+              {review.space_visibility === "private" ? " (private space)" : ""}
+            </span>
           )}
-        </p>
+          {review?.run_completed_at && <span>Completed {formatDate(review.run_completed_at)}</span>}
+          {review?.imported_at && <span>Imported {formatDate(review.imported_at)}</span>}
+          {reviewId && <CopyableId label="Review ID" value={reviewId} />}
+        </div>
       }
     >
       <div className="grid grid-cols-1 gap-6">
@@ -130,16 +169,8 @@ export default function IngestedReviewPage() {
                     </button>
                   ))}
                 </nav>
-                <div className="flex flex-wrap gap-2 px-3 py-2">
-                  {[["review.pdf", "PDF"], ["review.md", "Markdown"], ["review.bib", "BibTeX"], ["review.ttl", "Turtle"], ["review.json", "JSON"]]
-                    .filter(([p]) => has(p))
-                    .map(([p, label], i) => (
-                      <button key={p} type="button" onClick={() => grab(p)} disabled={busy === p}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium disabled:opacity-50 ${
-                          i === 0 ? "bg-sky-600 text-white hover:bg-sky-700" : "border border-sky-600 text-sky-700 hover:bg-sky-50"}`}>
-                        {busy === p ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} {label}
-                      </button>
-                    ))}
+                <div className="px-3 py-2">
+                  <DownloadMenu options={DOWNLOADS.filter((o) => has(o.key))} busyKey={busy} onPick={grab} />
                 </div>
               </div>
             </div>
@@ -155,7 +186,7 @@ export default function IngestedReviewPage() {
                 <ReviewFiles load={load} files={files} />
               </Section>
             )}
-            {tab === "review" && <ReviewText review={review} />}
+            {tab === "review" && <ReviewText review={review} spaceName={spaceName} />}
           </>
         )}
       </div>
@@ -163,30 +194,65 @@ export default function IngestedReviewPage() {
   );
 }
 
-function ReviewText({ review }: { review: IngestedReview }) {
+function ReviewText({ review, spaceName }: { review: IngestedReview; spaceName: string | null }) {
   const d = review.detail;
   const flow = d.flow as Record<string, number> | null;
   const cells: [string, unknown][] = flow ? [
     ["Identified", flow.total_identified], ["Duplicates removed", flow.duplicates_removed], ["After dedup", flow.after_dedup],
-    ["T/A screened", flow.screened_title_abstract], ["Excluded (T/A)", flow.excluded_title_abstract],
+    ["Title/abstract screened", flow.screened_title_abstract], ["Excluded at title/abstract", flow.excluded_title_abstract],
     ["Full-text sought", flow.sought_fulltext], ["Eligibility assessed", flow.assessed_eligibility],
     ["Excluded (eligibility)", flow.excluded_eligibility], ["Included in synthesis", flow.included_synthesis],
   ] : [];
-  const md = (title: string, text: string) => text ? <Section title={title}><MarkdownContent>{text}</MarkdownContent></Section> : null;
+  const md = (id: string, title: string, text: string) =>
+    text ? <Section id={id} title={title}><MarkdownContent>{text}</MarkdownContent></Section> : null;
+  const studies = d.included_articles;
+  const searched = searchDateRange((review.manifest?.local_run?.search_log ?? []).map((e) => e.date));
+  const r = d.retrieval;
+
+  const facts: Fact[] = [
+    { label: "Included studies", value: <span className="tabular-nums">{studies.length}</span> },
+    ...(r && r.included > 0 ? [{ label: "Read in full text", value: `${r.with_full_text} of ${r.included}` }] : []),
+    ...(searched ? [{ label: "Searched", value: searched }] : []),
+    ...(review.run_completed_at ? [{ label: "Review completed", value: formatDate(review.run_completed_at) }] : []),
+    {
+      label: "Status",
+      value: `Imported into BrainKB${review.imported_at ? ` ${formatDate(review.imported_at)}` : ""} · ${spaceName || readableSlug(review.space_slug)}`,
+    },
+  ];
+
+  const nav: NavItem[] = [
+    { id: "overview", label: "Overview" },
+    ...(d.structured_abstract ? [{ id: "abstract", label: "Abstract" }] : []),
+    ...(d.introduction_text ? [{ id: "introduction", label: "Introduction" }] : []),
+    ...(d.search_queries.length > 0 ? [{ id: "methods", label: "Methods" }] : []),
+    ...(cells.length > 0 ? [{ id: "prisma-flow", label: "PRISMA flow" }] : []),
+    ...(d.synthesis_text ? [{ id: "synthesis", label: "Synthesis" }] : []),
+    ...(studies.length > 0 ? [{ id: "included-studies", label: "Included studies" }] : []),
+    ...(d.bias_assessment ? [{ id: "risk-of-bias", label: "Risk of bias" }] : []),
+    ...(d.grade_assessments.length > 0 ? [{ id: "grade", label: "Certainty (GRADE)" }] : []),
+    ...(d.limitations ? [{ id: "limitations", label: "Limitations" }] : []),
+    ...(d.conclusions_text ? [{ id: "conclusions", label: "Conclusions" }] : []),
+  ];
+
   return (
     <>
-      {d.research_question && <Section title="Research question"><p className="text-gray-800">{d.research_question}</p></Section>}
-      {md("Abstract", d.structured_abstract)}
-      {md("Introduction", d.introduction_text)}
+      <OverviewSection
+        question={d.research_question}
+        facts={facts}
+        methodNote={<MethodNote statements={methodStatements(d.limitations)} limitationsId={d.limitations ? "limitations" : undefined} />}
+      />
+      <SectionNav items={nav} />
+      {md("abstract", "Abstract", d.structured_abstract)}
+      {md("introduction", "Introduction", d.introduction_text)}
       {d.search_queries.length > 0 && (
-        <Section title="Methods — search strategy">
+        <Section id="methods" title="Methods — search strategy">
           <ul className="list-disc pl-5 space-y-1.5">
             {d.search_queries.map((q, i) => <li key={i} className="font-mono text-xs text-gray-800 break-words">{q}</li>)}
           </ul>
         </Section>
       )}
       {cells.length > 0 && (
-        <Section title="PRISMA flow">
+        <Section id="prisma-flow" title="PRISMA flow">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {cells.map(([label, value]) => (
               <div key={label} className="rounded-lg border border-gray-200 bg-gradient-to-br from-gray-50 to-white p-3">
@@ -197,41 +263,22 @@ function ReviewText({ review }: { review: IngestedReview }) {
           </div>
         </Section>
       )}
-      {d.included_articles.length > 0 && (
-        <Section title={`Included studies (${d.included_articles.length})`}>
-          <div className="overflow-x-auto -mx-2">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-xs text-gray-700 uppercase tracking-wider">
-                <tr>
-                  <th className="px-3 py-2 text-left">PMID / DOI</th><th className="px-3 py-2 text-left">Year</th>
-                  <th className="px-3 py-2 text-left">Title</th><th className="px-3 py-2 text-left">Read</th>
-                  <th className="px-3 py-2 text-left">RoB</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {d.included_articles.map((a: IngestedArticle, i) => (
-                  <tr key={a.pmid || a.doi || i} className="align-top">
-                    <td className="px-3 py-2 font-mono text-xs text-gray-700 whitespace-nowrap">{a.pmid || a.doi || "—"}</td>
-                    <td className="px-3 py-2 text-xs text-gray-600 whitespace-nowrap">{a.year || "—"}</td>
-                    <td className="px-3 py-2 text-gray-900">
-                      {a.title || "(untitled)"}
-                      {a.journal && <span className="block text-xs text-gray-500 mt-0.5">{a.journal}</span>}
-                    </td>
-                    <td className="px-3 py-2 text-xs text-gray-600 whitespace-nowrap">
-                      {a.full_text ? `full text${a.full_text_source ? ` (${a.full_text_source.replace(/_/g, " ")})` : ""}` : "abstract"}
-                    </td>
-                    <td className="px-3 py-2 text-xs text-gray-700">{a.rob_overall || "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {md("synthesis", "Synthesis", d.synthesis_text)}
+      {studies.length > 0 && (
+        <Section id="included-studies" title={`Included studies (${studies.length})`}>
+          <StudiesTable
+            showRead
+            studies={studies.map((a: IngestedArticle & { pmc_id?: string; pmcid?: string }) => ({
+              pmid: a.pmid, doi: a.doi, pmcid: a.pmcid || a.pmc_id, year: a.year, title: a.title, journal: a.journal,
+              authors: a.authors, rob: a.rob_overall,
+              read: a.full_text ? `full text${a.full_text_source ? ` (${a.full_text_source.replace(/_/g, " ")})` : ""}` : "abstract",
+            }))}
+          />
         </Section>
       )}
-      {md("Synthesis", d.synthesis_text)}
-      {md("Risk of bias assessment", d.bias_assessment)}
+      {md("risk-of-bias", "Risk of bias assessment", d.bias_assessment)}
       {d.grade_assessments.length > 0 && (
-        <Section title="GRADE — certainty of evidence">
+        <Section id="grade" title="GRADE — certainty of evidence">
           <div className="space-y-4">
             {d.grade_assessments.map((g, i) => (
               <div key={i} className="border border-gray-200 rounded-lg p-4 bg-gray-50/50">
@@ -245,17 +292,8 @@ function ReviewText({ review }: { review: IngestedReview }) {
           </div>
         </Section>
       )}
-      {md("Limitations", d.limitations)}
-      {md("Conclusions", d.conclusions_text)}
+      {md("limitations", "Limitations", d.limitations)}
+      {md("conclusions", "Conclusions", d.conclusions_text)}
     </>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 sm:p-8">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-100">{title}</h2>
-      <div className="text-gray-800">{children}</div>
-    </section>
   );
 }
