@@ -4,7 +4,8 @@
  * /user/spaces — the spaces you can see, and the controls your role allows.
  *
  * Everyone sees their own spaces plus every public one. The owner of a space,
- * and admins, can switch it between private and public and share it with
+ * and admins, can rename it (name and description; the slug stays), switch it
+ * between private and public and share it with
  * people (viewer, editor, owner) — sharing is how a team gets access. Anyone
  * may create an individual space; team spaces need the create_team_space
  * capability (Admin/SuperAdmin by default). Spaces nest: whoever manages a
@@ -308,6 +309,62 @@ function AccessRules({ slug, onError }: { slug: string; onError: (m: string) => 
   );
 }
 
+/** Rename a space or change its description. The slug stays: it is the space's
+ *  IRI, and links, graph bindings and provenance point at it. */
+function EditDetails({ space, onSaved, onError, onCancel }: {
+  space: Space;
+  onSaved: () => void;
+  onError: (m: string) => void;
+  onCancel: () => void;
+}) {
+  const [name, setName] = useState(space.name);
+  const [description, setDescription] = useState(space.description ?? "");
+  const [busy, setBusy] = useState(false);
+  const unchanged = name.trim() === space.name && description.trim() === (space.description ?? "");
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (unchanged) return onCancel();
+    setBusy(true);
+    try {
+      await api(`/api/spaces/${encodeURIComponent(space.slug)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ name: name.trim(), description: description.trim() }),
+      });
+      onSaved();
+    } catch (err: any) {
+      onError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <form onSubmit={submit} style={{ display: "grid", gap: 10, borderTop: "1px solid var(--bkb-border)", paddingTop: 12 }}>
+      <div style={{ fontSize: 13, fontWeight: 600 }}>Rename</div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(240px, 100%), 1fr))", gap: 10 }}>
+        <label style={{ display: "grid", gap: 4, fontSize: 12, color: "var(--bkb-textMuted)" }}>
+          Name
+          <input className="bkb-input" required maxLength={200} value={name} onChange={(e) => setName(e.target.value)} />
+        </label>
+        <label style={{ display: "grid", gap: 4, fontSize: 12, color: "var(--bkb-textMuted)" }}>
+          Description (optional)
+          <input className="bkb-input" maxLength={2000} value={description} onChange={(e) => setDescription(e.target.value)} />
+        </label>
+      </div>
+      <div style={{ fontSize: 12, color: "var(--bkb-textMuted)" }}>
+        The slug <span className="bkb-mono">{space.slug}</span> stays the same, so links and graph names keep working.
+      </div>
+      <div style={{ display: "flex", gap: 8 }}>
+        <button className="bkb-btn bkb-btn-primary" type="submit" disabled={busy || !name.trim()} style={{ fontSize: 12, padding: "5px 12px" }}>
+          {busy ? "Saving…" : "Save"}
+        </button>
+        <button type="button" className="bkb-btn bkb-btn-ghost" onClick={onCancel} style={{ fontSize: 12, padding: "5px 12px" }}>
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
 type Deleted = {
   slug: string; dropped_graphs: string[]; dropped_delta_graphs: string[]; members_removed: number;
   subspaces_deleted?: string[]; synthscholar_reviews_removed?: number;
@@ -404,6 +461,7 @@ function SpaceRow({ space, canManage, canDelete, hasSubspaces, subspaces = [], p
   onError: (m: string) => void;
 }) {
   const [deleting, setDeleting] = useState(false);
+  const [renaming, setRenaming] = useState(false);
   const [addingSub, setAddingSub] = useState(false);
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
@@ -462,6 +520,9 @@ function SpaceRow({ space, canManage, canDelete, hasSubspaces, subspaces = [], p
                 </button>
               ))}
             </div>
+            <button className="bkb-btn" type="button" onClick={() => setRenaming((r) => !r)} aria-expanded={renaming} style={{ fontSize: 12, padding: "5px 12px" }}>
+              {renaming ? "Cancel rename" : "Rename"}
+            </button>
             <button className="bkb-btn" type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} style={{ fontSize: 12, padding: "5px 12px" }}>
               {open ? "Close" : "Manage access"}
             </button>
@@ -485,6 +546,10 @@ function SpaceRow({ space, canManage, canDelete, hasSubspaces, subspaces = [], p
           </span>
         )}
       </div>
+      {canManage && renaming && (
+        <EditDetails space={space} onError={onError} onCancel={() => setRenaming(false)}
+                     onSaved={() => { setRenaming(false); onChanged(); }} />
+      )}
       {canManage && open && <Members slug={space.slug} onError={onError} />}
       {canManage && open && <AccessRules slug={space.slug} onError={onError} />}
       {canManage && addingSub && (
