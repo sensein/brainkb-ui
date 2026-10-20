@@ -1,148 +1,119 @@
 <!doctype html>
 <html><head><meta charset="utf-8">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500&family=DM+Sans:wght@400;600;700&display=swap">
-<style>
-html,body{margin:0;background:transparent}
-svg{display:block}
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>html,body{margin:0;background:transparent}svg{display:block}
+.lbl{font:700 21px 'IBM Plex Sans',sans-serif;fill:#10202B}
+.ex{font:400 17px 'IBM Plex Sans',sans-serif;fill:#3A2A20}
+.ring{font:700 23px 'IBM Plex Sans',sans-serif;fill:#10202B}
+.role{font:500 17px 'IBM Plex Mono',monospace;letter-spacing:3px;fill:#7D432B}
+.core1{font:700 23px 'IBM Plex Sans',sans-serif;fill:#F6F5F0}
+.core2{font:400 18px 'IBM Plex Sans',sans-serif;fill:#D9E2E8}
 </style></head>
 <body>
 <svg id="fig" xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000"></svg>
 <script>
-// Palette: #slide (warm, the deck) or #web (BrainKB site blues).
-const WEB = location.hash === "#web";
-const T = WEB ? {
-  font: "'DM Sans'", mono: "'IBM Plex Mono'", ink: "#0b1628", muted: "#4f5b6e", outer: "#f7f9fd", mid: "#eaf1fe", inner: "#d5e5fd",
-  stroke: "#9cc0f5", core: "#0b1628", coreSub: "#c9d6ea", role: "#1d4ed8",
-} : {
-  font: "'IBM Plex Sans'", mono: "'IBM Plex Mono'", ink: "#10202B", muted: "#4A5563", outer: "#F6F5F0", mid: "#F3DCC9", inner: "#EDB38D",
-  stroke: "#10202B", core: "#10202B", coreSub: "#D9E2E8", role: "#8A3F17",
-};
-document.head.insertAdjacentHTML("beforeend", `<style>
-.lbl{font:600 21px ${T.font},sans-serif;fill:${T.ink}}
-.ex{font:400 17px ${T.font},sans-serif;fill:${T.muted}}
-.ring{font:700 23px ${T.font},sans-serif;fill:${T.ink}}
-.role{font:500 16px ${T.mono},monospace;letter-spacing:3px;fill:${T.role}}
-.core1{font:700 24px ${T.font},sans-serif;fill:#F6F5F0}
-.core2{font:400 19px ${T.font},sans-serif;fill:${T.coreSub}}
-</style>`);
+// BrainKB "The missing link" figure: one finding (disease-associated microglia at
+// amyloid plaques, Keren-Shaul et al., Cell 2017) and the knowledge it connects to.
+// Rings show reach, not a hierarchy. Links are illustrative, each one a relationship
+// reported in published work. Rendered to PNG for the deck and the BrainKB home page.
+const C = 500, NS = "http://www.w3.org/2000/svg", svg = document.getElementById("fig");
+const el = (tag, a, p = svg) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); p.appendChild(e); return e; };
+const g = (a, p = svg) => el("g", a, p);
 
-const C = 500, NS = "http://www.w3.org/2000/svg";
-const svg = document.getElementById("fig");
-const el = (tag, attrs, parent = svg) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent.appendChild(e); return e; };
-const g = (attrs, parent = svg) => el("g", attrs, parent);
+el("circle", { cx: C, cy: C, r: 497, fill: "#F8F7F3" });
+el("circle", { cx: C, cy: C, r: 362, fill: "#F3DDCD" });
+el("circle", { cx: C, cy: C, r: 258, fill: "#F0B890" });
+// ring outlines are masked: each label cuts a gap in the line behind it
+const mask = el("mask", { id: "cut", maskUnits: "userSpaceOnUse", x: 0, y: 0, width: 1000, height: 1000 }, el("defs", {}));
+el("rect", { x: 0, y: 0, width: 1000, height: 1000, fill: "#fff" }, mask);
+const outlines = g({ fill: "none", stroke: "#10202B", "stroke-width": 2, mask: "url(#cut)" });
+for (const r of [497, 362, 258]) el("circle", { cx: C, cy: C, r }, outlines);
 
-const defs = el("defs", {});
-defs.innerHTML = `
-<radialGradient id="pet" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#E63946"/><stop offset=".45" stop-color="#F4A261"/><stop offset="1" stop-color="#F4A261" stop-opacity="0"/></radialGradient>
-<filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#10202B" flood-opacity=".18"/></filter>`;
-
-// rings
-el("circle", { cx: C, cy: C, r: 497, fill: T.outer, stroke: T.stroke, "stroke-width": WEB ? 2 : 2.5 });
-el("circle", { cx: C, cy: C, r: 370, fill: T.mid, stroke: T.stroke, "stroke-width": 1.6 });
-el("circle", { cx: C, cy: C, r: 240, fill: T.inner, stroke: T.stroke, "stroke-width": 1.6 });
-
-// icons, each drawn in a ~48px box around 0,0
-const BRAIN = (fill = "#F2A3B3") => `
-  <path d="M-4 -19c-6-6-17-3-18 5-7 1-10 9-6 14-4 5-1 13 6 13 2 6 11 7 15 2 3 4 9 4 11 0V-17c-2-3-5-4-8-2z" fill="${fill}" stroke="#7A2E3B" stroke-width="2"/>
-  <path d="M4 -19c6-6 17-3 18 5 7 1 10 9 6 14 4 5 1 13-6 13-2 6-11 7-15 2-3 4-9 4-11 0V-17c2-3 5-4 8-2z" fill="${fill}" stroke="#7A2E3B" stroke-width="2"/>
-  <path d="M-15 -6c4 2 6 6 5 10M-18 6c4-1 8 1 9 4M15 -6c-4 2-6 6-5 10M18 6c-4-1-8 1-9 4" fill="none" stroke="#7A2E3B" stroke-width="1.6" stroke-linecap="round"/>`;
+// icons, ~60px, drawn around 0,0
+const BRAIN = (f, s) => `<path d="M-4 -24c-8-8-22-4-23 6-9 1-13 11-8 18-5 6-1 16 8 16 2 8 14 9 19 3 4 5 11 5 14 0V-21c-3-4-6-5-10-3z" fill="${f}" stroke="${s}" stroke-width="2.4"/><path d="M4 -24c8-8 22-4 23 6 9 1 13 11 8 18 5 6 1 16-8 16-2 8-14 9-19 3-4 5-11 5-14 0V-21c3-4 6-5 10-3z" fill="${f}" stroke="${s}" stroke-width="2.4"/><path d="M-19 -8c5 2 8 8 6 13M-23 8c5-1 10 1 11 5M19 -8c-5 2-8 8-6 13M23 8c-5-1-10 1-11 5" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round"/>`;
 const ICON = {
-  glia: `<g stroke="#6D4C9F" stroke-width="2.4" stroke-linecap="round" fill="none">
-      <path d="M0 0L-16 -15l-6 1M-16 -15l-2 -6M-9 -8l-3 -9M0 0L15 -16l6 0M15 -16l0 -6M0 0L-21 5l-4 -4M-21 5l-3 6M0 0L20 7l4 -4M20 7l2 6M0 0L-6 21l-5 3M-6 21l1 5M0 0L8 21l5 2"/></g>
-    <circle r="9" fill="#C9B6EA" stroke="#6D4C9F" stroke-width="2.4"/><circle cx="2" cy="-1" r="3" fill="#6D4C9F"/>`,
-  flame: `<path d="M2 -24C6 -12 18 -8 16 6C15 17 7 23 -1 23C-11 23 -18 15 -17 5C-16 -4 -9 -8 -8 -16C-3 -11 -2 -6 -2 -2C3 -8 4 -15 2 -24Z" fill="#F4A261" stroke="#A0401C" stroke-width="2.2" stroke-linejoin="round"/>
-    <path d="M0 6C3 10 6 12 5 16C4 20 0 21 -2 21C-6 21 -8 17 -7 14C-6 11 -3 10 -2 6Z" fill="#F6C344"/>`,
-  synapse: `<path d="M-9 -24V-12C-17 -10 -17 -2 -12 0H12C17 -2 17 -10 9 -12V-24" fill="#C9B6EA" stroke="#5B3E96" stroke-width="2.2"/>
-    <path d="M-14 24V12C-14 7 -10 5 0 5S14 7 14 12V24" fill="#B39DDB" stroke="#5B3E96" stroke-width="2.2"/>
-    <path d="M-20 -2L20 6" stroke="#A0401C" stroke-width="2.4" stroke-dasharray="3 3"/>`,
-  engulf: `<path d="M18 -12A21 21 0 1 0 18 12L4 0Z" fill="#8FD1C3" stroke="#1F6F66" stroke-width="2.2" stroke-linejoin="round"/>
-    <circle cx="-6" cy="-6" r="2.6" fill="#1F6F66"/><circle cx="16" cy="0" r="6" fill="#C08A3E" stroke="#6E4A17" stroke-width="1.8"/>`,
-  network: `<g stroke="#2F6596" stroke-width="2.4"><path d="M0 0L-17 -14M0 0L17 -14M0 0L-17 14M0 0L17 14M-17 -14L17 -14M-17 14L-17 -14M17 14L17 -14"/></g>
-    <g fill="#5B8DEF" stroke="#1D3E6E" stroke-width="2"><circle r="6"/><circle cx="-17" cy="-14" r="5"/><circle cx="17" cy="-14" r="5"/><circle cx="-17" cy="14" r="5"/><circle cx="17" cy="14" r="5"/></g>`,
-  degen: `${BRAIN("#E9C5CC")}<path d="M2 -20L-4 -6L4 0L-3 12L1 22" fill="none" stroke="#10202B" stroke-width="2.4" stroke-linejoin="round"/>`,
-  plaque: `<g stroke="#6E4A17" stroke-width="1.8"><path d="M-6 -16c6-5 15-1 14 6 6 3 4 12-2 13 1 7-8 10-12 5-6 4-14-1-12-7-6-3-4-12 3-12 0-3 4-6 9-5z" fill="#D9A55A"/>
-    <circle cx="-17" cy="12" r="5" fill="#E6BD7C"/><circle cx="17" cy="15" r="4" fill="#E6BD7C"/><circle cx="16" cy="-17" r="3.5" fill="#E6BD7C"/></g>`,
-  hourglass: `<path d="M-14 -22H14M-14 22H14" stroke="#5E6B78" stroke-width="3.2" stroke-linecap="round"/>
-    <path d="M-11 -22C-11 -8 -3 -4 -3 0S-11 8 -11 22H11C11 8 3 4 3 0S11 -8 11 -22Z" fill="#E8EEF3" stroke="#5E6B78" stroke-width="2.2"/>
-    <path d="M-6 -12H6L0 -3Z" fill="#E0B25C"/><path d="M-8 20C-6 13 6 13 8 20Z" fill="#E0B25C"/>`,
-  bulb: `<path d="M0 -22C-12 -22 -18 -13 -18 -5C-18 3 -11 7 -9 13H9C11 7 18 3 18 -5C18 -13 12 -22 0 -22Z" fill="#FFE08A" stroke="#9A6B00" stroke-width="2.2"/>
-    <path d="M-8 17H8M-6 22H6" stroke="#5C5C5C" stroke-width="3" stroke-linecap="round"/><path d="M-5 0L0 -7L5 0" fill="none" stroke="#9A6B00" stroke-width="1.8"/>`,
-  dna: `<path d="M-10 -24C-10 -12 10 -12 10 0S-10 12 -10 24" fill="none" stroke="#2F6596" stroke-width="3.2" stroke-linecap="round"/>
-    <path d="M10 -24C10 -12 -10 -12 -10 0S10 12 10 24" fill="none" stroke="#2A9D8F" stroke-width="3.2" stroke-linecap="round"/>
-    <path d="M-7 -18H7M-4 -6H4M-7 6H7M-4 18H4" stroke="#7A8794" stroke-width="2" stroke-linecap="round"/>`,
-  antibody: `<g stroke-linecap="round" stroke-linejoin="round"><path d="M0 24V2L-15 -14M0 2L15 -14" fill="none" stroke="#2F6596" stroke-width="6"/>
-    <path d="M-9 -2L-20 -13M9 -2L20 -13" fill="none" stroke="#7FB3EA" stroke-width="5"/></g>
-    <circle cx="-19" cy="-19" r="4" fill="#E63946"/><circle cx="19" cy="-19" r="4" fill="#E63946"/>`,
-  scan: `<path d="M-15 22V13C-21 9 -23 1 -22 -7C-20 -18 -10 -24 0 -24C11 -24 20 -16 20 -6L24 2L20 4V10C20 14 16 15 12 15H8V22" fill="#E8EEF3" stroke="#33475B" stroke-width="2.2" stroke-linejoin="round"/>
-    <circle cx="-3" cy="-6" r="11" fill="url(#pet)"/><circle cx="6" cy="2" r="6" fill="url(#pet)"/>`,
-  neuro: `${BRAIN()}<path d="M-26 6H-14L-10 -2L-5 12L0 4H26" fill="none" stroke="#10202B" stroke-width="2.4" stroke-linejoin="round"/>`,
-  pill: `<g transform="rotate(-35)"><path d="M0 -9H-14A9 9 0 0 0 -14 9H0Z" fill="#E63946" stroke="#7A1F27" stroke-width="2.2"/>
-    <path d="M0 -9H14A9 9 0 0 1 14 9H0Z" fill="#FFFFFF" stroke="#7A1F27" stroke-width="2.2"/></g>`,
-  cells: `<g stroke="#33407A" stroke-width="2"><circle cx="-9" cy="-7" r="10" fill="#B8C3F0"/><circle cx="10" cy="-4" r="8" fill="#7E8CE0"/><circle cx="0" cy="12" r="9" fill="#9AA8EA"/></g>
-    <g fill="#33407A"><circle cx="-9" cy="-7" r="3"/><circle cx="10" cy="-4" r="2.5"/><circle cx="0" cy="12" r="2.8"/></g>`,
-  mouse: `<path d="M18 6C26 8 30 2 28 -4" fill="none" stroke="#9AA6B2" stroke-width="2" stroke-linecap="round"/>
-    <path d="M-22 6C-22 -6 -10 -12 2 -12C12 -12 19 -5 19 4C19 9 15 11 10 11H-16C-20 11 -22 9 -22 6Z" fill="#C9D2DA" stroke="#5E6B78" stroke-width="2"/>
-    <circle cx="-12" cy="-10" r="5.5" fill="#E8C4C9" stroke="#5E6B78" stroke-width="1.8"/>
-    <circle cx="-17" cy="0" r="1.8" fill="#10202B"/><circle cx="-23" cy="5" r="1.6" fill="#E58FA0"/>`,
+  infl: `<path d="M3 -30C8 -15 23 -10 20 8C19 21 9 29 -1 29C-14 29 -23 19 -21 6C-20 -5 -11 -10 -10 -20C-4 -14 -2 -8 -2 -3C4 -10 5 -19 3 -30Z" fill="#F4A261" stroke="#A0401C" stroke-width="2.6" stroke-linejoin="round"/><path d="M0 8C4 13 8 15 6 20C5 25 0 26 -3 26C-8 26 -10 21 -9 17C-8 14 -4 12 -3 8Z" fill="#F6D04D"/>`,
+  act: `<g stroke="#7A4FB0" stroke-width="3" stroke-linecap="round" fill="none"><path d="M0 0L-20 -19l-7 1M-20 -19l-2 -8M-11 -10l-4 -11M0 0L19 -20l8 0M19 -20l0 -8M0 0L-26 6l-5 -5M-26 6l-4 7M0 0L25 9l5 -5M25 9l3 8M0 0L-8 26l-6 4M-8 26l1 7M0 0L10 26l7 3"/></g><circle r="11" fill="#B58BD8" stroke="#5B3E96" stroke-width="2.6"/><circle cx="-3" cy="-3" r="3.5" fill="#F1E2FF"/>`,
+  phago: `<path d="M23 -15A27 27 0 1 0 23 15L5 0Z" fill="#8FD1C3" stroke="#1F6F66" stroke-width="2.6" stroke-linejoin="round"/><circle cx="-8" cy="-8" r="3.2" fill="#1F6F66"/><circle cx="21" cy="0" r="8" fill="#D9A55A" stroke="#6E4A17" stroke-width="2"/>`,
+  prune: `<path d="M-15 -30V-14C-15 -4 -4 -5 -4 6M15 30V14C15 4 4 5 4 -6" stroke="#8258BA" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M-26 -2H26" stroke="#253A62" stroke-width="2" stroke-dasharray="3 5"/><g fill="#E7A3CE"><circle cx="-10" cy="1" r="4"/><circle cx="0" cy="-4" r="3"/><circle cx="9" cy="3" r="4"/></g><path d="M18 -26l9 9M27 -26l-9 9" stroke="#C0392B" stroke-width="3.2" stroke-linecap="round"/>`,
+  plaque: `<g stroke="#6E4A17" stroke-width="2.2"><path d="M-8 -20c8-6 19-1 17 8 8 4 5 15-2 16 1 9-10 12-15 6-8 5-17-1-15-9-8-4-5-15 4-15 0-4 5-7 11-6z" fill="#D9A55A"/><circle cx="-22" cy="15" r="6" fill="#E6BD7C"/><circle cx="21" cy="19" r="5" fill="#E6BD7C"/><circle cx="20" cy="-21" r="4.5" fill="#E6BD7C"/></g>`,
+  synloss: `<path d="M-15 -30V-14C-15 -4 -4 -5 -4 4M15 30V14C15 4 4 5 4 -4" stroke="#9D8DB8" stroke-width="9" fill="none" stroke-linecap="round" opacity=".85"/><path d="M-9 -7L9 9M9 -7L-9 9" stroke="#C0392B" stroke-width="3.6" stroke-linecap="round"/>`,
+  degen: `${BRAIN("#93BCF1", "#316BB6")}<path d="M3 -26L-5 -8L5 0L-4 14L1 27" fill="none" stroke="#10202B" stroke-width="2.8" stroke-linejoin="round"/>`,
+  gen: `<path d="M-13 -30C-13 -15 13 -15 13 0S-13 15 -13 30" fill="none" stroke="#327CC5" stroke-width="4" stroke-linecap="round"/><path d="M13 -30C13 -15 -13 -15 -13 0S13 15 13 30" fill="none" stroke="#327CC5" stroke-width="4" stroke-linecap="round"/><path d="M-9 -23H9M-5 -8H5M-9 8H9M-5 23H5" stroke="#D68359" stroke-width="3" stroke-linecap="round"/>`,
+  imm: `<g stroke-linecap="round"><path d="M0 30V3L-19 -17M0 3L19 -17" fill="none" stroke="#2F6596" stroke-width="7"/><path d="M-11 -3L-25 -16M11 -3L25 -16" fill="none" stroke="#7FB3EA" stroke-width="6"/></g><circle cx="-24" cy="-24" r="5" fill="#E63946"/><circle cx="24" cy="-24" r="5" fill="#E63946"/>`,
+  drug: `<g transform="rotate(42)"><rect x="-14" y="-27" width="28" height="54" rx="14" fill="#FCFCFC" stroke="#142B3C" stroke-width="3"/><path d="M-14 0V-13a14 14 0 0 1 28 0V0Z" fill="#EE5557" stroke="#142B3C" stroke-width="2"/></g>`,
+  clin: `${BRAIN("#F2A3B3", "#7A2E3B")}<path d="M-32 7H-17L-12 -3L-6 15L0 5H32" fill="none" stroke="#10202B" stroke-width="2.8" stroke-linejoin="round"/>`,
+  mouse: `<ellipse cx="2" cy="6" rx="22" ry="13" fill="#C4C2B9" stroke="#4D565A" stroke-width="2"/><circle cx="-16" cy="-5" r="8" fill="#D4D0C8" stroke="#4D565A" stroke-width="2"/><circle cx="-3" cy="-7" r="8" fill="#D4D0C8" stroke="#4D565A" stroke-width="2"/><circle cx="-18" cy="5" r="2" fill="#333"/><path d="M22 8q18-10 10-19" fill="none" stroke="#A4A29C" stroke-width="3"/>`,
 };
 
-// a: degrees (0 = right, -90 = top); r: distance from centre; lab: label above or below the icon
 const pt = (a, r) => [C + r * Math.cos(a * Math.PI / 180), C + r * Math.sin(a * Math.PI / 180)];
+// lab: where the text goes relative to the icon
 const NODES = {
   // subfield: cellular neuroscience
-  act:   { a: -132, r: 172, icon: "glia", t: ["Microglial activation"], lab: "up" },
-  infl:  { a: -48,  r: 172, icon: "flame", t: ["Neuroinflammation"], lab: "up" },
-  prune: { a: 157,  r: 178, icon: "synapse", t: ["Synaptic pruning"], lab: "down" },
-  phago: { a: 23,   r: 178, icon: "engulf", t: ["Phagocytosis"], lab: "down" },
+  infl:    { a: -128, r: 182, t: ["Neuroinflammation"], ex: "cytokine release", lab: "up" },
+  act:     { a: -52,  r: 182, t: ["Microglial", "activation"], ex: "DAM state", lab: "right" },
+  phago:   { a: 18,   r: 182, t: ["Phagocytosis"], ex: "amyloid uptake", lab: "down" },
+  prune:   { a: 176,  r: 186, t: ["Synaptic", "pruning"], ex: "C1q tagging", lab: "up" },
   // field: neuroscience
-  circ:  { a: -158, r: 300, icon: "network", t: ["Neural circuits"], lab: "up" },
-  degen: { a: -90,  r: 300, icon: "degen", t: ["Neurodegeneration"], lab: "down" },
-  amyl:  { a: -8,   r: 300, icon: "plaque", t: ["Amyloid pathology"], lab: "down" },
-  mem:   { a: 148,  r: 300, icon: "bulb", t: ["Memory"], lab: "down" },
-  aging: { a: 32,   r: 300, icon: "hourglass", t: ["Brain aging"], lab: "down" },
+  plaque:  { a: -12,  r: 312, t: ["Amyloid", "pathology"], ex: "Aβ plaques", lab: "right" },
+  degen:   { a: 118,  r: 312, t: ["Neurodegeneration"], ex: "neuron loss", lab: "left" },
+  synloss: { a: 156,  r: 312, t: ["Synapse loss"], ex: "early sign", lab: "left" },
   // adjacent fields
-  gen:   { a: -124, r: 434, icon: "dna", t: ["Human genetics", "TREM2, APOE"], lab: "down" },
-  imm:   { a: -56,  r: 434, icon: "antibody", t: ["Immunology", "innate immunity"], lab: "down" },
-  img:   { a: -22,  r: 428, icon: "scan", t: ["Brain imaging", "amyloid PET"], lab: "down" },
-  neuro: { a: -164, r: 430, icon: "neuro", t: ["Neurology", "dementia"], lab: "down" },
-  pharm: { a: 36,   r: 418, icon: "pill", t: ["Pharmacology", "drug targets"], lab: "down" },
-  other: { a: 144,  r: 418, icon: "cells", t: ["Other disorders", "Parkinson's, MS"], lab: "down" },
+  gen:     { a: -90,  r: 432, t: ["Genetics"], ex: "TREM2, APOE risk variants", lab: "left" },
+  imm:     { a: -150, r: 432, t: ["Immunology"], ex: "innate immunity", lab: "down" },
+  drug:    { a: -36,  r: 432, t: ["Drug targets"], ex: "TREM2 antibodies", lab: "down" },
+  clin:    { a: 30,   r: 430, t: ["Clinical neurology"], ex: "Alzheimer’s dementia", lab: "left" },
 };
-
-// dashed links from the study outwards
-const CHAINS = [["core", "act", "degen", "gen"], ["core", "infl", "amyl", "imm"], ["core", "prune", "circ", "neuro"],
-                ["core", "phago", "amyl", "img"], ["core", "prune", "mem", "other"], ["core", "phago", "aging", "pharm"]];
+// Each link is a relationship reported in published work (illustrative):
+const EDGES = [
+  ["core", "act", .25], ["act", "gen", -.3],      // the DAM program depends on TREM2; DAM upregulate Apoe
+  ["gen", "drug", -.25],                           // TREM2 is targeted by antibodies in trials
+  ["core", "infl", -.25], ["infl", "imm", -.3],     // neuroinflammation is innate immune signaling in the brain
+  ["core", "phago", -.25], ["phago", "plaque", .3], ["plaque", "clin", -.3], // DAM take up Aβ near plaques; plaques are a hallmark of AD
+  ["core", "prune", .25], ["prune", "synloss", -.3], ["synloss", "degen", .3], // complement-tagged synapses are engulfed early; synapse loss precedes neuron loss
+];
 const P = (k) => (k === "core" ? [C, C] : pt(NODES[k].a, NODES[k].r));
-const links = g({ fill: "none", stroke: T.ink, "stroke-width": 2, "stroke-dasharray": "2 7", "stroke-linecap": "round", opacity: .5 });
-for (const ch of CHAINS) for (let i = 0; i < ch.length - 1; i++) {
-  const [x1, y1] = P(ch[i]), [x2, y2] = P(ch[i + 1]);
-  const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, dx = x2 - x1, dy = y2 - y1;
-  el("path", { d: `M${x1} ${y1}Q${mx - dy * .18} ${my + dx * .18} ${x2} ${y2}` }, links);
+const off = (k) => (k === "core" ? 116 : 44);
+const lines = g({ fill: "none", stroke: "#10202B", "stroke-width": 2.6, "stroke-dasharray": "4 7", "stroke-linecap": "round" });
+const dots = g({ fill: "#10202B" });
+for (const [a, b, bend] of EDGES) {
+  let [x1, y1] = P(a), [x2, y2] = P(b);
+  const L = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / L, uy = (y2 - y1) / L;
+  x1 += ux * off(a); y1 += uy * off(a); x2 -= ux * off(b); y2 -= uy * off(b);
+  const dx = x2 - x1, dy = y2 - y1, mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+  // a gentle S-curve: two control points bowing to opposite sides
+  el("path", { d: `M${x1} ${y1}C${x1 + dx * .33 - dy * bend} ${y1 + dy * .33 + dx * bend} ${x1 + dx * .67 + dy * bend * .4} ${y1 + dy * .67 - dx * bend * .4} ${x2} ${y2}` }, lines);
+  el("circle", { cx: x1, cy: y1, r: 5.5 }, dots);
+  el("circle", { cx: x2, cy: y2, r: 5.5 }, dots);
 }
 
 const ringLabel = (y, name, role) => {
   el("text", { x: C, y, "text-anchor": "middle", class: "ring" }).textContent = name;
-  el("text", { x: C, y: y + 24, "text-anchor": "middle", class: "role" }).textContent = role;
+  el("text", { x: C, y: y + 26, "text-anchor": "middle", class: "role" }).textContent = role;
 };
-ringLabel(660, "Cellular neuroscience", "SUBFIELD");
-ringLabel(792, "Neuroscience", "FIELD");
-ringLabel(922, "Genetics, immunology, neurology", "ADJACENT FIELDS");
+ringLabel(690, "Cellular neuroscience", "SUBFIELD");
+ringLabel(808, "Neuroscience", "FIELD");
+ringLabel(920, "Genetics, immunology, clinical research", "ADJACENT FIELDS");
 
-el("circle", { cx: C, cy: C, r: 110, fill: T.core });
-el("text", { x: C, y: 468, "text-anchor": "middle", class: "core1" }).textContent = "Your study";
-el("text", { x: C, y: 496, "text-anchor": "middle", class: "core2" }).textContent = "Microglia in an";
-el("text", { x: C, y: 519, "text-anchor": "middle", class: "core2" }).textContent = "Alzheimer’s model";
-g({ transform: `translate(${C} 553)` }).innerHTML = ICON.mouse;
+el("circle", { cx: C, cy: C, r: 112, fill: "#10202B" });
+[["Your finding", "core1", 446], ["Disease-associated", "core2", 476], ["microglia at amyloid", "core2", 499], ["plaques, mouse model", "core2", 522]]
+  .forEach(([t, c, y]) => { el("text", { x: C, y, "text-anchor": "middle", class: c }).textContent = t; });
+g({ transform: `translate(${C} 560) scale(.95)` }).innerHTML = ICON.mouse;
 
 for (const k in NODES) {
   const n = NODES[k], [x, y] = pt(n.a, n.r);
   const ng = g({ transform: `translate(${x.toFixed(1)} ${y.toFixed(1)})` });
-  el("circle", { r: 31, fill: "#FFFFFF", stroke: "#10202B", "stroke-opacity": .18, "stroke-width": 1.5, filter: "url(#sh)" }, ng);
-  g({}, ng).innerHTML = ICON[n.icon];
-  const y0 = n.lab === "up" ? -40 - (n.t.length - 1) * 20 : 56;
-  n.t.forEach((t, i) => {
-    el("text", { x: 0, y: y0 + i * 21, "text-anchor": "middle", class: i === 0 ? "lbl" : "ex" }, ng).textContent = i === 0 ? t : `e.g. ${t}`;
-  });
+  g({}, ng).innerHTML = ICON[k];
+  const lines_ = [...n.t.map((t) => ["lbl", t]), ["ex", `e.g. ${n.ex}`]];
+  const h = n.t.length * 23 + 20;
+  const pos = { up: [0, -40 - h + 18, "middle"], down: [0, 54, "middle"], left: [-42, 6 - h / 2 + 14, "end"], right: [42, 6 - h / 2 + 14, "start"] }[n.lab];
+  let yy = pos[1];
+  for (const [cls, t] of lines_) {
+    el("text", { x: pos[0], y: yy, "text-anchor": pos[2], class: cls }, ng).textContent = t;
+    const m = el("text", { x: pos[0], y: yy, "text-anchor": pos[2], class: cls, fill: "#000", stroke: "#000", "stroke-width": 10, "stroke-linejoin": "round", transform: ng.getAttribute("transform") }, mask);
+    m.textContent = t; m.style.fill = "#000";
+    yy += cls === "lbl" ? 23 : 20;
+  }
 }
 </script>
 </body></html>

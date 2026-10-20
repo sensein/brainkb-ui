@@ -133,11 +133,6 @@ export default function HomePage() {
         </section>
 
         <section className="section flush" id="reach">
-          <SectionTitle eyebrow="From narrow to broad" color="#0e7490" title={["One observation.", "Connections across neuroscience."]}>
-            An observation about microglia in Alzheimer&apos;s disease can connect to research on neuroinflammation,
-            genetics, aging and other neurological conditions. BrainKB makes these relationships discoverable through
-            shared entities, ontologies and evidence-linked knowledge.
-          </SectionTitle>
           <ReachRings />
         </section>
 
