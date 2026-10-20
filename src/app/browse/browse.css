@@ -1,0 +1,29 @@
+/* Browse list/detail additions. The pages are otherwise styled inline with
+   the marketing tokens (components/marketing/tokens.ts); this file holds what
+   inline styles cannot express: media queries, focus states, <details>. */
+.browse-search{flex:1 1 260px;min-width:0;max-width:420px;padding:7px 12px;border:1px solid #cdd6e6;border-radius:999px;font-size:14px;color:#0b1628;background:#fff}
+.browse-search:focus{outline:2px solid #1d4ed8;outline-offset:1px}
+.browse-clear{margin-left:10px;border:none;background:none;padding:0;color:#1d4ed8;font:500 13px var(--font-plex-sans),system-ui,sans-serif;cursor:pointer;text-decoration:underline}
+.browse-desc{color:#3d4a5c;font-size:13px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.browse-id{font:400 11.5px var(--font-plex-mono),monospace;color:#6b7789;word-break:break-all}
+.browse-cards{display:none;list-style:none;margin:0;padding:0;flex-direction:column;gap:10px}
+.browse-cards dl{margin:12px 0 0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}
+.browse-cards dl > div{display:contents}
+.browse-cards dt{font:500 11.5px var(--font-plex-mono),monospace;color:#6b7789;padding-top:2px}
+.browse-cards dd{margin:0;color:#3d4a5c;word-break:break-word}
+.browse-card-action{display:inline-block;margin-top:12px;font-size:14px;font-weight:600;color:#1d4ed8}
+@media (max-width:640px){
+  .browse-table{display:none}
+  .browse-cards{display:flex}
+}
+
+/* Detail page */
+.detail-tech{border:1px solid #e4e8ef;border-radius:12px;background:#fff}
+.detail-tech > summary{cursor:pointer;padding:14px 18px;font:500 13px var(--font-plex-mono),monospace;color:#3d4a5c}
+.detail-tech[open] > summary{border-bottom:1px solid #e4e8ef}
+.detail-term-label{font:500 13px var(--font-plex-sans),system-ui,sans-serif;color:#3d4a5c;white-space:normal}
+.detail-resolved{margin-left:8px;color:#6b7789;font-size:13px}
+@media (max-width:640px){
+  .detail-table th,.detail-table td{display:block;width:auto!important}
+  .detail-table th{padding-bottom:2px!important;border-bottom:none!important}
+}

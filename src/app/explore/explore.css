@@ -1,0 +1,8 @@
+/* Explore page additions on top of the landing styles (.lp in landing.css). */
+.lp .scopes button .count{margin-left:6px;font:11px var(--font-plex-mono),monospace;color:var(--muted)}
+.lp .scopes button[aria-pressed="true"] .count{color:var(--blue)}
+.lp .card .dest{align-self:flex-start;margin-top:12px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);font:11px var(--font-plex-mono),monospace;color:var(--muted);background:#fff}
+.lp .card .dest.soon{border-style:dashed}
+.lp .card .go.soon{color:var(--muted);font-weight:500}
+.lp .empty-card p{margin:0}
+.lp .empty-card button{margin-top:12px;border:1px solid var(--line);background:#fff;color:var(--blue);border-radius:999px;padding:6px 13px;font-size:13px;font-weight:600;cursor:pointer}

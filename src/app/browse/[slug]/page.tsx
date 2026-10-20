@@ -13,7 +13,7 @@
  * arriving here from /explore stays visually continuous (see SiteChrome).
  */
 
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { notFound, useParams, useRouter, useSearchParams } from "next/navigation";
 import { Loader2, AlertCircle } from "lucide-react";
@@ -24,11 +24,15 @@ import { COLORS, CARD_SURFACE } from "../../components/marketing/tokens";
 import ModelFigure, { type ModelEdge } from "../ModelFigure";
 import FilterMenu, { type FilterOption } from "../FilterMenu";
 import browserConfig from "@/src/config/yaml/class-browser.yaml";
+import "../browse.css";
 
 // `queryTemplate` on a class overrides the page's, which overrides defaults —
 // useful for diagnostic entries that ask a different shape of question.
-type ClassEntry = { name: string; category: string; queryTemplate?: string };
-type Column = { key: string; label: string };
+// `noun` is how the row count reads ("120 resources"); entity/entities
+// otherwise.
+type ClassEntry = { name: string; category: string; queryTemplate?: string; noun?: [string, string] };
+// `emptyLabel` replaces "Not recorded" for a missing value in that column.
+type Column = { key: string; label: string; emptyLabel?: string };
 // `separator` splits a cell holding several values (a GROUP_CONCAT) so each
 // value is its own option. The label defaults to the column's.
 type FilterSpec = { key: string; label?: string; separator?: string };
@@ -49,6 +53,12 @@ type PageConfig = {
   modelEdges?: ModelEdge[];
   // Columns that get a multi-select filter above the table.
   filters?: FilterSpec[];
+  // Free-text search over these keys, alongside the filters.
+  search?: { keys: string[]; placeholder?: string };
+  // The column that carries the row's link (instead of the id), and an
+  // optional column shown under it. When set, the id moves under the name.
+  primaryColumn?: string;
+  secondaryColumn?: string;
 };
 
 // Entity ids are IRIs; the last segment is the part worth reading in a
@@ -67,6 +77,13 @@ function cellValues(row: Binding, spec: FilterSpec): string[] {
   if (!raw) return [NOT_LISTED];
   const values = spec.separator ? raw.split(spec.separator).map((v) => v.trim()).filter(Boolean) : [raw];
   return values.length ? values : [NOT_LISTED];
+}
+
+const EMPTY_LABEL = "Not recorded";
+
+// Normalised for search: case- and accent-insensitive.
+function fold(text: string): string {
+  return text.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 
 const CONFIG = browserConfig as {
@@ -204,7 +221,99 @@ function BrowseView({ page }: { page: PageConfig }) {
       return { spec, label, options, hasValues };
     })
     .filter((m) => m.hasValues);
-  const anyFilterActive = Object.values(selections).some((v) => v.size > 0);
+  // Free-text search. The input is local state so typing stays responsive;
+  // the URL (?q=) follows shortly after, so back navigation restores it.
+  const searchSpec = page.search;
+  const urlQuery = searchParams?.get("q") ?? "";
+  const [query, setQuery] = useState(urlQuery);
+  // The last value this page wrote to ?q=. The URL only overrides the input
+  // when it changed for another reason (class switch, back navigation), so a
+  // write landing mid-typing does not undo the keystrokes after it.
+  const pushedQuery = useRef(urlQuery);
+  useEffect(() => {
+    if (urlQuery !== pushedQuery.current) {
+      pushedQuery.current = urlQuery;
+      setQuery(urlQuery);
+    }
+  }, [urlQuery]);
+  useEffect(() => {
+    if (!searchSpec || query.trim() === urlQuery.trim()) return;
+    const timer = setTimeout(() => {
+      pushedQuery.current = query.trim() ? query : "";
+      const params = new URLSearchParams(listQuery);
+      params.set("class", selected.name);
+      if (query.trim()) params.set("q", query);
+      else params.delete("q");
+      replaceQuery(params);
+    }, 250);
+    return () => clearTimeout(timer);
+    // replaceQuery is recreated every render; the inputs that matter are listed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, urlQuery, listQuery, selected.name, searchSpec]);
+  const terms = fold(query).split(/\s+/).filter(Boolean);
+  const matchesSearch = (row: Binding) => {
+    if (!searchSpec || terms.length === 0) return true;
+    const haystack = fold(searchSpec.keys.map((k) => row[k]?.value ?? "").join(" "));
+    return terms.every((t) => haystack.includes(t));
+  };
+  const shownRows = visibleRows.filter(matchesSearch);
+
+  const anyFilterActive = Object.values(selections).some((v) => v.size > 0) || terms.length > 0;
+  const clearAll = () => {
+    setQuery("");
+    pushedQuery.current = "";
+    replaceQuery(new URLSearchParams({ class: selected.name }));
+  };
+  const [nounOne, nounMany] = selected.noun ?? ["entity", "entities"];
+  const countLabel = (n: number) => `${n} ${n === 1 ? nounOne : nounMany}`;
+
+  // With a primary column the name carries the link and the id moves under
+  // it. Columns with no value in any row (an Organization has no provider)
+  // are left out rather than shown as a column of "Not recorded".
+  const primaryKey = page.primaryColumn;
+  const secondaryKey = page.secondaryColumn;
+  const shownColumns = primaryKey
+    ? columns.filter((c) => c.key === primaryKey || rows.some((r) => r[c.key]?.value))
+    : columns;
+  const detailHref = (iri: string) =>
+    `/browse/${page.slug}/${encodeURIComponent(iri)}${listQuery ? `?from=${encodeURIComponent(listQuery)}` : ""}`;
+  const canLink = page.linkIds !== false;
+  const missing = (col?: Column) => <span style={{ color: COLORS.muted }}>{col?.emptyLabel ?? EMPTY_LABEL}</span>;
+
+  // The cell for one column. The primary cell is the readable name linked to
+  // the record, then the description, then the id in small monospace.
+  const renderCell = (row: Binding, col: Column): ReactNode => {
+    const iri = row.id?.value;
+    if (primaryKey && col.key === primaryKey) {
+      const name = row[col.key]?.value;
+      const desc = secondaryKey ? row[secondaryKey]?.value : undefined;
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+          {iri && canLink ? (
+            <Link href={detailHref(iri)} title={iri} style={{ color: COLORS.accentPurple, fontWeight: 600 }}>
+              {name || shortId(iri)}
+            </Link>
+          ) : (
+            <span style={{ fontWeight: 600 }}>{name || (iri ? shortId(iri) : EMPTY_LABEL)}</span>
+          )}
+          {desc && <span className="browse-desc">{desc}</span>}
+          {iri && (
+            <span className="browse-id" title={iri}>
+              ID {shortId(iri)}
+            </span>
+          )}
+        </div>
+      );
+    }
+    if (col.key === "id" && iri && canLink) {
+      return (
+        <Link href={detailHref(iri)} title={iri} style={{ color: COLORS.accentPurple, fontWeight: 500 }}>
+          {shortId(iri)}
+        </Link>
+      );
+    }
+    return row[col.key]?.value || missing(col);
+  };
 
   return (
     <div
@@ -320,15 +429,25 @@ function BrowseView({ page }: { page: PageConfig }) {
 
             {!loading && !error && rows.length === 0 && (
               <div style={{ ...CARD_SURFACE, color: COLORS.body, fontSize: 15, lineHeight: 1.6 }}>
-                No <strong>{selected.name}</strong> entities found in{" "}
+                No <strong>{selected.name}</strong> {nounMany} found in{" "}
                 <code style={{ font: "400 13px var(--font-plex-mono, monospace)" }}>{graph}</code>.
               </div>
             )}
 
             {!loading && !error && rows.length > 0 && (
               <>
-                {filterMenus.length > 0 && (
+                {(filterMenus.length > 0 || searchSpec) && (
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 16 }}>
+                    {searchSpec && (
+                      <input
+                        type="search"
+                        className="browse-search"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder={searchSpec.placeholder ?? "Search"}
+                        aria-label={searchSpec.placeholder ?? `Search ${nounMany}`}
+                      />
+                    )}
                     {filterMenus.map(({ spec, label, options }) => (
                       <FilterMenu
                         key={spec.key}
@@ -350,9 +469,13 @@ function BrowseView({ page }: { page: PageConfig }) {
                     flexWrap: "wrap",
                   }}
                 >
-                  <span style={{ font: "500 13px var(--font-plex-mono)", color: COLORS.muted }}>
-                    {anyFilterActive && `${visibleRows.length} of `}
-                    {rows.length} {rows.length === 1 ? "entity" : "entities"}
+                  <span role="status" style={{ font: "500 13px var(--font-plex-mono)", color: COLORS.muted }}>
+                    {anyFilterActive ? `${shownRows.length} of ${countLabel(rows.length)}` : countLabel(rows.length)}
+                    {anyFilterActive && (
+                      <button type="button" className="browse-clear" onClick={clearAll}>
+                        Clear search and filters
+                      </button>
+                    )}
                   </span>
                   {classTemplate && (
                     <a
@@ -365,68 +488,92 @@ function BrowseView({ page }: { page: PageConfig }) {
                     </a>
                   )}
                 </div>
-                <div style={{ ...CARD_SURFACE, padding: 0, overflowX: "auto" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
-                    <thead>
-                      <tr>
-                        {columns.map((col) => (
-                          <th
-                            key={col.key}
-                            style={{
-                              textAlign: "left",
-                              padding: "14px 18px",
-                              borderBottom: `1px solid ${COLORS.border}`,
-                              font: "500 12px var(--font-plex-mono)",
-                              color: COLORS.muted,
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {col.label}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {visibleRows.length === 0 && (
+                {shownRows.length === 0 && (
+                  <div style={{ ...CARD_SURFACE, color: COLORS.body, fontSize: 15, lineHeight: 1.6 }}>
+                    No {nounMany} match{terms.length > 0 ? <> &ldquo;{query.trim()}&rdquo;</> : null}
+                    {terms.length > 0 && Object.values(selections).some((v) => v.size > 0) ? " with" : ""}
+                    {Object.values(selections).some((v) => v.size > 0) ? " the selected filters" : ""}.{" "}
+                    <button type="button" className="browse-clear" onClick={clearAll}>
+                      Clear search and filters
+                    </button>
+                  </div>
+                )}
+                {shownRows.length > 0 && (
+                  <div className="browse-table" style={{ ...CARD_SURFACE, padding: 0, overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+                      <thead>
                         <tr>
-                          <td colSpan={columns.length} style={{ padding: "18px", color: COLORS.muted }}>
-                            No entities match the selected filters.
-                          </td>
-                        </tr>
-                      )}
-                      {visibleRows.map((row, i) => (
-                        <tr key={row.id?.value ?? i}>
-                          {columns.map((col) => (
-                            <td
+                          {shownColumns.map((col) => (
+                            <th
                               key={col.key}
                               style={{
-                                padding: "12px 18px",
-                                borderBottom: i === visibleRows.length - 1 ? "none" : `1px solid ${COLORS.border}`,
-                                color: COLORS.body,
-                                verticalAlign: "top",
-                                wordBreak: "break-word",
+                                textAlign: "left",
+                                padding: "14px 18px",
+                                borderBottom: `1px solid ${COLORS.border}`,
+                                font: "500 12px var(--font-plex-mono)",
+                                color: COLORS.muted,
+                                whiteSpace: "nowrap",
                               }}
                             >
-                              {col.key === "id" && row.id?.value && page.linkIds !== false ? (
-                                <Link
-                                  href={`/browse/${page.slug}/${encodeURIComponent(row.id.value)}${
-                                    listQuery ? `?from=${encodeURIComponent(listQuery)}` : ""
-                                  }`}
-                                  title={row.id.value}
-                                  style={{ color: COLORS.accentPurple, fontWeight: 500 }}
-                                >
-                                  {shortId(row.id.value)}
-                                </Link>
-                              ) : (
-                                row[col.key]?.value || <span style={{ color: COLORS.muted }}>—</span>
-                              )}
-                            </td>
+                              {col.label}
+                            </th>
                           ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {shownRows.map((row, i) => (
+                          <tr key={row.id?.value ?? i}>
+                            {shownColumns.map((col) => (
+                              <td
+                                key={col.key}
+                                style={{
+                                  padding: "12px 18px",
+                                  borderBottom: i === shownRows.length - 1 ? "none" : `1px solid ${COLORS.border}`,
+                                  color: COLORS.body,
+                                  verticalAlign: "top",
+                                  wordBreak: "break-word",
+                                  minWidth: col.key === primaryKey ? 220 : undefined,
+                                }}
+                              >
+                                {renderCell(row, col)}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                {/* Narrow screens: one compact card per row instead of a squeezed table. */}
+                {shownRows.length > 0 && (
+                  <ul className="browse-cards">
+                    {shownRows.map((row, i) => {
+                      const iri = row.id?.value;
+                      const head = shownColumns.find((c) => c.key === (primaryKey ?? "id")) ?? shownColumns[0];
+                      const rest = shownColumns.filter((c) => c !== head && c.key !== "id");
+                      return (
+                        <li key={iri ?? i} style={{ ...CARD_SURFACE, padding: 16 }}>
+                          {head && renderCell(row, head)}
+                          {rest.length > 0 && (
+                            <dl>
+                              {rest.map((col) => (
+                                <div key={col.key}>
+                                  <dt>{col.label}</dt>
+                                  <dd>{renderCell(row, col)}</dd>
+                                </div>
+                              ))}
+                            </dl>
+                          )}
+                          {iri && canLink && (
+                            <Link href={detailHref(iri)} className="browse-card-action">
+                              View details →
+                            </Link>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
               </>
             )}
           </div>
