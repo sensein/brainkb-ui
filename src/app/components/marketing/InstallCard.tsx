@@ -1,8 +1,8 @@
 "use client";
 
-// MCP setup per client: a tab per client (✓ = tested with BrainKB) plus a
-// "BrainKB skill" tab that links to the skill section, then a pane with the
-// config to copy and numbered steps. Must render inside an `.lp` root (landing.css).
+// MCP setup per client: a tab per client (✓ = tested with BrainKB), then a pane
+// with the config to copy and numbered steps. On the home page (compact) a
+// "BrainKB skill" tab links to /mcp; on /mcp a note explains the optional skill. Must render inside an `.lp` root (landing.css).
 
 import { Fragment, useState } from "react";
 import { MCP_CLIENTS, MCP_SITE } from "./tokens";
@@ -21,7 +21,7 @@ function Step({ text }: { text: string }) {
 interface InstallCardProps {
   /** Shows a short sign-in note below the card. */
   authNote?: boolean;
-  /** Where the "BrainKB skill" tab links to (the skill install section). */
+  /** Where the BrainKB skill link points (the skill setup). */
   skillHref?: string;
   /** Home page: three clients, no steps, and a link to the full setup on /mcp. */
   compact?: boolean;
@@ -71,9 +71,11 @@ export default function InstallCard({ authNote = false, skillHref = "/mcp#skill"
             </button>
           ))}
           {compact && <a className="more-tab" href="/mcp">All clients →</a>}
-          <a className="skill-tab" href={skillHref}>
-            <i aria-hidden="true">◆</i>BrainKB skill {skillHref.startsWith("#") ? "↓" : "→"}
-          </a>
+          {compact && (
+            <a className="skill-tab" href={skillHref}>
+              <i aria-hidden="true">◆</i>BrainKB skill →
+            </a>
+          )}
         </div>
         <div className="connect-pane" role="tabpanel">
           <div className="connect-head">
@@ -92,6 +94,12 @@ export default function InstallCard({ authNote = false, skillHref = "/mcp#skill"
           )}
         </div>
       </div>
+      {!compact && (
+        <p className="muted-p">
+          This connects the <b>MCP server</b>: your agent gets BrainKB&apos;s tools. The <b>BrainKB skill</b> is
+          optional and adds instructions and workflows for using them; <a href={skillHref}>set it up below ↓</a>
+        </p>
+      )}
       {authNote && (
         <p className="muted-p">
           <span className="ok">✓</span> tested with BrainKB. No login is needed to read public spaces; for anything
