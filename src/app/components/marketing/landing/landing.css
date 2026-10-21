@@ -603,6 +603,8 @@ html:has(.lp){scroll-behavior:smooth}
 .lp .missing-panel ul{margin:0;padding:0;list-style:none;display:grid;gap:8px}
 .lp .missing-panel li{font-size:15px;line-height:1.5;color:#102330}
 .lp .missing-panel .src{display:block;font-size:13px;color:#6b3418}
+.lp .missing-panel .src a{color:inherit;text-decoration:underline;text-decoration-color:#6b341866;text-underline-offset:2px}
+.lp .missing-panel .src a:hover,.lp .missing-panel .src a:focus-visible{color:#8a3f17;text-decoration-color:currentColor}
 .lp .missing-panel .note{margin-top:10px;font-size:14px;color:#3a2a20}
 .lp .missing-panel .hint{font-size:15px;color:#3a2a20;max-width:none}
 /* the inline figure */
