@@ -6,6 +6,7 @@
  * page's design (the `.lp` classes in components/marketing/landing/landing.css).
  */
 
+import Image from "next/image";
 import Link from "next/link";
 import MarketingHeader from "../components/marketing/MarketingHeader";
 import MarketingFooter from "../components/marketing/MarketingFooter";
@@ -20,7 +21,7 @@ const SKILLS_REPO = "https://github.com/sensein/agent_skills";
 const SKILLS = [
   {
     name: "StructSense",
-    icon: "◆",
+    logo: "/structsense-mark.png",
     role: "EXTRACT",
     summary: "Turns unstructured text and PDFs into validated, ontology-grounded records.",
     points: [
@@ -34,7 +35,7 @@ const SKILLS = [
   },
   {
     name: "SynthScholar",
-    icon: "▤",
+    logo: "/synthscholar-mark.png",
     role: "REVIEW",
     summary: "Runs and queries PRISMA systematic reviews, with the audit trail kept intact.",
     points: [
@@ -125,7 +126,9 @@ export default function SkillsPage() {
             {SKILLS.map((s) => (
               <a key={s.name} className="card" href={s.href} target="_blank" rel="noopener noreferrer">
                 <div className="top">
-                  <div className="ico" aria-hidden="true">{s.icon}</div>
+                  <div className="ico logo" aria-hidden="true">
+                    <Image src={s.logo} alt="" width={40} height={40} />
+                  </div>
                   <span className="tag blue">{s.role}</span>
                 </div>
                 <h3>{s.name}</h3>
