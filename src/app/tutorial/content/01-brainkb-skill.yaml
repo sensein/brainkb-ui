@@ -1,4 +1,4 @@
-# Chapter 1: BrainKB skill. See README.md in this folder for the format.
+# Chapter 2: BrainKB skill. See README.md in this folder for the format.
 id: brainkb-skill
 icon: ◉
 name: BrainKB skill
@@ -13,7 +13,7 @@ facts:
 prereqs:
   - "An AI assistant: Claude Code, Codex, or any SKILL.md agent"
   - Node.js 18.17+ (for npx)
-  - The Claude Code CLI on your PATH, for automatic MCP registration
+  - The Claude Code CLI on your PATH, for automatic MCP registration (Claude Code only)
   - A BrainKB account only for private data or changes
 links:
   - label: BrainKB skill on GitHub
@@ -24,15 +24,17 @@ links:
     href: /mcp
 help: "{{SKILLS_REPO}}/issues"
 logo: /brainkb_logo.png
+chooseAgent: true
 tryIt:
   - label: npx
+    agent: claude
     cmd: npx brainkb install{{MCP_FLAG}}
-  - label: GitHub
-    cmd: |-
-      git clone {{SKILLS_REPO}}
-      cd agent_skills
-      python scripts/install_skills.py --agent claude --skills brainkb
-      claude mcp add --scope user --transport http brainkb {{MCP_ENDPOINT}}
+  - label: npx
+    agent: codex
+    cmd: npx brainkb install{{MCP_FLAG}} --agent codex
+  - label: npx
+    agent: other
+    cmd: npx brainkb install --dest ~/my-agent/skills --mcp none
 sections:
   - title: Overview
     subtitle: What the skill adds on top of the MCP server.
@@ -62,52 +64,126 @@ sections:
           Reading public spaces needs no login. The skill signs you in only when a task needs private data, a
           change, provenance or admin tools.
   - title: Install
-    subtitle: npx installs the skill and registers the MCP server in one step.
+    subtitle: >-
+      npx installs the skill. It registers the MCP server automatically for Claude Code only; for Codex and
+      every other assistant you add the server yourself.
     blocks:
+      - p: >-
+          Done [Start here](#start-here)? Then the MCP server may already be connected; the installer reports
+          an existing registration and leaves it alone.
       - step:
           title: Install the skill
-          desc: Use npx, or install from GitHub; both give you the same skill.
           blocks:
-            - options:
-                - label: npx
-                  cmd: |-
-                    npx brainkb install{{MCP_FLAG}}                 # Claude Code, your user
-                    npx brainkb install{{MCP_FLAG}} --scope project # this project only
-                    npx brainkb install{{MCP_FLAG}} --agent codex   # Codex
-                    npx brainkb install{{MCP_FLAG}} --agent both    # Claude Code and Codex
-                    npx brainkb install --dest ~/my-agent/skills --mcp none   # any other assistant
-                    npx brainkb install --dry-run              # show what would happen
-                - label: GitHub
-                  cmd: |-
-                    git clone {{SKILLS_REPO}}
-                    cd agent_skills
-                    python scripts/install_skills.py --agent claude --skills brainkb
-                    # --agent codex, or --dest /path/to/skills, for other assistants
+            - agents:
+                claude:
+                  - code:
+                      label: terminal
+                      cmd: npx brainkb install{{MCP_FLAG}}
+                  - p: >-
+                      Copies the skill to `~/.claude/skills/brainkb` and registers the MCP server with Claude
+                      Code through its own `claude` CLI.
+                codex:
+                  - code:
+                      label: terminal
+                      cmd: npx brainkb install{{MCP_FLAG}} --agent codex
+                  - p: >-
+                      Copies the skill to `~/.agents/skills/brainkb`. It does **not** register the MCP server
+                      with Codex: it prints the server URL for you to add (next step).
+                other:
+                  - code:
+                      label: terminal
+                      cmd: npx brainkb install --dest ~/my-agent/skills --mcp none
+                  - p: >-
+                      Copies the skill into the skills folder your assistant loads (change the path). The MCP
+                      server is not registered for you.
       - step:
-          title: Register the MCP server if needed
-          desc: >-
-            npx registers it with Claude Code automatically. For Codex and other assistants, or after a GitHub
-            install, add the server yourself:
+          title: Register the MCP server
+          blocks:
+            - agents:
+                claude:
+                  - p: >-
+                      Done by the installer if the `claude` CLI is on your PATH. If it isn't, the installer
+                      prints the command to run instead:
+                  - code:
+                      label: terminal
+                      cmd: claude mcp add --scope user --transport http brainkb {{MCP_ENDPOINT}}
+                codex:
+                  - code:
+                      label: ~/.codex/config.toml
+                      cmd: |-
+                        [mcp_servers.brainkb]
+                        url = "{{MCP_ENDPOINT}}"
+                other:
+                  - p: >-
+                      Add `{{MCP_ENDPOINT}}` as a remote MCP server; each client's steps are on [Use with
+                      AI](/mcp).
+      - step:
+          title: Verify
+          desc: Restart the assistant (or start a new session) so it loads the skill, then check.
+          blocks:
+            - example:
+                input:
+                  label: terminal
+                  cmd: npx brainkb status
+                outputs:
+                  - label: Example output (Claude Code; your paths and version will differ)
+                    cmd: |-
+                      claude v0.1.1, current — /Users/you/.claude/skills/brainkb
+                      codex  not installed (/Users/you/.agents/skills/brainkb)
+                      MCP    brainkb: registered (https://mcp.brainkb.org/mcp)
+            - p: >-
+                `status` reports the MCP registration for Claude Code only. In any assistant, ask it to
+                describe the skill:
+            - ask: Describe the brainkb skill, and list the BrainKB tools you can use
+      - outcome:
+          expect: >-
+            The assistant describes the BrainKB skill (sign in, spaces, ingest, search, provenance) and lists
+            BrainKB tools such as search and list spaces.
+      - details:
+          summary: "Reference: other install options"
           blocks:
             - code:
-                label: Claude Code
-                cmd: claude mcp add --scope user --transport http brainkb {{MCP_ENDPOINT}}
-            - note: >-
-                Codex: add `[mcp_servers.brainkb]` with `url = "{{MCP_ENDPOINT}}"` to `~/.codex/config.toml`.
-                Every other client is on [Use with AI](/mcp).
-      - table:
-          cols:
-            - "`--mcp`"
-            - Registers
-          rows:
-            - - "`production` (default)"
-              - "`mcp.brainkb.org`"
-            - - "`sandbox`"
-              - "`mcp.sandbox.brainkb.org`, for trying things out"
-            - - "`both`"
-              - Production and sandbox
-            - - "`none`"
-              - The skill only
+                label: terminal
+                cmd: |-
+                  npx brainkb install{{MCP_FLAG}} --scope project # this project only (Claude Code: also ./.mcp.json)
+                  npx brainkb install{{MCP_FLAG}} --agent both    # Claude Code and Codex (registers for Claude Code only)
+                  npx brainkb install --dry-run              # show what would happen, change nothing
+            - table:
+                cols:
+                  - "`--mcp`"
+                  - Registers with Claude Code
+                rows:
+                  - - "`prod` (default)"
+                    - "`mcp.brainkb.org`"
+                  - - "`sandbox`"
+                    - "`mcp.sandbox.brainkb.org`, for trying things out"
+                  - - "`both`"
+                    - Production and sandbox
+                  - - "`none`"
+                    - Nothing; the skill only
+            - table:
+                cols:
+                  - Assistant
+                  - Your user
+                  - This project only
+                rows:
+                  - - Claude Code
+                    - "`~/.claude/skills/brainkb`"
+                    - "`./.claude/skills/brainkb` (+ `./.mcp.json`)"
+                  - - Codex
+                    - "`~/.agents/skills/brainkb`"
+                    - "`./.agents/skills/brainkb`"
+      - details:
+          summary: "Reference: install from GitHub instead of npm"
+          blocks:
+            - code:
+                label: terminal
+                cmd: |-
+                  git clone {{SKILLS_REPO}}
+                  cd agent_skills
+                  python scripts/install_skills.py --agent claude --skills brainkb
+                  # --agent codex, or --dest /path/to/skills, for other assistants
+            - p: This copies the skill only. Register the MCP server yourself, as in step 2.
   - title: Sign in and ask
     subtitle: Start your assistant and talk to BrainKB in plain language.
     blocks:
@@ -127,6 +203,10 @@ sections:
       - note: >-
           Codex calls the skill as `$brainkb`; in Claude Code it loads automatically when you ask about
           BrainKB.
+      - outcome:
+          expect: >-
+            After signing in, the assistant tells you who you are signed in as before it changes anything,
+            and answers from the spaces you may read.
   - title: A typical session
     subtitle: What the skill does for "ingest my file, then show what changed".
     blocks:
@@ -141,48 +221,40 @@ sections:
       - p: >-
           For a SynthScholar review, it ingests `review.ttl` into the review's own graph,
           `https://brainkb.org/synthscholar/reviews/<review_id>/`, and only once: ingest is append-only.
-  - title: Manage and maintain
-    subtitle: Check, update and remove.
+  - title: Maintenance and limits
+    subtitle: Reference for later.
     blocks:
-      - code:
-          label: terminal
-          cmd: |-
-            npx brainkb status                    # what's installed, which version, MCP registration
-            npx brainkb uninstall                 # remove the skill and its MCP entry
-            npx brainkb mcp-command --mcp both    # just print the registration commands
-      - table:
-          cols:
-            - Assistant
-            - Your user
-            - This project only
-          rows:
-            - - Claude Code
-              - "`~/.claude/skills/brainkb`"
-              - "`./.claude/skills/brainkb` (+ `./.mcp.json`)"
-            - - Codex
-              - "`~/.agents/skills/brainkb`"
-              - "`./.agents/skills/brainkb`"
-      - tips:
-          - "**Safe to re-run**: `install` updates a copy it installed and leaves an up-to-date one alone."
-          - >-
-            An edited copy is never overwritten silently; `--force` replaces it and keeps yours as
-            `brainkb.bak-<timestamp>`.
-          - >-
-            An existing `brainkb` MCP entry that points somewhere else (e.g. a local deployment) is reported,
-            not replaced, unless you pass `--force`.
-  - title: Tips
-    subtitle: Limits and what to expect.
-    blocks:
-      - tips:
-          - >-
-            The hosted server is rate-limited per caller (roughly 8 logins, 40 writes, 120 reads and 30 admin
-            calls a minute). A `429` means wait, not retry.
-          - >-
-            An empty list of spaces can mean you aren't signed in; the skill checks your identity before
-            saying you have none.
-          - >-
-            Free-form SPARQL needs an admin role; the skill uses search, spaces, ready-made questions and
-            provenance tools first.
-          - >-
-            A cloud or hosted assistant can't reach a BrainKB running on your laptop's `localhost`; use the
-            hosted server there.
+      - details:
+          summary: "Maintenance: status, update, uninstall"
+          blocks:
+            - code:
+                label: terminal
+                cmd: |-
+                  npx brainkb status                    # what's installed, which version, MCP registration
+                  npx brainkb uninstall                 # remove the skill and its MCP entry
+                  npx brainkb mcp-command --mcp both    # just print the registration commands
+            - tips:
+                - "**Safe to re-run**: `install` updates a copy it installed and leaves an up-to-date one alone."
+                - >-
+                    An edited copy is never overwritten silently; `--force` replaces it and keeps yours as
+                    `brainkb.bak-<timestamp>`.
+                - >-
+                    An existing `brainkb` MCP entry that points somewhere else (e.g. a local deployment) is
+                    reported, not replaced, unless you pass `--force`.
+      - details:
+          summary: "Limits: rate limits and what to expect"
+          blocks:
+            - tips:
+                - >-
+                    The hosted server is rate-limited per caller (roughly 8 logins, 40 writes, 120 reads and 30
+                    admin calls a minute). A `429` means wait, not retry.
+                - >-
+                    An empty list of spaces can mean you aren't signed in; the skill checks your identity
+                    before saying you have none.
+                - >-
+                    Free-form SPARQL needs an admin role; the skill uses search, spaces, ready-made questions
+                    and provenance tools first.
+                - >-
+                    A cloud or hosted assistant can't reach a BrainKB running on your laptop's `localhost`; use
+                    the hosted server there.
+      - p: Something not working? See [Troubleshooting](#start-here--troubleshooting).

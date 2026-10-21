@@ -58,7 +58,7 @@ export const MCP_CLIENTS = [
     cmd: `claude mcp add --scope user --transport http brainkb ${MCP_ENDPOINT}`,
     steps: [
       "Start `claude` and say “log me in to BrainKB”; it hands you a browser link.",
-      `For the server plus the BrainKB skill in one step, use \`npx brainkb install${MCP_FLAG}\` instead.`,
+      "Want the optional BrainKB skill too? Its installer also adds this server: see Set up below.",
     ],
   },
   {
@@ -68,7 +68,7 @@ export const MCP_CLIENTS = [
     cmd: `[mcp_servers.brainkb]\nurl = "${MCP_ENDPOINT}"`,
     steps: [
       "Add it to `~/.codex/config.toml`, start `codex`, and say “log me in to BrainKB”.",
-      `Skill for Codex: \`npx brainkb install${MCP_FLAG} --agent codex\`.`,
+      "The optional BrainKB skill for Codex is under Set up below.",
     ],
   },
   {

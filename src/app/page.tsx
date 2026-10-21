@@ -11,10 +11,11 @@
 import Link from "next/link";
 import MarketingHeader from "./components/marketing/MarketingHeader";
 import MarketingFooter from "./components/marketing/MarketingFooter";
-import { dmSans, plexMono } from "./components/marketing/fonts";
+import { dmSans, plexMono, plexSans } from "./components/marketing/fonts";
 import HeroSearch, { FocusSearchLink } from "./components/marketing/landing/HeroSearch";
 import HeroDemo from "./components/marketing/landing/HeroDemo";
 import CompareSources from "./components/marketing/landing/CompareSources";
+import ReachRings from "./components/marketing/landing/ReachRings";
 import WhereResultsGo from "./components/marketing/landing/WhereResultsGo";
 import ProvenanceTrace from "./components/marketing/landing/ProvenanceTrace";
 import InstallCard from "./components/marketing/InstallCard";
@@ -24,9 +25,9 @@ import "./components/marketing/landing/landing.css";
 const PILLARS = [
   { href: "#connected", k: "c", name: "Connected", title: "Knowledge, not silos.", desc: "Facts are extracted from papers, datasets and reviews, then linked in one knowledge graph so you can discover connections across studies.", go: "See the graph →" },
   { href: "#open", k: "g", name: "Open", title: "No login to read.", desc: "Public spaces are open to everyone: search, browse and download.", go: "What's open →" },
-  { href: "#decentralized", k: "v", name: "Decentralized", title: "Run it. Share if you want.", desc: "Run BrainKB and its extraction tools yourself. Contribute to the community only when you choose.", go: "Run & share →" },
   { href: "#agents", k: "b", name: "Agent-ready", title: "Bring your own client.", desc: "Ask Claude, ChatGPT, Perplexity, Cursor or VS Code to search and discover across the graph, over MCP and skills.", go: "Connect an agent →" },
   { href: "#provenance", k: "a", name: "Provenance", title: "Every fact has a source.", desc: "Who added it, when, how, and from which sentence of which paper it was extracted.", go: "Trace a fact →" },
+  { href: "#decentralized", k: "v", name: "Decentralized", title: "Run it. Share if you want.", desc: "Run BrainKB and its extraction tools yourself. Contribute to the community only when you choose.", go: "Run & share →" },
 ];
 
 const AUDIENCES = [
@@ -59,10 +60,10 @@ const DECENTRALIZED = [
 ];
 
 const PROV_POINTS = [
-  { di: "◉", title: "Attributed", desc: "Every ingest is tied to the account that made it. Nothing is anonymous once it's written." },
-  { di: "❝", title: "Evidence-backed", desc: "Extracted facts keep the sentence, section and paper they came from, so you can check the claim." },
-  { di: "↻", title: "Change history", desc: "See exactly which triples each job added, and compare versions over time." },
-  { di: "⌘", title: "Open standard", desc: "Provenance is W3C PROV-O, queryable like the rest of the graph, and exportable." },
+  { di: "❝", title: "Evidence-linked assertions", desc: "Each extracted fact keeps the sentence, section and paper that support it, so you can read the evidence yourself." },
+  { di: "◉", title: "Provenance and context", desc: "Who added it, when, and by which tool, model and settings, recorded as W3C PROV-O and queryable like the rest of the graph." },
+  { di: "↻", title: "Traceable updates", desc: "Each job's added triples are kept, so you can see what changed, compare versions and tell which source each claim came from." },
+  { di: "⚖", title: "Assess, don't assume", desc: "Provenance supports checking and verification. A sourced assertion can still be wrong, and the record lets you find out." },
 ];
 
 const STEPS = [
@@ -90,7 +91,7 @@ function SectionTitle({ eyebrow, color, title, children }: { eyebrow: string; co
 
 export default function HomePage() {
   return (
-    <div className={`lp ${dmSans.variable} ${plexMono.variable}`}>
+    <div className={`lp ${dmSans.variable} ${plexMono.variable} ${plexSans.variable}`}>
       <MarketingHeader />
 
       <main id="top" className="wrap">
@@ -101,9 +102,9 @@ export default function HomePage() {
               Neuroscience knowledge, <span>connected.</span>
             </h1>
             <p className="lead">
-              Findings are scattered across papers, datasets and atlases, each naming things its own way. BrainKB
-              extracts what they say, links it into one open knowledge graph, and lets you search it, ask your AI
-              agent about it, and trace every fact back to the source.
+              Explore neuroscience findings as connected, evidence-linked knowledge. Discover relationships across
+              studies, trace each one to its source, and use the structured knowledge through search, SPARQL and AI
+              agents.
             </p>
             <HeroSearch />
           </div>
@@ -124,11 +125,15 @@ export default function HomePage() {
 
         <section className="section" id="connected">
           <SectionTitle eyebrow="The problem → the fix" color="#0e7490" title={["Knowledge is stuck", "in silos."]}>
-            The same cell type appears under a dozen names, findings sit in PDFs, and nothing links one result to the
-            next. Researchers spend weeks re-reading what&apos;s already known. BrainKB connects it into one graph, so
-            related facts are one query apart.
+            The same cell type appears under a dozen names, findings sit in PDFs and supplementary tables, and
+            nothing links one result to the next. Researchers spend weeks re-reading what&apos;s already known. BrainKB
+            resolves the names to one entity, so related facts are one query apart.
           </SectionTitle>
           <CompareSources />
+        </section>
+
+        <section className="section flush" id="reach">
+          <ReachRings />
         </section>
 
         <section className="section flush" id="who">
@@ -180,25 +185,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="section" id="decentralized">
-          <SectionTitle eyebrow="Decentralized" title={["Run your own.", "Share if you want."]}>
-            BrainKB isn&apos;t one central server you have to hand your data to. Run the tools and your own BrainKB,
-            keep it private as long as you like, and contribute to the community knowledge graph when you&apos;re
-            ready, with credit on every triple.
-          </SectionTitle>
-          <div className="dec">
-            <div className="dec-list">
-              {DECENTRALIZED.map((d) => (
-                <div key={d.title} className="dec-item">
-                  <i className="di" aria-hidden="true">{d.di}</i>
-                  <h4>{d.title}</h4>
-                  <p>{d.desc}</p>
-                </div>
-              ))}
-            </div>
-            <WhereResultsGo />
-          </div>
-        </section>
 
         <section className="section flush" id="agents">
           <SectionTitle eyebrow="Agent-ready" title={["Use BrainKB from", "your favorite client."]}>
@@ -238,7 +224,7 @@ export default function HomePage() {
             <Link className="way" href="/mcp#skill">
               <span className="lbl">BrainKB skill</span>
               <h3>Teach your agent</h3>
-              <p>Installs the BrainKB skill and registers the MCP server in one step.</p>
+              <p>Installs the BrainKB skill and registers the MCP server with Claude Code; other agents add the server themselves.</p>
               <div className="code"><b>npx</b> brainkb install{MCP_FLAG}</div>
             </Link>
             <div className="way">
@@ -253,7 +239,8 @@ export default function HomePage() {
         <section className="section" id="provenance">
           <SectionTitle eyebrow="Provenance" title={["Every fact", "has a history."]}>
             Trust comes from being able to check. Every triple in BrainKB records who added it, when, by which
-            process, and the evidence behind it, as W3C PROV-O you can query.
+            process and the evidence behind it, as W3C PROV-O you can query. Provenance helps you assess a claim; it
+            does not by itself make the claim correct.
           </SectionTitle>
           <div className="prov">
             <ProvenanceTrace />
@@ -280,6 +267,26 @@ export default function HomePage() {
                 <p>{s.desc}</p>
               </div>
             ))}
+          </div>
+        </section>
+
+        <section className="section" id="decentralized">
+          <SectionTitle eyebrow="Decentralized" title={["Run your own.", "Share if you want."]}>
+            BrainKB isn&apos;t one central server you have to hand your data to. Run the tools and your own BrainKB,
+            keep it private as long as you like, and contribute to the community knowledge graph when you&apos;re
+            ready, with credit on every triple.
+          </SectionTitle>
+          <div className="dec">
+            <div className="dec-list">
+              {DECENTRALIZED.map((d) => (
+                <div key={d.title} className="dec-item">
+                  <i className="di" aria-hidden="true">{d.di}</i>
+                  <h4>{d.title}</h4>
+                  <p>{d.desc}</p>
+                </div>
+              ))}
+            </div>
+            <WhereResultsGo />
           </div>
         </section>
 

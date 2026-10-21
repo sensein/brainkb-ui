@@ -6,6 +6,7 @@
  * page's design (the `.lp` classes in components/marketing/landing/landing.css).
  */
 
+import Image from "next/image";
 import Link from "next/link";
 import MarketingHeader from "../components/marketing/MarketingHeader";
 import MarketingFooter from "../components/marketing/MarketingFooter";
@@ -13,13 +14,14 @@ import { dmSans, plexMono } from "../components/marketing/fonts";
 import SkillsDemo from "./SkillsDemo";
 import SkillInstall from "./SkillInstall";
 import "../components/marketing/landing/landing.css";
+import "./skills.css";
 
 const SKILLS_REPO = "https://github.com/sensein/agent_skills";
 
 const SKILLS = [
   {
     name: "StructSense",
-    icon: "◆",
+    logo: "/structsense-mark.png",
     role: "EXTRACT",
     summary: "Turns unstructured text and PDFs into validated, ontology-grounded records.",
     points: [
@@ -33,7 +35,7 @@ const SKILLS = [
   },
   {
     name: "SynthScholar",
-    icon: "▤",
+    logo: "/synthscholar-mark.png",
     role: "REVIEW",
     summary: "Runs and queries PRISMA systematic reviews, with the audit trail kept intact.",
     points: [
@@ -55,13 +57,24 @@ const STEPS = [
 ];
 
 const WHY = [
-  { di: "⌂", title: "Runs where you work", desc: "Skills run inside your own agent, on your machine. Papers and drafts don't have to leave it." },
-  { di: "⚿", title: "Your model, your keys", desc: "The pipeline is model-agnostic: Claude, GPT, Gemini, or a local model." },
+  { di: "⌂", title: "Runs where you work", desc: "Skills run inside your own agent, on your machine, next to your files." },
+  { di: "⚿", title: "Your model, your keys", desc: "The pipeline is model-agnostic: Claude, GPT, Gemini, or a local model. See the privacy note below." },
   { di: "❝", title: "Source on every record", desc: "Extracted facts keep their evidence, so you and reviewers can check each claim." },
   { di: "✓", title: "Validated before hand-off", desc: "Turtle output is validated first, so what you ingest into BrainKB is well-formed." },
 ];
 
-const AGENTS = [["✳", "Claude Code"], ["›_", "Codex"], ["◇", "Any SKILL.md agent"]];
+/** Choose by goal first; each links to the install panel with that tool selected. */
+const CHOOSE = [
+  { goal: "Extract information from papers", tool: "StructSense", href: "#install-structsense", desc: "Entities, relations, resources or your own schema, as validated Turtle and JSON." },
+  { goal: "Run a literature review", tool: "SynthScholar", href: "#install-synthscholar", desc: "A PRISMA systematic review, from protocol to synthesis, with its audit trail." },
+];
+
+/** Hero chips: each opens the install panel with that agent selected. */
+const AGENTS = [
+  ["✳", "Claude Code", "#install-agent-claude"],
+  ["›_", "Codex", "#install-agent-codex"],
+  ["◇", "Any SKILL.md agent", "#install-agent-other"],
+];
 
 export default function SkillsPage() {
   return (
@@ -78,13 +91,23 @@ export default function SkillsPage() {
               matters, and record where each piece came from. The output is structured and traceable, ready to
               ingest into BrainKB.
             </p>
+            <div className="sk-choose" aria-label="Which tool do you need?">
+              <span className="sk-choose-h">Which tool do you need?</span>
+              {CHOOSE.map((c) => (
+                <a key={c.tool} className="sk-choose-card" href={c.href}>
+                  <span className="g">{c.goal}</span>
+                  <b>→ {c.tool}</b>
+                  <small>{c.desc}</small>
+                </a>
+              ))}
+            </div>
             <div className="hero-actions">
-              <a className="btn primary" href="#install">Install the skills</a>
+              <a className="btn primary" href="#install">Install for your agent</a>
               <a className="btn" href={SKILLS_REPO} target="_blank" rel="noopener noreferrer">View on GitHub ↗</a>
             </div>
             <div className="clients" aria-label="Works with" style={{ margin: "26px 0 0" }}>
-              {AGENTS.map(([i, name]) => (
-                <span key={name} className="client"><i>{i}</i>{name}</span>
+              {AGENTS.map(([i, name, href]) => (
+                <a key={name} className="client sk-client" href={href}><i>{i}</i>{name}</a>
               ))}
             </div>
           </div>
@@ -103,7 +126,9 @@ export default function SkillsPage() {
             {SKILLS.map((s) => (
               <a key={s.name} className="card" href={s.href} target="_blank" rel="noopener noreferrer">
                 <div className="top">
-                  <div className="ico" aria-hidden="true">{s.icon}</div>
+                  <div className="ico logo" aria-hidden="true">
+                    <Image src={s.logo} alt="" width={40} height={40} />
+                  </div>
                   <span className="tag blue">{s.role}</span>
                 </div>
                 <h3>{s.name}</h3>
@@ -141,12 +166,15 @@ export default function SkillsPage() {
           <div className="install" style={{ marginTop: 0 }}>
             <div>
               <span className="eyebrow">Install</span>
-              <h2>One command,<br />any agent.</h2>
+              <h2>Install for<br />your agent.</h2>
               <p style={{ marginTop: 16 }}>
+                Pick the tool for your task, then your agent, and run the recommended command. The two tools install
+                differently: SynthScholar from npm, StructSense from the repository with its install script. Other
+                routes, such as installing into one project only, are under <b>Other ways to install</b>.
+              </p>
+              <p style={{ marginTop: 12 }}>
                 Each skill is a flat directory with a <code>SKILL.md</code>, following the cross-agent Agent Skills
-                format. SynthScholar installs with <code>npx synthscholar install</code> or from the repository; StructSense
-                installs from the repository with its install script. Add <code>--scope project</code> to either to install into
-                the current project instead of your user folder.
+                format, so any agent that loads skill directories can use it.
               </p>
               <a className="go" href={SKILLS_REPO} target="_blank" rel="noopener noreferrer">
                 All skills on GitHub ↗
@@ -175,6 +203,14 @@ export default function SkillsPage() {
               </div>
             ))}
           </div>
+          <div className="sk-privacy" role="note">
+            <b>Local execution and a local model are separate choices.</b>
+            <p>
+              The skills always run on your machine, but the text they process goes to whichever model your agent
+              uses. Papers stay on your machine only if you also use a local model (StructSense's model client supports
+              Ollama and vLLM). With a hosted model provider, the text you process is sent to that provider, under its terms.
+            </p>
+          </div>
         </section>
 
         <section className="cta">
@@ -184,7 +220,7 @@ export default function SkillsPage() {
           </div>
           <div className="actions">
             <Link className="btn primary" href="/mcp">Connect over MCP</Link>
-            <Link className="btn" href="/explore">Explore the graph</Link>
+            <Link className="btn" href="/explore">Explore knowledge</Link>
           </div>
         </section>
       </div>

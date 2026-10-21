@@ -4,7 +4,9 @@
  * /user/spaces — the spaces you can see, and the controls your role allows.
  *
  * Everyone sees their own spaces plus every public one. The owner of a space,
- * and admins, can switch it between private and public and share it with
+ * and admins, can rename it (name, description and slug; a new slug moves the
+ * graphs named after the old one, which keep working as aliases), switch it
+ * between private and public and share it with
  * people (viewer, editor, owner) — sharing is how a team gets access. Anyone
  * may create an individual space; team spaces need the create_team_space
  * capability (Admin/SuperAdmin by default). Spaces nest: whoever manages a
@@ -308,11 +310,116 @@ function AccessRules({ slug, onError }: { slug: string; onError: (m: string) => 
   );
 }
 
-type Deleted = { slug: string; dropped_graphs: string[]; dropped_delta_graphs: string[]; members_removed: number };
+// BrainKB IRIs that carry the space slug (as in the query service's rename): graphs
+// bound to the space under these move with a new slug; any other IRI stays.
+const SLUG_IRI_BASES = ["https://brainkb.org/graph/", "https://brainkb.org/synthscholar/"];
+const movedIri = (iri: string, oldSlug: string, newSlug: string): string | null => {
+  for (const base of SLUG_IRI_BASES) {
+    if (iri === base + oldSlug) return base + newSlug;
+    if (iri.startsWith(`${base}${oldSlug}/`)) return base + newSlug + iri.slice((base + oldSlug).length);
+  }
+  return null;
+};
+
+/** Rename a space: its name, description and slug. A new slug moves the space's
+ *  graphs named after the old slug to the new one; the old slug and IRIs keep
+ *  working as aliases. The form shows exactly which graphs will move. */
+function EditDetails({ space, onSaved, onError, onCancel }: {
+  space: Space;
+  onSaved: () => void;
+  onError: (m: string) => void;
+  onCancel: () => void;
+}) {
+  // a subspace's slug is prefixed with its parent's (as when it was created)
+  const prefixed = !!space.parent_slug && space.slug.startsWith(`${space.parent_slug}-`);
+  const slugFor = (n: string) => (prefixed ? slugify(`${space.parent_slug}-${n}`) : slugify(n));
+  const [name, setName] = useState(space.name);
+  const [description, setDescription] = useState(space.description ?? "");
+  const [slug, setSlug] = useState(space.slug);
+  const [slugEdited, setSlugEdited] = useState(false);
+  const [graphs, setGraphs] = useState<string[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    api<Manifest>(`/api/spaces/${encodeURIComponent(space.slug)}`).then((m) => setGraphs(m.graphs ?? [])).catch(() => setGraphs([]));
+  }, [space.slug]);
+  const slugChanged = slug !== space.slug;
+  const moves = slugChanged ? (graphs ?? []).map((g) => [g, movedIri(g, space.slug, slug)] as const).filter(([, n]) => n) : [];
+  const unchanged = name.trim() === space.name && description.trim() === (space.description ?? "") && !slugChanged;
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (unchanged) return onCancel();
+    if (slugChanged && !confirm(`Change the slug to "${slug}"? ${moves.length} graph${moves.length === 1 ? "" : "s"} will move to new IRIs. Old links keep working.`)) return;
+    setBusy(true);
+    try {
+      await api(`/api/spaces/${encodeURIComponent(space.slug)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ name: name.trim(), description: description.trim(), ...(slugChanged ? { slug } : {}) }),
+      });
+      onSaved();
+    } catch (err: any) {
+      onError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <form onSubmit={submit} style={{ display: "grid", gap: 10, borderTop: "1px solid var(--bkb-border)", paddingTop: 12 }}>
+      <div style={{ fontSize: 13, fontWeight: 600 }}>Rename</div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(240px, 100%), 1fr))", gap: 10 }}>
+        <label style={{ display: "grid", gap: 4, fontSize: 12, color: "var(--bkb-textMuted)" }}>
+          Name
+          <input className="bkb-input" required maxLength={200} value={name}
+                 onChange={(e) => { setName(e.target.value); if (!slugEdited) setSlug(slugFor(e.target.value) || space.slug); }} />
+        </label>
+        <label style={{ display: "grid", gap: 4, fontSize: 12, color: "var(--bkb-textMuted)" }}>
+          Slug (used in links and graph names)
+          <input className="bkb-input bkb-mono" required pattern="[a-z0-9][a-z0-9\-]{1,62}[a-z0-9]"
+                 title="3–64 characters: lowercase letters, digits and hyphens" value={slug}
+                 onChange={(e) => { setSlug(e.target.value); setSlugEdited(true); }} />
+        </label>
+      </div>
+      <label style={{ display: "grid", gap: 4, fontSize: 12, color: "var(--bkb-textMuted)" }}>
+        Description (optional)
+        <input className="bkb-input" maxLength={2000} value={description} onChange={(e) => setDescription(e.target.value)} />
+      </label>
+      {slugChanged ? (
+        <div style={{ fontSize: 12, color: "var(--bkb-textMuted)", display: "grid", gap: 6 }}>
+          <span>
+            The space&apos;s IRI and {moves.length ? `these ${moves.length} graph${moves.length === 1 ? "" : "s"}` : "no graphs"} move to the new slug,
+            with their history and literature reviews. The old slug and IRIs keep working as aliases.
+            {graphs && graphs.length > moves.length && " Graphs with other IRIs keep theirs."}
+          </span>
+          {moves.map(([o, n]) => (
+            <span key={o} className="bkb-mono" style={{ fontSize: 11, overflowWrap: "anywhere" }}>{o} → {n}</span>
+          ))}
+        </div>
+      ) : (
+        <div style={{ fontSize: 12, color: "var(--bkb-textMuted)" }}>
+          Changing the name updates the slug <span className="bkb-mono">{space.slug}</span> too, unless you edit it.
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 8 }}>
+        <button className="bkb-btn bkb-btn-primary" type="submit" disabled={busy || !name.trim() || !slug} style={{ fontSize: 12, padding: "5px 12px" }}>
+          {busy ? "Saving…" : "Save"}
+        </button>
+        <button type="button" className="bkb-btn bkb-btn-ghost" onClick={onCancel} style={{ fontSize: 12, padding: "5px 12px" }}>
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
+type Deleted = {
+  slug: string; dropped_graphs: string[]; dropped_delta_graphs: string[]; members_removed: number;
+  subspaces_deleted?: string[]; synthscholar_reviews_removed?: number;
+};
 
 /** SuperAdmin only. Typing the slug is the confirmation the API also requires. */
-function DeleteSpace({ space, onDeleted, onError, onCancel }: {
+function DeleteSpace({ space, subspaces, onDeleted, onError, onCancel }: {
   space: Space;
+  /** Every subspace below this one (any depth): they are deleted with it. */
+  subspaces: string[];
   onDeleted: (d: Deleted) => void;
   onError: (m: string) => void;
   onCancel: () => void;
@@ -341,8 +448,15 @@ function DeleteSpace({ space, onDeleted, onError, onCancel }: {
       <div style={{ fontSize: 13, color: "var(--bkb-danger)", fontWeight: 600 }}>Delete this space permanently</div>
       <div style={{ fontSize: 13, color: "var(--bkb-textMuted)" }}>
         This drops every graph in the space and the ingestion history copies of its data, and removes its members,
-        access rules and search entries. It cannot be undone. The deletion itself is kept in the provenance record.
+        access rules, search entries and literature reviews. It cannot be undone. The deletion itself is kept in the
+        provenance record.
       </div>
+      {subspaces.length > 0 && (
+        <div style={{ fontSize: 13, color: "var(--bkb-danger)" }}>
+          Its {subspaces.length} subspace{subspaces.length === 1 ? "" : "s"} — and all their data — are deleted with it:{" "}
+          <span className="bkb-mono">{subspaces.join(", ")}</span>
+        </div>
+      )}
       <label style={{ fontSize: 13, display: "grid", gap: 6 }}>
         <span>Type <span className="bkb-mono">{space.slug}</span> to confirm</span>
         <input
@@ -368,7 +482,7 @@ function DeleteSpace({ space, onDeleted, onError, onCancel }: {
             opacity: busy ? 0.6 : 1,
           }}
         >
-          {busy ? "Deleting…" : "Delete space"}
+          {busy ? "Deleting…" : subspaces.length ? `Delete space and ${subspaces.length} subspace${subspaces.length === 1 ? "" : "s"}` : "Delete space"}
         </button>
         <button type="button" className="bkb-btn bkb-btn-ghost" onClick={onCancel} style={{ fontSize: 12, padding: "5px 12px" }}>
           Cancel
@@ -378,23 +492,28 @@ function DeleteSpace({ space, onDeleted, onError, onCancel }: {
   );
 }
 
-function SpaceRow({ space, canManage, canDelete, hasSubspaces, onChanged, onDeleted, onError }: {
+function SpaceRow({ space, canManage, canDelete, hasSubspaces, subspaces = [], publicAbove, onChanged, onDeleted, onError }: {
   space: Space;
   canManage: boolean;
   canDelete: boolean;
   hasSubspaces: boolean;
+  /** Every subspace below this one that the caller can see. */
+  subspaces?: string[];
+  /** Nearest public space above this one: everything in a public space is public. */
+  publicAbove?: string;
   onChanged: () => void;
   onDeleted: (d: Deleted) => void;
   onError: (m: string) => void;
 }) {
   const [deleting, setDeleting] = useState(false);
+  const [renaming, setRenaming] = useState(false);
   const [addingSub, setAddingSub] = useState(false);
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
 
   const setVisibility = async (visibility: Space["visibility"]) => {
     if (visibility === space.visibility) return;
-    if (visibility === "public" && !confirm(`Make "${space.name}" public? Anyone, including people who aren't signed in, will be able to read it.`)) return;
+    if (visibility === "public" && !confirm(`Make "${space.name}" public${hasSubspaces ? " — and all of its subspaces" : ""}? Anyone, including people who aren't signed in, will be able to read ${hasSubspaces ? "them" : "it"}.`)) return;
     setBusy(true);
     try {
       await api(`/api/spaces/${encodeURIComponent(space.slug)}/visibility`, {
@@ -420,6 +539,11 @@ function SpaceRow({ space, canManage, canDelete, hasSubspaces, onChanged, onDele
             {space.your_role && <Chip>you: {space.your_role}{space.role_inherited ? " (from parent)" : ""}</Chip>}
           </div>
           <div className="bkb-mono" style={{ fontSize: 11, color: "var(--bkb-textSubtle)", marginTop: 4 }}>{space.slug}</div>
+          {publicAbove && (
+            <div style={{ fontSize: 12, color: "var(--bkb-textMuted)", marginTop: 4 }}>
+              Public because <span className="bkb-mono">{publicAbove}</span> is public.
+            </div>
+          )}
           {space.description && <div style={{ fontSize: 13, color: "var(--bkb-textMuted)", marginTop: 6 }}>{space.description}</div>}
         </div>
 
@@ -430,7 +554,8 @@ function SpaceRow({ space, canManage, canDelete, hasSubspaces, onChanged, onDele
                 <button
                   key={v}
                   type="button"
-                  disabled={busy}
+                  disabled={busy || (v === "private" && !!publicAbove)}
+                  title={v === "private" && publicAbove ? `Public because ${publicAbove} is public — everything in a public space is public` : undefined}
                   aria-pressed={space.visibility === v}
                   onClick={() => setVisibility(v)}
                   className={space.visibility === v ? "bkb-btn bkb-btn-primary" : "bkb-btn bkb-btn-ghost"}
@@ -440,6 +565,9 @@ function SpaceRow({ space, canManage, canDelete, hasSubspaces, onChanged, onDele
                 </button>
               ))}
             </div>
+            <button className="bkb-btn" type="button" onClick={() => setRenaming((r) => !r)} aria-expanded={renaming} style={{ fontSize: 12, padding: "5px 12px" }}>
+              {renaming ? "Cancel rename" : "Rename"}
+            </button>
             <button className="bkb-btn" type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} style={{ fontSize: 12, padding: "5px 12px" }}>
               {open ? "Close" : "Manage access"}
             </button>
@@ -463,30 +591,32 @@ function SpaceRow({ space, canManage, canDelete, hasSubspaces, onChanged, onDele
           </span>
         )}
       </div>
+      {canManage && renaming && (
+        <EditDetails space={space} onError={onError} onCancel={() => setRenaming(false)}
+                     onSaved={() => { setRenaming(false); onChanged(); }} />
+      )}
       {canManage && open && <Members slug={space.slug} onError={onError} />}
       {canManage && open && <AccessRules slug={space.slug} onError={onError} />}
       {canManage && addingSub && (
         <CreateSpace
           parent={space}
+          parentPublic={space.visibility === "public" || !!publicAbove}
           canCreateTeam={false}
           onError={onError}
           onCreated={() => { setAddingSub(false); onChanged(); }}
         />
       )}
-      {canDelete && deleting && (hasSubspaces ? (
-        <div style={{ fontSize: 13, color: "var(--bkb-danger)", borderTop: "1px solid var(--bkb-border)", paddingTop: 12, display: "flex", justifyContent: "space-between", gap: 12 }}>
-          <span>This space still has subspaces. Delete them first, then this one.</span>
-          <button type="button" className="bkb-btn bkb-btn-ghost" style={{ fontSize: 12, padding: "2px 8px" }} onClick={() => setDeleting(false)}>OK</button>
-        </div>
-      ) : (
-        <DeleteSpace space={space} onDeleted={onDeleted} onError={onError} onCancel={() => setDeleting(false)} />
-      ))}
+      {canDelete && deleting && (
+        <DeleteSpace space={space} subspaces={subspaces} onDeleted={onDeleted} onError={onError} onCancel={() => setDeleting(false)} />
+      )}
     </div>
   );
 }
 
-function CreateSpace({ canCreateTeam, onCreated, onError, parent }: {
+function CreateSpace({ canCreateTeam, onCreated, onError, parent, parentPublic = false }: {
   canCreateTeam: boolean;
+  /** The parent is public (or inside a public space): the subspace is public too. */
+  parentPublic?: boolean;
   onCreated: () => void;
   onError: (m: string) => void;
   /** Create a subspace of this space: it takes the parent's type, and the
@@ -498,7 +628,7 @@ function CreateSpace({ canCreateTeam, onCreated, onError, parent }: {
   const [slug, setSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
   const [description, setDescription] = useState("");
-  const [visibility, setVisibility] = useState<Space["visibility"]>("private");
+  const [visibility, setVisibility] = useState<Space["visibility"]>(parentPublic ? "public" : "private");
   const [type, setType] = useState<Space["space_type"]>("individual");
   const [busy, setBusy] = useState(false);
 
@@ -514,7 +644,7 @@ function CreateSpace({ canCreateTeam, onCreated, onError, parent }: {
           ...(parent ? { parent_slug: parent.slug } : {}),
         }),
       });
-      setName(""); setSlug(""); setSlugEdited(false); setDescription(""); setVisibility("private"); setType("individual");
+      setName(""); setSlug(""); setSlugEdited(false); setDescription(""); setVisibility(parentPublic ? "public" : "private"); setType("individual");
       onCreated();
     } catch (e: any) {
       onError(e.message);
@@ -542,7 +672,7 @@ function CreateSpace({ canCreateTeam, onCreated, onError, parent }: {
           <input
             className="bkb-input bkb-mono"
             required
-            pattern="[a-z0-9][a-z0-9-]{1,62}[a-z0-9]"
+            pattern="[a-z0-9][a-z0-9\-]{1,62}[a-z0-9]"
             title="3–64 characters: lowercase letters, digits and hyphens"
             value={slug}
             onChange={(e) => { setSlug(e.target.value); setSlugEdited(true); }}
@@ -558,7 +688,8 @@ function CreateSpace({ canCreateTeam, onCreated, onError, parent }: {
           <legend style={{ fontSize: 12, color: "var(--bkb-textMuted)", float: "left", marginRight: 10 }}>Visibility</legend>
           {(["private", "public"] as const).map((v) => (
             <label key={v} style={{ display: "flex", gap: 6, alignItems: "center", textTransform: "capitalize" }}>
-              <input type="radio" name="visibility" checked={visibility === v} onChange={() => setVisibility(v)} /> {v}
+              <input type="radio" name="visibility" checked={visibility === v} onChange={() => setVisibility(v)}
+                     disabled={parentPublic && v === "private"} /> {v}
             </label>
           ))}
         </fieldset>
@@ -575,9 +706,11 @@ function CreateSpace({ canCreateTeam, onCreated, onError, parent }: {
         </fieldset>}
       </div>
       <div style={{ fontSize: 12, color: "var(--bkb-textMuted)" }}>
-        {visibility === "public"
-          ? "Public: anyone can read it, even without signing in. Only members can add data."
-          : "Private: only the people you add can read it."}
+        {parentPublic
+          ? `Public, like ${parent?.slug}: everything in a public space is public. Only members can add data.`
+          : visibility === "public"
+            ? "Public: anyone can read it, even without signing in. Only members can add data."
+            : "Private: only the people you add can read it."}
         {parent
           ? ` Everyone with a role in ${parent.slug} gets the same role here; you can add more people to the subspace.`
           : !canCreateTeam && " Team spaces are created by an admin; ask one to set one up or to share a space with you."}
@@ -608,9 +741,12 @@ export default function SpacesPage() {
   const showError = useCallback((m: string) => setError(m), []);
   const onDeleted = useCallback((d: Deleted) => {
     const n = d.dropped_graphs.length;
-    setNotice(`Deleted space "${d.slug}": ${n} graph${n === 1 ? "" : "s"}` +
+    const subs = d.subspaces_deleted ?? [];
+    setNotice(`Deleted space "${d.slug}"` + (subs.length ? ` and ${subs.length} subspace${subs.length === 1 ? "" : "s"} (${subs.join(", ")})` : "") +
+      `: ${n} graph${n === 1 ? "" : "s"}` +
       (d.dropped_delta_graphs.length ? ` and ${d.dropped_delta_graphs.length} ingestion history cop${d.dropped_delta_graphs.length === 1 ? "y" : "ies"}` : "") +
-      ` removed, ${d.members_removed} member${d.members_removed === 1 ? "" : "s"} unshared.`);
+      ` removed, ${d.members_removed} member${d.members_removed === 1 ? "" : "s"} unshared` +
+      (d.synthscholar_reviews_removed ? `, ${d.synthscholar_reviews_removed} literature review${d.synthscholar_reviews_removed === 1 ? "" : "s"} removed` : "") + ".");
     load();
   }, [load]);
   const canManage = (s: Space) => isAdmin || s.is_owner || s.your_role === "owner";
@@ -627,13 +763,21 @@ export default function SpacesPage() {
   const roots = all.filter((s) => !s.parent_slug || !slugs.has(s.parent_slug));
   const mine = roots.filter((s) => s.your_role);
   const others = roots.filter((s) => !s.your_role);
-  const renderTree = (s: Space, depth = 0, seen = new Set<string>()): React.ReactNode => {
+  // Every subspace below a space, any depth (what its deletion takes with it).
+  const below = (slug: string, seen = new Set<string>()): string[] => {
+    if (seen.has(slug)) return [];
+    seen.add(slug);
+    return (childrenOf.get(slug) ?? []).flatMap((k) => [k.slug, ...below(k.slug, seen)]);
+  };
+  const renderTree = (s: Space, depth = 0, seen = new Set<string>(), publicAbove?: string): React.ReactNode => {
     if (seen.has(s.slug)) return null;          // defensive: the API never returns a cycle
     const kids = childrenOf.get(s.slug) ?? [];
     const next = new Set(seen).add(s.slug);
     return (
       <div key={s.slug} style={{ display: "grid", gap: 10 }}>
         <SpaceRow space={s} canManage={canManage(s)} canDelete={isSuperAdmin} hasSubspaces={kids.length > 0}
+                  subspaces={below(s.slug)}
+                  publicAbove={publicAbove}
                   onChanged={load} onDeleted={onDeleted} onError={showError} />
         {kids.length > 0 && (
           <div
@@ -641,7 +785,7 @@ export default function SpacesPage() {
             aria-label={`Subspaces of ${s.name}`}
             style={{ display: "grid", gap: 10, marginLeft: depth < 6 ? 22 : 0, paddingLeft: 12, borderLeft: "2px solid var(--bkb-border)" }}
           >
-            {kids.map((k) => renderTree(k, depth + 1, next))}
+            {kids.map((k) => renderTree(k, depth + 1, next, s.visibility === "public" ? s.slug : publicAbove))}
           </div>
         )}
       </div>
@@ -657,6 +801,7 @@ export default function SpacesPage() {
             A space holds one or more graphs and decides who can read them. Make a space public so anyone can read it,
             or keep it private and add the people who should have access.
             {" Spaces can hold subspaces; people with a role in a space have the same role in its subspaces."}
+            {" Everything in a public space is public; under a private space, each subspace can be made public on its own."}
             {isAdmin && " As an admin you can change any space you can see here."}
           </p>
         </div>

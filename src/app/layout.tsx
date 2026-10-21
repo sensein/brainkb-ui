@@ -56,16 +56,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <meta httpEquiv="Content-Security-Policy" content="upgrade-insecure-requests" />
       </head>
       <body className={inter.className}>
-      {/* Google Tag Manager NoScript - Runs only if consent is given */}
-      <noscript>
-          <iframe
-              src="https://www.googletagmanager.com/ns.html?id=GTM-W79DN38R"
-              height="0"
-              width="0"
-              style={{display: "none", visibility: "hidden"}}
-          ></iframe>
-      </noscript>
-
+      {/* No <noscript> Tag Manager fallback: without JavaScript a visitor can't
+          accept the cookie banner, and analytics load only after consent. */}
       <SessionProvider session={session}>
           {/* One place that reacts to an expired backend credential, instead of
               every feature reporting its own "please sign in" failure. */}

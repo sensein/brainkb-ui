@@ -1,12 +1,38 @@
 import type {Metadata} from "next";
-import {getServerSession} from "next-auth";
-import {authOptions} from "@/lib/auth";
-import {redirect} from "next/navigation";
+import type {ReactNode} from "react";
 import yaml from "@/src/config/yaml/privacy-policy.yaml";
 
 export const metadata: Metadata = {
     title: "Privacy Policy",
 };
+
+const linkClass = "text-sky-600 hover:text-sky-700 font-semibold underline";
+
+// Turn the "HTTP cookies" phrase and any email address in a line of policy text
+// into links, leaving the rest as plain text.
+function renderLine(line: string): ReactNode[] {
+    const parts = line.split(/(HTTP cookies|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/);
+    return parts.map((part, i) => {
+        if (part === "HTTP cookies") {
+            return (
+                <a key={i} href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies"
+                   target="_blank" rel="noopener noreferrer" className={linkClass}>
+                    HTTP cookies
+                </a>
+            );
+        }
+        if (/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(part)) {
+            return <a key={i} href={`mailto:${part}`} className={linkClass}>{part}</a>;
+        }
+        return part;
+    });
+}
+
+function formatDate(iso: string): string {
+    const d = new Date(`${iso}T00:00:00Z`);
+    if (Number.isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString("en-US", {year: "numeric", month: "long", day: "numeric", timeZone: "UTC"});
+}
 
 export default async function PrivacyPolicy() { 
 
@@ -35,6 +61,25 @@ export default async function PrivacyPolicy() {
                             {section.description && (
                                 <p className="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
                                     {section.description}
+                                </p>
+                            )}
+                            {(section.last_updated || section.contact_email) && (
+                                <p className="mt-6 text-sm text-gray-600">
+                                    {section.last_updated && (
+                                        <span>
+                                            Last updated:{" "}
+                                            <time dateTime={section.last_updated}>{formatDate(section.last_updated)}</time>
+                                        </span>
+                                    )}
+                                    {section.last_updated && section.contact_email && <span aria-hidden="true"> · </span>}
+                                    {section.contact_email && (
+                                        <span>
+                                            {section.contact_label || "Contact"}:{" "}
+                                            <a href={`mailto:${section.contact_email}`} className={linkClass}>
+                                                {section.contact_email}
+                                            </a>
+                                        </span>
+                                    )}
                                 </p>
                             )}
                         </div>
@@ -68,24 +113,9 @@ export default async function PrivacyPolicy() {
 
                                         {/* Description */}
                                         <div className="text-gray-700 text-base leading-relaxed mb-4">
-                                            {subsection.description.split("\n").map((line, i) => (
+                                            {subsection.description.split("\n").filter((line) => line.trim() !== "").map((line, i) => (
                                                 <p key={i} className="mb-2">
-                                                    {line.includes("HTTP cookies") ? (
-                                                        <>
-                                                            {line.split("HTTP cookies")[0]}
-                                                            <a
-                                                                href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies"
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="text-sky-600 hover:text-sky-700 font-semibold underline"
-                                                            >
-                                                                HTTP cookies
-                                                            </a>
-                                                            {line.split("HTTP cookies")[1]}
-                                                        </>
-                                                    ) : (
-                                                        line
-                                                    )}
+                                                    {renderLine(line)}
                                                 </p>
                                             ))}
                                         </div>

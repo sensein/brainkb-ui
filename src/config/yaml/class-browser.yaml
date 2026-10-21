@@ -93,10 +93,15 @@ defaults:
   # into a FILTER inside the OPTIONAL had it evaluated as an inner join,
   # dropping every row that had no neighbour. Verified against the sample
   # data with a SPARQL engine rather than by reading the spec.
+  #
+  # The `label` rows do the same for each neighbour's rdfs:label, so a
+  # connection reads as a name rather than only an id. Same plain-join shape,
+  # same four ways a neighbour can be referenced.
   detailQueryTemplate: |-
     PREFIX biolink: <https://w3id.org/biolink/vocab/>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-    SELECT DISTINCT ?direction ?predicate ?other ?otherCategory
+    SELECT DISTINCT ?direction ?predicate ?other ?otherCategory ?otherLabel
     WHERE {
       GRAPH <{{graph}}> {
         { BIND("out" AS ?direction) <{{id}}> ?predicate ?other . }
@@ -126,9 +131,27 @@ defaults:
         { BIND("class" AS ?direction) <{{id}}> ?predicate ?other . ?other biolink:category ?otherCategory . }
         UNION
         { BIND("class" AS ?direction) ?other ?predicate <{{id}}> . ?other biolink:category ?otherCategory . }
+        UNION
+        {
+          BIND("label" AS ?direction)
+          <{{id}}> ?predicate ?lit3 .
+          ?other rdfs:label ?otherLabel .
+          FILTER(STR(?other) = CONCAT("{{base}}", STR(?lit3)))
+        }
+        UNION
+        {
+          BIND("label" AS ?direction)
+          ?other ?predicate ?ref4 .
+          FILTER(isLiteral(?ref4) && STR(?ref4) = "{{localId}}")
+          ?other rdfs:label ?otherLabel .
+        }
+        UNION
+        { BIND("label" AS ?direction) <{{id}}> ?predicate ?other . FILTER(isIRI(?other)) ?other rdfs:label ?otherLabel . }
+        UNION
+        { BIND("label" AS ?direction) ?other ?predicate <{{id}}> . ?other rdfs:label ?otherLabel . }
       }
     }
-    LIMIT 500
+    LIMIT 1000
 
 pages:
   - slug: "genes-genomes"
@@ -312,9 +335,13 @@ pages:
     description: >-
       Tools, atlases, pipelines, standards and data archives used across the
       BICAN consortium, with their RRIDs and how to cite them.
+    # The readable name is the row's link; the slug-style id and the
+    # description sit under it (`primaryColumn` / `secondaryColumn`), so the
+    # id column is not repeated. `emptyLabel` replaces the default
+    # "Not recorded" for a missing value.
+    primaryColumn: "name"
+    secondaryColumn: "description"
     columns:
-      - key: "id"
-        label: "ID"
       - key: "name"
         label: "Name"
       - key: "type"
@@ -323,6 +350,11 @@ pages:
         label: "RRID / identifier"
       - key: "provider"
         label: "Provider"
+        emptyLabel: "Provider not recorded"
+    # Free-text search over these columns, alongside the filters.
+    search:
+      keys: ["name", "description", "rrid"]
+      placeholder: "Search name, description or RRID"
     # Provider names are joined with "; " (a resource could have several).
     filters:
       - key: "type"
@@ -336,11 +368,13 @@ pages:
     queryTemplate: |-
       PREFIX biolink: <https://w3id.org/biolink/vocab/>
       PREFIX brainkb: <https://brainkb.org/vocab/>
+      PREFIX dcterms: <http://purl.org/dc/terms/>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX schema: <https://schema.org/>
       PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
       SELECT ?id (SAMPLE(?label) AS ?name) (SAMPLE(?category) AS ?type)
+             (SAMPLE(?desc) AS ?description)
              (GROUP_CONCAT(DISTINCT ?ident; separator=", ") AS ?rrid)
              (GROUP_CONCAT(DISTINCT ?providerName; separator="; ") AS ?provider)
       WHERE {
@@ -348,6 +382,8 @@ pages:
           ?id biolink:category "{{category}}"^^xsd:anyURI .
           OPTIONAL { ?id rdfs:label ?label }
           OPTIONAL { ?id brainkb:resourceCategory ?category }
+          # Whichever description predicate the data uses; none is fine.
+          OPTIONAL { ?id schema:description|dcterms:description|rdfs:comment ?desc }
           OPTIONAL { ?id schema:identifier ?ident }
           OPTIONAL { ?id schema:provider ?prov . ?prov rdfs:label ?providerName }
         }
@@ -358,9 +394,12 @@ pages:
     classes:
       - name: "Resource"
         category: "brainkb:Resource"
+        # How the list counts rows: "120 resources" rather than "120 entities".
+        noun: ["resource", "resources"]
         description: >-
           A tool, atlas, pipeline, standard, data archive or other resource
           from the BICAN citation list. Its type is the list's own category.
       - name: "Organization"
         category: "brainkb:Organization"
+        noun: ["organization", "organizations"]
         description: "Institutes and consortia that provide resources."

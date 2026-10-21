@@ -1,4 +1,4 @@
-# Chapter 3: SynthScholar. See README.md in this folder for the format.
+# Chapter 4: SynthScholar. See README.md in this folder for the format.
 id: synthscholar
 icon: ▤
 name: SynthScholar
@@ -22,16 +22,23 @@ links:
     href: https://github.com/sensein/synthscholar
 help: "{{SKILLS_REPO}}/issues"
 wordmark: /synthscholar-horizontal.png
+chooseAgent: true
 tryIt:
   - label: npx
+    agent: claude
     cmd: |-
       npx synthscholar install
       npx synthscholar doctor
-  - label: GitHub
+  - label: npx
+    agent: codex
     cmd: |-
-      git clone {{SKILLS_REPO}}
-      cd agent_skills
-      python scripts/install_skills.py --agent claude --skills synthscholar
+      npx synthscholar install --agent codex
+      npx synthscholar doctor
+  - label: npx
+    agent: other
+    cmd: |-
+      npx synthscholar install --dest ~/my-agent/skills
+      npx synthscholar doctor
 sections:
   - title: Overview
     subtitle: A PRISMA 2020 review with every decision traceable.
@@ -100,46 +107,68 @@ sections:
             - name: The app-driven pipeline
               why: Run the original SynthScholar application's pipeline instead of your assistant.
               cmd: the synthscholar Python package + OPENROUTER_API_KEY
+      - callout:
+          title: Running SynthScholar inside Claude Code or another agent? You don't need an OpenRouter API key.
+          text: >-
+            Without `OPENROUTER_API_KEY`, the skill uses the agent itself as the model: the agent screens,
+            charts, appraises and synthesises the papers, and the review is exported in the same format. If a
+            key *is* set, the skill prefers SynthScholar's own pipeline, which uses it; to keep the agent as the
+            model, tell it so, e.g. "run this SynthScholar review yourself, as the agent, without OpenRouter".
+            You need the key only to run SynthScholar's own pipeline (the `synthscholar` Python package)
+            instead of the agent.
       - note: >-
           Not sure what's missing? `npx synthscholar doctor` lists what each tool needs and what isn't
           installed.
   - title: Install
-    subtitle: npx or GitHub, then check what's missing.
+    subtitle: One npx command, then check what's missing.
     blocks:
       - step:
           title: Install the skill
           desc: >-
-            Use npx, or install from GitHub; both give you the same skill. The installer only copies the
-            skill: no Python packages, no TeX, no keys.
+            The installer only copies the skill: no Python packages, no TeX, no keys.
           blocks:
-            - options:
-                - label: npx
-                  cmd: |-
-                    npx synthscholar install                        # Claude Code, your user
-                    npx synthscholar install --scope project        # this project only
-                    npx synthscholar install --agent codex          # Codex
-                    npx synthscholar install --agent both           # Claude Code and Codex
-                    npx synthscholar install --dest ~/my-agent/skills   # any other assistant
-                    npx synthscholar install --dry-run              # show what would happen
-                - label: GitHub
-                  cmd: |-
-                    git clone {{SKILLS_REPO}}
-                    cd agent_skills
-                    python scripts/install_skills.py --agent claude --skills synthscholar
-                    # --agent codex, or --dest /path/to/skills, for other assistants
-            - table:
-                cols:
-                  - Assistant
-                  - Your user
-                  - This project only
-                rows:
-                  - - Claude Code
-                    - "`~/.claude/skills/synthscholar`"
-                    - "`./.claude/skills/synthscholar`"
-                  - - Codex
-                    - "`~/.agents/skills/synthscholar`"
-                    - "`./.agents/skills/synthscholar`"
+            - agents:
+                claude:
+                  - code:
+                      label: terminal
+                      cmd: npx synthscholar install
+                codex:
+                  - code:
+                      label: terminal
+                      cmd: npx synthscholar install --agent codex
+                other:
+                  - code:
+                      label: terminal
+                      cmd: npx synthscholar install --dest ~/my-agent/skills
             - note: Start a new session after installing so your assistant loads the skill.
+            - details:
+                summary: "Reference: other install options and where the skill goes"
+                blocks:
+                  - code:
+                      label: terminal
+                      cmd: |-
+                        npx synthscholar install --scope project        # this project only
+                        npx synthscholar install --agent both           # Claude Code and Codex
+                        npx synthscholar install --dry-run              # show what would happen
+                  - code:
+                      label: from GitHub instead of npm (same skill)
+                      cmd: |-
+                        git clone {{SKILLS_REPO}}
+                        cd agent_skills
+                        python scripts/install_skills.py --agent claude --skills synthscholar
+                        # --agent codex, or --dest /path/to/skills, for other assistants
+                  - table:
+                      cols:
+                        - Assistant
+                        - Your user
+                        - This project only
+                      rows:
+                        - - Claude Code
+                          - "`~/.claude/skills/synthscholar`"
+                          - "`./.claude/skills/synthscholar`"
+                        - - Codex
+                          - "`~/.agents/skills/synthscholar`"
+                          - "`./.agents/skills/synthscholar`"
       - step:
           title: Check what's missing
           desc: >-
@@ -152,6 +181,10 @@ sections:
                   npx synthscholar doctor      # what's needed, what's missing
                   npx synthscholar status      # what's installed, which version
                   npx synthscholar uninstall   # remove the skill
+      - outcome:
+          expect: >-
+            `status` lists `synthscholar` as installed and current for your assistant, and `doctor` marks
+            Python `[ok]`. Then ask your assistant to describe the synthscholar skill.
       - tips:
           - "**Safe to re-run**: `install` updates a copy it installed and leaves an up-to-date one alone."
           - >-

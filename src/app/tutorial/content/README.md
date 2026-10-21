@@ -29,7 +29,9 @@ links:                          # right panel: Useful links
   - label: StructSense on GitHub
     href: "{{SKILLS_REPO}}/tree/main/skills/structsense"
 help: "{{SKILLS_REPO}}/issues"  # right panel: Report an issue
+chooseAgent: true               # optional: ask "Which assistant do you use?" under the title
 tryIt:                          # optional "Try it yourself" box; several become tabs
+                                # add `agent: claude|codex|other` to an item to show it only for that assistant
   - label: GitHub
     cmd: |-
       git clone {{SKILLS_REPO}}
@@ -62,6 +64,10 @@ Each item in `blocks:` is one of these:
 | Required / optional lists | `- needs: {required: [{name, why, cmd?}], optional: [{name, why, cmd?}]}` |
 | How to call a skill | `- callSkill: structsense` (Claude Code `/`, Codex `$`, others) |
 | Shared block | `- include: cascade` (a key in `_shared.yaml`) |
+| Per-assistant blocks | `- agents: {claude: [ …blocks… ], codex: [ … ], other: [ … ]}` (shown after the reader picks an assistant) |
+| Collapsed reference | `- details: {summary: "Reference: flags", blocks: [ … ]}` |
+| Highlighted callout | `- callout: {title: Don't miss this, text: Why it matters}` |
+| End of an exercise | `- outcome: {expect: What you should see, trouble: "#start-here--troubleshooting"}` (`trouble` optional; that is the default) |
 
 ## Text
 

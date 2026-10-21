@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import StatusIndicator, { StatusType } from "../../components/ui/StatusIndicator";
 import { clientEnv } from "../../../config/env";
+import SynthScholarImport from "../../components/synth-scholar/SynthScholarImport";
 
 interface SpaceGraph {
     iri: string;
@@ -23,6 +24,13 @@ interface WritableSpace {
 }
 
 const UNMAPPED = "__unmapped__";
+
+/** What is being ingested. Each kind has its own form: the user says which, nothing is guessed from the files. */
+type IngestKind = "rdf" | "synthscholar";
+const INGEST_KINDS: { id: IngestKind; title: string; detail: string }[] = [
+    { id: "rdf", title: "RDF files", detail: "Turtle (.ttl) or JSON-LD (.jsonld) files into a named graph of a space." },
+    { id: "synthscholar", title: "SynthScholar review", detail: "The output folder of a SynthScholar run — its RDF goes into the review's own graph in a space, with its manuscript, PDF, figures and provenance kept for its page." },
+];
 
 /** Spaces in tree order (parents before their subspaces), with depth for indenting. */
 function treeOrder(spaces: WritableSpace[]): { space: WritableSpace; depth: number }[] {
@@ -62,6 +70,13 @@ export default function IngestKnowledgeGraphPage() {
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [isDragOver, setIsDragOver] = useState<boolean>(false);
     const [currentStatus, setCurrentStatus] = useState<StatusType>('idle');
+    const [kind, setKind] = useState<IngestKind>('rdf');
+
+    // ?kind=synthscholar opens the review import directly (linked from SynthScholar).
+    useEffect(() => {
+        const k = new URLSearchParams(window.location.search).get('kind');
+        if (k === 'synthscholar' || k === 'rdf') setKind(k);
+    }, []);
 
     // Redirect if not logged in
     useEffect(() => {
@@ -268,6 +283,47 @@ export default function IngestKnowledgeGraphPage() {
     return (
         <div className="flex flex-col max-w-4xl mx-auto p-4">
             <h1 className="text-2xl font-bold mb-6">Ingest Knowledge Graph</h1>
+
+            {/* What is being ingested — chosen, not inferred */}
+            <fieldset className="mb-6">
+                <legend className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">What are you ingesting?</legend>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {INGEST_KINDS.map((k) => (
+                        <label
+                            key={k.id}
+                            className={`cursor-pointer rounded-lg border p-4 transition-colors ${
+                                kind === k.id
+                                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                                    : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                            }`}
+                        >
+                            <input
+                                type="radio"
+                                name="ingest-kind"
+                                value={k.id}
+                                checked={kind === k.id}
+                                onChange={() => { setKind(k.id); setError(null); setSuccessMessage(null); }}
+                                disabled={isUploading}
+                                className="sr-only"
+                            />
+                            <span className="block font-semibold text-gray-800 dark:text-gray-100">{k.title}</span>
+                            <span className="block text-xs text-gray-600 dark:text-gray-400 mt-1">{k.detail}</span>
+                        </label>
+                    ))}
+                </div>
+            </fieldset>
+
+            {kind === "synthscholar" ? (
+                <SynthScholarImport
+                    cannotIngest={cannotIngest}
+                    userId={getUserId()}
+                    spaces={spaces === null ? null : treeOrder(spaces).map(({ space: s, depth }) => ({
+                        slug: s.slug,
+                        label: `${"\u00a0\u00a0\u00a0".repeat(depth)}${depth ? "└ " : ""}${s.name} (${s.slug}) · ${s.visibility}`,
+                    }))}
+                />
+            ) : (
+            <>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
                 Upload Knowledge Graph files in JSON-LD or Turtle (TTL) format to a specified named graph.
             </p>
@@ -522,6 +578,8 @@ export default function IngestKnowledgeGraphPage() {
                 </div>
 
             </form>
+            </>
+            )}
         </div>
     );
 }

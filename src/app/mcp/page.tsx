@@ -1,8 +1,9 @@
 /**
- * MCP — public marketing page for the BrainKB MCP server. Content follows the
- * MCP server's own site (MCP_SITE), condensed: full per-client setup and the
- * FAQ stay there and are linked. The look is the Home page's design (the `.lp`
- * classes in components/marketing/landing/landing.css).
+ * Use with AI — public page for connecting an AI agent to BrainKB over MCP.
+ * Order: why and how to connect (hero with the per-client configuration), what
+ * the agent can do (research vs knowledge management), a research example, one
+ * setup interface (BrainKB skill or MCP only) with verification, then help.
+ * The look is the Home page's design (the `.lp` classes in landing.css).
  */
 
 import Link from "next/link";
@@ -14,44 +15,39 @@ import { dmSans, plexMono } from "../components/marketing/fonts";
 import { MCP_ENDPOINT, MCP_SITE } from "../components/marketing/tokens";
 import "../components/marketing/landing/landing.css";
 
-const CAPABILITIES = [
-  {
-    di: "⇪",
-    name: "Ingest",
-    desc: "Load RDF from text, files or large streamed uploads (up to 5 GB). Each ingest runs as a background job, attributed to you.",
-    asks: ["Ingest review.ttl into my lab space", "Did last night's ingest finish?"],
-  },
-  {
-    di: "⌕",
-    name: "Search and read",
-    desc: "Search everything you may read, open a whole space, or list the graphs in the knowledge base.",
-    asks: ["Find anything about Purkinje cells", "What's in the hmba space?"],
-  },
-  {
-    di: "◈",
-    name: "Ready-made questions",
-    desc: "Vetted questions about extracted entities, cells, markers, phenotypes and causal claims, answered without writing SPARQL.",
-    asks: ["How is the neocortex written across papers?", "Which entities do these papers share?"],
-  },
-  {
-    di: "↻",
-    name: "Provenance",
-    desc: "The history of any graph as W3C PROV-O: who added what, when, and the exact triples each ingest contributed.",
-    asks: ["What changed in my space this week?", "Who added these triples?"],
-  },
-  {
-    di: "▣",
-    name: "Workspaces",
-    desc: "Create private or public spaces, for yourself or a team, and choose who can read or edit them.",
-    asks: ["Create a private space for my lab", "Give alice@lab.org edit access"],
-  },
-  {
-    di: "⚿",
-    name: "Identity and access",
-    desc: "Sign in with Globus, ORCID or GitHub, keep a personal access token, and let admins manage roles.",
-    asks: ["Log me in with Globus", "Make me a token for this laptop"],
-  },
-] as const;
+type Cap = { di: string; name: string; line: string; desc: string; asks: string[] };
+
+const RESEARCH: Cap[] = [
+  { di: "⌕", name: "Discover", line: "Find concepts and relationships", desc: "Search everything you may read, open a whole space, or list the graphs in the knowledge base.", asks: ["Find what BrainKB has on disease-associated microglia", "What's in the hmba space?"] },
+  { di: "◈", name: "Investigate", line: "Ask scientific questions", desc: "Vetted questions over extracted entities: cell types, regions, markers, phenotypes and causal claims, answered without writing SPARQL.", asks: ["Which papers link TREM2 to microglia?", "Which entities do these papers share?"] },
+  { di: "❝", name: "Verify", line: "Trace supporting evidence", desc: "Where each assertion came from: the paper and sentence, who added it and when, as W3C PROV-O.", asks: ["Which sentence supports this claim?", "Who added these triples, and when?"] },
+];
+const MANAGE: Cap[] = [
+  { di: "⇪", name: "Ingest", line: "Add structured data", desc: "Load RDF from text, files or large streamed uploads (up to 5 GB). Each ingest runs as a background job, attributed to you.", asks: ["Ingest review.ttl into my lab space", "Did last night's ingest finish?"] },
+  { di: "▣", name: "Organize", line: "Work across spaces", desc: "Create private or public spaces and subspaces for yourself or a team, and see what changed in each.", asks: ["Create a private space for my lab", "What changed in my space this week?"] },
+  { di: "⚿", name: "Control", line: "Manage access", desc: "Sign in with Globus, ORCID or GitHub, keep a personal access token, and choose who can read or edit.", asks: ["Give alice@lab.org edit access", "Make me a token for this laptop"] },
+];
+
+function Group({ id, title, caps }: { id: string; title: string; caps: Cap[] }) {
+  return (
+    <div className="cap-group" id={id}>
+      <span className="cap-k">{title}</span>
+      <div className="grid3 tight blue-items">
+        {caps.map((c) => (
+          <div key={c.name} className="dec-item">
+            <i className="di" aria-hidden="true">{c.di}</i>
+            <h4>{c.name}</h4>
+            <p className="cap-line">{c.line}</p>
+            <p>{c.desc}</p>
+            <ul className="asks">
+              {c.asks.map((a) => <li key={a}>{a}</li>)}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function McpPage() {
   return (
@@ -59,18 +55,30 @@ export default function McpPage() {
       <MarketingHeader />
 
       <main className="wrap">
-        <section className="hero page">
+        <section className="hero page" id="connect">
           <div className="hero-copy">
             <span className="eyebrow">Agent-ready · MCP</span>
             <h1>Use BrainKB from your AI agent.</h1>
             <p className="lead">
-              The BrainKB MCP server connects your agent to the knowledge base. Ask in plain language, and it signs in
-              as you, ingests RDF into your workspaces, answers questions over extracted entities, and traces where
-              every triple came from.
+              Connect Claude, Codex, VS Code and other MCP-compatible clients to BrainKB. Search neuroscience
+              knowledge, explore evidence-linked relationships, and work with your knowledge spaces in natural
+              language.
             </p>
-            <p className="muted-p">
-              Public spaces can be read without logging in. Everything else runs as you, within your permissions.
-            </p>
+            <ul className="chips" aria-label="What you get">
+              <li><a href="#setup-mcp">MCP server</a></li>
+              <li><a href="#setup-skill">Optional skill</a></li>
+              <li><a href="#manage">Public + private spaces</a></li>
+            </ul>
+            <div className="two-parts">
+              <a href="#setup-mcp">
+                <b>MCP server <span aria-hidden="true">↓</span></b>
+                <span>Connects your agent to BrainKB&apos;s tools and knowledge. This is what you add to your client.</span>
+              </a>
+              <a href="#setup-skill">
+                <b>BrainKB skill <span aria-hidden="true">↓</span></b>
+                <span>Optional. Adds instructions and workflows for using those tools well.</span>
+              </a>
+            </div>
             <div className="endpoint">
               <span className="lbl">Endpoint</span>
               <div className="code">
@@ -78,15 +86,8 @@ export default function McpPage() {
                 {MCP_ENDPOINT.replace(/^https?:\/\//, "")}
               </div>
             </div>
-            <p className="muted-p">
-              Works with <b>Claude Code</b>, <b>claude.ai</b>, <b>ChatGPT</b>, <b>Perplexity</b>, <b>Cursor</b>,{" "}
-              <b>VS Code</b> and <b>Copilot</b>, <b>Codex</b>, and any other MCP client.
-            </p>
-            <div className="hero-actions">
-              <a className="btn primary" href="#skill">Install the BrainKB skill ↓</a>
-            </div>
           </div>
-          <InstallCard authNote skillHref="#skill" />
+          <InstallCard authNote skillHref="#setup" />
         </section>
       </main>
 
@@ -94,57 +95,70 @@ export default function McpPage() {
         <div className="wrap">
           <div className="section-title">
             <div>
-              <span className="eyebrow">Capabilities</span>
+              <span className="eyebrow">What your agent can do</span>
               <h2>Less SPARQL.<br />More science.</h2>
             </div>
             <p>Ask in plain language and your agent picks the right BrainKB tools. For example:</p>
           </div>
-          <div className="grid3 tight blue-items">
-            {CAPABILITIES.map((c) => (
-              <div key={c.name} className="dec-item">
-                <i className="di" aria-hidden="true">{c.di}</i>
-                <h4>{c.name}</h4>
-                <p>{c.desc}</p>
-                <ul className="asks">
-                  {c.asks.map((a) => (
-                    <li key={a}>{a}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+          <Group id="research" title="Research with your agent" caps={RESEARCH} />
+          <Group id="manage" title="Manage knowledge" caps={MANAGE} />
         </div>
       </section>
 
       <div className="wrap">
-        <section className="section" id="skill">
+        <section className="section" id="example">
+          <div className="section-title">
+            <div>
+              <span className="eyebrow">Research in action</span>
+              <h2>One question,<br />traced to its evidence.</h2>
+            </div>
+            <p>
+              Why connect BrainKB to your agent: it answers from linked, sourced knowledge instead of from memory, and
+              shows you where each part of the answer came from.
+            </p>
+          </div>
+          <div className="example">
+            <div className="ex-ask">
+              <span className="ex-k">Researcher asks</span>
+              <p>“What relationships are documented between TREM2, disease-associated microglia and Alzheimer&apos;s disease?”</p>
+            </div>
+            <ol className="ex-flow">
+              <li><span className="ex-k">Find the concepts</span><code>brainkb_search</code> resolves TREM2, disease-associated microglia and Alzheimer&apos;s disease to graph entities.</li>
+              <li><span className="ex-k">Retrieve assertions</span><code>brainkb_qa_run</code> asks the vetted questions about those entities and the claims that connect them.</li>
+              <li><span className="ex-k">Show provenance</span><code>brainkb_provenance_graph</code> returns who added each assertion, when, and from which source.</li>
+            </ol>
+            <div className="ex-result">
+              <div><span className="ex-k">Concepts</span><p>TREM2 (gene) · disease-associated microglia (cell state) · Alzheimer&apos;s disease (disease)</p></div>
+              <div><span className="ex-k">Relationships</span><p>The assertions linking them, for example that the disease-associated microglia response depends on TREM2</p></div>
+              <div><span className="ex-k">Evidence</span><p>The paper and sentence behind each assertion, with its extraction run and PROV-O record</p></div>
+            </div>
+            <p className="ex-note">
+              This shows the workflow. What comes back depends on what has been ingested into the spaces you can read.
+            </p>
+            <div className="connect-links">
+              <Link className="btn primary" href="/explore">Explore knowledge</Link>
+              <a className="btn" href="#setup">Try it in your agent ↓</a>
+            </div>
+          </div>
+        </section>
+
+        <section className="section" id="setup">
           <div className="section-title center">
             <div>
-              <span className="eyebrow">Skill</span>
-              <h2>Connect with the BrainKB skill.</h2>
-              <p>
-                One command installs the BrainKB skill and registers the MCP server. The skill teaches your agent to
-                confirm who it is acting as, ingest large files safely, pick the right workspace and question, and
-                answer provenance questions.
-              </p>
+              <span className="eyebrow">Set up</span>
+              <h2>Connect, sign in, check.</h2>
+              <p>Pick the BrainKB skill (recommended) or connect the MCP server alone.</p>
             </div>
           </div>
           <SkillSetup />
         </section>
 
-        <section className="cta">
+        <section className="help">
           <div>
-            <h2>Every client,<br />step by step.</h2>
-            <p>
-              Setup for VS Code, Copilot, Claude Desktop and more, the BrainKB skill, and answers to common questions.
-            </p>
+            <h3>Need help connecting your client?</h3>
+            <p>Configuration examples, authentication and troubleshooting for Claude Code, Codex, VS Code, Cursor, Copilot and other clients.</p>
           </div>
-          <div className="actions">
-            <a className="btn primary" href={MCP_SITE} target="_blank" rel="noopener noreferrer">
-              Full setup guide ↗
-            </a>
-            <Link className="btn" href="/explore">Explore the graph</Link>
-          </div>
+          <a className="btn" href={MCP_SITE} target="_blank" rel="noopener noreferrer">Full setup guide ↗</a>
         </section>
       </div>
 

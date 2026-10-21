@@ -8,9 +8,11 @@
  * following a per-class field list, so a class needs no configuration to get
  * a working detail page.
  *
- * Two sections: the entity's plain values (untitled, directly under the
- * header) and Connections — anything pointing at another entity, in either
- * direction, with incoming references marked "←".
+ * Sections: Overview (the entity's plain values), Connections (anything
+ * pointing at another entity, in either direction, with incoming references
+ * phrased from this record's side, e.g. "Tissue sample derived from this
+ * Donor"), Source & history (provenance-style values such as dates and
+ * versions), and a collapsed Technical details view with the raw triples.
  *
  * Note that "points at another entity" is not the same as "is an IRI":
  * the BICAN data links by typed literal
@@ -32,6 +34,7 @@ import { instrumentSerif, plexSans, plexMono } from "../../../components/marketi
 import { COLORS, CARD_SURFACE } from "../../../components/marketing/tokens";
 import ModelFigure, { type ModelEdge } from "../../ModelFigure";
 import browserConfig from "@/src/config/yaml/class-browser.yaml";
+import "../../browse.css";
 
 type ClassEntry = { name: string; category: string; description?: string };
 type ModelSource = { name?: string; url?: string; classUrlTemplate?: string } | null;
@@ -44,7 +47,7 @@ type PageConfig = {
   model?: ModelSource;
 };
 type Term = { value?: string; type?: string; datatype?: string };
-type Row = { direction?: Term; predicate?: Term; other?: Term; otherCategory?: Term };
+type Row = { direction?: Term; predicate?: Term; other?: Term; otherCategory?: Term; otherLabel?: Term };
 
 const CONFIG = browserConfig as {
   defaults: {
@@ -77,6 +80,92 @@ function refTarget(term: Term | undefined, currentId: string): string | null {
 function shortLabel(iri: string): string {
   const tail = iri.split(/[#/]/).filter(Boolean).pop();
   return tail || iri;
+}
+
+// Readable form of a predicate or class local name: "was_derived_from" and
+// "wasDerivedFrom" both become "was derived from", "TissueSample" becomes
+// "Tissue sample".
+function words(name: string): string {
+  return name
+    .replace(/[_-]+/g, " ")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
+    .trim()
+    .toLowerCase();
+}
+function sentence(text: string): string {
+  return text ? text[0].toUpperCase() + text.slice(1) : text;
+}
+// Well-known predicates get a plain name; anything else is its local name in
+// words. Keyed by local name so it works across namespaces.
+const PREDICATE_LABELS: Record<string, string> = {
+  label: "Name",
+  category: "Type",
+  type: "RDF type",
+  full_name: "Full name",
+  identifier: "Identifier",
+  url: "Website",
+};
+function predicateLabel(iri: string): string {
+  const local = shortLabel(iri);
+  return PREDICATE_LABELS[local] ?? sentence(words(local));
+}
+function className(name?: string): string | undefined {
+  return name ? sentence(words(name)) : undefined;
+}
+// Incoming reference, phrased from this record's side: other --p--> this.
+// "wasDerivedFrom" reads "Tissue sample derived from this Donor"; a noun
+// predicate such as "provider" reads "Resource with this Organization as
+// provider", a verb such as "annotates" reads "… that annotates this …". A leading was/is is dropped so the phrase reads as a relative
+// clause.
+function inverseLabel(predicateIri: string, otherClass: string | undefined, thisClass: string | undefined): string {
+  const phrase = words(shortLabel(predicateIri));
+  const subject = otherClass ?? "Records";
+  const object = `this ${thisClass ?? "record"}`;
+  const verbal = /^(was|is|has|had)\b/.test(phrase) || /\b(by|from|of|on|to|in|with|for|at)$/.test(phrase);
+  if (verbal) return `${subject} ${phrase.replace(/^(was|is)\s+/, "")} ${object}`;
+  // A single present-tense verb ("annotates"): "Dissection roi polygon that
+  // annotates this Brain slab".
+  if (/^[a-z]+[^s]s$/.test(phrase)) return `${subject} that ${phrase} ${object}`;
+  return `${subject} with ${object} as ${phrase}`;
+}
+
+// Provenance-style values, grouped under "Source & history" rather than
+// Overview. Matched on the predicate's local name, case-insensitively.
+const HISTORY_PREDICATE =
+  /^(generated_?at_?time|invalidated_?at_?time|was_?generated_?by|was_?attributed_?to|was_?revision_?of|was_?informed_?by|was_?quoted_?from|had_?primary_?source|created|modified|issued|date.*|.*_date|version|version_?info|source|provenance|license|citation|creator|contributor|publisher)$/i;
+
+// Labels for identifiers whose meaning is fixed and well known, shown next to
+// the raw id. Only NCBI Taxonomy ids for the species BICAN data covers;
+// anything not listed here is shown as-is rather than guessed.
+const KNOWN_IDS: Record<string, string> = {
+  "NCBITaxon:9606": "Homo sapiens (human)",
+  "NCBITaxon:10090": "Mus musculus (house mouse)",
+  "NCBITaxon:10116": "Rattus norvegicus (Norway rat)",
+  "NCBITaxon:9544": "Macaca mulatta (rhesus macaque)",
+  "NCBITaxon:9541": "Macaca fascicularis (crab-eating macaque)",
+  "NCBITaxon:9483": "Callithrix jacchus (common marmoset)",
+};
+function knownLabel(value: string): string | undefined {
+  // Accept the CURIE and the OBO PURL form of the same id.
+  const m = value.match(/NCBITaxon[:_](\d+)$/);
+  return m ? KNOWN_IDS[`NCBITaxon:${m[1]}`] : undefined;
+}
+
+type Group = { key: string; label: string; title: string; rows: Row[] };
+
+// Rows sharing a label become one field with several values, in first-seen
+// order.
+function groupRows(rows: Row[], labelFor: (row: Row) => string): Group[] {
+  const groups = new Map<string, Group>();
+  for (const row of rows) {
+    const label = labelFor(row);
+    const predicate = row.predicate?.value ?? "";
+    const existing = groups.get(label);
+    if (existing) existing.rows.push(row);
+    else groups.set(label, { key: `${label}|${predicate}`, label, title: predicate, rows: [row] });
+  }
+  return [...groups.values()];
 }
 
 export default function EntityDetailPage() {
@@ -153,9 +242,13 @@ function DetailView({ page, id }: { page: PageConfig; id: string }) {
   // "class" rows are not content: they carry each neighbour's category so the
   // figure can name what this record is actually connected to.
   const neighbourCategory = new Map<string, string>();
+  const neighbourLabel = new Map<string, string>();
   for (const row of rows) {
     if (row.direction?.value === "class" && row.other?.value && row.otherCategory?.value) {
       neighbourCategory.set(row.other.value, row.otherCategory.value);
+    }
+    if (row.direction?.value === "label" && row.other?.value && row.otherLabel?.value) {
+      neighbourLabel.set(row.other.value, row.otherLabel.value);
     }
   }
 
@@ -202,6 +295,33 @@ function DetailView({ page, id }: { page: PageConfig; id: string }) {
   }
   const hasModelEdges = !!entityClass && modelEdges.length > 0;
 
+  // Where a row's other end points, in either direction (null for a value).
+  const targetOf = (row: Row): string | null =>
+    row.direction?.value === "in"
+      ? row.other?.type === "uri"
+        ? row.other.value ?? null
+        : refTarget(row.other, id)
+      : refTarget(row.other, id);
+
+  const thisClass = className(entityClass?.name);
+  const overview = groupRows(
+    attributes.filter((r) => !HISTORY_PREDICATE.test(shortLabel(r.predicate?.value ?? ""))),
+    (r) => predicateLabel(r.predicate?.value ?? ""),
+  );
+  const history = groupRows(
+    attributes.filter((r) => HISTORY_PREDICATE.test(shortLabel(r.predicate?.value ?? ""))),
+    (r) => predicateLabel(r.predicate?.value ?? ""),
+  );
+  const connectionGroups = [
+    ...groupRows(connections, (r) => predicateLabel(r.predicate?.value ?? "")),
+    ...groupRows(incoming, (r) => {
+      const target = targetOf(r);
+      const other = classNameFor(target ? neighbourCategory.get(target) : undefined);
+      return inverseLabel(r.predicate?.value ?? "", className(other), thisClass);
+    }),
+  ];
+  const rawRows = rows.filter((r) => r.direction?.value === "out" || r.direction?.value === "in");
+
   return (
     <div
       className={`${instrumentSerif.variable} ${plexSans.variable} ${plexMono.variable}`}
@@ -246,8 +366,11 @@ function DetailView({ page, id }: { page: PageConfig; id: string }) {
           >
             {label || shortLabel(id)}
           </h1>
-          <code style={{ font: "400 13px var(--font-plex-mono, monospace)", color: COLORS.muted, wordBreak: "break-all" }}>
-            {id}
+          <code
+            title={id}
+            style={{ font: "400 13px var(--font-plex-mono, monospace)", color: COLORS.muted, wordBreak: "break-all" }}
+          >
+            ID {shortLabel(id)}
           </code>
           {entityClass && (
             <div style={{ display: "flex", flexDirection: "column", gap: 6, maxWidth: 760 }}>
@@ -312,12 +435,20 @@ function DetailView({ page, id }: { page: PageConfig; id: string }) {
 
         {!loading && !error && rows.length > 0 && (
           <>
-            <TermSection rows={attributes} pageSlug={page.slug} currentId={id} linkSuffix={linkSuffix} />
+            <TermSection
+              title="Overview"
+              groups={overview}
+              pageSlug={page.slug}
+              targetOf={targetOf}
+              neighbourLabel={neighbourLabel}
+              linkSuffix={linkSuffix}
+            />
             <TermSection
               title="Connections"
-              rows={[...connections, ...incoming]}
+              groups={connectionGroups}
               pageSlug={page.slug}
-              currentId={id}
+              targetOf={targetOf}
+              neighbourLabel={neighbourLabel}
               linkSuffix={linkSuffix}
             />
             {entityClass && hasModelEdges && (
@@ -330,6 +461,66 @@ function DetailView({ page, id }: { page: PageConfig; id: string }) {
                 </div>
               </div>
             )}
+            <TermSection
+              title="Source & history"
+              groups={history}
+              pageSlug={page.slug}
+              targetOf={targetOf}
+              neighbourLabel={neighbourLabel}
+              linkSuffix={linkSuffix}
+            />
+            <details className="detail-tech">
+              <summary>Technical details: RDF identifiers ({rawRows.length} triples)</summary>
+              <div style={{ padding: "14px 18px", display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ fontSize: 13, color: COLORS.body }}>
+                  Subject IRI{" "}
+                  <code style={{ font: "400 12px var(--font-plex-mono)", wordBreak: "break-all" }}>{id}</code>
+                  {" "}in graph{" "}
+                  <code style={{ font: "400 12px var(--font-plex-mono)", wordBreak: "break-all" }}>{graph}</code>
+                </div>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", font: "400 12px var(--font-plex-mono)" }}>
+                    <thead>
+                      <tr>
+                        {["Direction", "Predicate", "Value", "Datatype"].map((h) => (
+                          <th
+                            key={h}
+                            style={{ textAlign: "left", padding: "6px 8px", color: COLORS.muted, borderBottom: `1px solid ${COLORS.border}` }}
+                          >
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rawRows.map((r, i) => (
+                        <tr key={i}>
+                          {[
+                            r.direction?.value === "in" ? "incoming (subject)" : "outgoing",
+                            r.predicate?.value ?? "",
+                            r.other?.value ?? "",
+                            r.other?.datatype ?? (r.other?.type === "uri" ? "IRI" : ""),
+                          ].map((cell, j) => (
+                            <td
+                              key={j}
+                              style={{
+                                padding: "6px 8px",
+                                color: COLORS.body,
+                                verticalAlign: "top",
+                                wordBreak: "break-all",
+                                borderBottom: `1px solid ${COLORS.border}`,
+                              }}
+                            >
+                              {cell}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </details>
           </>
         )}
       </section>
@@ -341,85 +532,70 @@ function DetailView({ page, id }: { page: PageConfig; id: string }) {
 
 function TermSection({
   title,
-  rows,
+  groups,
   pageSlug,
-  currentId,
+  targetOf,
+  neighbourLabel,
   linkSuffix,
 }: {
-  title?: string;
-  rows: Row[];
+  title: string;
+  groups: Group[];
   pageSlug: string;
-  currentId: string;
+  targetOf: (row: Row) => string | null;
+  neighbourLabel: Map<string, string>;
   linkSuffix: string;
 }) {
-  if (rows.length === 0) return null;
+  if (groups.length === 0) return null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      {title && (
-        <h2 style={{ margin: 0, font: "400 24px/1.1 var(--font-instrument-serif), serif", color: COLORS.accentPurple }}>
-          {title}
-        </h2>
-      )}
+      <h2 style={{ margin: 0, font: "400 24px/1.1 var(--font-instrument-serif), serif", color: COLORS.accentPurple }}>
+        {title}
+      </h2>
       <div style={{ ...CARD_SURFACE, padding: 0, overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+        <table className="detail-table" style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
           <tbody>
-            {rows.map((row, i) => {
-              const predicate = row.predicate?.value || "";
-              const value = row.other?.value || "";
-              const incoming = row.direction?.value === "in";
-              // Incoming rows name the *other* entity, which is always a real
-              // IRI subject; outgoing ones may be literal references.
-              const target = incoming
-                ? (row.other?.type === "uri" ? row.other.value ?? null : refTarget(row.other, currentId))
-                : refTarget(row.other, currentId);
+            {groups.map((group, i) => {
+              const border = i === groups.length - 1 ? "none" : `1px solid ${COLORS.border}`;
               return (
-                <tr key={`${predicate}-${value}-${i}`}>
+                <tr key={group.key}>
                   <th
                     scope="row"
-                    title={predicate}
+                    title={group.title}
+                    className="detail-term-label"
                     style={{
                       textAlign: "left",
                       padding: "12px 18px",
-                      borderBottom: i === rows.length - 1 ? "none" : `1px solid ${COLORS.border}`,
-                      font: "500 12px var(--font-plex-mono)",
-                      color: COLORS.muted,
-                      whiteSpace: "nowrap",
+                      borderBottom: border,
                       verticalAlign: "top",
-                      width: "1%",
+                      width: "30%",
+                      minWidth: 160,
                     }}
                   >
-                    {incoming ? `← ${shortLabel(predicate)} of` : shortLabel(predicate)}
+                    {group.label}
                   </th>
                   <td
                     style={{
                       padding: "12px 18px",
-                      borderBottom: i === rows.length - 1 ? "none" : `1px solid ${COLORS.border}`,
+                      borderBottom: border,
                       color: COLORS.body,
                       verticalAlign: "top",
                       wordBreak: "break-word",
                     }}
                   >
-                    {target ? (
-                      // Both directions render as the local id: outgoing rows
-                      // carry it as a literal, incoming ones as a full IRI.
-                      // The IRI stays available as the title attribute.
-                      <Link
-                        href={`/browse/${pageSlug}/${encodeURIComponent(target)}${linkSuffix}`}
-                        title={target}
-                        style={{ color: COLORS.accentPurple, fontWeight: 500 }}
-                      >
-                        {shortLabel(target)}
-                      </Link>
-                    ) : /^https?:\/\//.test(value) ? (
-                      // External links (schema:url, RRID resolver) are stored
-                      // as literals so they are not taken for connections.
-                      <a href={value} target="_blank" rel="noopener noreferrer" style={{ color: COLORS.accentPurple }}>
-                        {value}
-                      </a>
-                    ) : (
-                      value
-                    )}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {group.rows.map((row, j) => (
+                        <div key={`${row.other?.value ?? ""}-${j}`}>
+                          <TermValue
+                            row={row}
+                            target={targetOf(row)}
+                            pageSlug={pageSlug}
+                            neighbourLabel={neighbourLabel}
+                            linkSuffix={linkSuffix}
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </td>
                 </tr>
               );
@@ -428,5 +604,58 @@ function TermSection({
         </table>
       </div>
     </div>
+  );
+}
+
+function TermValue({
+  row,
+  target,
+  pageSlug,
+  neighbourLabel,
+  linkSuffix,
+}: {
+  row: Row;
+  target: string | null;
+  pageSlug: string;
+  neighbourLabel: Map<string, string>;
+  linkSuffix: string;
+}) {
+  const value = row.other?.value || "";
+  if (target) {
+    // A connection reads as the neighbour's name when it has one, with its
+    // local id beside it; the full IRI stays available as the title.
+    const name = neighbourLabel.get(target);
+    return (
+      <>
+        <Link
+          href={`/browse/${pageSlug}/${encodeURIComponent(target)}${linkSuffix}`}
+          title={target}
+          style={{ color: COLORS.accentPurple, fontWeight: 500 }}
+        >
+          {name ?? shortLabel(target)}
+        </Link>
+        {name && <span className="detail-resolved">{shortLabel(target)}</span>}
+      </>
+    );
+  }
+  const known = knownLabel(value);
+  if (/^https?:\/\//.test(value)) {
+    // External links (schema:url, RRID resolver) are stored as literals so
+    // they are not taken for connections.
+    return (
+      <>
+        <a href={value} target="_blank" rel="noopener noreferrer" style={{ color: COLORS.accentPurple }}>
+          {known ?? value}
+        </a>
+        {known && <span className="detail-resolved">{value}</span>}
+      </>
+    );
+  }
+  if (!value) return <span style={{ color: COLORS.muted }}>Not recorded</span>;
+  return (
+    <>
+      {known ?? value}
+      {known && <span className="detail-resolved">{value}</span>}
+    </>
   );
 }

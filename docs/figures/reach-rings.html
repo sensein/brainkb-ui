@@ -1,0 +1,212 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>html,body{margin:0;background:transparent}svg{display:block}
+.rr-lbl{font:700 17.5px 'IBM Plex Sans',sans-serif;fill:#10202B}
+.rr-big{font-size:19.5px}
+.rr-ex{font:400 14.5px 'IBM Plex Sans',sans-serif;fill:#3A2A20}
+.rr-ring{font:700 23px 'IBM Plex Sans',sans-serif;fill:#10202B}
+.rr-role{font:500 17px 'IBM Plex Mono',monospace;letter-spacing:3px;fill:#7D432B}
+.rr-core1{font:700 23px 'IBM Plex Sans',sans-serif;fill:#F6F5F0}
+.rr-core2{font:400 18px 'IBM Plex Sans',sans-serif;fill:#D9E2E8}
+</style></head>
+<body>
+<svg id="fig" xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000"></svg>
+<script>
+const WEB = location.hash === "#web";   // titles-only, larger type: the interactive home-page version
+// BrainKB "The missing link" figure: one finding (disease-associated microglia at
+// amyloid plaques, Keren-Shaul et al., Cell 2017) and the knowledge it connects to.
+// Rings show reach, not a hierarchy. Links are illustrative, each one a relationship
+// reported in published work. Rendered to PNG for the deck and the BrainKB home page.
+const C = 500, NS = "http://www.w3.org/2000/svg", svg = document.getElementById("fig");
+const el = (tag, a, p = svg) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); p.appendChild(e); return e; };
+const g = (a, p = svg) => el("g", a, p);
+
+const R0 = 108, R1 = 250, R2 = 374, R3 = 497;   // core and ring radii (unchanged)
+el("circle", { cx: C, cy: C, r: R3, fill: "#F8F7F3" });
+el("circle", { cx: C, cy: C, r: R2, fill: "#F3DDCD" });
+el("circle", { cx: C, cy: C, r: R1, fill: "#F0B890" });
+const outlines = g({ fill: "none", stroke: "#10202B", "stroke-width": 2 });
+for (const r of [R3, R2, R1]) el("circle", { cx: C, cy: C, r }, outlines);
+
+// icons, ~60px, drawn around 0,0
+const BRAIN = (f, s) => `<path d="M-4 -24c-8-8-22-4-23 6-9 1-13 11-8 18-5 6-1 16 8 16 2 8 14 9 19 3 4 5 11 5 14 0V-21c-3-4-6-5-10-3z" fill="${f}" stroke="${s}" stroke-width="2.4"/><path d="M4 -24c8-8 22-4 23 6 9 1 13 11 8 18 5 6 1 16-8 16-2 8-14 9-19 3-4 5-11 5-14 0V-21c3-4 6-5 10-3z" fill="${f}" stroke="${s}" stroke-width="2.4"/><path d="M-19 -8c5 2 8 8 6 13M-23 8c5-1 10 1 11 5M19 -8c-5 2-8 8-6 13M23 8c-5-1-10 1-11 5" fill="none" stroke="${s}" stroke-width="2" stroke-linecap="round"/>`;
+const ICON = {
+  infl: `<path d="M3 -30C8 -15 23 -10 20 8C19 21 9 29 -1 29C-14 29 -23 19 -21 6C-20 -5 -11 -10 -10 -20C-4 -14 -2 -8 -2 -3C4 -10 5 -19 3 -30Z" fill="#F4A261" stroke="#A0401C" stroke-width="2.6" stroke-linejoin="round"/><path d="M0 8C4 13 8 15 6 20C5 25 0 26 -3 26C-8 26 -10 21 -9 17C-8 14 -4 12 -3 8Z" fill="#F6D04D"/>`,
+  act: `<g stroke="#7A4FB0" stroke-width="3" stroke-linecap="round" fill="none"><path d="M0 0L-20 -19l-7 1M-20 -19l-2 -8M-11 -10l-4 -11M0 0L19 -20l8 0M19 -20l0 -8M0 0L-26 6l-5 -5M-26 6l-4 7M0 0L25 9l5 -5M25 9l3 8M0 0L-8 26l-6 4M-8 26l1 7M0 0L10 26l7 3"/></g><circle r="11" fill="#B58BD8" stroke="#5B3E96" stroke-width="2.6"/><circle cx="-3" cy="-3" r="3.5" fill="#F1E2FF"/>`,
+  phago: `<path d="M23 -15A27 27 0 1 0 23 15L5 0Z" fill="#8FD1C3" stroke="#1F6F66" stroke-width="2.6" stroke-linejoin="round"/><circle cx="-8" cy="-8" r="3.2" fill="#1F6F66"/><circle cx="21" cy="0" r="8" fill="#D9A55A" stroke="#6E4A17" stroke-width="2"/>`,
+  prune: `<path d="M-15 -30V-14C-15 -4 -4 -5 -4 6M15 30V14C15 4 4 5 4 -6" stroke="#8258BA" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M-26 -2H26" stroke="#253A62" stroke-width="2" stroke-dasharray="3 5"/><g fill="#E7A3CE"><circle cx="-10" cy="1" r="4"/><circle cx="0" cy="-4" r="3"/><circle cx="9" cy="3" r="4"/></g><path d="M18 -26l9 9M27 -26l-9 9" stroke="#C0392B" stroke-width="3.2" stroke-linecap="round"/>`,
+  plaque: `<g stroke="#6E4A17" stroke-width="2.2"><path d="M-8 -20c8-6 19-1 17 8 8 4 5 15-2 16 1 9-10 12-15 6-8 5-17-1-15-9-8-4-5-15 4-15 0-4 5-7 11-6z" fill="#D9A55A"/><circle cx="-22" cy="15" r="6" fill="#E6BD7C"/><circle cx="21" cy="19" r="5" fill="#E6BD7C"/><circle cx="20" cy="-21" r="4.5" fill="#E6BD7C"/></g>`,
+  synloss: `<path d="M-15 -30V-14C-15 -4 -4 -5 -4 4M15 30V14C15 4 4 5 4 -4" stroke="#9D8DB8" stroke-width="9" fill="none" stroke-linecap="round" opacity=".85"/><path d="M-9 -7L9 9M9 -7L-9 9" stroke="#C0392B" stroke-width="3.6" stroke-linecap="round"/>`,
+  degen: `${BRAIN("#93BCF1", "#316BB6")}<path d="M3 -26L-5 -8L5 0L-4 14L1 27" fill="none" stroke="#10202B" stroke-width="2.8" stroke-linejoin="round"/>`,
+  gen: `<path d="M-13 -30C-13 -15 13 -15 13 0S-13 15 -13 30" fill="none" stroke="#327CC5" stroke-width="4" stroke-linecap="round"/><path d="M13 -30C13 -15 -13 -15 -13 0S13 15 13 30" fill="none" stroke="#327CC5" stroke-width="4" stroke-linecap="round"/><path d="M-9 -23H9M-5 -8H5M-9 8H9M-5 23H5" stroke="#D68359" stroke-width="3" stroke-linecap="round"/>`,
+  imm: `<g stroke-linecap="round"><path d="M0 30V3L-19 -17M0 3L19 -17" fill="none" stroke="#2F6596" stroke-width="7"/><path d="M-11 -3L-25 -16M11 -3L25 -16" fill="none" stroke="#7FB3EA" stroke-width="6"/></g><circle cx="-24" cy="-24" r="5" fill="#E63946"/><circle cx="24" cy="-24" r="5" fill="#E63946"/>`,
+  drug: `<g transform="rotate(42)"><rect x="-14" y="-27" width="28" height="54" rx="14" fill="#FCFCFC" stroke="#142B3C" stroke-width="3"/><path d="M-14 0V-13a14 14 0 0 1 28 0V0Z" fill="#EE5557" stroke="#142B3C" stroke-width="2"/></g>`,
+  clin: `${BRAIN("#F2A3B3", "#7A2E3B")}<path d="M-32 7H-17L-12 -3L-6 15L0 5H32" fill="none" stroke="#10202B" stroke-width="2.8" stroke-linejoin="round"/>`,
+  mouse: `<ellipse cx="2" cy="6" rx="22" ry="13" fill="#C4C2B9" stroke="#4D565A" stroke-width="2"/><circle cx="-16" cy="-5" r="8" fill="#D4D0C8" stroke="#4D565A" stroke-width="2"/><circle cx="-3" cy="-7" r="8" fill="#D4D0C8" stroke="#4D565A" stroke-width="2"/><circle cx="-18" cy="5" r="2" fill="#333"/><path d="M22 8q18-10 10-19" fill="none" stroke="#A4A29C" stroke-width="3"/>`,
+};
+
+const pt = (a, r) => [C + r * Math.cos(a * Math.PI / 180), C + r * Math.sin(a * Math.PI / 180)];
+// a: angle (0 right, -90 top); r: distance from the centre; lab: text above, below, left or right of the icon
+const NODES = {
+  // subfield: cellular neuroscience
+  infl:    { a: -128, r: 182, t: ["Neuroinflammation"], ex: ["e.g. cytokine", "release"], lab: "up" },
+  act:     { a: -48,  r: 182, t: ["Microglial", "activation"], ex: ["e.g. activation", "states"], lab: "right" },
+  phago:   { a: 18,   r: 182, t: ["Phagocytosis"], ex: ["e.g. amyloid", "uptake"], lab: "down" },
+  prune:   { a: 176,  r: 186, t: ["Synaptic", "pruning"], ex: ["e.g. C1q tagging"], lab: "up" },
+  // field: neuroscience
+  plaque:  { a: -12,  r: 312, t: ["Amyloid", "pathology"], ex: ["e.g. Aβ plaques"], lab: "up" },
+  degen:   { a: -104, r: 312, t: ["Neurodegeneration"], ex: ["e.g. neuron loss"], lab: "left" },
+  synloss: { a: 180, r: 312, t: ["Synapse", "loss"], ex: ["e.g. synaptic", "degeneration"], lab: "down" },
+  // adjacent fields
+  gen:     { a: -90,  r: 432, t: ["Genetics"], ex: ["e.g. TREM2 and APOE genes;", "AD-associated variants"], lab: "left" },
+  imm:     { a: -150, r: 432, t: ["Immunology"], ex: ["e.g. innate", "immunity"], lab: "down" },
+  drug:    { a: -14,  r: 436, t: ["Therapeutic", "approaches"], ex: ["e.g. TREM2-", "targeting", "antibodies"], lab: "down" },
+  clin:    { a: 90,   r: 424, t: ["Clinical neurology"], ex: ["e.g. Alzheimer’s dementia"], lab: "left" },
+};
+// titles-only web version: Therapeutic approaches fits best beside its icon near the top
+if (WEB) { NODES.drug.fs = 17.5; Object.assign(NODES.infl, { lab: "right" }); Object.assign(NODES.act, { a: -26, lab: "down" }); Object.assign(NODES.degen, { lab: "left" }); Object.assign(NODES.imm, { a: -124, lab: "right" }); }
+// links between scientifically related concepts (relationships reported in published work); [from, to, preferred bend]
+const EDGES = [
+  ["core", "act", .25],      // disease-associated microglia are an activation state of microglia
+  ["act", "gen", -.3],       // TREM2 shapes microglial function; DAM depend on TREM2
+  ["gen", "drug", -.25],     // TREM2-targeting antibodies
+  ["core", "infl", -.25],    // microglia drive neuroinflammation
+  ["infl", "imm", -.3],      // neuroinflammation is innate immune signalling in the brain
+  ["core", "phago", -.25],   // DAM upregulate phagocytic programs
+  ["phago", "plaque", .3],   // DAM take up Aβ next to plaques
+  ["plaque", "clin", -.3],   // amyloid plaques are a pathological hallmark of Alzheimer's disease
+  ["core", "prune", .25],    // microglia prune synapses (complement-dependent)
+  ["prune", "synloss", -.3], // excess pruning removes synapses early in disease
+  ["infl", "degen", .25],    // neuroinflammation contributes to neurodegenerative processes
+];
+const lines = g({ fill: "none", stroke: "#10202B", "stroke-width": 2.6, "stroke-dasharray": "4 7", "stroke-linecap": "round" });
+const dots = g({ fill: "#10202B" });
+
+const ringLabel = (y, name, role) => {
+  el("text", { x: C, y, "text-anchor": "middle", class: "rr-ring" }).textContent = name;
+  el("text", { x: C, y: y + 26, "text-anchor": "middle", class: "rr-role" }).textContent = role;
+};
+ringLabel(686, "Cellular neuroscience", "SUBFIELD");
+ringLabel(812, "Neuroscience", "FIELD");
+el("text", { x: C, y: 972, "text-anchor": "middle", class: "rr-role" }).textContent = "ADJACENT FIELDS";
+
+el("circle", { cx: C, cy: C, r: R0, fill: "#10202B", "data-node": "core", class: "rr-node rr-core" });
+[["Your finding", "rr-core1", 448], ["Disease-associated", "rr-core2", 478], ["microglia at amyloid", "rr-core2", 500], ["plaques, mouse model", "rr-core2", 522]]
+  .forEach(([t, c, y]) => { el("text", { x: C, y, "text-anchor": "middle", class: c }).textContent = t; });
+g({ transform: `translate(${C} 560) scale(.95)` }).innerHTML = ICON.mouse;
+
+const IR = 25;   // icon half-size
+const M = 6;     // clearance from borders and neighbours
+const BANDS = [[R0, R1], [R1, R2], [R2, R3]];
+const bandIdx = (r) => (r < R1 ? 0 : r < R2 ? 1 : 2);
+const corners = (b) => [[b[2], b[3]], [b[4], b[3]], [b[2], b[5]], [b[4], b[5]]];
+const rad = ([x, y]) => Math.hypot(x - C, y - C);
+const minRad = (b) => { const cx = Math.min(Math.max(C, b[2]), b[4]), cy = Math.min(Math.max(C, b[3]), b[5]); return Math.hypot(cx - C, cy - C); };
+const ov = (a, b, m = M) => a[2] < b[4] + m && b[2] < a[4] + m && a[3] < b[5] + m && b[3] < a[5] + m;
+const whichBand = (b) => { const lo = minRad(b), hi = Math.max(...corners(b).map(rad)); return BANDS.findIndex(([l, h]) => lo >= l + M && hi <= h - M); };
+const ringBoxes = [...svg.querySelectorAll("text.rr-ring, text.rr-role")].map((t) => { const bb = t.getBBox(); return ["ring label", t.textContent, bb.x - 4, bb.y, bb.x + bb.width + 4, bb.y + bb.height]; });
+
+// #web: the interactive home-page version shows titles only (examples appear on hover), in larger type
+function textRows(n) {
+  if (WEB) return n.t.map((t) => ["rr-lbl rr-big", t, 22]);
+  return [...n.t.map((t) => ["rr-lbl", t, 19.5]), ...n.ex.map((t) => ["rr-ex", t, 16.5])];
+}
+function drawText(n, lab, parent) {
+  const rows = textRows(n), h = rows.reduce((s_, r_) => s_ + r_[2], 0);
+  const pos = { up: [0, -IR - 10 - h + 16, "middle"], down: [0, IR + 22, "middle"], left: [-IR - 10, -h / 2 + 15, "end"], right: [IR + 10, -h / 2 + 15, "start"] }[lab];
+  const tg = g({}, parent); let yy = pos[1];
+  for (const [cls, t, lh] of rows) {
+    const te = el("text", { x: pos[0], y: yy, "text-anchor": pos[2], class: cls }, tg); te.textContent = t;
+    if (WEB && n.fs) te.style.fontSize = n.fs + "px";     // one long title, a touch smaller so it fits its ring
+    yy += lh;
+  }
+  return tg;
+}
+const LABS = ["up", "down", "left", "right"];
+const rel = {};
+for (const k in NODES) { rel[k] = {}; for (const lab of LABS) { const tg = drawText(NODES[k], lab, svg); const bb = tg.getBBox(); rel[k][lab] = [bb.x, bb.y, bb.x + bb.width, bb.y + bb.height]; tg.remove(); } }
+
+// small moves only: within 30 degrees of the current angle, same ring
+const placed = [];
+const ORDER = ["synloss", "degen", "gen", "drug", "plaque", "clin", "imm", "infl", "act", "phago", "prune"];
+const unplaced = [];
+for (const k of ORDER) {
+  const n = NODES[k], own = bandIdx(n.r), [lo, hi] = BANDS[own];
+  let best = null;
+  for (const span of [30]) { if (best) break;
+  for (let da = -span; da <= span; da += 2) for (let r_ = lo + IR + M; r_ <= hi - IR - M; r_ += 2) {
+    const [x, y] = pt(n.a + da, r_);
+    const ib = ["icon", k, x - IR, y - IR, x + IR, y + IR];
+    if (whichBand(ib) !== own) continue;
+    for (const lab of LABS) {
+      const q = rel[k][lab], tb = ["text", k, x + q[0], y + q[1], x + q[2], y + q[3]];
+      const tbBand = whichBand(tb);
+      if (tbBand < 0) continue;
+      if ([...placed, ...ringBoxes].some((o) => ov(ib, o) || ov(tb, o))) continue;
+      // text facing the centre sits in the way of the link from the finding: avoid it
+      const facesIn = rad([(tb[2] + tb[4]) / 2, (tb[3] + tb[5]) / 2]) < rad([x, y]) - 20 ? 3 : 0;
+      const score = Math.abs(da) / 3 + Math.abs(r_ - n.r) / 12 + (lab === n.lab ? 0 : 6) + (tbBand === own ? 0 : 4) + facesIn;
+      if (!best || score < best.score) best = { score, a: n.a + da, r: r_, lab, ib, tb };
+    }
+  } }
+  if (!best) { unplaced.push(k); continue; }
+  Object.assign(n, { a: best.a, r: best.r, lab: best.lab });
+  placed.push(best.ib, best.tb);
+}
+const boxes = [];
+for (const k in NODES) {
+  const n = NODES[k], [x, y] = pt(n.a, n.r);
+  const ng = g({ transform: `translate(${x.toFixed(1)} ${y.toFixed(1)})`, "data-node": k, class: "rr-node" });
+  el("circle", { r: IR + 8, fill: "transparent", class: "rr-hit" }, ng);
+  g({ transform: "scale(.78)" }, ng).innerHTML = ICON[k];
+  const bb = drawText(n, n.lab, ng).getBBox();
+  boxes.push(["icon", k, x - IR, y - IR, x + IR, y + IR], ["text", k, x + bb.x, y + bb.y, x + bb.x + bb.width, y + bb.y + bb.height]);
+}
+// ---------- layout check, printed into #report (read with --dump-dom) ----------
+const report = unplaced.map((k) => `could not place ${k}`);
+for (const b of boxes) {
+  // no icon or text block may straddle a ring border (it may sit wholly in a neighbouring ring)
+  const rmax = Math.max(...corners(b).map(rad)), rmin = minRad(b);
+  for (const R of [R0, R1, R2, R3]) if (rmin < R + M && rmax > R - M) report.push(`${b[0]} ${b[1]}: on the r=${R} border (spans ${rmin.toFixed(0)}–${rmax.toFixed(0)})`);
+}
+const all = [...boxes, ...ringBoxes];
+for (let i = 0; i < all.length; i++) for (let j = i + 1; j < all.length; j++)
+  if (all[i][1] !== all[j][1] && !(all[i][0] === "ring label" && all[j][0] === "ring label") && ov(all[i], all[j])) report.push(`overlap: ${all[i][0]} ${all[i][1]} / ${all[j][0]} ${all[j][1]}`);
+
+// links: keep the S-curve style; if the preferred bend runs into text or another icon, try others
+const P = (k) => (k === "core" ? [C, C] : pt(NODES[k].a, NODES[k].r));
+const off = (k) => (k === "core" ? R0 + 4 : 44);
+for (const [a, b, pref] of EDGES) {
+  let [x1, y1] = P(a), [x2, y2] = P(b);
+  const L = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / L, uy = (y2 - y1) / L;
+  x1 += ux * off(a); y1 += uy * off(a); x2 -= ux * off(b); y2 -= uy * off(b);
+  const dx = x2 - x1, dy = y2 - y1;
+  const tries = [pref, ...[.1, .2, .3, .4, .5, .6, .7, .8].flatMap((v) => [pref + v, pref - v])];
+  let chosen = null, fewest = null;
+  for (const bend of tries) for (const tw of [-.4, .5, 1]) {
+    // tw < 0: gentle S-curve (the house style); tw > 0: one smooth bow
+    const d = `M${x1} ${y1}C${x1 + dx * .33 - dy * bend} ${y1 + dy * .33 + dx * bend} ${x1 + dx * .67 - dy * bend * tw} ${y1 + dy * .67 + dx * bend * tw} ${x2} ${y2}`;
+    const pth = el("path", { d }, lines), len = pth.getTotalLength(), hits = new Set();
+    for (let s_ = 0; s_ <= len; s_ += 3) {
+      const q = pth.getPointAtLength(s_);
+      if (a !== "core" && Math.hypot(q.x - C, q.y - C) < R0 + 4) hits.add("core");
+      if (Math.hypot(q.x - C, q.y - C) > R3 - 10) hits.add("outside the circle");
+      for (const bx of all) {
+        if (bx[0] === "icon" && (bx[1] === a || bx[1] === b)) continue;
+        if (q.x > bx[2] - 6 && q.x < bx[4] + 6 && q.y > bx[3] - 6 && q.y < bx[5] + 6) hits.add(`${bx[0]} ${bx[1]}`);
+      }
+    }
+    pth.remove();
+    if (!hits.size) { chosen = d; break; }
+    if (!fewest || hits.size < fewest[1].size) fewest = [d, hits];
+  }
+  if (chosen === null) { report.push(`path ${a}→${b} touches: ${[...fewest[1]].join(", ")}`); chosen = fewest[0]; }
+  el("path", { d: chosen, "data-a": a, "data-b": b, class: "rr-link" }, lines);
+  el("circle", { cx: x1, cy: y1, r: 5.5, "data-a": a, "data-b": b, class: "rr-dot" }, dots);
+  el("circle", { cx: x2, cy: y2, r: 5.5, "data-a": a, "data-b": b, class: "rr-dot" }, dots);
+}
+report.push("at: " + Object.entries(NODES).map(([k, n]) => `${k} ${n.a}/${n.r}/${n.lab}`).join("; "));
+const pre = document.createElement("pre"); pre.id = "report"; pre.style.display = "none"; pre.textContent = report.join("\n"); document.body.appendChild(pre);
+</script>
+</body></html>

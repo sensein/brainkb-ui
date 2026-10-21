@@ -40,7 +40,7 @@ const callSkill = (skill: string): Block => ({
   ],
 });
 
-/** Expands `include: <name>` (from _shared.yaml) and `callSkill: <skill>` blocks. */
+/** Expands `include: <name>` (from _shared.yaml) and `callSkill: <skill>` blocks, also inside steps, details and agents. */
 function expand(blocks: unknown[], shared: Record<string, Block>, where: string): Block[] {
   return blocks.map((b) => {
     const block = b as Record<string, unknown>;
@@ -53,6 +53,19 @@ function expand(blocks: unknown[], shared: Record<string, Block>, where: string)
     if (block.step && typeof block.step === "object") {
       const step = block.step as { blocks?: unknown[] };
       return { step: { ...step, blocks: expand(step.blocks ?? [], shared, where) } } as Block;
+    }
+    if (block.details && typeof block.details === "object") {
+      const d = block.details as { blocks?: unknown[] };
+      return { details: { ...d, blocks: expand(d.blocks ?? [], shared, where) } } as Block;
+    }
+    if (block.agents && typeof block.agents === "object") {
+      const per = block.agents as Record<string, unknown[]>;
+      for (const k of Object.keys(per)) {
+        if (!["claude", "codex", "other"].includes(k)) throw new Error(`${where}: unknown agent "${k}" (use claude, codex or other)`);
+      }
+      return {
+        agents: Object.fromEntries(Object.entries(per).map(([k, v]) => [k, expand(v ?? [], shared, `${where} › ${k}`)])),
+      } as Block;
     }
     return block as Block;
   });

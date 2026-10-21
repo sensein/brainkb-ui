@@ -42,7 +42,8 @@ export type ExportFormat =
   | "appraisal_markdown"
   | "appraisal_json"
   | "narrative_summary_markdown"
-  | "narrative_summary_json";
+  | "narrative_summary_json"
+  | "pdf";
 
 export type SynthesisStyle = "paragraph" | "question_answer" | "bullet_list" | "table";
 

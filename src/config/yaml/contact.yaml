@@ -1,19 +1,47 @@
 contact:
   title: "Contact Us"
-  subtitle: "Have questions or need assistance or have use case for us? Reach out to us."
+  subtitle: "Have a question, need support, or want to discuss a research use case? Get in touch."
 
   details:
     - label: "Email"
       value: "tekraj@mit.edu"
+      href: "mailto:tekraj@mit.edu"
       icon: "email"
 
     - label: "Phone"
       value: "+1 (617) 324-7195"
+      href: "tel:+16173247195"
       icon: "phone"
 
     - label: "Address"
-      value: "McGovern Institute for Brain Research 46-4033F 43 Vassar St Cambridge, MA 02139 USA"
       icon: "location"
+      lines:
+        - "McGovern Institute for Brain Research"
+        - "46-4033F"
+        - "43 Vassar St"
+        - "Cambridge, MA 02139"
+        - "USA"
+
+  # Where to go for each kind of request.
+  routes_title: "How can we help?"
+  routes:
+    - title: "Documentation"
+      description: "Guides and tutorials for using BrainKB."
+      link_text: "Read the tutorials"
+      href: "/tutorial"
+      icon: "docs"
+
+    - title: "Bug reports"
+      description: "Found a problem with the website? Open an issue on GitHub."
+      link_text: "Report an issue"
+      href: "https://github.com/sensein/brainkb-ui/issues"
+      icon: "bug"
+
+    - title: "Research inquiries"
+      description: "Collaborations, research use cases and data questions."
+      link_text: "tekraj@mit.edu"
+      href: "mailto:tekraj@mit.edu"
+      icon: "research"
 
 #  form:
 #    title: "Send us a message"

@@ -22,7 +22,9 @@ export default function SiteChrome({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
 
   const standalone =
-    pathname !== null && (MARKETING_ROUTES.has(pathname) || pathname.startsWith("/browse/"));
+    pathname !== null && (MARKETING_ROUTES.has(pathname) || pathname.startsWith("/browse/")
+      // Literature reviews: a top-menu section, in the marketing layout like the others.
+      || pathname === "/knowledge-base/synth-scholar" || pathname.startsWith("/knowledge-base/synth-scholar/"));
 
   if (standalone) {
     return <>{children}</>;
