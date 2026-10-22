@@ -32,10 +32,10 @@ const TYPES: DataType[] = [
   {
     name: "Cell types",
     icon: "◉",
-    desc: "Taxonomies and cell-type definitions with markers and regions.",
+    desc: "The newest HMBA basal ganglia taxonomy: each cell type with its markers, previous revision, the papers that mention it and its epigenomic data.",
     sources: "BICAN",
     programs: ["BICAN"],
-    href: "/hmba-taxonomy",
+    href: "/taxonomy",
     action: "View the HMBA taxonomy",
   },
   {
@@ -46,6 +46,15 @@ const TYPES: DataType[] = [
     programs: ["BICAN"],
     href: "/browse/bican-resources",
     action: "Browse resources",
+  },
+  {
+    name: "Named entities",
+    icon: "◇",
+    desc: "Cell types, genes, brain regions and methods extracted from papers, shown as a network of papers and entities.",
+    sources: "StructSense",
+    programs: ["BICAN"],
+    href: "/named-entities",
+    action: "View the network",
   },
 ];
 
