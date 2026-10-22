@@ -8,7 +8,11 @@
  * sharp; hovering, focusing or tapping a concept highlights its links and shows the
  * relationship and published source behind each one. The last concept stays shown
  * when the pointer leaves the figure, so the panel's source links can be reached
- * and clicked; another concept, Escape or a click on empty space changes it.
+ * and clicked; another concept, Escape or a click on empty space changes it. Every
+ * concept's panel is rendered, stacked in one cell, and only the shown one is
+ * visible: the box keeps the height of the tallest, so switching concepts
+ * crossfades the text instead of resizing the box (which re-centred the figure
+ * beside it and made it jump on every hover).
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -119,8 +123,34 @@ export default function ReachRings() {
     if (e.key === "Escape") { setPinned(null); setActive(null); }
   }, []);
 
-  const info = shown ? NODES[shown] : null;
-  const links = shown ? Object.entries(LINKS).filter(([k]) => k.split(">").includes(shown)) : [];
+  const panel = (key: string) => {
+    const info = NODES[key];
+    const links = Object.entries(LINKS).filter(([k]) => k.split(">").includes(key));
+    return (
+      <>
+        <span className="k">{info.kind}</span>
+        <h3>{info.title}</h3>
+        {info.example && <p className="ex">e.g. {info.example}</p>}
+        {links.length > 0 && (
+          <ul>
+            {links.map(([k, l]) => {
+              const other = k.split(">").find((x) => x !== key)!;
+              return (
+                <li key={k}>
+                  <b>{NODES[other].title}.</b> {l.says} <Sources list={l.sources} />
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {info.note && (
+          <p className="note">
+            {info.note} {info.noteSources && <Sources list={info.noteSources} />}
+          </p>
+        )}
+      </>
+    );
+  };
 
   return (
     <div className="missing">
@@ -147,32 +177,14 @@ export default function ReachRings() {
       />
 
       <div className="missing-panel" aria-live="polite">
-        {info ? (
-          <>
-            <span className="k">{info.kind}</span>
-            <h3>{info.title}</h3>
-            {info.example && <p className="ex">e.g. {info.example}</p>}
-            {links.length > 0 && (
-              <ul>
-                {links.map(([k, l]) => {
-                  const other = k.split(">").find((x) => x !== shown)!;
-                  return (
-                    <li key={k}>
-                      <b>{NODES[other].title}.</b> {l.says} <Sources list={l.sources} />
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-            {info.note && (
-              <p className="note">
-                {info.note} {info.noteSources && <Sources list={info.noteSources} />}
-              </p>
-            )}
-          </>
-        ) : (
+        <div className={`mp-layer${shown ? "" : " on"}`}>
           <p className="hint">Hover over or tap a concept to see how it connects, and the published evidence behind each link.</p>
-        )}
+        </div>
+        {Object.keys(NODES).map((k) => (
+          <div key={k} className={`mp-layer${shown === k ? " on" : ""}`}>
+            {panel(k)}
+          </div>
+        ))}
       </div>
     </div>
   );

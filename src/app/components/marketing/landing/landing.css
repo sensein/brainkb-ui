@@ -596,7 +596,11 @@ html:has(.lp){scroll-behavior:smooth}
 .lp .missing p{margin:0;font-size:17px;line-height:1.65;max-width:520px}
 .lp .missing .missing-note{margin-top:16px;font-size:15px;color:#3a1d0c}
 .lp .missing-fig{grid-area:fig;width:100%;max-width:800px;justify-self:center}
-.lp .missing-panel{grid-area:panel;align-self:start;background:#f8f7f3;border-radius:14px;padding:18px 20px;max-width:520px;min-height:120px;box-shadow:0 10px 26px #10233022}
+.lp .missing-panel{grid-area:panel;align-self:start;display:grid;background:#f8f7f3;border-radius:14px;padding:18px 20px;max-width:520px;min-height:120px;box-shadow:0 10px 26px #10233022}
+/* every concept's text sits in the same cell, so the box keeps the tallest one's height and switching only crossfades */
+.lp .missing-panel .mp-layer{grid-area:1/1;opacity:0;visibility:hidden;transition:opacity .25s ease,visibility 0s linear .25s}
+.lp .missing-panel .mp-layer.on{opacity:1;visibility:visible;transition:opacity .25s ease}
+@media(prefers-reduced-motion:reduce){.lp .missing-panel .mp-layer,.lp .missing-panel .mp-layer.on{transition:none}}
 .lp .missing-panel .k{font:12px var(--font-plex-mono),monospace;letter-spacing:1.4px;text-transform:uppercase;color:#8a3f17}
 .lp .missing-panel h3{margin:4px 0 4px;font-size:19px;color:#102330}
 .lp .missing-panel .ex{font-size:15px;color:#3a2a20;margin:0 0 8px}
