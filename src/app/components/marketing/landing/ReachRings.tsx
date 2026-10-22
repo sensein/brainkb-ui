@@ -6,13 +6,17 @@
  * it connects to. The rings show reach, not a hierarchy. The figure is inline SVG
  * (reachRingsSvg.ts, generated from docs/figures/reach-rings.html) so its text stays
  * sharp; hovering, focusing or tapping a concept highlights its links and shows the
- * relationship and published source behind each one. The last concept stays shown
- * when the pointer leaves the figure, so the panel's source links can be reached
- * and clicked; another concept, Escape or a click on empty space changes it. Every
- * concept's panel is rendered, stacked in one cell, and only the shown one is
- * visible: the box keeps the height of the tallest, so switching concepts
- * crossfades the text instead of resizing the box (which re-centred the figure
- * beside it and made it jump on every hover).
+ * relationship and published source behind each one.
+ *
+ * The details card sits in the empty space under the text and takes no space in
+ * the layout, so nothing moves when it appears, changes or goes (in the page flow
+ * its changing height re-centred the figure and made it jump; floating beside a
+ * concept, it covered the next ones). It fades in and crossfades its text. A
+ * hovered card closes shortly after the pointer leaves both the figure and the
+ * card, with time to move across to it; hovering switches concepts only after a
+ * short rest, so crossing other concepts on the way does not swap the card. A
+ * click or tap pins it until a click outside it or Escape. Below 900px it sits
+ * under the figure, and only while a concept is shown.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -75,17 +79,28 @@ function Sources({ list }: { list: Source[] }) {
   );
 }
 
+const nodeOf = (t: EventTarget | null) => (t as Element | null)?.closest?.("[data-node]")?.getAttribute("data-node") ?? null;
+const inCard = (t: EventTarget | null) => !!(t as Element | null)?.closest?.(".rr-card");
+
+const SWITCH_MS = 120; // rest on a concept this long before the card switches to it
+const CLOSE_MS = 600; // a hovered card stays this long after the pointer leaves
+
 export default function ReachRings() {
   const fig = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState<string | null>(null);
   const [pinned, setPinned] = useState<string | null>(null);
   const shown = pinned ?? active;
+  const pending = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closing = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // after the card is closed, the concept still under the pointer does not reopen
+  // it until the pointer has moved off that concept
+  const muted = useRef<string | null>(null);
+  const touchStart = useRef<{ x: number; y: number; t: number } | null>(null);
+  const tapped = useRef(0);
 
   // highlight the shown concept, its links and the concepts at their other ends
   useEffect(() => {
-    const root = fig.current;
-    if (!root) return;
-    const svg = root.querySelector("svg");
+    const svg = fig.current?.querySelector("svg");
     if (!svg) return;
     svg.classList.toggle("rr-active", !!shown);
     const near = new Set<string>(shown ? [shown] : []);
@@ -108,22 +123,85 @@ export default function ReachRings() {
     });
   }, []);
 
-  const nodeOf = (t: EventTarget | null) => (t as Element | null)?.closest?.("[data-node]")?.getAttribute("data-node") ?? null;
-  const onOver = useCallback((e: React.PointerEvent | React.FocusEvent) => { const k = nodeOf(e.target); if (k) setActive(k); }, []);
-  // No clearing on pointer leave or blur: the panel sits beside the figure, so moving
-  // to it (or tabbing to its links) leaves the figure, and clearing there emptied the
-  // panel before its source links could be clicked.
-  const onClick = useCallback((e: React.MouseEvent) => {
-    const k = nodeOf(e.target);
-    if (!k) setActive(null);
-    setPinned((p) => (k && p !== k ? k : null));
+  const clearPending = useCallback(() => {
+    if (pending.current) { clearTimeout(pending.current); pending.current = null; }
   }, []);
+  const cancelClose = useCallback(() => {
+    if (closing.current) { clearTimeout(closing.current); closing.current = null; }
+  }, []);
+  const close = useCallback(() => {
+    clearPending();
+    cancelClose();
+    setPinned(null);
+    setActive((a) => { muted.current = a; return null; });
+  }, [clearPending, cancelClose]);
+  const scheduleClose = useCallback(() => {
+    cancelClose();
+    closing.current = setTimeout(() => { clearPending(); setActive(null); }, CLOSE_MS);
+  }, [cancelClose, clearPending]);
+
+  useEffect(() => () => { clearPending(); cancelClose(); }, [clearPending, cancelClose]);
+
+  // while the card is open, a click or tap anywhere but the card or a concept
+  // closes it, and so does Escape wherever the focus is
+  useEffect(() => {
+    if (!shown) return;
+    const onDown = (e: PointerEvent) => { if (!inCard(e.target) && !nodeOf(e.target)) close(); };
+    const onEsc = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onEsc);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onEsc);
+    };
+  }, [shown, close]);
+
+  const onOver = useCallback((e: React.PointerEvent) => {
+    if (e.pointerType === "touch") return; // taps pin the card instead (onUp)
+    const k = nodeOf(e.target);
+    if (k !== muted.current) muted.current = null;
+    clearPending();
+    if (k && !muted.current) {
+      cancelClose();
+      pending.current = setTimeout(() => setActive(k), SWITCH_MS);
+    } else if (!k) {
+      scheduleClose();
+    }
+  }, [clearPending, cancelClose, scheduleClose]);
+  const onLeave = useCallback(() => { clearPending(); muted.current = null; scheduleClose(); }, [clearPending, scheduleClose]);
+
+  // Taps toggle the card from pointer events: a click is not always delivered
+  // after a touch, and a touch that moved was a scroll, not a tap.
+  const onDown = useCallback((e: React.PointerEvent) => {
+    touchStart.current = e.pointerType === "touch" ? { x: e.clientX, y: e.clientY, t: Date.now() } : null;
+  }, []);
+  const onUp = useCallback((e: React.PointerEvent) => {
+    const s0 = touchStart.current;
+    touchStart.current = null;
+    if (!s0 || e.pointerType !== "touch") return;
+    if (Math.hypot(e.clientX - s0.x, e.clientY - s0.y) > 10 || Date.now() - s0.t > 600) return;
+    const k = nodeOf(e.target);
+    if (!k) return;
+    tapped.current = Date.now();
+    setActive(k);
+    setPinned((p) => (p !== k ? k : null));
+  }, []);
+  const onClick = useCallback((e: React.MouseEvent) => {
+    if (Date.now() - tapped.current < 700) return; // a tap already handled it
+    const k = nodeOf(e.target);
+    if (!k) return;
+    clearPending();
+    cancelClose();
+    muted.current = null;
+    setActive(k);
+    setPinned((p) => (p !== k ? k : null));
+  }, [clearPending, cancelClose]);
+  const onFocus = useCallback((e: React.FocusEvent) => { const k = nodeOf(e.target); if (k) setActive(k); }, []);
   const onKey = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") { const k = nodeOf(e.target); if (k) { e.preventDefault(); setPinned((p) => (p === k ? null : k)); } }
-    if (e.key === "Escape") { setPinned(null); setActive(null); }
   }, []);
 
-  const panel = (key: string) => {
+  const details = (key: string) => {
     const info = NODES[key];
     const links = Object.entries(LINKS).filter(([k]) => k.split(">").includes(key));
     return (
@@ -164,27 +242,29 @@ export default function ReachRings() {
           relationships.
         </p>
         <p className="missing-note">The rings show how far a finding can reach, not a strict hierarchy.</p>
+        <p className="missing-hint">Hover over or tap a concept to see how it connects, and the published evidence behind each link.</p>
       </div>
 
       <div
         ref={fig}
         className="missing-fig"
         onPointerOver={onOver}
-        onFocus={onOver}
+        onPointerLeave={onLeave}
+        onPointerDown={onDown}
+        onPointerUp={onUp}
+        onFocus={onFocus}
         onClick={onClick}
         onKeyDown={onKey}
         dangerouslySetInnerHTML={{ __html: REACH_RINGS_SVG }}
       />
 
-      <div className="missing-panel" aria-live="polite">
-        <div className={`mp-layer${shown ? "" : " on"}`}>
-          <p className="hint">Hover over or tap a concept to see how it connects, and the published evidence behind each link.</p>
-        </div>
-        {Object.keys(NODES).map((k) => (
-          <div key={k} className={`mp-layer${shown === k ? " on" : ""}`}>
-            {panel(k)}
-          </div>
-        ))}
+      <div
+        className={`rr-card${shown ? " on" : ""}`}
+        aria-live="polite"
+        onPointerEnter={cancelClose}
+        onPointerLeave={(e) => { if (e.pointerType !== "touch" && !pinned) scheduleClose(); }}
+      >
+        {shown && <div key={shown} className="rr-card-body">{details(shown)}</div>}
       </div>
     </div>
   );

@@ -589,28 +589,31 @@ html:has(.lp){scroll-behavior:smooth}
 @media(max-width:900px){.lp .tut-needs-wrap{grid-template-columns:1fr}}
 @media(max-width:760px){.lp .book{display:block;margin:0 -16px}.lp .book-menu{display:block;width:calc(100% - 32px);margin:16px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:10px 14px;text-align:left;font:600 14px var(--font-dm-sans),sans-serif}.lp .book-side{display:none;position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}.lp .book-side.open{display:block}.lp .book-main{padding:24px 20px 60px}.lp .book-sec h2{font-size:24px}.lp .tut-ask{flex-wrap:wrap}}
 /* From your narrow domain to the whole field: one finding and the knowledge it reaches (ReachRings) */
-.lp .missing{display:grid;grid-template-columns:minmax(0,.72fr) minmax(0,1.28fr);grid-template-areas:"copy fig" "panel fig";grid-template-rows:auto 1fr;column-gap:32px;row-gap:22px;align-items:center;background:#e27a3f;color:#102330;border-radius:22px;padding:56px 48px}
-.lp .missing-copy{grid-area:copy;align-self:end}
+.lp .missing{display:grid;grid-template-columns:minmax(0,.72fr) minmax(0,1.28fr);grid-template-areas:"copy fig";column-gap:32px;row-gap:22px;align-items:center;background:#e27a3f;color:#102330;border-radius:22px;padding:56px 48px}
+.lp .missing-copy{grid-area:copy;align-self:center}
 .lp .missing-k{font:14px var(--font-plex-mono),monospace;letter-spacing:4px;text-transform:uppercase;color:#102330}
 .lp .missing h2{margin:16px 0 22px;font-size:42px;line-height:1.1;letter-spacing:-1.2px;color:#102330}
 .lp .missing p{margin:0;font-size:17px;line-height:1.65;max-width:520px}
 .lp .missing .missing-note{margin-top:16px;font-size:15px;color:#3a1d0c}
 .lp .missing-fig{grid-area:fig;width:100%;max-width:800px;justify-self:center}
-.lp .missing-panel{grid-area:panel;align-self:start;display:grid;background:#f8f7f3;border-radius:14px;padding:18px 20px;max-width:520px;min-height:120px;box-shadow:0 10px 26px #10233022}
-/* every concept's text sits in the same cell, so the box keeps the tallest one's height and switching only crossfades */
-.lp .missing-panel .mp-layer{grid-area:1/1;opacity:0;visibility:hidden;transition:opacity .25s ease,visibility 0s linear .25s}
-.lp .missing-panel .mp-layer.on{opacity:1;visibility:visible;transition:opacity .25s ease}
-@media(prefers-reduced-motion:reduce){.lp .missing-panel .mp-layer,.lp .missing-panel .mp-layer.on{transition:none}}
-.lp .missing-panel .k{font:12px var(--font-plex-mono),monospace;letter-spacing:1.4px;text-transform:uppercase;color:#8a3f17}
-.lp .missing-panel h3{margin:4px 0 4px;font-size:19px;color:#102330}
-.lp .missing-panel .ex{font-size:15px;color:#3a2a20;margin:0 0 8px}
-.lp .missing-panel ul{margin:0;padding:0;list-style:none;display:grid;gap:8px}
-.lp .missing-panel li{font-size:15px;line-height:1.5;color:#102330}
-.lp .missing-panel .src{display:block;font-size:13px;color:#6b3418}
-.lp .missing-panel .src a{color:inherit;text-decoration:underline;text-decoration-color:#6b341866;text-underline-offset:2px}
-.lp .missing-panel .src a:hover,.lp .missing-panel .src a:focus-visible{color:#8a3f17;text-decoration-color:currentColor}
-.lp .missing-panel .note{margin-top:10px;font-size:14px;color:#3a2a20}
-.lp .missing-panel .hint{font-size:15px;color:#3a2a20;max-width:none}
+.lp .missing-hint{margin-top:14px !important;font-size:14px !important;color:#3a1d0c}
+/* the details card floats over the figure: it takes no layout space, so nothing moves when it shows, changes or hides */
+/* bottom-left of the section, under the text (the copy column: .72 of the content width less the gap); it grows upward over the text, never over the figure */
+.lp .missing{position:relative}
+.lp .rr-card{position:absolute;left:48px;bottom:56px;width:min(520px,calc((100% - 128px) * .36));max-height:calc(100% - 112px);overflow:auto;background:#f8f7f3;border-radius:14px;padding:16px 18px;box-shadow:0 12px 30px #10233033;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .2s ease,visibility 0s linear .2s;z-index:2}
+.lp .rr-card.on{opacity:1;visibility:visible;pointer-events:auto;transition:opacity .2s ease}
+.lp .rr-card-body{animation:rr-fade .2s ease}
+@keyframes rr-fade{from{opacity:0}to{opacity:1}}
+.lp .rr-card .k{font:12px var(--font-plex-mono),monospace;letter-spacing:1.4px;text-transform:uppercase;color:#8a3f17}
+.lp .rr-card h3{margin:4px 0 4px;font-size:18px;color:#102330}
+.lp .rr-card .ex{font-size:14.5px;color:#3a2a20;margin:0 0 8px;max-width:none}
+.lp .rr-card ul{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.lp .rr-card li{font-size:14.5px;line-height:1.5;color:#102330}
+.lp .rr-card .src{display:block;font-size:12.5px;color:#6b3418}
+.lp .rr-card .src a{color:inherit;text-decoration:underline;text-decoration-color:#6b341866;text-underline-offset:2px}
+.lp .rr-card .src a:hover,.lp .rr-card .src a:focus-visible{color:#8a3f17;text-decoration-color:currentColor}
+.lp .rr-card .note{margin-top:10px;font-size:13.5px;color:#3a2a20;max-width:none}
+@media(prefers-reduced-motion:reduce){.lp .rr-card,.lp .rr-card.on{transition:none}.lp .rr-card-body{animation:none}}
 /* the inline figure */
 .lp .rr-svg{display:block;width:100%;height:auto}
 .lp .rr-svg .rr-lbl{font-family:var(--font-plex-sans),"IBM Plex Sans",Arial,sans-serif;font-weight:700;font-size:17.5px;fill:#10202b}
@@ -625,7 +628,7 @@ html:has(.lp){scroll-behavior:smooth}
 .lp .rr-svg.rr-active .rr-link:not(.rr-on),.lp .rr-svg.rr-active .rr-dot:not(.rr-on){opacity:.15}
 .lp .rr-svg.rr-active [data-node]:not(.rr-on){opacity:.35}
 .lp .rr-svg .rr-link.rr-on{stroke-width:3.6}
-@media(max-width:900px){.lp .missing{grid-template-columns:minmax(0,1fr);grid-template-areas:"copy" "fig" "panel";padding:40px 28px}.lp .missing-fig{max-width:620px}.lp .missing-panel{max-width:none}}
+@media(max-width:900px){.lp .missing{grid-template-columns:minmax(0,1fr);grid-template-areas:"copy" "fig";padding:40px 28px}.lp .missing-fig{max-width:620px}.lp .rr-card{position:static;width:auto;max-height:none;display:none;transition:none}.lp .rr-card.on{display:block}}
 @media(max-width:680px){.lp .missing{padding:32px 18px;border-radius:14px}.lp .missing h2{font-size:31px}}
 
 /* Use with AI page */
