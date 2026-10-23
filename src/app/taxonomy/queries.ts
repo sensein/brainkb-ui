@@ -16,7 +16,7 @@ PREFIX prov: <http://www.w3.org/ns/prov#>`;
 // release, with their level, species (from the taxonomy title), display color
 // and how many clusters sit under them.
 export const TAXA_QUERY = `${PREFIXES}
-SELECT ?taxon ?label ?accession ?level ?title ?version ?parent ?order ?cl ?color ?prev ?literature ?clusters
+SELECT ?taxon ?label ?accession ?level ?title ?version ?parent ?order ?cl ?color ?prev ?clusters
 WHERE {
   GRAPH <{{tax}}> {
     ?taxon a bican:CellTypeTaxon ;
@@ -34,7 +34,6 @@ WHERE {
     OPTIONAL { ?taxon bican:cell_type_ontology_term ?cl }
     OPTIONAL { ?c bican:is_color_for_taxon ?taxon ; bican:color_hex_triplet ?color }
     OPTIONAL { ?taxon bican:revision_of ?prev }
-    OPTIONAL { ?taxon bican:literature_support ?literature }
     OPTIONAL {
       SELECT ?taxon (COUNT(DISTINCT ?k) AS ?clusters)
       WHERE { ?k a bican:Cluster ; bican:has_parent ?taxon }
@@ -87,8 +86,8 @@ WHERE {
     VALUES ?how { skos:exactMatch skos:closeMatch skos:broadMatch skos:narrowMatch skos:relatedMatch }
     ?entity ?how ?hit ;
             prov:hadPrimarySource ?paper .
-    ?taxon bican:revision_of* ?hit ;
-           bican:accession_id ?a .
+    ?hit ^bican:revision_of* ?taxon .
+    ?taxon bican:accession_id ?a .
     FILTER NOT EXISTS { ?newer bican:revision_of ?taxon }
     ?entity rdfs:label ?el ;
             ner:hasMention ?m .
@@ -184,3 +183,15 @@ WHERE {
   }
 }
 GROUP BY ?summary ?enhancer ?gene ?symbol ?region ?regionType ?abc ?specific`;
+
+// Clusters directly under the given taxon (a cluster has_parent every level
+// above it, so this is only asked for taxa without named subtypes).
+export const CLUSTERS_QUERY = `${PREFIXES}
+SELECT ?cluster ?label
+WHERE {
+  GRAPH <{{tax}}> {
+    ?cluster a bican:Cluster ;
+             bican:has_parent <{{taxon}}> ;
+             rdfs:label ?label .
+  }
+}`;

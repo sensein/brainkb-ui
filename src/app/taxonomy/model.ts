@@ -16,7 +16,7 @@ const levelOf = (set: string | undefined, accession: string) =>
 export type Taxon = {
   id: string; label: string; accession: string; level: string; species: string;
   parent?: string; order: number; version?: string; cl?: string; color?: string;
-  prev?: string; literature?: string; clusters: number; children: string[];
+  prev?: string; clusters: number; children: string[];
 };
 export type Taxonomy = { taxa: Map<string, Taxon>; roots: Map<string, string[]>; species: string[] };
 
@@ -31,7 +31,7 @@ export function buildTaxonomy(rows: Binding[]): Taxonomy {
     taxa.set(id, {
       id, label: val(r, "label") || accession, accession, level: levelOf(val(r, "level"), accession), species,
       parent: val(r, "parent"), order: Number(val(r, "order") ?? 0), version: val(r, "version"), cl: val(r, "cl"),
-      color: val(r, "color"), prev: val(r, "prev"), literature: val(r, "literature"),
+      color: val(r, "color"), prev: val(r, "prev"),
       clusters: Number(val(r, "clusters") ?? 0), children: [],
     });
   }

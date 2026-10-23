@@ -10,7 +10,7 @@
  * /dev/taxonomy-sample.json instead (git-ignored, not deployed).
  */
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Fragment, Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Loader2, AlertCircle, ChevronRight, ChevronDown, FileText, Activity } from "lucide-react";
 import MarketingHeader from "../components/marketing/MarketingHeader";
@@ -19,11 +19,11 @@ import { instrumentSerif, plexSans, plexMono } from "../components/marketing/fon
 import { COLORS, CARD_SURFACE } from "../components/marketing/tokens";
 import { DETAIL_QUERY } from "../named-entities/queries";
 import {
-  TAXA_QUERY, REVISIONS_QUERY, MARKERS_QUERY, PAPERS_QUERY, MARKER_PAPERS_QUERY, EPI_SUMMARY_QUERY, EPI_TRACKS_QUERY, EPI_ENHANCERS_QUERY,
+  TAXA_QUERY, REVISIONS_QUERY, MARKERS_QUERY, PAPERS_QUERY, MARKER_PAPERS_QUERY, EPI_SUMMARY_QUERY, EPI_TRACKS_QUERY, EPI_ENHANCERS_QUERY, CLUSTERS_QUERY,
 } from "./queries";
 import {
-  type Binding, type Epigenome, type Marker, type PaperHit, type Revision, type Taxon, type Taxonomy, type Track, type Enhancer,
-  buildEpigenome, buildMarkers, buildPapers, buildRevisions, buildTaxonomy, descendants, lineage, toEnhancer, toTrack,
+  type Binding, type Epigenome, type EpiSummary, type Marker, type PaperHit, type Revision, type Taxon, type Taxonomy, type Track, type Enhancer,
+  LEVEL_ORDER, buildEpigenome, buildMarkers, buildPapers, buildRevisions, buildTaxonomy, descendants, lineage, toEnhancer, toTrack,
 } from "./model";
 
 // Where the taxonomy, gene records and epigenome nodes live, and the paper extractions.
@@ -36,6 +36,7 @@ const SAMPLE_URL = "/dev/taxonomy-sample.json";
 type Sample = {
   taxa: Binding[]; revisions: Binding[]; markers: Binding[]; papers: Binding[]; epi: Binding[];
   tracks: Record<string, Binding[]>; enhancers: Record<string, Binding[]>; details: Record<string, Binding[]>;
+  clusters?: Record<string, Binding[]>;
 };
 
 async function runQuery(slug: string, sparqlQuery: string): Promise<Binding[]> {
@@ -303,9 +304,8 @@ function TaxonPanel({ taxon, taxonomy, revisions, markers, papers, epigenome, sa
         <div style={{ marginTop: 6, font: "400 12px var(--font-plex-mono)", color: COLORS.muted, display: "flex", flexWrap: "wrap", gap: "4px 12px" }}>
           <span>{taxon.level}</span><span>{taxon.accession}</span><span>{taxon.species}</span>
           {taxon.version && <span>release {taxon.version}</span>}
-          {taxon.clusters > 0 && <span>{taxon.clusters} cluster{taxon.clusters === 1 ? "" : "s"}</span>}
+          {taxon.clusters > 0 && <span title="Leaf clusters of the taxonomy that fall under this cell type">{taxon.clusters} cluster{taxon.clusters === 1 ? "" : "s"}</span>}
           {taxon.cl && <a href={`https://www.ebi.ac.uk/ols4/search?q=${encodeURIComponent(taxon.cl)}`} target="_blank" rel="noreferrer" style={{ color: COLORS.accentPurple }}>{taxon.cl}</a>}
-          {taxon.literature && <span>{taxon.literature}</span>}
         </div>
         {sameAccession.length > 0 && (
           <div style={{ marginTop: 8, fontSize: 13 }}>
@@ -317,7 +317,9 @@ function TaxonPanel({ taxon, taxonomy, revisions, markers, papers, epigenome, sa
         )}
       </div>
 
-      <RevisionSection taxon={taxon} taxonomy={taxonomy} revisions={revisions} markers={markers} />
+      <RevisionSection taxon={taxon} revisions={revisions} />
+
+      <ChildrenSection taxon={taxon} taxonomy={taxonomy} sample={sample} onSelect={onSelect} />
 
       {(markers.get(taxon.id)?.length ?? 0) > 0 && (
         <div>
@@ -335,55 +337,74 @@ function TaxonPanel({ taxon, taxonomy, revisions, markers, papers, epigenome, sa
   );
 }
 
-function RevisionSection({ taxon, taxonomy, revisions, markers }: {
-  taxon: Taxon; taxonomy: Taxonomy; revisions: Revision[]; markers: Map<string, Marker[]>;
+// Earlier names only; the full record of a revision is in the graph.
+function RevisionSection({ taxon, revisions }: { taxon: Taxon; revisions: Revision[] }) {
+  const earlier = revisions.filter((r, i) => r.label && r.label !== taxon.label && revisions.findIndex((x) => x.label === r.label) === i);
+  return (
+    <div style={{ fontSize: 13 }}>
+      <span style={{ color: COLORS.muted }}>Previous names: </span>
+      {earlier.length === 0
+        ? <span style={{ color: COLORS.muted }}>–</span>
+        : earlier.map((r, i) => (
+            <span key={r.id}>{i > 0 && ", "}<span style={{ color: COLORS.ink }}>{r.label}</span>
+              {r.version && <span style={{ color: COLORS.muted }}> (release {r.version})</span>}</span>
+          ))}
+    </div>
+  );
+}
+
+// Named children as links; for a taxon without any, the clusters under it
+// (they carry only a label, so there is nothing to open).
+function ChildrenSection({ taxon, taxonomy, sample, onSelect }: {
+  taxon: Taxon; taxonomy: Taxonomy; sample: Sample | null; onSelect: (id: string) => void;
 }) {
-  const prev = revisions[0];
-  if (!prev) {
-    return <div><div style={panelHeading}>Previous revision</div><span style={{ color: COLORS.muted }}>None: this taxon is new in this release.</span></div>;
+  const [clusters, setClusters] = useState<string[] | null>(null);
+  const leaf = taxon.children.length === 0;
+  useEffect(() => {
+    setClusters(null);
+    if (!leaf || taxon.clusters === 0) return;
+    const toLabels = (rows: Binding[]) =>
+      [...new Set(rows.map((r) => r.label?.value).filter((l): l is string => !!l))]
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    if (sample) { setClusters(toLabels(sample.clusters?.[taxon.id] ?? [])); return; }
+    let cancelled = false;
+    runQuery(`taxonomy-clusters-${taxon.id}`, fill(CLUSTERS_QUERY, { taxon: taxon.id }))
+      .then((r) => { if (!cancelled) setClusters(toLabels(r)); })
+      .catch(() => { if (!cancelled) setClusters([]); });
+    return () => { cancelled = true; };
+  }, [taxon.id, taxon.clusters, leaf, sample]);
+
+  if (!leaf) {
+    // Named after the children's level: a Class lists its Subclasses, and so on.
+    const levels = [...new Set(taxon.children.map((id) => taxonomy.taxa.get(id)!.level))];
+    const heading = levels.map((l) => (l.endsWith("s") ? `${l}es` : `${l}s`)).join(" / ");
+    return (
+      <div>
+        <div style={panelHeading}>{heading} ({taxon.children.length})</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {taxon.children.map((id) => {
+            const c = taxonomy.taxa.get(id)!;
+            return (
+              <button key={id} onClick={() => onSelect(id)}
+                style={{ ...chip, cursor: "pointer", border: `1px solid ${COLORS.border}`, display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12 }}>
+                <span style={{ width: 9, height: 9, borderRadius: 3, background: c.color ?? COLORS.borderStrong }} />
+                {c.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
   }
-  const parentLabel = taxon.parent ? taxonomy.taxa.get(taxon.parent)?.label : undefined;
-  const now = new Set((markers.get(taxon.id) ?? []).map((m) => m.symbol));
-  const before = new Set((markers.get(prev.id) ?? []).map((m) => m.symbol));
-  const added = [...now].filter((s) => !before.has(s)), removed = [...before].filter((s) => !now.has(s));
-  const rows: [string, string | undefined, string | undefined][] = [
-    ["Name", prev.label, taxon.label], ["Accession", prev.accession, taxon.accession],
-    ["Parent", prev.parentLabel, parentLabel], ["Cell Ontology", prev.cl, taxon.cl],
-  ];
-  const th = { textAlign: "left" as const, padding: "6px 10px", font: "500 11px var(--font-plex-mono)", color: COLORS.muted, borderBottom: `1px solid ${COLORS.border}` };
-  const td = { padding: "6px 10px", borderBottom: `1px solid ${COLORS.border}`, verticalAlign: "top" as const };
+  if (taxon.clusters === 0) return null;
   return (
     <div>
-      <div style={panelHeading}>Previous revision{revisions.length > 1 ? ` (${revisions.length} earlier)` : ""}</div>
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-          <thead><tr><th style={th}></th><th style={th}>{prev.version ? `Release ${prev.version}` : "Earlier release"}</th><th style={th}>{taxon.version ? `Release ${taxon.version}` : "This release"}</th></tr></thead>
-          <tbody>
-            {rows.map(([k, a, b]) => {
-              const changed = (a ?? "") !== (b ?? "");
-              return (
-                <tr key={k}>
-                  <td style={{ ...td, color: COLORS.muted, whiteSpace: "nowrap" }}>{k}</td>
-                  <td style={{ ...td, color: changed ? COLORS.ink : COLORS.body }}>{a ?? <span style={{ color: COLORS.muted }}>—</span>}</td>
-                  <td style={{ ...td, color: COLORS.ink, fontWeight: changed ? 600 : 400 }}>
-                    {b ?? <span style={{ color: COLORS.muted }}>—</span>}
-                    {changed && <span style={{ ...chip, marginLeft: 6 }}>changed</span>}
-                  </td>
-                </tr>
-              );
-            })}
-            <tr>
-              <td style={{ ...td, color: COLORS.muted }}>Markers</td>
-              <td style={td} colSpan={2}>
-                {added.length === 0 && removed.length === 0
-                  ? <span>{now.size ? `same ${now.size}` : "none in either"}</span>
-                  : <span>{added.length > 0 && `added ${added.join(", ")}`}{added.length > 0 && removed.length > 0 && " · "}{removed.length > 0 && `removed ${removed.join(", ")}`}</span>}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div style={{ marginTop: 6, font: "400 11px var(--font-plex-mono)", color: COLORS.muted, wordBreak: "break-all" }}>{prev.id}</div>
+      <div style={panelHeading}>Clusters ({taxon.clusters})</div>
+      {clusters === null
+        ? <span style={{ color: COLORS.muted, fontSize: 13 }}>Loading…</span>
+        : <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {clusters.map((l) => <span key={l} style={chip}>{l}</span>)}
+          </div>}
     </div>
   );
 }
@@ -399,6 +420,10 @@ function PapersSection({ taxon, taxonomy, revisions, papers, sample }: {
   const below = descendants(taxonomy, taxon.id);
   const childHits = below.flatMap((id) => papers.get(id) ?? []);
   const hits = [...(papers.get(taxon.id) ?? []), ...(withChildren ? childHits : [])];
+  const childPapers = new Set(childHits.map((h) => h.paper)).size;
+  const childLevels = LEVEL_ORDER.filter((l) => childHits.some((h) => taxonomy.taxa.get(h.taxon)?.level === l))
+    .map((l) => `${l}${l.endsWith("s") ? "es" : "s"}`);
+  const levelList = childLevels.length > 1 ? `${childLevels.slice(0, -1).join(", ")} and ${childLevels.at(-1)}` : childLevels[0] ?? "cell types below";
   const byPaper = new Map<string, PaperHit[]>();
   for (const h of hits) byPaper.set(h.paper, [...(byPaper.get(h.paper) ?? []), h]);
   const revisionName = (h: PaperHit) => {
@@ -413,7 +438,7 @@ function PapersSection({ taxon, taxonomy, revisions, papers, sample }: {
         {childHits.length > 0 && (
           <label style={{ ...controlLabel, fontSize: 12 }}>
             <input type="checkbox" checked={withChildren} onChange={(e) => setWithChildren(e.target.checked)} />
-            Include subtypes ({new Set(childHits.map((h) => h.paper)).size} papers)
+            Also papers on its {levelList} ({childPapers} paper{childPapers === 1 ? "" : "s"})
           </label>
         )}
       </div>
@@ -498,63 +523,64 @@ function EpigenomeSection({ taxon, epigenome, sample }: { taxon: Taxon; epigenom
     return <div><div style={panelHeading}>Epigenomic data</div><span style={{ color: COLORS.muted }}>No epigenome portal data for this cell type.</span></div>;
   }
   const summaries = ids.map((s) => epigenome.summaries.get(s)!);
-  const speciesOf = new Map(summaries.map((s) => [s.id, s.species]));
-  const byMeasurement = new Map<string, Track[]>();
-  for (const t of tracks ?? []) byMeasurement.set(t.measurement, [...(byMeasurement.get(t.measurement) ?? []), t]);
+  const multiSpecies = summaries.length > 1;
+  const trackCount = summaries.reduce((n, s) => n + s.tracks, 0);
+  const enhancerCount = summaries.reduce((n, s) => n + s.enhancers, 0);
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <div>
-        <div style={panelHeading}>Epigenomic data</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          {summaries.map((s) => (
-            <div key={s.id}>
-              <span style={{ color: COLORS.ink, fontWeight: 500 }}>{s.species}</span>
-              <span style={{ color: COLORS.muted }}> · {s.tracks} track{s.tracks === 1 ? "" : "s"}{s.enhancers ? ` · ${s.enhancers} marker enhancers` : ""}{!s.taxon ? " · matched by accession (no taxonomy for this species)" : ""}</span>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 4 }}>{s.measurements.map((m) => <span key={m} style={chip}>{m}</span>)}</div>
-            </div>
-          ))}
+    <div>
+      <div style={panelHeading}>Epigenomic data</div>
+      <div style={{ border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: "10px 12px", display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ fontSize: 13, color: COLORS.muted }}>
+          {trackCount} track{trackCount === 1 ? "" : "s"}{enhancerCount ? ` and ${enhancerCount} marker enhancers` : ""} from the{" "}
+          <a href="https://basalganglia.epigenomes.net" target="_blank" rel="noreferrer" style={{ color: COLORS.accentPurple, fontWeight: 500 }}>Basal Ganglia Epigenome Portal ↗</a>
         </div>
-        <a href="https://basalganglia.epigenomes.net" target="_blank" rel="noreferrer" style={{ display: "inline-block", marginTop: 6, fontSize: 12, color: COLORS.accentPurple }}>Basal Ganglia Epigenome Portal ↗</a>
+        {error && <div style={{ color: "#8c3d1f" }}>{error}</div>}
+        {!error && !tracks && <div style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 13 }}><Loader2 size={14} className="animate-spin" /> Loading tracks…</div>}
+        {tracks && summaries.map((s) => (
+          <MeasurementList key={s.id} summary={s} tracks={tracks.filter((t) => t.summary === s.id)} titled={multiSpecies} />
+        ))}
+        {enhancers && enhancers.length > 0 && <EnhancerTable enhancers={enhancers} />}
       </div>
-      {error && <div style={{ color: "#8c3d1f" }}>{error}</div>}
-      {!error && !tracks && <div style={{ display: "flex", gap: 6, alignItems: "center" }}><Loader2 size={14} className="animate-spin" /> Loading tracks…</div>}
-      {tracks && tracks.length > 0 && (
-        <div>
-          <div style={panelHeading}>Tracks</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {[...byMeasurement].sort((a, b) => a[0].localeCompare(b[0])).map(([m, list]) => <TrackGroup key={m} measurement={m} tracks={list} speciesOf={speciesOf} multiSpecies={summaries.length > 1} />)}
-          </div>
-        </div>
-      )}
-      {enhancers && enhancers.length > 0 && <EnhancerTable enhancers={enhancers} />}
     </div>
   );
 }
 
-function TrackGroup({ measurement, tracks, speciesOf, multiSpecies }: { measurement: string; tracks: Track[]; speciesOf: Map<string, string>; multiSpecies: boolean }) {
-  const [open, setOpen] = useState(false);
+// One line per measurement the portal has for this cell type, with its track
+// files inline; a measurement without a file here is only on the portal.
+function MeasurementList({ summary, tracks, titled }: { summary: EpiSummary; tracks: Track[]; titled: boolean }) {
+  const byMeasurement = new Map<string, Track[]>(summary.measurements.map((m) => [m, []]));
+  for (const t of tracks) byMeasurement.set(t.measurement, [...(byMeasurement.get(t.measurement) ?? []), t]);
   return (
     <div>
-      <button onClick={() => setOpen(!open)} style={{ ...linkButton, color: COLORS.ink, fontWeight: 400, display: "inline-flex", alignItems: "center", gap: 4 }}>
-        {open ? <ChevronDown size={13} /> : <ChevronRight size={13} />}{measurement}
-        <span style={{ color: COLORS.muted, fontSize: 12 }}>({tracks.length})</span>
-      </button>
-      {open && (
-        <ul style={{ margin: "2px 0 6px 0", paddingLeft: 22, display: "flex", flexDirection: "column", gap: 3, fontSize: 13 }}>
-          {tracks.sort((a, b) => a.label.localeCompare(b.label)).map((t) => (
-            <li key={t.id}>
-              {t.url ? <a href={t.url} target="_blank" rel="noreferrer" style={{ color: COLORS.accentPurple }}>{t.label}</a> : t.label}
-              <span style={{ color: COLORS.muted }}>
-                {multiSpecies ? ` · ${speciesOf.get(t.summary)}` : ""}{t.lab ? ` · ${t.lab}` : ""}{t.assay ? ` · ${t.assay}` : ""}
-                {t.assembly ? ` · ${t.assembly}` : ""}{t.match && t.match !== "exact" ? ` · ${t.match} cell type` : ""}
-              </span>
-            </li>
-          ))}
-        </ul>
+      {titled && (
+        <div style={{ fontSize: 13, color: COLORS.ink, fontWeight: 500, marginBottom: 4 }}>
+          {summary.species}{!summary.taxon && <span style={{ color: COLORS.muted, fontWeight: 400 }}> · matched by accession</span>}
+        </div>
       )}
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 190px) minmax(0, 1fr)", gap: "4px 12px", fontSize: 13 }}>
+        {[...byMeasurement].sort((a, b) => a[0].localeCompare(b[0])).map(([m, list]) => (
+          <Fragment key={m}>
+            <span style={{ color: COLORS.body }}>{m}</span>
+            <span>
+              {list.length === 0
+                ? <span style={{ color: COLORS.muted }}>on the portal</span>
+                : list.sort((a, b) => a.label.localeCompare(b.label)).map((t, i) => (
+                    <span key={t.id}>{i > 0 && <span style={{ color: COLORS.muted }}> · </span>}
+                      {t.url ? <a href={t.url} target="_blank" rel="noreferrer" title={t.label} style={{ color: COLORS.accentPurple }}>{trackName(t)}</a> : trackName(t)}
+                    </span>
+                  ))}
+            </span>
+          </Fragment>
+        ))}
+      </div>
     </div>
   );
 }
+
+// The link text says what differs between files: the assay and lab, not the
+// cell type (it is the selected one) or the measurement (it heads the row).
+const trackName = (t: Track) =>
+  [t.assay, t.lab, t.format, t.match && t.match !== "exact" ? `${t.match} match` : undefined].filter(Boolean).join(", ") || t.label;
 
 function EnhancerTable({ enhancers }: { enhancers: Enhancer[] }) {
   const [all, setAll] = useState(false);
@@ -564,7 +590,7 @@ function EnhancerTable({ enhancers }: { enhancers: Enhancer[] }) {
   const td = { padding: "5px 8px", borderBottom: `1px solid ${COLORS.border}`, fontSize: 13, verticalAlign: "top" as const };
   return (
     <div>
-      <div style={panelHeading}>Marker-gene enhancers (activity by contact)</div>
+      <div style={{ ...panelHeading, marginBottom: 4 }}>Marker-gene enhancers (activity by contact)</div>
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead><tr><th style={th}>Gene</th><th style={th}>Region (hg38)</th><th style={th}>Type</th><th style={{ ...th, textAlign: "right" }}>ABC</th><th style={th}>Specific</th></tr></thead>
