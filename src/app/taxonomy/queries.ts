@@ -1,3 +1,7 @@
+// The page runs these as the query service's stored queries (core/stored_queries.py
+// in BrainKB), generated from this file by scripts/gen_stored_queries.py — rerun it
+// and redeploy the query service after changing a query here.
+//
 // SPARQL for /taxonomy. {{tax}} is the graph holding the cell-type taxonomy,
 // gene records and epigenome nodes; {{ner}} the graph with the StructSense
 // paper extractions. "Newest" taxa are the ones no other taxon is a

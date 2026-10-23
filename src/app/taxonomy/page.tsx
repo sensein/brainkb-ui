@@ -4,7 +4,8 @@
  * /taxonomy — the newest release of the HMBA basal ganglia cell-type taxonomy.
  * Pick a taxon to see its earlier revision, the papers whose extracted
  * entities point at it (in any revision), and the epigenome portal data linked
- * to it. Data comes through /api/knowledge-base, so it needs a signed-in session.
+ * to it. Data comes from the query service's stored queries (via
+ * /api/stored-query), so signed-out visitors can read it when the space is public.
  * /taxonomy?taxon=<taxon IRI> opens on that taxon (links from /literature).
  *
  * Local preview without a backend: in `next dev`, /taxonomy?sample=1 loads
@@ -13,17 +14,11 @@
 
 import { Fragment, Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { signIn, useSession } from "next-auth/react";
 import { Loader2, AlertCircle, ChevronRight, ChevronDown, FileText, Activity } from "lucide-react";
 import MarketingHeader from "../components/marketing/MarketingHeader";
 import MarketingFooter from "../components/marketing/MarketingFooter";
 import { instrumentSerif, plexSans, plexMono } from "../components/marketing/fonts";
 import { COLORS, CARD_SURFACE } from "../components/marketing/tokens";
-import { DETAIL_QUERY } from "../literature/queries";
-import {
-  TAXA_QUERY, REVISIONS_QUERY, MARKERS_QUERY, PAPERS_QUERY, MARKER_PAPERS_QUERY, EPI_SUMMARY_QUERY, EPI_TRACKS_QUERY, EPI_ENHANCERS_QUERY, CLUSTERS_QUERY,
-  CELLS_QUERY, CELL_REGIONS_QUERY, CELL_DONORS_QUERY, LIMITS,
-} from "./queries";
 import {
   type Binding, type CellCount, type CellSummary, type Epigenome, type EpiSummary, type Marker, type PaperHit, type Revision, type Taxon, type Taxonomy, type Track, type Enhancer,
   LEVEL_ORDER, toCellSummary, toDonorCounts, toRegionCounts, buildEpigenome, buildMarkers, buildPapers, buildRevisions, buildTaxonomy, descendants, lineage, toEnhancer, toTrack,
@@ -31,10 +26,8 @@ import {
 
 // Where the taxonomy, gene records and epigenome nodes live, and the paper extractions.
 const TAX_GRAPH = "https://brainkb.org/graph/bican-basal-ganglia/";
-// The paper extractions live alongside the taxonomy: Oxigraph times out on
-// queries that join across two graphs.
-const NER_GRAPH = TAX_GRAPH;
 const SAMPLE_URL = "/dev/taxonomy-sample.json";
+const GRAPH_FOR_QUERIES = TAX_GRAPH;
 
 type Sample = {
   taxa: Binding[]; revisions: Binding[]; markers: Binding[]; papers: Binding[]; epi: Binding[];
@@ -43,21 +36,22 @@ type Sample = {
   cells?: Record<string, { summary: Binding[]; regions: Binding[]; donors: Binding[] }>;
 };
 
-async function runQuery(slug: string, sparqlQuery: string): Promise<Binding[]> {
-  const response = await fetch("/api/knowledge-base", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ slug, sparqlQuery }),
-  });
+// Rows of one of the query service's stored queries (core/stored_queries.py),
+// run on the taxonomy graph as the caller; `capped` says the result reached the query's
+// row cap. Signed-out visitors can read public spaces this way.
+type Rows = Binding[] & { capped?: boolean };
+async function runStored(name: string, params: Record<string, string> = {}): Promise<Rows> {
+  const qs = new URLSearchParams({ graph: GRAPH_FOR_QUERIES, ...params });
+  const response = await fetch(`/api/stored-query/${encodeURIComponent(name)}?${qs}`);
   // A proxy or load balancer in front of the app answers timeouts with an HTML page.
   const json = await response.json().catch(() => null);
   if (!json) throw new Error(`Query failed (HTTP ${response.status}${response.status === 504 ? ", timed out" : ""})`);
-  if (!response.ok || json.success === false) throw new Error(json.error || `Query failed (HTTP ${response.status})`);
-  return Array.isArray(json.data) ? json.data : [];
+  if (!response.ok || json.error) throw new Error(json.error || `Query failed (HTTP ${response.status})`);
+  const rows: Rows = Array.isArray(json.message?.results?.bindings) ? json.message.results.bindings : [];
+  rows.capped = !!json.capped;
+  return rows;
 }
 
-const fill = (q: string, extra: Record<string, string> = {}) =>
-  q.replace(/\{\{(\w+)\}\}/g, (_, k: string) => ({ tax: TAX_GRAPH, ner: NER_GRAPH, graph: NER_GRAPH, ...extra })[k] ?? "");
 
 // IRIs are pasted into queries between <...>; refuse anything that could break out.
 const unsafeIri = (iri: string) => /[<>"{}\s]/.test(iri);
@@ -73,10 +67,6 @@ export default function TaxonomyPage() {
 function TaxonomyView() {
   const searchParams = useSearchParams();
   const useSample = process.env.NODE_ENV === "development" && searchParams?.get("sample") === "1";
-  // Signed-out reads of this graph go through a path that copies the whole space
-  // (and is refused for it server-side), so don't send the queries at all.
-  const { status: authStatus } = useSession();
-  const canQuery = useSample || authStatus === "authenticated";
   const linkedTaxon = searchParams?.get("taxon") ?? null;
 
   const [sample, setSample] = useState<Sample | null>(null);
@@ -95,7 +85,6 @@ function TaxonomyView() {
   const [renamedOnly, setRenamedOnly] = useState(false);
 
   useEffect(() => {
-    if (!canQuery) { setLoading(authStatus === "loading"); return; }
     let cancelled = false;
     (async () => {
       setLoading(true);
@@ -108,22 +97,21 @@ function TaxonomyView() {
           if (!cancelled) { setSample(s); setRows({ taxa: s.taxa, revisions: s.revisions, markers: s.markers, papers: s.papers, markerPapers: [], epi: s.epi }); }
           return;
         }
-        const taxa = await runQuery("taxonomy-taxa", fill(TAXA_QUERY));
+        const taxa = await runStored("taxonomy.taxa");
         if (cancelled) return;
         setRows((r) => ({ ...r, taxa }));
-        if (taxa.length >= LIMITS.TAXA) setSideErrors((e) => [...e, `taxa: only the first ${LIMITS.TAXA} rows were loaded`]);
+        if (taxa.capped) setSideErrors((e) => [...e, `taxa: only the first ${taxa.length} rows were loaded`]);
         // The rest fills in as it arrives; a failure there leaves the tree usable.
-        const side: [keyof typeof rows, string, number][] = [
-          ["revisions", REVISIONS_QUERY, LIMITS.REVISIONS], ["markers", MARKERS_QUERY, LIMITS.MARKERS],
-          ["papers", PAPERS_QUERY, LIMITS.PAPERS], ["markerPapers", MARKER_PAPERS_QUERY, LIMITS.MARKER_PAPERS],
-          ["epi", EPI_SUMMARY_QUERY, LIMITS.EPI_SUMMARY],
+        const side: [keyof typeof rows, string][] = [
+          ["revisions", "taxonomy.revisions"], ["markers", "taxonomy.markers"], ["papers", "taxonomy.papers"],
+          ["markerPapers", "taxonomy.marker_papers"], ["epi", "taxonomy.epigenome_summaries"],
         ];
-        side.forEach(([key, q, cap]) =>
-          runQuery(`taxonomy-${key}`, fill(q))
+        side.forEach(([key, name]) =>
+          runStored(name)
             .then((data) => {
               if (cancelled) return;
               setRows((r) => ({ ...r, [key]: data }));
-              if (data.length >= cap) setSideErrors((e) => [...e, `${key}: only the first ${cap} rows were loaded`]);
+              if (data.capped) setSideErrors((e) => [...e, `${key}: only the first ${data.length} rows were loaded`]);
             })
             .catch((err) => { if (!cancelled) setSideErrors((e) => [...e, `${key}: ${err instanceof Error ? err.message : "query failed"}`]); }));
       } catch (err) {
@@ -133,7 +121,7 @@ function TaxonomyView() {
       }
     })();
     return () => { cancelled = true; };
-  }, [useSample, canQuery, authStatus]);
+  }, [useSample]);
 
   const taxonomy = useMemo(() => buildTaxonomy(rows.taxa), [rows.taxa]);
   const revisions = useMemo(() => buildRevisions(rows.revisions), [rows.revisions]);
@@ -205,13 +193,6 @@ function TaxonomyView() {
             {TAX_GRAPH}
           </span>
         </div>
-
-        {!canQuery && authStatus === "unauthenticated" && (
-          <div style={{ ...CARD_SURFACE, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 14, fontSize: 15, color: COLORS.body }}>
-            <span>Sign in to view the taxonomy. For now this page needs a signed-in admin account.</span>
-            <button onClick={() => signIn()} style={{ padding: "7px 14px", borderRadius: 8, border: "none", background: COLORS.ink, color: COLORS.pageBg, fontSize: 14, cursor: "pointer" }}>Sign in</button>
-          </div>
-        )}
 
         {loading && <div style={{ display: "flex", alignItems: "center", gap: 10, color: COLORS.body }}><Loader2 size={18} className="animate-spin" /> Loading taxonomy…</div>}
 
@@ -401,7 +382,7 @@ function ChildrenSection({ taxon, taxonomy, sample, onSelect }: {
         .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
     if (sample) { setClusters(toLabels(sample.clusters?.[taxon.id] ?? [])); return; }
     let cancelled = false;
-    runQuery(`taxonomy-clusters-${taxon.id}`, fill(CLUSTERS_QUERY, { taxon: taxon.id }))
+    runStored("taxonomy.clusters", { taxon: taxon.id })
       .then((r) => { if (!cancelled) setClusters(toLabels(r)); })
       .catch(() => { if (!cancelled) setClusters([]); });
     return () => { cancelled = true; };
@@ -505,7 +486,7 @@ function MentionRow({ hit, via, sample }: { hit: PaperHit; via: string; sample: 
     if (!open || rows) return;
     if (sample) { setRows(sample.details[hit.entity] ?? []); return; }
     if (unsafeIri(hit.entity)) { setError("Unexpected entity IRI"); return; }
-    runQuery(`taxonomy-mentions-${hit.entity}`, fill(DETAIL_QUERY, { entity: hit.entity }))
+    runStored("literature.mentions", { entity: hit.entity })
       .then(setRows).catch((err) => setError(err instanceof Error ? err.message : "Query failed"));
   }, [open, rows, hit.entity, sample]);
   const sentences = (rows ?? []).filter((r) => !r.title?.value || r.title.value === hit.title);
@@ -547,8 +528,8 @@ function CellsSection({ taxon, sample }: { taxon: Taxon; sample: Sample | null }
     }
     if (unsafeIri(taxon.id)) { setError("Unexpected taxon IRI"); return; }
     let cancelled = false;
-    Promise.all([CELLS_QUERY, CELL_REGIONS_QUERY, CELL_DONORS_QUERY].map((q, i) =>
-      runQuery(`taxonomy-cells-${i}-${taxon.id}`, fill(q, { taxon: taxon.id }))))
+    Promise.all(["taxonomy.cells", "taxonomy.cell_regions", "taxonomy.cell_donors"].map((name) =>
+      runStored(name, { taxon: taxon.id })))
       .then(([s, r, d]) => { if (!cancelled) setData(build(s, r, d)); })
       .catch((e) => { if (!cancelled) setError(String(e?.message ?? e)); });
     return () => { cancelled = true; };
@@ -634,9 +615,8 @@ function EpigenomeSection({ taxon, epigenome, sample }: { taxon: Taxon; epigenom
       return;
     }
     if (ids.some(unsafeIri)) { setError("Unexpected summary IRI"); return; }
-    const values = ids.map((s) => `<${s}>`).join(" ");
-    runQuery(`taxonomy-tracks-${taxon.id}`, fill(EPI_TRACKS_QUERY, { summaries: values })).then((r) => setTracks(r.map(toTrack))).catch((e) => setError(String(e?.message ?? e)));
-    runQuery(`taxonomy-enhancers-${taxon.id}`, fill(EPI_ENHANCERS_QUERY, { summaries: values })).then((r) => setEnhancers(r.map(toEnhancer))).catch((e) => setError(String(e?.message ?? e)));
+    runStored("taxonomy.epigenome_tracks", { summaries: ids.join(" ") }).then((r) => setTracks(r.map(toTrack))).catch((e) => setError(String(e?.message ?? e)));
+    runStored("taxonomy.epigenome_enhancers", { summaries: ids.join(" ") }).then((r) => setEnhancers(r.map(toEnhancer))).catch((e) => setError(String(e?.message ?? e)));
   }, [ids, sample, taxon.id]);
 
   if (ids.length === 0) {

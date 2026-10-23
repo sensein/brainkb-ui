@@ -1,3 +1,7 @@
+// The page runs these as the query service's stored queries (core/stored_queries.py
+// in BrainKB), generated from this file by scripts/gen_stored_queries.py — rerun it
+// and redeploy the query service after changing a query here.
+//
 // SPARQL for /literature. {{graph}} holds the StructSense paper extractions and
 // the records their entities map to (taxa, gene annotations, parcellation terms);
 // {{entity}} is an entity IRI. Everything stays in one graph: Oxigraph times out

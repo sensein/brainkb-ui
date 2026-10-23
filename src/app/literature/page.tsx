@@ -4,8 +4,9 @@
  * /literature — papers processed by StructSense and the biological entities
  * extracted from them (cell types, genes, brain regions, species), each linked
  * to the record it maps to: a cell type to its taxon on /taxonomy, a gene to
- * Ensembl/NCBI, a region to its ontology term. Data comes through
- * /api/knowledge-base, so it needs a signed-in session.
+ * Ensembl/NCBI, a region to its ontology term. Data comes from the query
+ * service's stored queries (via /api/stored-query), so signed-out visitors can
+ * read it when the space is public.
  *
  * Local preview without a backend: in `next dev`, /literature?sample=1 loads
  * /dev/literature-sample.json instead (git-ignored, not deployed).
@@ -14,13 +15,11 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { signIn, useSession } from "next-auth/react";
 import { Loader2, AlertCircle, ChevronRight, ChevronDown } from "lucide-react";
 import MarketingHeader from "../components/marketing/MarketingHeader";
 import MarketingFooter from "../components/marketing/MarketingFooter";
 import { instrumentSerif, plexSans, plexMono } from "../components/marketing/fonts";
 import { COLORS, CARD_SURFACE } from "../components/marketing/tokens";
-import { PAPERS_QUERY, ENTITIES_QUERY, TARGETS_QUERY, DETAIL_QUERY, LIMITS } from "./queries";
 import {
   type Binding, type Entity, type GroupKey, type Link as EntityLink, type Paper, type Target,
   GROUPS, buildEntities, buildPapers, buildTargets, isMapped, typeLabel,
@@ -28,25 +27,27 @@ import {
 
 const GRAPH = "https://brainkb.org/graph/bican-basal-ganglia/";
 const SAMPLE_URL = "/dev/literature-sample.json";
+const GRAPH_FOR_QUERIES = GRAPH;
 const ROWS_SHOWN = 15;
 
 type Sample = { papers: Binding[]; entities: Binding[]; targets: Binding[]; details: Record<string, Binding[]> };
 
-async function runQuery(slug: string, sparqlQuery: string): Promise<Binding[]> {
-  const response = await fetch("/api/knowledge-base", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ slug, sparqlQuery }),
-  });
+// Rows of one of the query service's stored queries (core/stored_queries.py),
+// run on GRAPH as the caller; `capped` says the result reached the query's
+// row cap. Signed-out visitors can read public spaces this way.
+type Rows = Binding[] & { capped?: boolean };
+async function runStored(name: string, params: Record<string, string> = {}): Promise<Rows> {
+  const qs = new URLSearchParams({ graph: GRAPH_FOR_QUERIES, ...params });
+  const response = await fetch(`/api/stored-query/${encodeURIComponent(name)}?${qs}`);
   // A proxy or load balancer in front of the app answers timeouts with an HTML page.
   const json = await response.json().catch(() => null);
   if (!json) throw new Error(`Query failed (HTTP ${response.status}${response.status === 504 ? ", timed out" : ""})`);
-  if (!response.ok || json.success === false) throw new Error(json.error || `Query failed (HTTP ${response.status})`);
-  return Array.isArray(json.data) ? json.data : [];
+  if (!response.ok || json.error) throw new Error(json.error || `Query failed (HTTP ${response.status})`);
+  const rows: Rows = Array.isArray(json.message?.results?.bindings) ? json.message.results.bindings : [];
+  rows.capped = !!json.capped;
+  return rows;
 }
 
-const fill = (q: string, extra: Record<string, string> = {}) =>
-  q.replace(/\{\{(\w+)\}\}/g, (_, k: string) => ({ graph: GRAPH, ...extra })[k] ?? "");
 
 // IRIs are pasted into queries between <...>; refuse anything that could break out.
 const unsafeIri = (iri: string) => /[<>"{}\s]/.test(iri);
@@ -64,10 +65,6 @@ export default function LiteraturePage() {
 function LiteratureView() {
   const searchParams = useSearchParams();
   const useSample = process.env.NODE_ENV === "development" && searchParams?.get("sample") === "1";
-  // Signed-out reads of this graph go through a path that copies the whole space
-  // (and is refused for it server-side), so don't send the queries at all.
-  const { status: authStatus } = useSession();
-  const canQuery = useSample || authStatus === "authenticated";
 
   const [sample, setSample] = useState<Sample | null>(null);
   const [rows, setRows] = useState<Record<"papers" | "entities" | "targets", Binding[]>>({ papers: [], entities: [], targets: [] });
@@ -82,7 +79,6 @@ function LiteratureView() {
   const [mappedOnly, setMappedOnly] = useState(false);
 
   useEffect(() => {
-    if (!canQuery) { setLoading(authStatus === "loading"); return; }
     let cancelled = false;
     (async () => {
       setLoading(true);
@@ -96,21 +92,21 @@ function LiteratureView() {
           return;
         }
         const [papers, entities] = await Promise.all([
-          runQuery("literature-papers", fill(PAPERS_QUERY)),
-          runQuery("literature-entities", fill(ENTITIES_QUERY)),
+          runStored("literature.papers"),
+          runStored("literature.entities"),
         ]);
         if (cancelled) return;
         setRows((r) => ({ ...r, papers, entities }));
         setCapped([
-          ...(papers.length >= LIMITS.PAPERS ? [`papers (first ${LIMITS.PAPERS})`] : []),
-          ...(entities.length >= LIMITS.ENTITIES ? [`entities (first ${LIMITS.ENTITIES} rows)`] : []),
+          ...(papers.capped ? [`papers (first ${papers.length})`] : []),
+          ...(entities.capped ? [`entities (first ${entities.length} rows)`] : []),
         ]);
         // Target names fill in afterwards; without them rows still show the entity.
-        runQuery("literature-targets", fill(TARGETS_QUERY))
+        runStored("literature.targets")
           .then((targets) => {
             if (cancelled) return;
             setRows((r) => ({ ...r, targets }));
-            if (targets.length >= LIMITS.TARGETS) setCapped((c) => [...c, `linked records (first ${LIMITS.TARGETS})`]);
+            if (targets.capped) setCapped((c) => [...c, `linked records (first ${targets.length})`]);
           })
           .catch((err) => { if (!cancelled) setTargetsError(err instanceof Error ? err.message : "query failed"); });
       } catch (err) {
@@ -120,7 +116,7 @@ function LiteratureView() {
       }
     })();
     return () => { cancelled = true; };
-  }, [useSample, canQuery, authStatus]);
+  }, [useSample]);
 
   const papers = useMemo(() => buildPapers(rows.papers), [rows.papers]);
   const entities = useMemo(() => buildEntities(rows.entities), [rows.entities]);
@@ -175,13 +171,6 @@ function LiteratureView() {
             {useSample ? "Local sample · " : ""}{GRAPH}
           </span>
         </div>
-
-        {!canQuery && authStatus === "unauthenticated" && (
-          <div style={{ ...CARD_SURFACE, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 14, fontSize: 15, color: COLORS.body }}>
-            <span>Sign in to view the papers. For now this page needs a signed-in admin account.</span>
-            <button onClick={() => signIn()} style={{ padding: "7px 14px", borderRadius: 8, border: "none", background: COLORS.ink, color: COLORS.pageBg, fontSize: 14, cursor: "pointer" }}>Sign in</button>
-          </div>
-        )}
 
         {loading && <div style={{ display: "flex", alignItems: "center", gap: 10, color: COLORS.body }}><Loader2 size={18} className="animate-spin" /> Loading papers…</div>}
 
@@ -312,7 +301,7 @@ function EntityRow({ entity, targets, needle, sample }: { entity: Entity; target
     if (!open || rows) return;
     if (sample) { setRows(sample.details[entity.id] ?? []); return; }
     if (unsafeIri(entity.id)) { setError("Unexpected entity IRI"); return; }
-    runQuery(`literature-mentions-${entity.id}`, fill(DETAIL_QUERY, { entity: entity.id }))
+    runStored("literature.mentions", { entity: entity.id })
       .then(setRows).catch((e) => setError(String(e?.message ?? e)));
   }, [open, rows, entity.id, sample]);
 
