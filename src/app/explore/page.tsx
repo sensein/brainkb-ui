@@ -48,7 +48,7 @@ const TYPES: DataType[] = [
     action: "Browse resources",
   },
   {
-    name: "Literature",
+    name: "Literature extraction",
     icon: "◇",
     desc: "Papers and the cell types, genes, brain regions and species they mention, each linked to the taxonomy or ontology record it refers to.",
     sources: "StructSense",

@@ -160,7 +160,7 @@ function LiteratureView() {
       <section style={{ maxWidth: 1240, margin: "0 auto", padding: "64px 16px 96px", width: "100%", display: "flex", flexDirection: "column", gap: 24 }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <h1 style={{ margin: 0, font: "400 clamp(32px,4vw,48px)/1.05 var(--font-instrument-serif), serif", letterSpacing: "-.02em", color: COLORS.accent }}>
-            Literature
+            Literature extraction
           </h1>
           <p style={{ margin: 0, maxWidth: 860, color: COLORS.body, fontSize: 16, lineHeight: 1.55 }}>
             Papers and what they mention. Cell types, genes, brain regions and species were extracted from each paper
