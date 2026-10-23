@@ -195,3 +195,56 @@ WHERE {
              rdfs:label ?label .
   }
 }`;
+
+// Cell counts of one taxon in the taxonomy's data file (epi:CellSummary):
+// totals, then the split by region and by donor. {{taxon}} is the taxon IRI.
+export const CELLS_QUERY = `${PREFIXES}
+SELECT ?summary ?cells ?fraction ?donors ?regions ?samples ?url
+WHERE {
+  GRAPH <{{tax}}> {
+    ?summary a epi:CellSummary ;
+             epi:about <{{taxon}}> ;
+             epi:n_cells ?cells .
+    OPTIONAL { ?summary epi:fraction_of_taxonomy_cells ?fraction }
+    OPTIONAL { ?summary epi:n_donors ?donors }
+    OPTIONAL { ?summary epi:n_regions ?regions }
+    OPTIONAL { ?summary epi:n_barcoded_cell_samples ?samples }
+    OPTIONAL { ?summary schema:url ?url }
+  }
+}`;
+
+// ?source says where the region came from: the tissue sample's structure in
+// BrainKB, or (when it has none) the region named in the data file.
+export const CELL_REGIONS_QUERY = `${PREFIXES}
+SELECT ?count ?cells ?region ?regionLabel ?parentLabel ?abbreviation ?source
+WHERE {
+  GRAPH <{{tax}}> {
+    ?summary epi:about <{{taxon}}> ;
+             epi:has_region_count ?count .
+    ?count epi:n_cells ?cells .
+    OPTIONAL {
+      ?count epi:region ?region .
+      OPTIONAL { ?region rdfs:label ?regionLabel }
+      OPTIONAL { ?region bican:has_parent_parcellation_term/rdfs:label ?parentLabel }
+    }
+    OPTIONAL { ?count epi:region_abbreviation ?abbreviation }
+    OPTIONAL { ?count epi:region_source ?source }
+  }
+}`;
+
+export const CELL_DONORS_QUERY = `${PREFIXES}
+SELECT ?count ?cells ?donor ?donorId ?sex ?age ?ageUnit
+WHERE {
+  GRAPH <{{tax}}> {
+    ?summary epi:about <{{taxon}}> ;
+             epi:has_donor_count ?count .
+    ?count epi:n_cells ?cells .
+    OPTIONAL { ?count epi:donor_id ?donorId }
+    OPTIONAL {
+      ?count epi:donor ?donor .
+      OPTIONAL { ?donor bican:sex ?sex }
+      OPTIONAL { ?donor bican:age_of_death ?age }
+      OPTIONAL { ?donor bican:age_at_death_unit ?ageUnit }
+    }
+  }
+}`;

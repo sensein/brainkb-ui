@@ -180,3 +180,51 @@ export const toEnhancer = (r: Binding): Enhancer => ({
   specific: val(r, "specific") === "true", shared: Number(val(r, "shared") ?? 0),
   sharedLabels: (val(r, "sharedLabels") ?? "").split("; ").filter(Boolean),
 });
+
+export type CellSummary = {
+  cells: number; fraction?: number; donors?: number; regions?: number; samples?: number; url?: string;
+};
+export const toCellSummary = (r: Binding): CellSummary => ({
+  cells: Number(val(r, "cells") ?? 0),
+  fraction: val(r, "fraction") !== undefined ? Number(val(r, "fraction")) : undefined,
+  donors: val(r, "donors") !== undefined ? Number(val(r, "donors")) : undefined,
+  regions: val(r, "regions") !== undefined ? Number(val(r, "regions")) : undefined,
+  samples: val(r, "samples") !== undefined ? Number(val(r, "samples")) : undefined,
+  url: val(r, "url"),
+});
+
+// fallback: the region came from the data file, not from BrainKB's tissue record.
+export type CellCount = { id: string; cells: number; label: string; detail?: string; parent?: string; fallback?: boolean };
+
+export const toRegionCounts = (rows: Binding[]): CellCount[] => {
+  const out = new Map<string, CellCount>();
+  for (const r of rows) {
+    const id = val(r, "count");
+    if (!id || out.has(id)) continue;
+    const region = val(r, "region"), abbr = val(r, "abbreviation"), source = val(r, "source") ?? "";
+    out.set(id, {
+      id, cells: Number(val(r, "cells") ?? 0), label: val(r, "regionLabel") ?? abbr ?? "unknown region",
+      // HOMBA purls do not resolve to a term page (they redirect to the purl
+      // repository), so the term is named, not linked.
+      detail: [val(r, "regionLabel") ? abbr : undefined, region?.split("/").pop()?.replace("_", ":")].filter(Boolean).join(" · ") || undefined,
+      parent: val(r, "parentLabel"),
+      fallback: !source.startsWith("TissueSample structure") || source.includes("not in the graph"),
+    });
+  }
+  return [...out.values()].sort((a, b) => b.cells - a.cells);
+};
+
+export const toDonorCounts = (rows: Binding[]): CellCount[] => {
+  const out = new Map<string, CellCount>();
+  for (const r of rows) {
+    const id = val(r, "count");
+    if (!id || out.has(id)) continue;
+    const age = val(r, "age"), unit = val(r, "ageUnit");
+    const ageText = age ? `${Number(age)} ${unit === "year" ? "y" : unit ?? ""}`.trim() : undefined;
+    out.set(id, {
+      id, cells: Number(val(r, "cells") ?? 0), label: val(r, "donorId") ?? "unknown donor",
+      detail: [val(r, "sex"), ageText].filter(Boolean).join(" · ") || undefined,
+    });
+  }
+  return [...out.values()].sort((a, b) => b.cells - a.cells);
+};

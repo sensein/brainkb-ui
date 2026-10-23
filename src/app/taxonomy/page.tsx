@@ -21,10 +21,11 @@ import { COLORS, CARD_SURFACE } from "../components/marketing/tokens";
 import { DETAIL_QUERY } from "../literature/queries";
 import {
   TAXA_QUERY, REVISIONS_QUERY, MARKERS_QUERY, PAPERS_QUERY, MARKER_PAPERS_QUERY, EPI_SUMMARY_QUERY, EPI_TRACKS_QUERY, EPI_ENHANCERS_QUERY, CLUSTERS_QUERY,
+  CELLS_QUERY, CELL_REGIONS_QUERY, CELL_DONORS_QUERY,
 } from "./queries";
 import {
-  type Binding, type Epigenome, type EpiSummary, type Marker, type PaperHit, type Revision, type Taxon, type Taxonomy, type Track, type Enhancer,
-  LEVEL_ORDER, buildEpigenome, buildMarkers, buildPapers, buildRevisions, buildTaxonomy, descendants, lineage, toEnhancer, toTrack,
+  type Binding, type CellCount, type CellSummary, type Epigenome, type EpiSummary, type Marker, type PaperHit, type Revision, type Taxon, type Taxonomy, type Track, type Enhancer,
+  LEVEL_ORDER, toCellSummary, toDonorCounts, toRegionCounts, buildEpigenome, buildMarkers, buildPapers, buildRevisions, buildTaxonomy, descendants, lineage, toEnhancer, toTrack,
 } from "./model";
 
 // Where the taxonomy, gene records and epigenome nodes live, and the paper extractions.
@@ -38,6 +39,7 @@ type Sample = {
   taxa: Binding[]; revisions: Binding[]; markers: Binding[]; papers: Binding[]; epi: Binding[];
   tracks: Record<string, Binding[]>; enhancers: Record<string, Binding[]>; details: Record<string, Binding[]>;
   clusters?: Record<string, Binding[]>;
+  cells?: Record<string, { summary: Binding[]; regions: Binding[]; donors: Binding[] }>;
 };
 
 async function runQuery(slug: string, sparqlQuery: string): Promise<Binding[]> {
@@ -340,6 +342,8 @@ function TaxonPanel({ taxon, taxonomy, revisions, markers, papers, epigenome, sa
 
       <PapersSection taxon={taxon} taxonomy={taxonomy} revisions={revisions} papers={papers} sample={sample} />
 
+      <CellsSection taxon={taxon} sample={sample} />
+
       <EpigenomeSection taxon={taxon} epigenome={epigenome} sample={sample} />
     </aside>
   );
@@ -502,6 +506,93 @@ function MentionRow({ hit, via, sample }: { hit: PaperHit; via: string; sample: 
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// How many cells of the taxonomy's data file fall in this cell type, and how
+// they split over brain regions and donors.
+function CellsSection({ taxon, sample }: { taxon: Taxon; sample: Sample | null }) {
+  const [data, setData] = useState<{ summary?: CellSummary; regions: CellCount[]; donors: CellCount[] } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    setData(null); setError(null);
+    const build = (summary: Binding[], regions: Binding[], donors: Binding[]) =>
+      ({ summary: summary[0] ? toCellSummary(summary[0]) : undefined, regions: toRegionCounts(regions), donors: toDonorCounts(donors) });
+    if (sample) {
+      const c = sample.cells?.[taxon.id];
+      setData(build(c?.summary ?? [], c?.regions ?? [], c?.donors ?? []));
+      return;
+    }
+    if (unsafeIri(taxon.id)) { setError("Unexpected taxon IRI"); return; }
+    let cancelled = false;
+    Promise.all([CELLS_QUERY, CELL_REGIONS_QUERY, CELL_DONORS_QUERY].map((q, i) =>
+      runQuery(`taxonomy-cells-${i}-${taxon.id}`, fill(q, { taxon: taxon.id }))))
+      .then(([s, r, d]) => { if (!cancelled) setData(build(s, r, d)); })
+      .catch((e) => { if (!cancelled) setError(String(e?.message ?? e)); });
+    return () => { cancelled = true; };
+  }, [taxon.id, sample]);
+
+  if (error) return <div><div style={panelHeading}>Cells</div><span style={{ color: "#8c3d1f", fontSize: 13 }}>{error}</span></div>;
+  if (!data) return <div><div style={panelHeading}>Cells</div><span style={{ color: COLORS.muted, fontSize: 13 }}>Loading…</span></div>;
+  const s = data.summary;
+  if (!s) return null;
+  const n = (x: number) => x.toLocaleString("en-US");
+  const facts = [
+    s.fraction !== undefined ? `${(s.fraction * 100).toFixed(s.fraction < 0.01 ? 2 : 1)}% of the taxonomy` : undefined,
+    s.donors !== undefined ? `${n(s.donors)} donor${s.donors === 1 ? "" : "s"}` : undefined,
+    s.regions !== undefined ? `${n(s.regions)} region${s.regions === 1 ? "" : "s"}` : undefined,
+    s.samples !== undefined ? `${n(s.samples)} cell sample${s.samples === 1 ? "" : "s"}` : undefined,
+  ].filter(Boolean);
+  return (
+    <div>
+      <div style={panelHeading}>Cells</div>
+      <div style={{ border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: "10px 12px", display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ fontSize: 13 }}>
+          <span style={{ color: COLORS.ink, fontWeight: 600 }}>{n(s.cells)} cells</span>
+          {facts.length > 0 && <span style={{ color: COLORS.muted }}> · {facts.join(" · ")}</span>}
+          {s.url && <> · <a href={s.url} target="_blank" rel="noreferrer" style={{ color: COLORS.accentPurple }}>taxonomy data file (.h5ad) ↗</a></>}
+        </div>
+        {data.regions.length > 0 && <CountBars title="By region" counts={data.regions} total={s.cells}
+          note="The tissue sample has no structure in BrainKB; the region is the one named in the taxonomy data file." />}
+        {data.donors.length > 0 && <CountBars title="By donor" counts={data.donors} total={s.cells} />}
+      </div>
+    </div>
+  );
+}
+
+function CountBars({ title, counts, total, note }: { title: string; counts: CellCount[]; total: number; note?: string }) {
+  const [all, setAll] = useState(false);
+  const shown = all ? counts : counts.slice(0, 8);
+  const max = counts[0]?.cells || 1;
+  return (
+    <div>
+      <div style={{ fontSize: 12, color: COLORS.muted, marginBottom: 4 }}>{title}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(80px, 180px) 64px", gap: "6px 12px", alignItems: "center", fontSize: 13 }}>
+        {shown.map((c) => (
+          <Fragment key={c.id}>
+            <span style={{ minWidth: 0, lineHeight: 1.35 }}>
+              <span style={{ color: COLORS.ink }}>{c.label}</span>
+              {c.fallback && note && <span title={note} style={{ color: COLORS.muted }}> *</span>}
+              {(c.detail || c.parent) && (
+                <span style={{ display: "block", font: "400 11px var(--font-plex-mono)", color: COLORS.muted }}>
+                  {[c.detail, c.parent ? `in ${c.parent}` : undefined].filter(Boolean).join(" · ")}
+                </span>
+              )}
+            </span>
+            <span style={{ height: 8, borderRadius: 4, background: COLORS.chipBg, overflow: "hidden" }}>
+              <span style={{ display: "block", height: "100%", width: `${Math.max(2, (c.cells / max) * 100)}%`, background: COLORS.accentPurple, borderRadius: 4 }} />
+            </span>
+            <span style={{ font: "400 12px var(--font-plex-mono)", color: COLORS.body, textAlign: "right" }} title={`${((c.cells / total) * 100).toFixed(1)}%`}>
+              {c.cells.toLocaleString("en-US")}
+            </span>
+          </Fragment>
+        ))}
+      </div>
+      {counts.length > shown.length && (
+        <button onClick={() => setAll(true)} style={{ ...linkButton, fontSize: 12, marginTop: 4 }}>Show all {counts.length}</button>
+      )}
+      {note && shown.some((c) => c.fallback) && <div style={{ fontSize: 11, color: COLORS.muted, marginTop: 4 }}>* {note}</div>}
     </div>
   );
 }

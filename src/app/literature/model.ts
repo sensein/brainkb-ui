@@ -87,7 +87,8 @@ export function buildTargets(rows: Binding[]): Map<string, Target> {
         : /^\d+$/.test(identifier) ? `https://www.ncbi.nlm.nih.gov/gene/${identifier}` : undefined;
       t = { id, kind: "gene", label: symbol ?? label ?? id, detail: [identifier, val(r, "species")].filter(Boolean).join(" · "), href };
     } else if (kind === "ParcellationTerm") {
-      t = { id, kind: "region", label: label ?? id, detail: id.split("/").pop(), href: id };
+      // No link: HOMBA purls redirect to the purl repository, not to a term page.
+      t = { id, kind: "region", label: label ?? id, detail: id.split("/").pop()?.replace("_", ":") };
     } else if (id.startsWith(`${OBO}NCBITaxon_`)) {
       const n = id.slice(`${OBO}NCBITaxon_`.length);
       t = { id, kind: "species", label: SPECIES[n] ?? `NCBITaxon:${n}`, detail: `NCBITaxon:${n}`, href: id };
