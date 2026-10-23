@@ -48,13 +48,13 @@ const TYPES: DataType[] = [
     action: "Browse resources",
   },
   {
-    name: "Named entities",
+    name: "Literature",
     icon: "◇",
-    desc: "Cell types, genes, brain regions and methods extracted from papers, shown as a network of papers and entities.",
+    desc: "Papers and the cell types, genes, brain regions and species they mention, each linked to the taxonomy or ontology record it refers to.",
     sources: "StructSense",
     programs: ["BICAN"],
-    href: "/named-entities",
-    action: "View the network",
+    href: "/literature",
+    action: "Browse papers",
   },
 ];
 

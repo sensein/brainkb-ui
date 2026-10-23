@@ -5,6 +5,7 @@
  * Pick a taxon to see its earlier revision, the papers whose extracted
  * entities point at it (in any revision), and the epigenome portal data linked
  * to it. Data comes through /api/knowledge-base, so it needs a signed-in session.
+ * /taxonomy?taxon=<taxon IRI> opens on that taxon (links from /literature).
  *
  * Local preview without a backend: in `next dev`, /taxonomy?sample=1 loads
  * /dev/taxonomy-sample.json instead (git-ignored, not deployed).
@@ -17,7 +18,7 @@ import MarketingHeader from "../components/marketing/MarketingHeader";
 import MarketingFooter from "../components/marketing/MarketingFooter";
 import { instrumentSerif, plexSans, plexMono } from "../components/marketing/fonts";
 import { COLORS, CARD_SURFACE } from "../components/marketing/tokens";
-import { DETAIL_QUERY } from "../named-entities/queries";
+import { DETAIL_QUERY } from "../literature/queries";
 import {
   TAXA_QUERY, REVISIONS_QUERY, MARKERS_QUERY, PAPERS_QUERY, MARKER_PAPERS_QUERY, EPI_SUMMARY_QUERY, EPI_TRACKS_QUERY, EPI_ENHANCERS_QUERY, CLUSTERS_QUERY,
 } from "./queries";
@@ -67,6 +68,7 @@ export default function TaxonomyPage() {
 function TaxonomyView() {
   const searchParams = useSearchParams();
   const useSample = process.env.NODE_ENV === "development" && searchParams?.get("sample") === "1";
+  const linkedTaxon = searchParams?.get("taxon") ?? null;
 
   const [sample, setSample] = useState<Sample | null>(null);
   const [rows, setRows] = useState<Record<"taxa" | "revisions" | "markers" | "papers" | "markerPapers" | "epi", Binding[]>>({
@@ -131,9 +133,15 @@ function TaxonomyView() {
   const paperCount = (id: string) => new Set((papers.get(id) ?? []).map((p) => p.paper)).size;
   const epiOf = (id: string) => (epigenome.byTaxon.get(id) ?? []).map((s) => epigenome.summaries.get(s)!);
 
-  // Start on the first taxon that has both papers and epigenome data.
+  // Open on the linked taxon, if it is in the newest release.
   useEffect(() => {
-    if (selectedId || !currentSpecies || rows.papers.length === 0 || rows.epi.length === 0) return;
+    const t = linkedTaxon ? taxonomy.taxa.get(linkedTaxon) : undefined;
+    if (t) { setSpecies(t.species); setSelectedId(t.id); }
+  }, [taxonomy, linkedTaxon]);
+
+  // Otherwise start on the first taxon that has both papers and epigenome data.
+  useEffect(() => {
+    if (selectedId || (linkedTaxon && taxonomy.taxa.has(linkedTaxon)) || !currentSpecies || rows.papers.length === 0 || rows.epi.length === 0) return;
     const pick = [...taxonomy.taxa.values()].filter((t) => t.species === currentSpecies)
       .sort((a, b) => paperCount(b.id) - paperCount(a.id))
       .find((t) => paperCount(t.id) > 0 && epiOf(t.id).length > 0);
