@@ -13,6 +13,7 @@
 
 import { Fragment, Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { signIn, useSession } from "next-auth/react";
 import { Loader2, AlertCircle, ChevronRight, ChevronDown, FileText, Activity } from "lucide-react";
 import MarketingHeader from "../components/marketing/MarketingHeader";
 import MarketingFooter from "../components/marketing/MarketingFooter";
@@ -48,8 +49,10 @@ async function runQuery(slug: string, sparqlQuery: string): Promise<Binding[]> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ slug, sparqlQuery }),
   });
-  const json = await response.json();
-  if (!response.ok || json?.success === false) throw new Error(json?.error || `Query failed (HTTP ${response.status})`);
+  // A proxy or load balancer in front of the app answers timeouts with an HTML page.
+  const json = await response.json().catch(() => null);
+  if (!json) throw new Error(`Query failed (HTTP ${response.status}${response.status === 504 ? ", timed out" : ""})`);
+  if (!response.ok || json.success === false) throw new Error(json.error || `Query failed (HTTP ${response.status})`);
   return Array.isArray(json.data) ? json.data : [];
 }
 
@@ -70,6 +73,10 @@ export default function TaxonomyPage() {
 function TaxonomyView() {
   const searchParams = useSearchParams();
   const useSample = process.env.NODE_ENV === "development" && searchParams?.get("sample") === "1";
+  // Signed-out reads of this graph go through a path that copies the whole space
+  // (and is refused for it server-side), so don't send the queries at all.
+  const { status: authStatus } = useSession();
+  const canQuery = useSample || authStatus === "authenticated";
   const linkedTaxon = searchParams?.get("taxon") ?? null;
 
   const [sample, setSample] = useState<Sample | null>(null);
@@ -88,6 +95,7 @@ function TaxonomyView() {
   const [renamedOnly, setRenamedOnly] = useState(false);
 
   useEffect(() => {
+    if (!canQuery) { setLoading(authStatus === "loading"); return; }
     let cancelled = false;
     (async () => {
       setLoading(true);
@@ -119,7 +127,7 @@ function TaxonomyView() {
       }
     })();
     return () => { cancelled = true; };
-  }, [useSample]);
+  }, [useSample, canQuery, authStatus]);
 
   const taxonomy = useMemo(() => buildTaxonomy(rows.taxa), [rows.taxa]);
   const revisions = useMemo(() => buildRevisions(rows.revisions), [rows.revisions]);
@@ -191,6 +199,13 @@ function TaxonomyView() {
             {TAX_GRAPH}
           </span>
         </div>
+
+        {!canQuery && authStatus === "unauthenticated" && (
+          <div style={{ ...CARD_SURFACE, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 14, fontSize: 15, color: COLORS.body }}>
+            <span>Sign in to view the taxonomy. For now this page needs a signed-in admin account.</span>
+            <button onClick={() => signIn()} style={{ padding: "7px 14px", borderRadius: 8, border: "none", background: COLORS.ink, color: COLORS.pageBg, fontSize: 14, cursor: "pointer" }}>Sign in</button>
+          </div>
+        )}
 
         {loading && <div style={{ display: "flex", alignItems: "center", gap: 10, color: COLORS.body }}><Loader2 size={18} className="animate-spin" /> Loading taxonomy…</div>}
 
