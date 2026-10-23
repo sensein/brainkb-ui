@@ -11,6 +11,11 @@ PREFIX dcterms: <http://purl.org/dc/terms/>
 PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
 PREFIX biolink: <https://w3id.org/biolink/vocab/>`;
 
+// Row caps, as on the browse pages (class-browser.yaml), set well above what
+// the graph holds today (2026-10-23: 4 papers, 743 entity rows, 498 targets).
+// The page warns when a query comes back exactly at its cap.
+export const LIMITS = { PAPERS: 1000, ENTITIES: 20000, TARGETS: 20000 } as const;
+
 export const PAPERS_QUERY = `${PREFIXES}
 SELECT ?paper (SAMPLE(?t) AS ?title) (SAMPLE(?d) AS ?doi) (SAMPLE(?y) AS ?year) (SAMPLE(?j) AS ?journal)
 WHERE {
@@ -22,7 +27,8 @@ WHERE {
     OPTIONAL { ?paper dcterms:bibliographicCitation ?j }
   }
 }
-GROUP BY ?paper`;
+GROUP BY ?paper
+LIMIT ${LIMITS.PAPERS}`;
 
 // One row per (entity, mapping): the entity's specific ner: class, its paper,
 // how often that paper mentions it, and what it maps to by which skos relation.
@@ -43,7 +49,8 @@ WHERE {
     }
   }
 }
-GROUP BY ?paper ?entity ?how ?target`;
+GROUP BY ?paper ?entity ?how ?target
+LIMIT ${LIMITS.ENTITIES}`;
 
 // What the mapped-to records say about themselves. A cell-type taxon from an
 // earlier release also gets the newest taxon that revises it (?newest), which
@@ -70,7 +77,8 @@ WHERE {
     }
   }
 }
-GROUP BY ?target`;
+GROUP BY ?target
+LIMIT ${LIMITS.TARGETS}`;
 
 // A few mentions of one entity, with the sentence each sits in.
 export const DETAIL_QUERY = `${PREFIXES}

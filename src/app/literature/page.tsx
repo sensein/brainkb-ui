@@ -20,7 +20,7 @@ import MarketingHeader from "../components/marketing/MarketingHeader";
 import MarketingFooter from "../components/marketing/MarketingFooter";
 import { instrumentSerif, plexSans, plexMono } from "../components/marketing/fonts";
 import { COLORS, CARD_SURFACE } from "../components/marketing/tokens";
-import { PAPERS_QUERY, ENTITIES_QUERY, TARGETS_QUERY, DETAIL_QUERY } from "./queries";
+import { PAPERS_QUERY, ENTITIES_QUERY, TARGETS_QUERY, DETAIL_QUERY, LIMITS } from "./queries";
 import {
   type Binding, type Entity, type GroupKey, type Link as EntityLink, type Paper, type Target,
   GROUPS, buildEntities, buildPapers, buildTargets, isMapped, typeLabel,
@@ -74,6 +74,7 @@ function LiteratureView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [targetsError, setTargetsError] = useState<string | null>(null);
+  const [capped, setCapped] = useState<string[]>([]);
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -100,9 +101,17 @@ function LiteratureView() {
         ]);
         if (cancelled) return;
         setRows((r) => ({ ...r, papers, entities }));
+        setCapped([
+          ...(papers.length >= LIMITS.PAPERS ? [`papers (first ${LIMITS.PAPERS})`] : []),
+          ...(entities.length >= LIMITS.ENTITIES ? [`entities (first ${LIMITS.ENTITIES} rows)`] : []),
+        ]);
         // Target names fill in afterwards; without them rows still show the entity.
         runQuery("literature-targets", fill(TARGETS_QUERY))
-          .then((targets) => { if (!cancelled) setRows((r) => ({ ...r, targets })); })
+          .then((targets) => {
+            if (cancelled) return;
+            setRows((r) => ({ ...r, targets }));
+            if (targets.length >= LIMITS.TARGETS) setCapped((c) => [...c, `linked records (first ${LIMITS.TARGETS})`]);
+          })
           .catch((err) => { if (!cancelled) setTargetsError(err instanceof Error ? err.message : "query failed"); });
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : "Query failed");
@@ -203,6 +212,7 @@ function LiteratureView() {
                 {plural(listed.length, "paper")} · {plural(kept.filter((e) => listed.some((p) => p.id === e.paper) && matches(e)).length, "entity", "entities")}
               </span>
             </div>
+            {capped.length > 0 && <div style={{ fontSize: 13, color: "#8c3d1f" }}>The list may be incomplete: only part of the {capped.join(", ")} was loaded.</div>}
             {targetsError && <div style={{ fontSize: 13, color: "#8c3d1f" }}>Linked records could not be loaded ({targetsError}).</div>}
 
             <div className="grid gap-4 md:grid-cols-[minmax(0,360px)_minmax(0,1fr)]" style={{ alignItems: "start" }}>

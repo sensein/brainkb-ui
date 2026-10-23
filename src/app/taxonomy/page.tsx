@@ -22,7 +22,7 @@ import { COLORS, CARD_SURFACE } from "../components/marketing/tokens";
 import { DETAIL_QUERY } from "../literature/queries";
 import {
   TAXA_QUERY, REVISIONS_QUERY, MARKERS_QUERY, PAPERS_QUERY, MARKER_PAPERS_QUERY, EPI_SUMMARY_QUERY, EPI_TRACKS_QUERY, EPI_ENHANCERS_QUERY, CLUSTERS_QUERY,
-  CELLS_QUERY, CELL_REGIONS_QUERY, CELL_DONORS_QUERY,
+  CELLS_QUERY, CELL_REGIONS_QUERY, CELL_DONORS_QUERY, LIMITS,
 } from "./queries";
 import {
   type Binding, type CellCount, type CellSummary, type Epigenome, type EpiSummary, type Marker, type PaperHit, type Revision, type Taxon, type Taxonomy, type Track, type Enhancer,
@@ -111,14 +111,20 @@ function TaxonomyView() {
         const taxa = await runQuery("taxonomy-taxa", fill(TAXA_QUERY));
         if (cancelled) return;
         setRows((r) => ({ ...r, taxa }));
+        if (taxa.length >= LIMITS.TAXA) setSideErrors((e) => [...e, `taxa: only the first ${LIMITS.TAXA} rows were loaded`]);
         // The rest fills in as it arrives; a failure there leaves the tree usable.
-        const side: [keyof typeof rows, string][] = [
-          ["revisions", REVISIONS_QUERY], ["markers", MARKERS_QUERY], ["papers", PAPERS_QUERY], ["markerPapers", MARKER_PAPERS_QUERY],
-          ["epi", EPI_SUMMARY_QUERY],
+        const side: [keyof typeof rows, string, number][] = [
+          ["revisions", REVISIONS_QUERY, LIMITS.REVISIONS], ["markers", MARKERS_QUERY, LIMITS.MARKERS],
+          ["papers", PAPERS_QUERY, LIMITS.PAPERS], ["markerPapers", MARKER_PAPERS_QUERY, LIMITS.MARKER_PAPERS],
+          ["epi", EPI_SUMMARY_QUERY, LIMITS.EPI_SUMMARY],
         ];
-        side.forEach(([key, q]) =>
+        side.forEach(([key, q, cap]) =>
           runQuery(`taxonomy-${key}`, fill(q))
-            .then((data) => { if (!cancelled) setRows((r) => ({ ...r, [key]: data })); })
+            .then((data) => {
+              if (cancelled) return;
+              setRows((r) => ({ ...r, [key]: data }));
+              if (data.length >= cap) setSideErrors((e) => [...e, `${key}: only the first ${cap} rows were loaded`]);
+            })
             .catch((err) => { if (!cancelled) setSideErrors((e) => [...e, `${key}: ${err instanceof Error ? err.message : "query failed"}`]); }));
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : "Query failed");
@@ -235,7 +241,7 @@ function TaxonomyView() {
               </span>
             </div>
             {sideErrors.length > 0 && (
-              <div style={{ fontSize: 13, color: "#8c3d1f" }}>Some details could not be loaded ({sideErrors.join("; ")}).</div>
+              <div style={{ fontSize: 13, color: "#8c3d1f" }}>Some details could not be loaded or may be incomplete ({sideErrors.join("; ")}).</div>
             )}
 
             <div className="grid gap-4 md:grid-cols-[minmax(0,400px)_minmax(0,1fr)]" style={{ alignItems: "start" }}>

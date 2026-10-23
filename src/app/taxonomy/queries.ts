@@ -12,6 +12,14 @@ PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX ner: <https://brainkb.org/ner/>
 PREFIX prov: <http://www.w3.org/ns/prov#>`;
 
+// Row caps, as on the browse pages (class-browser.yaml), set well above what
+// the graph holds today (2026-10-23: 327 taxa, 1,147 epigenome rows, 207 paper
+// rows). The page warns when a load query comes back exactly at its cap.
+export const LIMITS = {
+  TAXA: 3000, REVISIONS: 5000, MARKERS: 10000, PAPERS: 10000, MARKER_PAPERS: 10000, EPI_SUMMARY: 10000,
+  EPI_TRACKS: 5000, EPI_ENHANCERS: 5000, CLUSTERS: 1000, CELLS: 10, CELL_REGIONS: 1000, CELL_DONORS: 1000,
+} as const;
+
 // Named taxa (they carry an accession; cluster-level taxa do not) of the newest
 // release, with their level, species (from the taxonomy title), display color
 // and how many clusters sit under them.
@@ -40,7 +48,8 @@ WHERE {
       GROUP BY ?taxon
     }
   }
-}`;
+}
+LIMIT ${LIMITS.TAXA}`;
 
 // Every step of every newest taxon's revision chain: ?from revision_of ?prev,
 // with what the earlier revision said about itself.
@@ -58,7 +67,8 @@ WHERE {
     OPTIONAL { ?prev bican:has_parent/rdfs:label ?parentLabel }
     OPTIONAL { ?prev bican:cell_type_ontology_term ?cl }
   }
-}`;
+}
+LIMIT ${LIMITS.REVISIONS}`;
 
 // Curated marker genes of each newest taxon and of each of its earlier revisions
 // (?holder), so the two can be compared.
@@ -73,7 +83,8 @@ WHERE {
     OPTIONAL { ?gene biolink:symbol ?symbol }
     OPTIONAL { ?gene schema:identifier ?identifier }
   }
-}`;
+}
+LIMIT ${LIMITS.MARKERS}`;
 
 // Papers whose extracted entities point at a newest taxon or any earlier
 // revision of it (?hit) by a skos relation. Kept apart from MARKER_PAPERS_QUERY
@@ -95,7 +106,8 @@ WHERE {
     OPTIONAL { ?paper ner:doi ?d }
   }
 }
-GROUP BY ?taxon ?hit ?how ?entity ?paper`;
+GROUP BY ?taxon ?hit ?how ?entity ?paper
+LIMIT ${LIMITS.PAPERS}`;
 
 // Papers with an extracted gene that is a curated marker of a newest taxon or
 // of one of its earlier revisions (?how = "marker").
@@ -117,7 +129,8 @@ WHERE {
   }
   BIND("marker" AS ?how)
 }
-GROUP BY ?taxon ?hit ?how ?entity ?paper`;
+GROUP BY ?taxon ?hit ?how ?entity ?paper
+LIMIT ${LIMITS.MARKER_PAPERS}`;
 
 // One row per (epigenome summary, measurement), with its track and
 // marker-enhancer counts. Summaries without epi:about are for species that have
@@ -141,7 +154,8 @@ WHERE {
       GROUP BY ?summary
     }
   }
-}`;
+}
+LIMIT ${LIMITS.EPI_SUMMARY}`;
 
 // Tracks of the given summaries. {{summaries}} is a space-separated list of <IRI>s.
 export const EPI_TRACKS_QUERY = `${PREFIXES}
@@ -160,7 +174,8 @@ WHERE {
     OPTIONAL { ?track epi:genome_assembly ?assembly }
     OPTIONAL { ?track epi:file_format ?format }
   }
-}`;
+}
+LIMIT ${LIMITS.EPI_TRACKS}`;
 
 // Marker-gene enhancers (activity-by-contact links) of the given summaries,
 // with the other cell types the enhancer is also active in.
@@ -182,7 +197,8 @@ WHERE {
     BIND(COALESCE(?otherLabel, "") AS ?ol)
   }
 }
-GROUP BY ?summary ?enhancer ?gene ?symbol ?region ?regionType ?abc ?specific`;
+GROUP BY ?summary ?enhancer ?gene ?symbol ?region ?regionType ?abc ?specific
+LIMIT ${LIMITS.EPI_ENHANCERS}`;
 
 // Clusters directly under the given taxon (a cluster has_parent every level
 // above it, so this is only asked for taxa without named subtypes).
@@ -194,7 +210,8 @@ WHERE {
              bican:has_parent <{{taxon}}> ;
              rdfs:label ?label .
   }
-}`;
+}
+LIMIT ${LIMITS.CLUSTERS}`;
 
 // Cell counts of one taxon in the taxonomy's data file (epi:CellSummary):
 // totals, then the split by region and by donor. {{taxon}} is the taxon IRI.
@@ -211,7 +228,8 @@ WHERE {
     OPTIONAL { ?summary epi:n_barcoded_cell_samples ?samples }
     OPTIONAL { ?summary schema:url ?url }
   }
-}`;
+}
+LIMIT ${LIMITS.CELLS}`;
 
 // ?source says where the region came from: the tissue sample's structure in
 // BrainKB, or (when it has none) the region named in the data file.
@@ -230,7 +248,8 @@ WHERE {
     OPTIONAL { ?count epi:region_abbreviation ?abbreviation }
     OPTIONAL { ?count epi:region_source ?source }
   }
-}`;
+}
+LIMIT ${LIMITS.CELL_REGIONS}`;
 
 export const CELL_DONORS_QUERY = `${PREFIXES}
 SELECT ?count ?cells ?donor ?donorId ?sex ?age ?ageUnit
@@ -247,4 +266,5 @@ WHERE {
       OPTIONAL { ?donor bican:age_at_death_unit ?ageUnit }
     }
   }
-}`;
+}
+LIMIT ${LIMITS.CELL_DONORS}`;
