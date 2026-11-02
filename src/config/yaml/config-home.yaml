@@ -136,7 +136,7 @@ usecases:
       discussion_link: "https://github.com/sensein/BrainKB/discussions/24"
       is_future: false
       status: "available"
-      use_link: "/hmba-taxonomy"
+      use_link: "/taxonomy"
       use_link_text: "View"
     - title: "Resources Extraction"
       case_number: "Case 2"

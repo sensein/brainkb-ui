@@ -36,10 +36,22 @@ async function spaceNquads(slug: string, isPublic: boolean): Promise<string> {
     return nquads;
 }
 
+// Graphs too large for this path. Reading a space here means the query service
+// serializing the whole space to JSON-LD and this server parsing it into memory,
+// several GB each for bican-basal-ganglia (~1.8M triples): signed-out visits
+// to /taxonomy got Oxigraph, gunicorn and next-server OOM-killed on the shared
+// host. Comma-separated override: SPACE_FALLBACK_BLOCKED_GRAPHS.
+const BLOCKED_GRAPHS = (process.env.SPACE_FALLBACK_BLOCKED_GRAPHS ?? 'https://brainkb.org/graph/bican-basal-ganglia/')
+    .split(',').map((g) => g.trim().replace(/\/+$/, '')).filter(Boolean);
+
 /** Same shape as the query service's SPARQL proxy: rows and column names. */
 export async function runSparqlOverSpaces(sparql: string): Promise<{ data: any[]; headers: string[] }> {
     const graphs = Array.from(new Set(Array.from(sparql.matchAll(/GRAPH\s*<([^>]+)>/gi), (m) => m[1])));
     if (!graphs.length) throw new SpaceReadError('This query does not name a graph, so no space can answer it.', 400);
+    const blocked = graphs.find((g) => BLOCKED_GRAPHS.includes(g.replace(/\/+$/, '')));
+    if (blocked) {
+        throw new SpaceReadError(`${blocked} is too large to read without signing in. Sign in with an admin account to view it.`, 403);
+    }
 
     const store = new oxigraph.Store();
     for (const graph of graphs) {
