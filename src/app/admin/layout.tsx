@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 // supplies the bkb Theme tokens that the admin pages use.
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Theme theme="light" style={{ background: "#f0eee9", minHeight: "calc(100vh - 64px)" }}>
+    <Theme theme="light" style={{ background: "#f6f8fb", minHeight: "calc(100vh - 64px)" }}>
       <AdminShell>{children}</AdminShell>
     </Theme>
   );

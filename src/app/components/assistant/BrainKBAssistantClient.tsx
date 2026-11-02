@@ -30,8 +30,6 @@ const config = {
       enabled: true,
       type: 'jwt' as const,
       jwtEndpoint: clientEnv.tokenEndpoint,
-      username: clientEnv.jwtUser,
-      password: clientEnv.jwtPassword,
       autoRefresh: true,
       refreshThreshold: 300, // Refresh 5 minutes before expiry
     },
@@ -166,8 +164,6 @@ console.log('🔍 Page Context:', pageContext);
 console.log('⚙️ Config:', config);
 console.log('🔐 JWT Endpoint:', process.env.NEXT_PUBLIC_TOKEN_ENDPOINT);
 console.log('🌐 Chat Endpoint:', process.env.NEXT_PUBLIC_CHAT_ENDPOINT || process.env.CHAT_SERVICE_API_ENDPOINT);
-console.log('👤 JWT User:', process.env.NEXT_PUBLIC_JWT_USER ? '***configured***' : '❌ NOT SET');
-console.log('🔑 JWT Password:', process.env.NEXT_PUBLIC_JWT_PASSWORD ? '***configured***' : '❌ NOT SET');
 
 export default function BrainKBAssistantWrapper() {
   return <BrainKBAssistant config={config} pageContext={pageContext} />

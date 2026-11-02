@@ -15,7 +15,7 @@ import React from "react";
 import Link from "next/link";
 import { FONTS } from "./index";
 
-function FloatingGraph() {
+export function FloatingGraph() {
   // Three-column flow:
   //   Left column  (purple sources)  → Center (Knowledge Graph hub) → Right column (teal outputs, Discovery accent in coral).
   // Inbound edges (purple, with arrowheads) animate dashes left→right; outbound
@@ -32,7 +32,7 @@ function FloatingGraph() {
     >
       <defs>
         <marker id="bkb-ah-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-          <path d="M2 2L8 5L2 8" fill="none" stroke="#7F77DD" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M2 2L8 5L2 8" fill="none" stroke="#534AB7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </marker>
         <marker id="bkb-ah-teal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
           <path d="M2 2L8 5L2 8" fill="none" stroke="#1D9E75" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -70,10 +70,10 @@ function FloatingGraph() {
       <circle cx="430" cy="180" r="68" fill="none" stroke="#1D9E75" strokeWidth="0.5" strokeDasharray="4 6" opacity="0.25" />
 
       {/* Inbound flow lines (sources → hub) */}
-      <path className="bkb-fl-1" d="M164 72  C260 72  320 130 362 155" fill="none" stroke="#7F77DD" strokeWidth="1.2" strokeDasharray="7 6" markerEnd="url(#bkb-ah-purple)" opacity="0.65" />
-      <path className="bkb-fl-2" d="M164 145 C260 145 320 158 362 168" fill="none" stroke="#7F77DD" strokeWidth="1.2" strokeDasharray="7 6" markerEnd="url(#bkb-ah-purple)" opacity="0.65" />
-      <path className="bkb-fl-3" d="M164 215 C260 215 320 200 362 192" fill="none" stroke="#7F77DD" strokeWidth="1.2" strokeDasharray="7 6" markerEnd="url(#bkb-ah-purple)" opacity="0.65" />
-      <path className="bkb-fl-4" d="M164 288 C260 288 320 240 362 207" fill="none" stroke="#7F77DD" strokeWidth="1.2" strokeDasharray="7 6" markerEnd="url(#bkb-ah-purple)" opacity="0.65" />
+      <path className="bkb-fl-1" d="M164 72  C260 72  320 130 362 155" fill="none" stroke="#534AB7" strokeWidth="1.2" strokeDasharray="7 6" markerEnd="url(#bkb-ah-purple)" opacity="0.65" />
+      <path className="bkb-fl-2" d="M164 145 C260 145 320 158 362 168" fill="none" stroke="#534AB7" strokeWidth="1.2" strokeDasharray="7 6" markerEnd="url(#bkb-ah-purple)" opacity="0.65" />
+      <path className="bkb-fl-3" d="M164 215 C260 215 320 200 362 192" fill="none" stroke="#534AB7" strokeWidth="1.2" strokeDasharray="7 6" markerEnd="url(#bkb-ah-purple)" opacity="0.65" />
+      <path className="bkb-fl-4" d="M164 288 C260 288 320 240 362 207" fill="none" stroke="#534AB7" strokeWidth="1.2" strokeDasharray="7 6" markerEnd="url(#bkb-ah-purple)" opacity="0.65" />
 
       {/* Outbound flow lines (hub → outputs) */}
       <path className="bkb-ol-1" d="M498 158 C570 130 640 100 696 84"  fill="none" stroke="#1D9E75" strokeWidth="1.4" strokeDasharray="7 6" markerEnd="url(#bkb-ah-teal)" opacity="0.8" />
@@ -83,43 +83,43 @@ function FloatingGraph() {
       {/* Source nodes (left column, purple) */}
       <g className="bkb-fa">
         <rect x="60" y="50" width="104" height="44" rx="10" fill="rgba(127,119,221,0.12)" stroke="#534AB7" strokeWidth="0.8" />
-        <text x="112" y="72" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="500" fill="#AFA9EC" fontFamily={FONTS.body}>Literature</text>
+        <text x="112" y="72" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="500" fill="#4A3F9E" fontFamily={FONTS.body}>Literature</text>
       </g>
       <g className="bkb-fb">
         <rect x="60" y="123" width="104" height="44" rx="10" fill="rgba(127,119,221,0.12)" stroke="#534AB7" strokeWidth="0.8" />
-        <text x="112" y="145" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="500" fill="#AFA9EC" fontFamily={FONTS.body}>Datasets</text>
+        <text x="112" y="145" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="500" fill="#4A3F9E" fontFamily={FONTS.body}>Datasets</text>
       </g>
       <g className="bkb-fc">
         <rect x="60" y="193" width="104" height="44" rx="10" fill="rgba(127,119,221,0.12)" stroke="#534AB7" strokeWidth="0.8" />
-        <text x="112" y="215" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="500" fill="#AFA9EC" fontFamily={FONTS.body}>Experiments</text>
+        <text x="112" y="215" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="500" fill="#4A3F9E" fontFamily={FONTS.body}>Experiments</text>
       </g>
       <g className="bkb-fd">
         <rect x="60" y="266" width="104" height="44" rx="10" fill="rgba(127,119,221,0.12)" stroke="#534AB7" strokeWidth="0.8" />
-        <text x="112" y="288" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="500" fill="#AFA9EC" fontFamily={FONTS.body}>Databases</text>
+        <text x="112" y="288" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="500" fill="#4A3F9E" fontFamily={FONTS.body}>Databases</text>
       </g>
 
       {/* Central hub: Knowledge Graph */}
-      <circle cx="430" cy="180" r="62" fill="rgba(15,110,86,0.25)" stroke="#1D9E75" strokeWidth="1" />
+      <circle cx="430" cy="180" r="62" fill="rgba(15,110,86,0.15)" stroke="#1D9E75" strokeWidth="1" />
       {/* Satellite dots on orbit ring */}
       <circle cx="430" cy="112" r="4" fill="#1D9E75" opacity="0.6" />
       <circle cx="492" cy="148" r="3" fill="#1D9E75" opacity="0.4" />
       <circle cx="368" cy="148" r="3" fill="#1D9E75" opacity="0.4" />
       <circle cx="430" cy="248" r="4" fill="#1D9E75" opacity="0.5" />
-      <text x="430" y="171" textAnchor="middle" dominantBaseline="central" fontSize="14" fontWeight="500" fill="#9FE1CB" fontFamily={FONTS.body}>Knowledge</text>
-      <text x="430" y="191" textAnchor="middle" dominantBaseline="central" fontSize="14" fontWeight="500" fill="#9FE1CB" fontFamily={FONTS.body}>Graph</text>
+      <text x="430" y="171" textAnchor="middle" dominantBaseline="central" fontSize="14" fontWeight="500" fill="#0F6E56" fontFamily={FONTS.body}>Knowledge</text>
+      <text x="430" y="191" textAnchor="middle" dominantBaseline="central" fontSize="14" fontWeight="500" fill="#0F6E56" fontFamily={FONTS.body}>Graph</text>
 
       {/* Output nodes (right column) — Discovery in coral accent */}
       <g className="bkb-fe">
         <rect x="696" y="62" width="104" height="44" rx="10" fill="rgba(29,158,117,0.12)" stroke="#0F6E56" strokeWidth="0.8" />
-        <text x="748" y="84" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="500" fill="#9FE1CB" fontFamily={FONTS.body}>Evidence</text>
+        <text x="748" y="84" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="500" fill="#0F6E56" fontFamily={FONTS.body}>Evidence</text>
       </g>
       <g className="bkb-ff">
         <rect x="696" y="158" width="104" height="44" rx="10" fill="rgba(29,158,117,0.12)" stroke="#0F6E56" strokeWidth="0.8" />
-        <text x="748" y="180" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="500" fill="#9FE1CB" fontFamily={FONTS.body}>Insights</text>
+        <text x="748" y="180" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="500" fill="#0F6E56" fontFamily={FONTS.body}>Insights</text>
       </g>
       <g className="bkb-fg">
         <rect x="696" y="254" width="104" height="44" rx="10" fill="rgba(153,60,29,0.2)" stroke="#993C1D" strokeWidth="1" />
-        <text x="748" y="276" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="600" fill="#F5C4B3" fontFamily={FONTS.body}>Discovery</text>
+        <text x="748" y="276" textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="600" fill="#7A3018" fontFamily={FONTS.body}>Discovery</text>
       </g>
 
       {/* Subtle vertical connectors between the three output cards */}

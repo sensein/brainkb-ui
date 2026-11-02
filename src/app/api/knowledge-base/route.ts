@@ -3,9 +3,30 @@ import { unstable_cache } from 'next/cache';
 import { getWarmedCache } from '@/src/utils/cache/cache-warm';
 import { getData } from '@/src/app/components/utils/getData';
 import { env } from '../../../config/env';
+import { runSparqlOverSpaces, SpaceReadError } from '@/src/utils/api/space-sparql';
 
 // Force dynamic rendering - this route uses searchParams
 export const dynamic = 'force-dynamic';
+
+// Why POST does not use unstable_cache (fixed 2026-09-28):
+//
+// 1. Auth cannot work inside a cache scope. The query service is SSO-only
+//    (see src/utils/api/auth.ts — the service-account fallback was removed),
+//    so a call needs the caller's session JWT, which means reading
+//    headers/cookies. Next.js forbids that inside unstable_cache, so the token
+//    read threw, the request went out unauthenticated, and the service
+//    answered 403 — which was then swallowed into an empty result, so callers
+//    saw "no data" instead of "not signed in".
+// 2. The cache key is the slug alone while results are access-filtered per
+//    user, so a cached response could be served to a different user than the
+//    one it was fetched for.
+//
+// POST therefore executes directly and propagates errors; warmed build-time
+// slugs are still honoured. Cost: /knowledge-base/[slug] loses its 24h cache,
+// so watch query-service load.
+//
+// STILL TO DO: GET below, plus /api/statistics and /api/entity-query, wrap
+// calls the same way and are probably affected too — unverified.
 
 // Cache duration: 24 hours (in seconds)
 const CACHE_DURATION = 24 * 60 * 60;
@@ -43,8 +64,11 @@ async function executeQuery(sparqlQuery: string) {
     };
 }
 
-// Simplified: Only handle caching, data fetching moved to page component
-async function fetchKnowledgeBaseData(slug: string, sparqlQuery?: string) {
+// `throwOnError`: callers that run outside unstable_cache (POST) surface the
+// real failure — an unauthenticated call must not look like an empty result.
+// The cached callers keep returning empty, since throwing inside the cache
+// scope would poison the cache entry.
+async function fetchKnowledgeBaseData(slug: string, sparqlQuery?: string, throwOnError = false) {
     // Check for pre-warmed cache from build time first
     const warmedCache = getWarmedCache<{
         data: any[];
@@ -97,6 +121,7 @@ async function fetchKnowledgeBaseData(slug: string, sparqlQuery?: string) {
             };
         } catch (error) {
             console.error(`[KB API] Error executing query:`, error);
+            if (throwOnError) throw error;
             return {
                 data: [],
                 headers: [],
@@ -147,8 +172,33 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const cachedFetch = getCachedKnowledgeBase(slug, sparqlQuery);
-        const result = await cachedFetch();
+        // Deliberately NOT wrapped in unstable_cache: the query service is
+        // SSO-only, so the call needs the caller's session, which cannot be
+        // read inside a cache scope — and slug-keyed caching would share
+        // access-filtered rows between users. Warmed build-time slugs are
+        // still honoured inside fetchKnowledgeBaseData.
+        let result;
+        try {
+            result = await fetchKnowledgeBaseData(slug, sparqlQuery, true);
+        } catch (sparqlError) {
+            // The query service's SPARQL endpoint is admin-only, so anyone else
+            // (including anonymous visitors) is refused there. They may still
+            // read the spaces they can see: answer the same query over the
+            // space's own data instead.
+            try {
+                const local = await runSparqlOverSpaces(sparqlQuery);
+                result = { ...local, pageTitle: "", pageSubtitle: "", entityPageSlug: "" };
+            } catch (spaceError) {
+                if (spaceError instanceof SpaceReadError) {
+                    return NextResponse.json(
+                        { success: false, error: spaceError.message },
+                        { status: spaceError.status }
+                    );
+                }
+                console.error('[KB API] Space fallback failed:', spaceError);
+                throw sparqlError;
+            }
+        }
 
         const response = {
             success: true,
@@ -162,12 +212,16 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(response);
     } catch (error: any) {
         console.error('[KB API] Error:', error);
+        const message = error?.message || 'Failed to fetch knowledge base data';
+        // A 403 from the query service means no usable session, not a broken
+        // query — say so, instead of reporting it as a server fault.
+        const unauthenticated = /not authenticated|signed-in session|please sign in/i.test(message);
         return NextResponse.json(
             {
                 success: false,
-                error: error.message || 'Failed to fetch knowledge base data'
+                error: unauthenticated ? 'Sign in required to query the graph.' : message
             },
-            { status: 500 }
+            { status: unauthenticated ? 401 : 500 }
         );
     }
 }

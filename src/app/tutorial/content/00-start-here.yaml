@@ -1,0 +1,135 @@
+# Chapter 1: Start here. A public, read-only first exercise: no account, no
+# sign-in, nothing installed but one MCP entry. See README.md for the format.
+id: start-here
+icon: ▶
+name: Start here
+tagline: Your first search, no sign-in
+summary: >-
+  Connect your AI assistant to the hosted BrainKB server, check it works, search the public spaces and look
+  at the evidence behind a result. No account or sign-in needed.
+facts:
+  Runs in: Your AI assistant
+  Requires: An MCP client
+  Sign-in: Not needed
+  Time: About 5 minutes
+prereqs:
+  - "An MCP client: Claude Code, Codex, Cursor, VS Code, claude.ai, ChatGPT…"
+  - No BrainKB account; everything here is public and read-only
+links:
+  - label: "Use with AI: every client"
+    href: /mcp
+  - label: MCP setup guide
+    href: "{{MCP_SITE}}"
+  - label: Explore knowledge in the browser
+    href: /explore
+help: https://github.com/sensein/brainkb/issues
+chooseAgent: true
+sections:
+  - title: Overview
+    subtitle: Connect → Verify → Search → Inspect evidence.
+    blocks:
+      - p: >-
+          Public spaces in BrainKB can be listed, searched and read by anyone, including an assistant that
+          hasn't signed in. This exercise uses only those read-only tools, so nothing you do here changes
+          BrainKB and nothing asks for an account.
+      - steps:
+          - "**Connect** your assistant to the hosted server at `{{MCP_ENDPOINT}}`."
+          - "**Verify** that the BrainKB tools are available."
+          - "**Search** the public spaces in plain language."
+          - "**Inspect the evidence**: where a result comes from, and what supports it."
+      - note: >-
+          Choose your assistant above first; the commands below change to match it. Your choice is kept for
+          the rest of the tutorial.
+  - title: Connect
+    subtitle: Add the hosted BrainKB MCP server to your assistant. No sign-in.
+    blocks:
+      - agents:
+          claude:
+            - code:
+                label: terminal
+                cmd: claude mcp add --scope user --transport http brainkb {{MCP_ENDPOINT}}
+          codex:
+            - code:
+                label: ~/.codex/config.toml
+                cmd: |-
+                  [mcp_servers.brainkb]
+                  url = "{{MCP_ENDPOINT}}"
+            - p: Add these lines to `~/.codex/config.toml` and save.
+          other:
+            - p: >-
+                Add `{{MCP_ENDPOINT}}` as a remote (streamable HTTP) MCP server. Where it goes differs per
+                client: Cursor, VS Code, Copilot, claude.ai, ChatGPT, Perplexity and stdio-only clients are set
+                up step by step on [Use with AI](/mcp).
+      - note: >-
+          If your client offers to sign in to BrainKB, you can skip it for this exercise: public spaces need
+          no login.
+      - outcome:
+          expect: >-
+            `brainkb` is in your assistant's MCP configuration, pointing at `{{MCP_ENDPOINT}}`.
+  - title: Verify
+    subtitle: Check that your assistant can see BrainKB's tools.
+    blocks:
+      - agents:
+          claude:
+            - code:
+                label: terminal
+                cmd: claude mcp list
+            - p: "`brainkb` should be listed. Then start a new `claude` session and ask:"
+          codex:
+            - p: "Start a new `codex` session (it reads `config.toml` at start-up) and ask:"
+          other:
+            - p: "Restart the client or open a new chat so it loads the server, then ask:"
+      - ask: List the public BrainKB spaces
+      - outcome:
+          expect: >-
+            The assistant calls BrainKB's list-spaces tool **without asking you to log in**, and lists the
+            public spaces, each marked as public (read-only for you).
+  - title: Search
+    subtitle: Ask a question in plain language.
+    blocks:
+      - ask: Search BrainKB's public spaces for hippocampus
+      - p: >-
+          The assistant runs BrainKB's search tool. Without a sign-in it only ever sees public spaces; private
+          data is never returned.
+      - outcome:
+          expect: >-
+            A list of matches from public spaces, each with the space it comes from. Try another term (a cell
+            type, a region, a gene) if this one returns little.
+  - title: Inspect evidence
+    subtitle: Check where a result came from before you rely on it.
+    blocks:
+      - ask: For the first result, which space and graph does it come from, and what evidence supports it?
+      - p: >-
+          The assistant reads the result's space to answer. For entities extracted by StructSense, BrainKB
+          keeps the source and the sentence each one came from; for an ingested SynthScholar review, the
+          studies and the evidence for each claim.
+      - outcome:
+          expect: >-
+            The space and graph the result belongs to and, where that data records it, the source paper and
+            the supporting text. Questions such as "who added this, and when?" need a sign-in: that's the
+            [BrainKB skill](#brainkb-skill) chapter.
+  - title: Troubleshooting
+    subtitle: If a step didn't give the expected outcome.
+    blocks:
+      - tips:
+          - >-
+            **No BrainKB tools in the assistant**: start a new session or restart the client; most load MCP
+            servers only at start-up. In Claude Code, `claude mcp list` should show `brainkb`; in Codex, check
+            the `[mcp_servers.brainkb]` entry in `~/.codex/config.toml`.
+          - >-
+            **Asked to log in**: listing, searching and reading public spaces need no login. A tool that
+            answers `403` with `"anonymous": true` is one that needs a sign-in (for example provenance, SPARQL
+            or ready-made questions); stay with search and spaces for this exercise.
+          - >-
+            **No spaces or no results**: an empty answer is not proof that nothing exists. Without a sign-in
+            you see public spaces only; try a broader term.
+          - >-
+            **A hosted assistant can't connect to a local BrainKB**: claude.ai, ChatGPT and similar can't reach
+            `localhost` on your laptop; use the hosted server above.
+          - "**Still stuck?** [Report an issue](https://github.com/sensein/brainkb/issues) with what you asked and what came back."
+      - details:
+          summary: "Reference: rate limits"
+          blocks:
+            - p: >-
+                The hosted server is rate-limited per caller (roughly 8 logins, 40 writes, 120 reads and 30
+                admin calls a minute). A `429` means wait, not retry.

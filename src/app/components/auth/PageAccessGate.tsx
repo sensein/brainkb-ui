@@ -43,7 +43,7 @@ export function PageAccessGate({ pageKey, label, adminOnly, children }: PageAcce
   // Skip the backend round-trip for admin-only pages — the only fact that
   // matters is `isAdmin`. usePageAccess is conditional via skip mode so we
   // don't burn a fetch per render on these pages.
-  const { loading, allowed, reason, error } = usePageAccess(pageKey, { skip: adminOnly });
+  const { loading, allowed, reason, error, refresh } = usePageAccess(pageKey, { skip: adminOnly });
   const { user, isAdmin, isSuperAdmin, loading: userLoading } = useCurrentUser();
   const { status } = useSession();
 
@@ -141,6 +141,29 @@ export function PageAccessGate({ pageKey, label, adminOnly, children }: PageAcce
   }
 
   if (allowed) return <>{children}</>;
+
+  // The check failed and there is no earlier answer: that is not a denial. Saying
+  // "disabled" here is what made a lapsed session look like revoked access.
+  if (allowed === null && error) {
+    return (
+      <div style={{ padding: "60px 36px", maxWidth: 560 }}>
+        <div style={{ fontSize: 11, color: "var(--bkb-textSubtle)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
+          Access not verified
+        </div>
+        <h1 style={{ fontFamily: FONTS.display, fontSize: 32, margin: 0, letterSpacing: "-0.02em", fontWeight: 400 }}>
+          Couldn&apos;t check access to {label ?? pageKey}
+        </h1>
+        <p style={{ fontSize: 13, color: "var(--bkb-textMuted)", lineHeight: 1.6, marginTop: 12 }}>
+          The access service did not answer ({error}). Your permissions have not changed — try again in a moment.
+        </p>
+        <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+          <button className="bkb-btn bkb-btn-ghost" onClick={refresh}>
+            <Icon name="arrow" size={12} /> Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const reasonCopy: Record<string, string> = {
     public: "This page is public.",

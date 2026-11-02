@@ -1,0 +1,405 @@
+# Browse pages (/browse/<slug>)
+#
+# One entry under `pages` per Explore card that has its own browse page. Each
+# page lists its classes down the left and the matching entities in a table.
+# Adding a page — or a class, or a column — is a change here, not in code.
+#
+# `defaults` applies to every page; any page may override graph, columns or
+# queryTemplate by setting its own.
+
+defaults:
+  # Named graph to query, substituted into queryTemplate as {{graph}}.
+  # Change this to whichever graph the data was ingested into.
+  graph: "https://brainkb.org/sandbox-sample/"
+
+  # Table columns, in display order. Each `key` must match a variable selected
+  # in queryTemplate; a row with no value for a column renders as "—".
+  columns:
+    - key: "id"
+      label: "ID"
+    - key: "name"
+      label: "Name"
+    - key: "full_name"
+      label: "Full name"
+
+  # Run once per selected class, with {{graph}} and {{category}} substituted.
+  # name/full_name are OPTIONAL so an entity still lists when it only has an id.
+  #
+  # Predicates follow the BICAN JSON-LD context
+  # (brain-bican/models .../library_generation.context.jsonld), which maps
+  # category -> biolink:category (typed xsd:anyURI), full_name ->
+  # biolink:full_name, and name -> rdfs:label (NOT biolink:name).
+  queryTemplate: |-
+    PREFIX bican: <https://identifiers.org/brain-bican/vocab/>
+    PREFIX biolink: <https://w3id.org/biolink/vocab/>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+    SELECT DISTINCT ?id ?name ?full_name
+    WHERE {
+      GRAPH <{{graph}}> {
+        ?id biolink:category "{{category}}"^^xsd:anyURI .
+        OPTIONAL { ?id rdfs:label ?name }
+        OPTIONAL { ?id biolink:full_name ?full_name }
+      }
+    }
+    LIMIT 500
+
+  # Where a class's definition is published. {{class}} is the class `name`,
+  # so each class links to its own page in the model docs. Verified
+  # 2026-09-28: every class listed below resolves under this pattern.
+  # Override per page (or drop `url`) if a page's classes come from a
+  # different model.
+  model:
+    name: "BICAN models"
+    url: "https://brain-bican.github.io/models/"
+    classUrlTemplate: "https://brain-bican.github.io/models/{{class}}/"
+
+  # Datatypes that mark a literal as a reference to another entity rather than
+  # a plain value. The BICAN data does not link entities by IRI: it writes
+  #   <…/AC-IFXYBU524334> prov:wasDerivedFrom "BC-QXSSQN569230"^^prov:Entity
+  # i.e. a typed literal holding the target's *local id*. Values typed like
+  # this are shown as Connections and resolved to a full IRI by reusing the
+  # current entity's namespace. Leave empty for data that links by IRI.
+  entityRefDatatypes:
+    - "http://www.w3.org/ns/prov#Entity"
+
+  # Detail view for one entity: /browse/<page>/<id>. Substitutions: {{id}} is
+  # the full entity IRI, {{localId}} its last path segment. Three branches,
+  # because of the literal-reference shape described above:
+  #   out — the entity's own triples (attributes and outgoing connections)
+  #   in  — anything pointing at its IRI (for data that does link by IRI)
+  #   in  — anything whose typed literal names this entity's local id
+  # The third is what actually populates "Referenced by" for BICAN data.
+  # Detail view for one entity: /browse/<page>/<id>. Substitutions: {{id}} is
+  # the full entity IRI, {{localId}} its last path segment, {{base}} its
+  # namespace. Seven branches:
+  #   out   — the entity's own triples (attributes and outgoing references)
+  #   in    — anything pointing at its IRI (for data that links by IRI)
+  #   in    — anything whose typed literal names this entity's local id
+  #   class — the class of each entity this one references
+  #   class — the class of each entity that references this one
+  #   class — the same two, for data that links by IRI (BICAN resources)
+  #
+  # The `class` rows exist because the neighbour's class is not knowable from
+  # a reference alone: a TissueSample's was_derived_from can point at a
+  # DissectionRoiPolygon even though the schema declares Donor as the range,
+  # and the detail figure shows what is actually there.
+  #
+  # They are plain joins on purpose. Doing the same lookup in an OPTIONAL
+  # went wrong twice: BIND(IRI(CONCAT(...))) errors on a value like "50 yrs",
+  # leaving the variable unbound so the pattern matched every category in the
+  # graph (multiplying every row by the entity count); and moving the match
+  # into a FILTER inside the OPTIONAL had it evaluated as an inner join,
+  # dropping every row that had no neighbour. Verified against the sample
+  # data with a SPARQL engine rather than by reading the spec.
+  #
+  # The `label` rows do the same for each neighbour's rdfs:label, so a
+  # connection reads as a name rather than only an id. Same plain-join shape,
+  # same four ways a neighbour can be referenced.
+  detailQueryTemplate: |-
+    PREFIX biolink: <https://w3id.org/biolink/vocab/>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+    SELECT DISTINCT ?direction ?predicate ?other ?otherCategory ?otherLabel
+    WHERE {
+      GRAPH <{{graph}}> {
+        { BIND("out" AS ?direction) <{{id}}> ?predicate ?other . }
+        UNION
+        { BIND("in" AS ?direction) ?other ?predicate <{{id}}> . }
+        UNION
+        {
+          BIND("in" AS ?direction)
+          ?other ?predicate ?ref .
+          FILTER(isLiteral(?ref) && STR(?ref) = "{{localId}}")
+        }
+        UNION
+        {
+          BIND("class" AS ?direction)
+          <{{id}}> ?predicate ?lit .
+          ?other biolink:category ?otherCategory .
+          FILTER(STR(?other) = CONCAT("{{base}}", STR(?lit)))
+        }
+        UNION
+        {
+          BIND("class" AS ?direction)
+          ?other ?predicate ?ref2 .
+          FILTER(isLiteral(?ref2) && STR(?ref2) = "{{localId}}")
+          ?other biolink:category ?otherCategory .
+        }
+        UNION
+        { BIND("class" AS ?direction) <{{id}}> ?predicate ?other . ?other biolink:category ?otherCategory . }
+        UNION
+        { BIND("class" AS ?direction) ?other ?predicate <{{id}}> . ?other biolink:category ?otherCategory . }
+        UNION
+        {
+          BIND("label" AS ?direction)
+          <{{id}}> ?predicate ?lit3 .
+          ?other rdfs:label ?otherLabel .
+          FILTER(STR(?other) = CONCAT("{{base}}", STR(?lit3)))
+        }
+        UNION
+        {
+          BIND("label" AS ?direction)
+          ?other ?predicate ?ref4 .
+          FILTER(isLiteral(?ref4) && STR(?ref4) = "{{localId}}")
+          ?other rdfs:label ?otherLabel .
+        }
+        UNION
+        { BIND("label" AS ?direction) <{{id}}> ?predicate ?other . FILTER(isIRI(?other)) ?other rdfs:label ?otherLabel . }
+        UNION
+        { BIND("label" AS ?direction) ?other ?predicate <{{id}}> . ?other rdfs:label ?otherLabel . }
+      }
+    }
+    LIMIT 1000
+
+pages:
+  - slug: "genes-genomes"
+    title: "Genes & genomes"
+    model:
+      name: "BICAN genome annotation schema"
+      url: "https://brain-bican.github.io/models/index_genome_annotation/"
+    # From the genome annotation schema (BrainKB
+    # chat_service/notebook/genome_annotation.yaml).
+    modelEdges:
+      - { from: "GeneAnnotation", to: "GenomeAnnotation", label: "referenced_in" }
+      - { from: "GenomeAnnotation", to: "GenomeAssembly", label: "reference_assembly" }
+      - { from: "AnnotationCollection", to: "GeneAnnotation", label: "annotations" }
+      - { from: "AnnotationCollection", to: "GenomeAnnotation", label: "genome_annotations" }
+      - { from: "AnnotationCollection", to: "GenomeAssembly", label: "genome_assemblies" }
+    description: >-
+      Individual genes with their molecular type — protein-coding or noncoding —
+      linked to the versioned genome annotations from ENSEMBL or NCBI and the
+      reference assemblies they came from.
+    classes:
+      - name: "GeneAnnotation"
+        category: "bican:GeneAnnotation"
+        description: >-
+          A single gene, with the metadata describing it — its molecular type
+          (protein-coding or noncoding) and the genome annotation it was
+          referenced from.
+      - name: "GenomeAnnotation"
+        category: "bican:GenomeAnnotation"
+        description: >-
+          A genome annotation, with its version, the authority that published
+          it (ENSEMBL or NCBI), and the reference assembly it was built from.
+      - name: "GenomeAssembly"
+        category: "bican:GenomeAssembly"
+        description: >-
+          A computational representation of a genome sequence, optionally
+          narrowed to a strain or subtype.
+      - name: "AnnotationCollection"
+        category: "bican:AnnotationCollection"
+
+  # Diagnostic page, not linked from /explore: visit /browse/diagnostic signed
+  # in to see what is actually in the store. Each entry overrides the query,
+  # reusing the three columns as generic slots, so the labels below say what
+  # each column holds. Keep this — running an arbitrary query otherwise needs
+  # a signed-in session that curl cannot provide.
+  - slug: "diagnostic"
+    title: "Diagnostic"
+    model: null
+    # Column 1 holds graph and predicate IRIs here, not entity ids — leave
+    # them whole and unlinked.
+    linkIds: false
+    description: >-
+      What is actually in the store, independent of any expected schema. Use
+      this when a browse page returns nothing, to tell "wrong graph" from
+      "wrong predicates" from "nothing ingested".
+    columns:
+      - key: "id"
+        label: "1"
+      - key: "name"
+        label: "2"
+      - key: "full_name"
+        label: "3"
+    classes:
+      - name: "All graphs (1=graph, 2=triples)"
+        category: ""
+        queryTemplate: |-
+          SELECT ?id (COUNT(*) AS ?name) WHERE {
+            GRAPH ?id { ?s ?p ?o }
+          }
+          GROUP BY ?id
+          ORDER BY DESC(?name)
+          LIMIT 50
+      - name: "Predicates here (1=predicate, 2=count)"
+        category: ""
+        queryTemplate: |-
+          SELECT ?id (COUNT(*) AS ?name) WHERE {
+            GRAPH <{{graph}}> { ?s ?id ?o }
+          }
+          GROUP BY ?id
+          ORDER BY DESC(?name)
+          LIMIT 50
+      - name: "Category values (1=category, 2=count)"
+        category: ""
+        queryTemplate: |-
+          PREFIX biolink: <https://w3id.org/biolink/vocab/>
+          SELECT ?id (COUNT(*) AS ?name) WHERE {
+            GRAPH <{{graph}}> { ?s biolink:category ?id }
+          }
+          GROUP BY ?id
+          ORDER BY DESC(?name)
+          LIMIT 50
+      - name: "Raw triples (1=s, 2=p, 3=o)"
+        category: ""
+        queryTemplate: |-
+          SELECT ?id ?name ?full_name WHERE {
+            GRAPH <{{graph}}> { ?id ?name ?full_name }
+          }
+          LIMIT 100
+
+  # BICAN library generation schema — the specimen-to-library chain. Classes
+  # follow the order of the pipeline rather than the alphabet, so the list
+  # reads as the process it describes.
+  - slug: "library-generation"
+    title: "Library generation"
+    model:
+      name: "BICAN library generation schema"
+      url: "https://brain-bican.github.io/models/index_library_generation/"
+    # Class-to-class relationships, taken from the LinkML schema
+    # (brain-bican/models linkml-schema/library_generation.yaml — was_derived_from
+    # in slot_usage, plus the two attribute links). Drives the small model
+    # figure on each detail page: `from` is the class that declares the
+    # relationship, `to` is its range.
+    #
+    # No cardinality shown: the schema only constrains the target side (and
+    # leaves `required` unset, so "1" would have meant "at most one"), while
+    # nothing declares the inverse. Add a `cardinality` per edge if that is
+    # ever filled in deliberately — the figure renders it when present.
+    modelEdges:
+      - { from: "BrainSlab", to: "Donor", label: "was_derived_from" }
+      - { from: "TissueSample", to: "Donor", label: "was_derived_from" }
+      - { from: "TissueSample", to: "DissectionRoiPolygon", label: "dissection_was_guided_by" }
+      - { from: "DissectionRoiPolygon", to: "BrainSlab", label: "annotates" }
+      - { from: "DissociatedCellSample", to: "TissueSample", label: "was_derived_from" }
+      - { from: "AmplifiedCdna", to: "BarcodedCellSample", label: "was_derived_from" }
+      - { from: "Library", to: "AmplifiedCdna", label: "was_derived_from" }
+      - { from: "Library", to: "BarcodedCellSample", label: "was_derived_from" }
+      - { from: "LibraryAliquot", to: "Library", label: "was_derived_from" }
+    description: >-
+      The path from donor to sequencing library: brain slabs and tissue
+      samples, the dissociated, enriched, and barcoded cell samples derived
+      from them, and the amplified cDNA, libraries, and aliquots they produce.
+    classes:
+      - name: "Donor"
+        category: "bican:Donor"
+      - name: "BrainSlab"
+        category: "bican:BrainSlab"
+      - name: "TissueSample"
+        category: "bican:TissueSample"
+      - name: "DissectionRoiPolygon"
+        category: "bican:DissectionRoiPolygon"
+      - name: "DissociatedCellSample"
+        category: "bican:DissociatedCellSample"
+      - name: "EnrichedCellSample"
+        category: "bican:EnrichedCellSample"
+      - name: "BarcodedCellSample"
+        category: "bican:BarcodedCellSample"
+        description: >-
+          A collection of molecularly barcoded cells, derived from a
+          dissociated or enriched cell sample. Barcodes are unique only within
+          this collection; the sample name plus the cell-level barcode
+          identifies a single cell.
+      - name: "AmplifiedCdna"
+        category: "bican:AmplifiedCdna"
+      - name: "Library"
+        category: "bican:Library"
+        description: >-
+          A sequencing library prepared from amplified cDNA. One library may
+          yield several aliquots, for instance when resequencing.
+      - name: "LibraryAliquot"
+        category: "bican:LibraryAliquot"
+        description: >-
+          One library in the library pool. Each aliquot carries a unique R1/R2
+          index so libraries sequenced together can be separated again by
+          demultiplexing; the resulting fastq files carry the aliquot name.
+
+  # BICAN resource citation list — tools, atlases, pipelines, standards and
+  # the organisations behind them. Test data is generated from the master
+  # list CSV (csv2ttl.py); it links by IRI, not by typed-literal local id.
+  # Not a LinkML model, so no model link; the figure comes from modelEdges.
+  - slug: "bican-resources"
+    title: "BICAN Resources"
+    graph: "https://brainkb.org/bican-resources/"
+    model: null
+    # Printed by csv2ttl.py from the links actually present in the data.
+    # isPartOf and usedBy, and every provider edge, are derived from where
+    # each resource's URL lives; isBasedOn is stated in the sheet itself.
+    modelEdges:
+      - { from: "Resource", to: "Resource", label: "isPartOf" }
+      - { from: "Resource", to: "Resource", label: "usedBy" }
+      - { from: "Resource", to: "Resource", label: "isBasedOn" }
+      - { from: "Resource", to: "Organization", label: "provider" }
+    description: >-
+      Tools, atlases, pipelines, standards and data archives used across the
+      BICAN consortium, with their RRIDs and how to cite them.
+    # The readable name is the row's link; the slug-style id and the
+    # description sit under it (`primaryColumn` / `secondaryColumn`), so the
+    # id column is not repeated. `emptyLabel` replaces the default
+    # "Not recorded" for a missing value.
+    primaryColumn: "name"
+    secondaryColumn: "description"
+    columns:
+      - key: "name"
+        label: "Name"
+      - key: "type"
+        label: "Type"
+      - key: "rrid"
+        label: "RRID / identifier"
+      - key: "provider"
+        label: "Provider"
+        emptyLabel: "Provider not recorded"
+    # Free-text search over these columns, alongside the filters.
+    search:
+      keys: ["name", "description", "rrid"]
+      placeholder: "Search name, description or RRID"
+    # Provider names are joined with "; " (a resource could have several).
+    filters:
+      - key: "type"
+      - key: "provider"
+        separator: "; "
+    # Type is the sheet's own category (Tools, Atlases & Coordinate
+    # Frameworks, ...), kept as an attribute rather than a class.
+    # A resource can carry more than one identifier (the marmoset genome has
+    # a GenBank and a RefSeq accession), so they are joined into one cell
+    # rather than repeating the row.
+    queryTemplate: |-
+      PREFIX biolink: <https://w3id.org/biolink/vocab/>
+      PREFIX brainkb: <https://brainkb.org/vocab/>
+      PREFIX dcterms: <http://purl.org/dc/terms/>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      PREFIX schema: <https://schema.org/>
+      PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+      SELECT ?id (SAMPLE(?label) AS ?name) (SAMPLE(?category) AS ?type)
+             (SAMPLE(?desc) AS ?description)
+             (GROUP_CONCAT(DISTINCT ?ident; separator=", ") AS ?rrid)
+             (GROUP_CONCAT(DISTINCT ?providerName; separator="; ") AS ?provider)
+      WHERE {
+        GRAPH <{{graph}}> {
+          ?id biolink:category "{{category}}"^^xsd:anyURI .
+          OPTIONAL { ?id rdfs:label ?label }
+          OPTIONAL { ?id brainkb:resourceCategory ?category }
+          # Whichever description predicate the data uses; none is fine.
+          OPTIONAL { ?id schema:description|dcterms:description|rdfs:comment ?desc }
+          OPTIONAL { ?id schema:identifier ?ident }
+          OPTIONAL { ?id schema:provider ?prov . ?prov rdfs:label ?providerName }
+        }
+      }
+      GROUP BY ?id
+      ORDER BY ?type ?name
+      LIMIT 500
+    classes:
+      - name: "Resource"
+        category: "brainkb:Resource"
+        # How the list counts rows: "120 resources" rather than "120 entities".
+        noun: ["resource", "resources"]
+        description: >-
+          A tool, atlas, pipeline, standard, data archive or other resource
+          from the BICAN citation list. Its type is the list's own category.
+      - name: "Organization"
+        category: "brainkb:Organization"
+        noun: ["organization", "organizations"]
+        description: "Institutes and consortia that provide resources."

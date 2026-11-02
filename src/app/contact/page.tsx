@@ -1,9 +1,32 @@
 "use client";
 
-import type { Metadata } from "next";
 import { useState } from "react";
+import Link from "next/link";
 import yaml from "@/src/config/yaml/contact.yaml";
-import { EnvelopeIcon, PhoneIcon, MapPinIcon } from "@heroicons/react/24/solid";
+import {
+  EnvelopeIcon,
+  PhoneIcon,
+  MapPinIcon,
+  BookOpenIcon,
+  BugAntIcon,
+  BeakerIcon,
+} from "@heroicons/react/24/solid";
+
+type ContactDetail = {
+  label: string;
+  icon: string;
+  value?: string;
+  href?: string;
+  lines?: string[];
+};
+
+type ContactRoute = {
+  title: string;
+  description?: string;
+  link_text: string;
+  href: string;
+  icon: string;
+};
 
 export default function ContactPage() {
   const contactData = yaml.contact;
@@ -20,11 +43,19 @@ export default function ContactPage() {
     setTimeout(() => setSubmitted(false), 3000); // Simulate form submission
   };
 
-  const iconMap = {
-    email: <EnvelopeIcon className="w-6 h-6 text-white" />,
-    phone: <PhoneIcon className="w-6 h-6 text-white" />,
-    location: <MapPinIcon className="w-6 h-6 text-white" />,
+  const iconMap: Record<string, JSX.Element> = {
+    email: <EnvelopeIcon className="w-6 h-6 text-white" aria-hidden="true" />,
+    phone: <PhoneIcon className="w-6 h-6 text-white" aria-hidden="true" />,
+    location: <MapPinIcon className="w-6 h-6 text-white" aria-hidden="true" />,
+    docs: <BookOpenIcon className="w-6 h-6 text-white" aria-hidden="true" />,
+    bug: <BugAntIcon className="w-6 h-6 text-white" aria-hidden="true" />,
+    research: <BeakerIcon className="w-6 h-6 text-white" aria-hidden="true" />,
   };
+
+  const details: ContactDetail[] = contactData?.details ?? [];
+  const routes: ContactRoute[] = contactData?.routes ?? [];
+  const linkClass = "text-sky-700 hover:text-sky-800 font-semibold underline underline-offset-2 break-words";
+  const isExternal = (href: string) => /^https?:\/\//.test(href);
 
   if (!contactData) {
     return <p className="text-center text-red-500">Contact information is not available.</p>;
@@ -54,10 +85,10 @@ export default function ContactPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         {/* Contact Details Section */}
-        {contactData.details && contactData.details.length > 0 && (
-          <section className="mb-20">
+        {details.length > 0 && (
+          <section className="mb-20" aria-label="Contact details">
             <div className="grid md:grid-cols-3 gap-6">
-              {contactData.details.map((item, index) => (
+              {details.map((item, index) => (
                 <div 
                   key={index} 
                   className="group bg-gradient-to-br from-sky-50 to-white rounded-xl p-6 border-2 border-gray-100 hover:border-sky-300 hover:shadow-lg transition-all duration-300"
@@ -70,7 +101,57 @@ export default function ContactPage() {
                     </div>
                     <div className="flex-1">
                       <h3 className="text-lg font-bold text-gray-900 mb-2">{item.label}</h3>
-                      <p className="text-gray-700 leading-relaxed">{item.value}</p>
+                      {item.lines && item.lines.length > 0 ? (
+                        <address className="not-italic text-gray-700 leading-relaxed">
+                          {item.lines.map((line, i) => (
+                            <span key={i} className="block">{line}</span>
+                          ))}
+                        </address>
+                      ) : item.href ? (
+                        <a href={item.href} className={linkClass}>{item.value}</a>
+                      ) : (
+                        <p className="text-gray-700 leading-relaxed">{item.value}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Where to go for each kind of request */}
+        {routes.length > 0 && (
+          <section className="mb-20" aria-labelledby="contact-routes-heading">
+            {contactData.routes_title && (
+              <h2 id="contact-routes-heading" className="text-3xl font-bold text-gray-900 mb-6 text-center">
+                {contactData.routes_title}
+              </h2>
+            )}
+            <div className="grid md:grid-cols-3 gap-6">
+              {routes.map((route, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-xl p-6 border-2 border-gray-100 hover:border-sky-300 hover:shadow-lg transition-all duration-300"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-sky-500 to-blue-500 rounded-lg flex items-center justify-center">
+                      {iconMap[route.icon]}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-bold text-gray-900 mb-2">{route.title}</h3>
+                      {route.description && (
+                        <p className="text-gray-700 leading-relaxed mb-3">{route.description}</p>
+                      )}
+                      {isExternal(route.href) ? (
+                        <a href={route.href} target="_blank" rel="noopener noreferrer" className={linkClass}>
+                          {route.link_text}
+                        </a>
+                      ) : route.href.startsWith("/") ? (
+                        <Link href={route.href} className={linkClass}>{route.link_text}</Link>
+                      ) : (
+                        <a href={route.href} className={linkClass}>{route.link_text}</a>
+                      )}
                     </div>
                   </div>
                 </div>

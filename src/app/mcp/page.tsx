@@ -1,145 +1,168 @@
-"use client";
-
 /**
- * /mcp — how to drive BrainKB from an AI assistant via the Model Context
- * Protocol (MCP) server. Editorial style consistent with the About/landing
- * pages (FONTS + --bkb-* tokens + .bkb-card + .home-pad).
+ * Use with AI — public page for connecting an AI agent to BrainKB over MCP.
+ * Order: why and how to connect (hero with the per-client configuration), what
+ * the agent can do (research vs knowledge management), a research example, one
+ * setup interface (BrainKB skill or MCP only) with verification, then help.
+ * The look is the Home page's design (the `.lp` classes in landing.css).
  */
 
-import { FONTS } from "@/src/app/components/design-system";
+import Link from "next/link";
+import MarketingHeader from "../components/marketing/MarketingHeader";
+import MarketingFooter from "../components/marketing/MarketingFooter";
+import InstallCard from "../components/marketing/InstallCard";
+import SkillSetup from "../components/marketing/SkillSetup";
+import { dmSans, plexMono } from "../components/marketing/fonts";
+import { MCP_ENDPOINT, MCP_SITE } from "../components/marketing/tokens";
+import "../components/marketing/landing/landing.css";
 
-const MCP_URL = "https://mcp.brainkb.org/mcp";
+type Cap = { di: string; name: string; line: string; desc: string; asks: string[] };
 
-function Eyebrow({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      style={{
-        fontFamily: FONTS.mono,
-        fontSize: 12,
-        letterSpacing: "0.18em",
-        textTransform: "uppercase",
-        color: "var(--bkb-accent)",
-        fontWeight: 600,
-        marginBottom: 18,
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-function Card({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      className="bkb-card"
-      style={{ padding: 28, borderRadius: 16, background: "var(--bkb-surfaceAlt)", height: "100%" }}
-    >
-      {children}
-    </div>
-  );
-}
-
-function Code({ children }: { children: React.ReactNode }) {
-  return (
-    <pre
-      style={{
-        fontFamily: FONTS.mono,
-        fontSize: 13,
-        lineHeight: 1.6,
-        background: "var(--bkb-surface)",
-        border: "1px solid var(--bkb-border)",
-        borderRadius: 10,
-        padding: "14px 16px",
-        overflowX: "auto",
-        margin: "10px 0 0",
-        color: "var(--bkb-text)",
-      }}
-    >
-      <code>{children}</code>
-    </pre>
-  );
-}
-
-const CAPABILITIES: { h: string; d: string }[] = [
-  { h: "Spaces & graphs", d: "Create private/team workspaces, register named graphs, manage members and access." },
-  { h: "Ingest", d: "Load RDF (Turtle / N-Triples / JSON-LD) — raw text or files up to ~5 GB — as background jobs." },
-  { h: "Read & search", d: "Access-filtered full-text search, read a space's RDF, list registered graphs." },
-  { h: "Provenance (PROV-O)", d: "Per-job provenance, a graph's change history, and the exact triples each ingest added." },
-  { h: "Personal Access Tokens", d: "Mint a browser-free token to authenticate the assistant, then revoke it any time." },
-  { h: "Admin (if authorized)", d: "Manage users, roles, capabilities, and per-space access rules." },
+const RESEARCH: Cap[] = [
+  { di: "⌕", name: "Discover", line: "Find concepts and relationships", desc: "Search everything you may read, open a whole space, or list the graphs in the knowledge base.", asks: ["Find what BrainKB has on disease-associated microglia", "What's in the hmba space?"] },
+  { di: "◈", name: "Investigate", line: "Ask scientific questions", desc: "Vetted questions over extracted entities: cell types, regions, markers, phenotypes and causal claims, answered without writing SPARQL.", asks: ["Which papers link TREM2 to microglia?", "Which entities do these papers share?"] },
+  { di: "❝", name: "Verify", line: "Trace supporting evidence", desc: "Where each assertion came from: the paper and sentence, who added it and when, as W3C PROV-O.", asks: ["Which sentence supports this claim?", "Who added these triples, and when?"] },
 ];
+const MANAGE: Cap[] = [
+  { di: "⇪", name: "Ingest", line: "Add structured data", desc: "Load RDF from text, files or large streamed uploads (up to 5 GB). Each ingest runs as a background job, attributed to you.", asks: ["Ingest review.ttl into my lab space", "Did last night's ingest finish?"] },
+  { di: "▣", name: "Organize", line: "Work across spaces", desc: "Create private or public spaces and subspaces for yourself or a team, and see what changed in each.", asks: ["Create a private space for my lab", "What changed in my space this week?"] },
+  { di: "⚿", name: "Control", line: "Manage access", desc: "Sign in with Globus, ORCID or GitHub, keep a personal access token, and choose who can read or edit.", asks: ["Give alice@lab.org edit access", "Make me a token for this laptop"] },
+];
+
+function Group({ id, title, caps }: { id: string; title: string; caps: Cap[] }) {
+  return (
+    <div className="cap-group" id={id}>
+      <span className="cap-k">{title}</span>
+      <div className="grid3 tight blue-items">
+        {caps.map((c) => (
+          <div key={c.name} className="dec-item">
+            <i className="di" aria-hidden="true">{c.di}</i>
+            <h4>{c.name}</h4>
+            <p className="cap-line">{c.line}</p>
+            <p>{c.desc}</p>
+            <ul className="asks">
+              {c.asks.map((a) => <li key={a}>{a}</li>)}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function McpPage() {
   return (
-    <main className="home-pad" style={{ padding: "72px 64px", maxWidth: 1100, margin: "0 auto" }}>
-      <Eyebrow>AI access · Model Context Protocol</Eyebrow>
-      <h1 style={{ fontFamily: FONTS.display, fontSize: 44, letterSpacing: "-0.02em", lineHeight: 1.05, margin: "0 0 18px", color: "var(--bkb-text)" }}>
-        Use BrainKB from your AI assistant
-      </h1>
-      <p style={{ fontSize: 17, lineHeight: 1.7, color: "var(--bkb-textMuted)", maxWidth: 720, margin: "0 0 40px" }}>
-        BrainKB exposes an <strong>MCP server</strong> so an assistant can operate the knowledge
-        graph <em>on your behalf</em>: ingest data, search, explore provenance, and manage spaces,
-        using your own account and permissions. <strong>Two ways to use it</strong> — point any MCP
-        client (Claude, etc.) at the server directly, or use the <strong>BrainKB skill</strong>,
-        which runs on the <em>same</em> MCP and adds guided, step-by-step workflows. Every action is
-        access-controlled server-side exactly as in this web app. For example, just ask:{" "}
-        <em>“Ingest my TTL into the hmba space, then show what changed.”</em>
-      </p>
+    <div className={`lp ${dmSans.variable} ${plexMono.variable}`}>
+      <MarketingHeader />
 
-      <div className="home-3col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 22, marginBottom: 40 }}>
-        <Card>
-          <div style={{ fontFamily: FONTS.display, fontSize: 20, color: "var(--bkb-text)", marginBottom: 6 }}>Connect</div>
-          <p style={{ fontSize: 14, color: "var(--bkb-textMuted)", lineHeight: 1.6, margin: 0 }}>
-            Add the hosted MCP endpoint to your client (e.g. Claude Code):
-          </p>
-          <Code>{`claude mcp add --transport http \\
-  brainkb ${MCP_URL}`}</Code>
-          <p style={{ fontSize: 13, color: "var(--bkb-textMuted)", lineHeight: 1.6, marginTop: 12 }}>
-            Registry id <code style={{ fontFamily: FONTS.mono }}>org.brainkb/brainkb</code>, transport
-            streamable-http. Prefer guided workflows? The <strong>BrainKB skill</strong> wraps these
-            same tools with step-by-step guidance in Claude Code.
-          </p>
-        </Card>
-        <Card>
-          <div style={{ fontFamily: FONTS.display, fontSize: 20, color: "var(--bkb-text)", marginBottom: 6 }}>Authenticate</div>
-          <p style={{ fontSize: 14, color: "var(--bkb-textMuted)", lineHeight: 1.6, margin: 0 }}>
-            Sign in once, mint a <strong>Personal Access Token</strong>, and send it with each request:
-          </p>
-          <Code>{`Authorization: Bearer brainkb_pat_…`}</Code>
-          <p style={{ fontSize: 13, color: "var(--bkb-textMuted)", lineHeight: 1.6, marginTop: 12 }}>
-            In the skill: <code style={{ fontFamily: FONTS.mono }}>brainkb_create_token()</code> after a
-            one-time Globus login, then set it as <code style={{ fontFamily: FONTS.mono }}>BRAINKB_TOKEN</code>.
-            Tokens are revocable and expire on inactivity.
-          </p>
-        </Card>
+      <main className="wrap">
+        <section className="hero page" id="connect">
+          <div className="hero-copy">
+            <span className="eyebrow">Agent-ready · MCP</span>
+            <h1>Use BrainKB from your AI agent.</h1>
+            <p className="lead">
+              Connect Claude, Codex, VS Code and other MCP-compatible clients to BrainKB. Search neuroscience
+              knowledge, explore evidence-linked relationships, and work with your knowledge spaces in natural
+              language.
+            </p>
+            <ul className="chips" aria-label="What you get">
+              <li><a href="#setup-mcp">MCP server</a></li>
+              <li><a href="#setup-skill">Optional skill</a></li>
+              <li><a href="#manage">Public + private spaces</a></li>
+            </ul>
+            <div className="two-parts">
+              <a href="#setup-mcp">
+                <b>MCP server <span aria-hidden="true">↓</span></b>
+                <span>Connects your agent to BrainKB&apos;s tools and knowledge. This is what you add to your client.</span>
+              </a>
+              <a href="#setup-skill">
+                <b>BrainKB skill <span aria-hidden="true">↓</span></b>
+                <span>Optional. Adds instructions and workflows for using those tools well.</span>
+              </a>
+            </div>
+            <div className="endpoint">
+              <span className="lbl">Endpoint</span>
+              <div className="code">
+                <b>https://</b>
+                {MCP_ENDPOINT.replace(/^https?:\/\//, "")}
+              </div>
+            </div>
+          </div>
+          <InstallCard authNote skillHref="#setup" />
+        </section>
+      </main>
+
+      <section className="band-section">
+        <div className="wrap">
+          <div className="section-title">
+            <div>
+              <span className="eyebrow">What your agent can do</span>
+              <h2>Less SPARQL.<br />More science.</h2>
+            </div>
+            <p>Ask in plain language and your agent picks the right BrainKB tools. For example:</p>
+          </div>
+          <Group id="research" title="Research with your agent" caps={RESEARCH} />
+          <Group id="manage" title="Manage knowledge" caps={MANAGE} />
+        </div>
+      </section>
+
+      <div className="wrap">
+        <section className="section" id="example">
+          <div className="section-title">
+            <div>
+              <span className="eyebrow">Research in action</span>
+              <h2>One question,<br />traced to its evidence.</h2>
+            </div>
+            <p>
+              Why connect BrainKB to your agent: it answers from linked, sourced knowledge instead of from memory, and
+              shows you where each part of the answer came from.
+            </p>
+          </div>
+          <div className="example">
+            <div className="ex-ask">
+              <span className="ex-k">Researcher asks</span>
+              <p>“What relationships are documented between TREM2, disease-associated microglia and Alzheimer&apos;s disease?”</p>
+            </div>
+            <ol className="ex-flow">
+              <li><span className="ex-k">Find the concepts</span><code>brainkb_search</code> resolves TREM2, disease-associated microglia and Alzheimer&apos;s disease to graph entities.</li>
+              <li><span className="ex-k">Retrieve assertions</span><code>brainkb_qa_run</code> asks the vetted questions about those entities and the claims that connect them.</li>
+              <li><span className="ex-k">Show provenance</span><code>brainkb_provenance_graph</code> returns who added each assertion, when, and from which source.</li>
+            </ol>
+            <div className="ex-result">
+              <div><span className="ex-k">Concepts</span><p>TREM2 (gene) · disease-associated microglia (cell state) · Alzheimer&apos;s disease (disease)</p></div>
+              <div><span className="ex-k">Relationships</span><p>The assertions linking them, for example that the disease-associated microglia response depends on TREM2</p></div>
+              <div><span className="ex-k">Evidence</span><p>The paper and sentence behind each assertion, with its extraction run and PROV-O record</p></div>
+            </div>
+            <p className="ex-note">
+              This shows the workflow. What comes back depends on what has been ingested into the spaces you can read.
+            </p>
+            <div className="connect-links">
+              <Link className="btn primary" href="/explore">Explore knowledge</Link>
+              <a className="btn" href="#setup">Try it in your agent ↓</a>
+            </div>
+          </div>
+        </section>
+
+        <section className="section" id="setup">
+          <div className="section-title center">
+            <div>
+              <span className="eyebrow">Set up</span>
+              <h2>Connect, sign in, check.</h2>
+              <p>Pick the BrainKB skill (recommended) or connect the MCP server alone.</p>
+            </div>
+          </div>
+          <SkillSetup />
+        </section>
+
+        <section className="help">
+          <div>
+            <h3>Need help connecting your client?</h3>
+            <p>Configuration examples, authentication and troubleshooting for Claude Code, Codex, VS Code, Cursor, Copilot and other clients.</p>
+          </div>
+          <a className="btn" href={MCP_SITE} target="_blank" rel="noopener noreferrer">Full setup guide ↗</a>
+        </section>
       </div>
 
-      <Eyebrow>What the assistant can do</Eyebrow>
-      <div className="home-3col" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 22, marginBottom: 44 }}>
-        {CAPABILITIES.map((c) => (
-          <Card key={c.h}>
-            <div style={{ fontFamily: FONTS.display, fontSize: 17, color: "var(--bkb-text)", marginBottom: 8 }}>{c.h}</div>
-            <div style={{ fontSize: 14, color: "var(--bkb-textMuted)", lineHeight: 1.6 }}>{c.d}</div>
-          </Card>
-        ))}
-      </div>
-
-      <div
-        style={{
-          padding: "18px 20px",
-          borderRadius: 12,
-          background: "var(--bkb-surfaceAlt)",
-          border: "1px solid var(--bkb-border)",
-          fontSize: 14,
-          color: "var(--bkb-textMuted)",
-          lineHeight: 1.65,
-        }}
-      >
-        The assistant acts as <strong>you</strong> — it can only see and change what your roles and
-        space membership permit, and a <code style={{ fontFamily: FONTS.mono }}>403</code> means a
-        permission is missing, not a broken token. Full tool reference and examples:{" "}
-        <a href="http://docs.brainkb.org" style={{ color: "var(--bkb-accent)" }}>docs.brainkb.org</a>.
-      </div>
-    </main>
+      <MarketingFooter />
+    </div>
   );
 }

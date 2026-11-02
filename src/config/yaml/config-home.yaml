@@ -149,10 +149,8 @@ usecases:
       icon_color: "emerald-500"
       discussion_link: "https://github.com/sensein/BrainKB/discussions/28"
       is_future: false
-      status: "available"
-      use_link: "/knowledge-base/resources"
-      use_link_text: "View extracted resources"
-      use_text: "Login to access available features"
+      status: "in_development"
+      use_text: "Login to access available features" #instead of link
     - title: "Resource Metadata Expansion"
       case_number: "Case 3"
       description: "Expand and enrich resource metadata including datasets with comprehensive information."
@@ -177,9 +175,8 @@ usecases:
       icon_color: "blue-500"
       discussion_link: "https://github.com/sensein/BrainKB/discussions/25"
       is_future: false
-      status: "available"
-      use_link: "/knowledge-base/ner"
-      use_link_text: "View extracted neuroscientific NER terms"
+      status: "in_development"
+      use_text: "Login to access available features" #instead of link
     - title: "Assertion Evidence"
       case_number: "Case 5"
       description: "Link scientific assertions with supporting evidence from publications and research."

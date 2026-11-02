@@ -3,43 +3,30 @@
  * Provides type-safe access to environment variables
  * 
  * Note: Only NEXT_PUBLIC_* variables are available in client components.
- * Server-only variables (like NER_API_KEY) will be undefined on the client.
  */
 
 interface EnvConfig {
   // API Configuration
   NEXT_PUBLIC_API_ADMIN_HOST: string;
   NEXT_PUBLIC_API_QUERY_ENDPOINT: string;
-  NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT?: string;
-  NEXT_PUBLIC_API_ADMIN_GET_NER_ENDPOINT?: string;
-  NEXT_PUBLIC_API_ADMIN_SAVE_STRUCTURED_RESOURCE_ENDPOINT?: string;
-  NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT?: string;
-  NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT?: string;
   NEXT_PUBLIC_API_NAMED_GRAPH_QUERY_ENDPOINT?: string;
   NEXT_PUBLIC_API_ADMIN_INSERT_KGS_JSONLD_TTL_ENDPOINT?: string;
   NEXT_PUBLIC_API_ADMIN_INSERT_KGS_JSONLD_TTL_JOB_STATUS_ENDPOINT?: string;
   NEXT_PUBLIC_API_ADMIN_INSERT_ALL_KGS_JSONLD_TTL_JOB_STATUS_ENDPOINT?: string;
   NEXT_PUBLIC_API_ADMIN_INSERT_RECOVERY_JOB_ENDPOINT?: string;
   NEXT_PUBLIC_API_ADMIN_INSERT_CHECK_RECOVERABLE_JOB_ENDPOINT?: string;
-  NEXT_PUBLIC_API_NER_ENDPOINT?: string;
   NEXT_PUBLIC_CHAT_SERVICE_API_ENDPOINT?: string;
-  NEXT_PUBLIC_NER_GET_ENDPOINT?: string;
-  NEXT_PUBLIC_NER_SAVE_ENDPOINT?: string;
-  NEXT_PUBLIC_STRUCTSENSE_ENDPOINT?: string;
   NEXT_PUBLIC_API_QUERY_TAXONOMY_ENDPOINT?: string;
   NEXT_PUBLIC_TOKEN_ENDPOINT?: string;
   NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE?: string;
   NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE?: string;
   NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE?: string;
   NEXT_PUBLIC_USER_MANAGEMENT_API_BASE?: string;
+  // Host of the BrainKB MCP server; differs per deployment (sandbox vs prod).
+  NEXT_PUBLIC_MCP_BASE_URL?: string;
 
   // Auth Configuration
-  NEXT_PUBLIC_JWT_USER?: string;
-  NEXT_PUBLIC_JWT_PASSWORD?: string;
   NEXT_PUBLIC_USE_BEARER_TOKEN?: string;
-
-  // Server-only (will be undefined on client)
-  NER_API_KEY?: string;
 }
 
 class EnvConfigManager {
@@ -53,16 +40,6 @@ class EnvConfigManager {
         'https://queryservice.brainkb.org',
       NEXT_PUBLIC_API_QUERY_ENDPOINT:
         process.env.NEXT_PUBLIC_API_QUERY_ENDPOINT || 'query/sparql',
-      NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT:
-        process.env.NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT,
-      NEXT_PUBLIC_API_ADMIN_GET_NER_ENDPOINT:
-        process.env.NEXT_PUBLIC_API_ADMIN_GET_NER_ENDPOINT,
-      NEXT_PUBLIC_API_ADMIN_SAVE_STRUCTURED_RESOURCE_ENDPOINT:
-        process.env.NEXT_PUBLIC_API_ADMIN_SAVE_STRUCTURED_RESOURCE_ENDPOINT,
-      NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT:
-        process.env.NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT,
-      NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT:
-        process.env.NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT,
       NEXT_PUBLIC_API_NAMED_GRAPH_QUERY_ENDPOINT:
         process.env.NEXT_PUBLIC_API_NAMED_GRAPH_QUERY_ENDPOINT,
       NEXT_PUBLIC_API_ADMIN_INSERT_KGS_JSONLD_TTL_ENDPOINT:
@@ -75,16 +52,8 @@ class EnvConfigManager {
         process.env.NEXT_PUBLIC_API_ADMIN_INSERT_RECOVERY_JOB_ENDPOINT,
       NEXT_PUBLIC_API_ADMIN_INSERT_CHECK_RECOVERABLE_JOB_ENDPOINT:
         process.env.NEXT_PUBLIC_API_ADMIN_INSERT_CHECK_RECOVERABLE_JOB_ENDPOINT,
-      NEXT_PUBLIC_API_NER_ENDPOINT:
-        process.env.NEXT_PUBLIC_API_NER_ENDPOINT,
       NEXT_PUBLIC_CHAT_SERVICE_API_ENDPOINT:
         process.env.NEXT_PUBLIC_CHAT_SERVICE_API_ENDPOINT,
-      NEXT_PUBLIC_NER_GET_ENDPOINT:
-        process.env.NEXT_PUBLIC_NER_GET_ENDPOINT,
-      NEXT_PUBLIC_NER_SAVE_ENDPOINT:
-        process.env.NEXT_PUBLIC_NER_SAVE_ENDPOINT,
-      NEXT_PUBLIC_STRUCTSENSE_ENDPOINT:
-        process.env.NEXT_PUBLIC_STRUCTSENSE_ENDPOINT,
       NEXT_PUBLIC_API_QUERY_TAXONOMY_ENDPOINT:
         process.env.NEXT_PUBLIC_API_QUERY_TAXONOMY_ENDPOINT,
       NEXT_PUBLIC_TOKEN_ENDPOINT: process.env.NEXT_PUBLIC_TOKEN_ENDPOINT,
@@ -96,10 +65,8 @@ class EnvConfigManager {
         process.env.NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE,
       NEXT_PUBLIC_USER_MANAGEMENT_API_BASE:
         process.env.NEXT_PUBLIC_USER_MANAGEMENT_API_BASE,
-      NEXT_PUBLIC_JWT_USER: process.env.NEXT_PUBLIC_JWT_USER,
-      NEXT_PUBLIC_JWT_PASSWORD: process.env.NEXT_PUBLIC_JWT_PASSWORD,
+      NEXT_PUBLIC_MCP_BASE_URL: process.env.NEXT_PUBLIC_MCP_BASE_URL,
       NEXT_PUBLIC_USE_BEARER_TOKEN: process.env.NEXT_PUBLIC_USE_BEARER_TOKEN,
-      NER_API_KEY: process.env.NER_API_KEY,
     };
   }
 
@@ -121,14 +88,6 @@ class EnvConfigManager {
 
   public get useBearerToken(): boolean {
     return this.config.NEXT_PUBLIC_USE_BEARER_TOKEN !== 'false';
-  }
-
-  public get jwtUser(): string | undefined {
-    return this.config.NEXT_PUBLIC_JWT_USER;
-  }
-
-  public get jwtPassword(): string | undefined {
-    return this.config.NEXT_PUBLIC_JWT_PASSWORD;
   }
 
   public get tokenEndpoint(): string | undefined {
@@ -166,40 +125,31 @@ class EnvConfigManager {
     return 'http://localhost:8004';
   }
 
-  public get nerApiKey(): string | undefined {
-    return this.config.NER_API_KEY;
+  /**
+   * Origin of the query service (e.g. http://localhost:8010), taken from the
+   * SPARQL endpoint when that is an absolute URL, else NEXT_PUBLIC_API_ADMIN_HOST.
+   */
+  public get queryServiceBase(): string {
+    const endpoint = this.config.NEXT_PUBLIC_API_QUERY_ENDPOINT;
+    try {
+      return new URL(endpoint).origin;
+    } catch {
+      return this.config.NEXT_PUBLIC_API_ADMIN_HOST.replace(/\/+$/, '');
+    }
   }
 
-  public get resourceEndpoint(): string | undefined {
-    return this.config.NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT;
-  }
-
-  public get nerGetEndpoint(): string | undefined {
-    return this.config.NEXT_PUBLIC_API_ADMIN_GET_NER_ENDPOINT;
-  }
-
-  public get saveStructuredResourceEndpoint(): string | undefined {
-    return this.config.NEXT_PUBLIC_API_ADMIN_SAVE_STRUCTURED_RESOURCE_ENDPOINT;
-  }
-
-  public get nerSaveEndpoint(): string | undefined {
-    return this.config.NEXT_PUBLIC_NER_SAVE_ENDPOINT;
-  }
-
-  public get structsenseEndpoint(): string | undefined {
-    return this.config.NEXT_PUBLIC_STRUCTSENSE_ENDPOINT;
+  /**
+   * Public MCP endpoint shown on the marketing pages, e.g.
+   * https://mcp.sandbox.brainkb.org/mcp (sandbox) or
+   * https://mcp.brainkb.org/mcp (production, the default).
+   */
+  public get mcpEndpoint(): string {
+    const base = (this.config.NEXT_PUBLIC_MCP_BASE_URL || 'https://mcp.brainkb.org').replace(/\/+$/, '');
+    return `${base}/mcp`;
   }
 
   public get taxonomyEndpoint(): string | undefined {
     return this.config.NEXT_PUBLIC_API_QUERY_TAXONOMY_ENDPOINT;
-  }
-
-  public get pdf2ReproschemaEndpoint(): string | undefined {
-    return this.config.NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT;
-  }
-
-  public get extractStructuredResourceEndpoint(): string | undefined {
-    return this.config.NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT;
   }
 
   public get namedGraphQueryEndpoint(): string | undefined {
@@ -227,10 +177,6 @@ class EnvConfigManager {
     return this.config.NEXT_PUBLIC_API_ADMIN_INSERT_CHECK_RECOVERABLE_JOB_ENDPOINT;
   }
 
-  public get nerEndpoint(): string | undefined {
-    return this.config.NEXT_PUBLIC_API_NER_ENDPOINT;
-  }
-
   public get chatServiceEndpoint(): string | undefined {
     return this.config.NEXT_PUBLIC_CHAT_SERVICE_API_ENDPOINT;
   }
@@ -238,33 +184,23 @@ class EnvConfigManager {
   /**
    * Resolves an environment variable by its name (string)
    * This is useful when the env var name comes from configuration (e.g., YAML)
-   * @param envVarName - The name of the environment variable (e.g., "NEXT_PUBLIC_API_ADMIN_GET_NER_ENDPOINT")
+   * @param envVarName - The name of the environment variable (e.g., "NEXT_PUBLIC_API_QUERY_TAXONOMY_ENDPOINT")
    * @returns The value of the environment variable, or undefined if not found
    */
   public resolveEnvVar(envVarName: string): string | undefined {
     // Map of env var names to their getter methods
     const envVarMap: Record<string, () => string | undefined> = {
-      'NEXT_PUBLIC_API_ADMIN_GET_STRUCTURED_RESOURCE_ENDPOINT': () => this.resourceEndpoint,
-      'NEXT_PUBLIC_API_ADMIN_GET_NER_ENDPOINT': () => this.nerGetEndpoint,
-      'NEXT_PUBLIC_NER_GET_ENDPOINT': () => this.config.NEXT_PUBLIC_NER_GET_ENDPOINT,
-      'NEXT_PUBLIC_API_ADMIN_SAVE_STRUCTURED_RESOURCE_ENDPOINT': () => this.saveStructuredResourceEndpoint,
-      'NEXT_PUBLIC_API_ADMIN_EXTRACT_STRUCTURED_RESOURCE_ENDPOINT': () => this.extractStructuredResourceEndpoint,
-      'NEXT_PUBLIC_API_PDF2REPROSCHEMA_ENDPOINT': () => this.pdf2ReproschemaEndpoint,
       'NEXT_PUBLIC_API_NAMED_GRAPH_QUERY_ENDPOINT': () => this.namedGraphQueryEndpoint,
       'NEXT_PUBLIC_API_ADMIN_INSERT_KGS_JSONLD_TTL_ENDPOINT': () => this.kgInsertEndpoint,
       'NEXT_PUBLIC_API_ADMIN_INSERT_KGS_JSONLD_TTL_JOB_STATUS_ENDPOINT': () => this.kgJobStatusEndpoint,
-      'NEXT_PUBLIC_API_NER_ENDPOINT': () => this.nerEndpoint,
       'NEXT_PUBLIC_CHAT_SERVICE_API_ENDPOINT': () => this.chatServiceEndpoint,
-      'NEXT_PUBLIC_NER_SAVE_ENDPOINT': () => this.nerSaveEndpoint,
-      'NEXT_PUBLIC_STRUCTSENSE_ENDPOINT': () => this.structsenseEndpoint,
       'NEXT_PUBLIC_API_QUERY_TAXONOMY_ENDPOINT': () => this.taxonomyEndpoint,
       'NEXT_PUBLIC_TOKEN_ENDPOINT': () => this.tokenEndpoint,
       'NEXT_PUBLIC_TOKEN_ENDPOINT_ML_SERVICE': () => this.tokenEndpointMLService,
       'NEXT_PUBLIC_TOKEN_ENDPOINT_QUERY_SERVICE': () => this.tokenEndpointQueryService,
       'NEXT_PUBLIC_TOKEN_ENDPOINT_USER_MANAGEMENT_SERVICE': () => this.tokenEndpointUserManagementService,
-      'NEXT_PUBLIC_JWT_USER': () => this.jwtUser,
-      'NEXT_PUBLIC_JWT_PASSWORD': () => this.jwtPassword,
       'NEXT_PUBLIC_API_ADMIN_HOST': () => this.apiHost,
+      'NEXT_PUBLIC_MCP_BASE_URL': () => this.config.NEXT_PUBLIC_MCP_BASE_URL,
       'NEXT_PUBLIC_API_QUERY_ENDPOINT': () => this.config.NEXT_PUBLIC_API_QUERY_ENDPOINT,
     };
 

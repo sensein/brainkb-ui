@@ -61,7 +61,7 @@ export default function About() {
   const outcomes = sections.find((s) => s.section === "expectedoutcome");
 
   return (
-    <div style={{ background: "#f0eee9" }}>
+    <div style={{ background: "#f6f8fb" }}>
       {/* ── About / What is BrainKB ───────────────────────────────── */}
       {whatIs && (
         <section className="home-pad home-pad-y" style={{ padding: "96px 64px 72px", maxWidth: 1200, margin: "0 auto" }}>

@@ -1,0 +1,41 @@
+/* Tutorial additions on top of the shared `.lp` landing styles: the assistant
+   picker, collapsed reference sections, exercise outcomes, and chapter
+   navigation that stays reachable on narrow screens. */
+
+.lp .tut-agent{display:flex;flex-direction:column;gap:10px;margin:18px 0 0;padding:14px 16px;border:1px solid #d6e5ff;border-radius:12px;background:#f0f6ff}
+.lp .tut-agent .q{font:600 11px var(--font-plex-mono),monospace;letter-spacing:.8px;text-transform:uppercase;color:var(--ink)}
+.lp .tut-agent [role="radiogroup"]{display:flex;flex-wrap:wrap;gap:8px}
+.lp .tut-agent button{display:inline-flex;flex-direction:column;align-items:flex-start;gap:2px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 12px;font:600 14px var(--font-dm-sans),sans-serif;color:var(--ink);cursor:pointer;text-align:left}
+.lp .tut-agent button small{font-weight:500;font-size:12px;color:var(--muted)}
+.lp .tut-agent button[aria-checked="true"]{border-color:var(--blue);background:var(--blue-50);color:var(--blue)}
+.lp .tut-agent.compact{margin:0;padding:10px 12px;flex-direction:row;align-items:center;flex-wrap:wrap;background:var(--pale);border-color:var(--line)}
+.lp .tut-agent.compact button{padding:5px 10px;font-size:13px}
+.lp .tut-per-agent{display:flex;flex-direction:column;gap:12px;min-width:0}
+.lp .tut-agent-wait{margin:0;font-size:14px;color:var(--muted)}
+
+.lp .tut-details{border:1px solid var(--line);border-radius:10px;background:#fff}
+.lp .tut-details summary{cursor:pointer;padding:12px 16px;font-size:14.5px;font-weight:600;color:var(--ink)}
+.lp .tut-details summary::marker{color:var(--blue)}
+.lp .tut-details[open] summary{border-bottom:1px solid var(--line)}
+.lp .tut-details-body{display:flex;flex-direction:column;gap:14px;padding:14px 16px 16px;min-width:0}
+
+.lp .tut-outcome{padding:14px 16px;border:1px solid var(--green-200);border-left:3px solid var(--green);border-radius:10px;background:var(--green-50)}
+.lp .tut-outcome .tut-lbl{color:var(--green-ink)}
+.lp .tut-outcome p{margin:6px 0 0;font-size:14.5px;line-height:1.6;color:#21352d}
+.lp .tut-outcome p.tr{font-size:13.5px}
+.lp .tut-outcome a{color:var(--blue);font-weight:600}
+
+/* Narrow screens: the chapters button stays pinned to the bottom of the
+   viewport, and opens the chapter list as a sheet above it. */
+@media(max-width:760px){
+  .lp .book-menu{position:fixed;left:16px;right:16px;bottom:16px;width:auto;margin:0;z-index:30;box-shadow:0 10px 30px #0b162826;background:#fff}
+  .lp .book-side.open{position:fixed;left:16px;right:16px;bottom:68px;top:auto;max-height:70vh;z-index:30;overflow-y:auto;border:1px solid var(--line);border-radius:12px;box-shadow:0 20px 40px #0b162833;padding:18px 16px}
+  .lp .book-main{padding-bottom:110px}
+}
+
+.lp .book-main .tut-agent,.lp .book-main .tut-details,.lp .book-main .tut-outcome{font-family:var(--font-dm-sans),sans-serif}
+.lp .tut-outcome .tut-lbl{margin-bottom:0;padding:0}
+
+.lp .tut-callout{padding:16px 18px;border:2px solid var(--blue);border-radius:12px;background:var(--blue-50);box-shadow:0 6px 18px #1d4ed814;font-family:var(--font-dm-sans),sans-serif}
+.lp .tut-callout b{display:block;font-size:16px;line-height:1.4;color:var(--ink)}
+.lp .tut-callout p{margin:8px 0 0;font-size:14.5px;line-height:1.6;color:#2b3a57}

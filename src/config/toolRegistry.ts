@@ -6,11 +6,6 @@
  * entry, PageAccessGate denies entry — i.e. all tools start disabled.
  */
 
-import {
-  ENABLE_EXTRACTION_TOOLS,
-  EXTRACTION_TOOL_PAGE_KEYS,
-} from "@/src/config/featureFlags";
-
 export interface ToolEntry {
   pageKey: string;
   href: string;
@@ -27,6 +22,12 @@ export interface ToolEntry {
    * adminOnly is set).
    */
   adminOnly?: boolean;
+  /**
+   * If true, every signed-in user gets this tool without a page-access entry,
+   * because the backend already scopes what each person can do there (e.g.
+   * Spaces: you only manage spaces you own). Skipped by /admin/page-access.
+   */
+  openToAll?: boolean;
 }
 
 /**
@@ -44,26 +45,19 @@ export const ALL_TOOLS: ToolEntry[] = [
     color: "var(--bkb-primary)",
   },
   {
-    pageKey: "tools.ner-extraction",
-    href: "/user/sie",
-    title: "NER extraction",
-    description: "Extract neuroscience named entities from text via multi-agent systems.",
-    icon: "agent",
-    color: "var(--bkb-agent)",
-  },
-  {
-    pageKey: "tools.extract-resource",
-    href: "/user/extract-resource",
-    title: "Resource extraction",
-    description: "Extract structured resources from unstructured documents.",
-    icon: "evidence",
+    pageKey: "tools.spaces",
+    href: "/user/spaces",
+    title: "Spaces",
+    description: "See your spaces, make them public or private, and share them with your team.",
+    icon: "graph",
     color: "var(--bkb-evidence)",
+    openToAll: true,
   },
   {
     pageKey: "tools.job-status",
     href: "/user/job-status",
     title: "Job status",
-    description: "Track in-flight ingestion and extraction jobs.",
+    description: "Track in-flight ingestion jobs.",
     icon: "history",
     color: "var(--bkb-publication)",
   },
@@ -86,16 +80,10 @@ export const ALL_TOOLS: ToolEntry[] = [
 ];
 
 /**
- * The tools actually surfaced to users. Filtering here rather than at each call
- * site means the dashboard tiles, the /admin/page-access seed list, and the user
- * breadcrumb all agree without three separate checks.
- *
- * Extraction tools are hidden while ENABLE_EXTRACTION_TOOLS is off — ml_service does
- * not register the /ws/ner, /ws/extract-resources or /ws/pdf2reproschema endpoints
- * they depend on. Nothing is deleted: flip the flag and they return.
+ * The tools actually surfaced to users. A separate export from ALL_TOOLS in case a
+ * future flag needs to filter it again, but currently just the full list — the old
+ * NER/resource-extraction tools (structsense + Mongo backed) were removed entirely
+ * rather than feature-flagged; the graph-native replacement (agent skills) doesn't
+ * need a dashboard tool entry the same way.
  */
-export const TOOL_REGISTRY: ToolEntry[] = ALL_TOOLS.filter(
-  (t) =>
-    ENABLE_EXTRACTION_TOOLS ||
-    !(EXTRACTION_TOOL_PAGE_KEYS as readonly string[]).includes(t.pageKey),
-);
+export const TOOL_REGISTRY: ToolEntry[] = ALL_TOOLS;

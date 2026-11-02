@@ -3,38 +3,55 @@ page_meta:
     title: "Privacy Policy"
     subtitle: "Learn how BrainKB collects, uses, and protects your data."
     description: "Welcome to BrainKB. Your privacy is important to us, and we are committed to protecting your personal information. This Privacy Policy explains what data we collect, how we use it, and the measures we take to safeguard your information."
+    last_updated: "2026-10-20"
+    contact_label: "Privacy questions"
+    contact_email: "tekraj@mit.edu"
 
 sections:
   - section: "informationwecollect"
     title: "Information We Collect"
     subsections:
-      - title: "Cookies"
+      - title: "Authentication Cookies"
         description: >
-          We use cookies to enhance your browsing experience and ensure secure authentication. Cookies are small data files stored on your device. For more details on how cookies work, you can refer to HTTP cookies.
-          
-          Specifically, we use cookies from Google and GitHub for authentication purposes. These cookies help us verify your identity when you log in using Google or GitHub OAuth.
+          We use cookies to keep you signed in securely. Cookies are small data files stored on your device. For more details on how cookies work, you can refer to HTTP cookies.
+
+          When you sign in, BrainKB sets a session cookie that keeps you signed in. It is removed when you sign out and otherwise expires after at most seven days. This cookie is necessary for signing in and is not used for analytics.
+
+      - title: "Analytics Cookies"
+        description: >
+          With your consent, we use Google Tag Manager to collect analytics about how the website is used, so that we can improve it. Analytics are loaded only after you click "Accept" on the cookie banner; if you click "Decline", they are not loaded.
+
+          Your choice is stored in a cookie named "cookie_consent" for one year. You can change it by clearing that cookie in your browser, after which the banner will ask you again.
 
       - title: "Personal Information"
-        description: "When you log in using Google or GitHub OAuth, we may collect basic profile details such as your name and email address. This information is used solely for authentication and account management purposes."
+        description: "You can sign in with Globus, ORCID or GitHub. When you sign in, we receive basic profile details from the provider you choose, such as your name, email address, and your ORCID iD or GitHub username. This information is used solely for authentication and account management purposes."
+
+      - title: "Personal Access Tokens"
+        description: "If you create a personal access token (for example, to use BrainKB from the command line or an AI assistant), the token is linked to your account. It is shown to you once and stored only in hashed form. You can revoke your tokens at any time."
 
   - section: "useofdata"
     title: "Use of Data"
     subsections:
-      - title: "Data Submission"
-        description: "Any data you submit to our platform is released under the Creative Commons Attribution 0 (CC BY 0) license. By submitting data, you acknowledge and agree to these terms. This means that:"
+      - title: "Data You Submit"
+        description: "Data you submit to BrainKB is stored in a space. Who can see it depends on the space's visibility, which its owner controls:"
         bullet_points:
-          - content: "The content you provide is dedicated to the public domain."
-          - content: "It can be freely used, modified, and shared by anyone for any purpose without restrictions."
-      - title: "Personal Information"
-        description: "When you log in using Google or GitHub OAuth, we may collect basic profile details such as your name and email address. This information is used solely for authentication and account management purposes."
+          - content: "Private spaces: data is visible only to the space's members (owners, editors and viewers)."
+          - content: "Public spaces: data can be read by anyone, including visitors who are not signed in."
+          - content: "Data becomes public only when its owner makes a space public, or submits it through a designated public-release workflow (see Fair Use Policy below)."
 
   - section: "fairusepolicy"
     title: "Fair Use Policy"
     subsections:
       - title: "Use of Public-Release Data"
-        description: "This Fair Use Policy applies only to data that the Platform identifies as public-release data. Certain data submission features, fields, or workflows are designated by the Platform as contributing to publicly accessible or openly released datasets. Only data submitted through these designated mechanisms will be distributed under the Creative Commons Zero (CC0) license. By submitting data through these mechanisms, the user acknowledges and agrees to the following:"
+        description: "This Fair Use Policy applies only to data that the Platform identifies as public-release data. Certain data submission features, fields, or workflows are designated by the Platform as contributing to publicly accessible or openly released datasets. Only data submitted through these designated mechanisms will be distributed under the CC0 1.0 (Creative Commons Zero) public-domain dedication. By submitting data through these mechanisms, the user acknowledges and agrees to the following:"
         bullet_points:
-          - content: "Public-release data may be freely used, modified, redistributed, and incorporated into derivative works by any third party without restriction, consistent with the CC0 license."
+          - content: "Public-release data may be freely used, modified, redistributed, and incorporated into derivative works by any third party without restriction, consistent with CC0 1.0 (Creative Commons Zero)."
           - content: "The Platform may collect, process, analyze, or transform public-release data for research, evaluation, quality improvement, and dissemination."
           - content: "The Platform may publish, share, or distribute aggregated, transformed, or derivative datasets created from public-release data for educational, scientific, or public-interest purposes."
           - content: "Users must avoid submitting personal, sensitive, or confidential information within any data submitted through public-release mechanisms, as such data will become publicly accessible and cannot be withdrawn once released."
+
+  - section: "contact"
+    title: "Contact"
+    subsections:
+      - title: "Questions About This Policy"
+        description: "If you have questions about this Privacy Policy or how your data is handled, contact us at tekraj@mit.edu."

@@ -1,819 +1,313 @@
-"use client";
-
 /**
- * Home — landing page (editorial direction).
+ * Home — public marketing entry page.
  *
- * Narrative order: Hero → What is BrainKB (what it is) → AbstractAtlas (what
- * users can explore) → Use Cases (where it applies) → BrainKB Tools (which
- * tools enable it) → Video (how it works) → Structured Models (what models
- * support it) → Powered by AI agents (technical credibility).
- * All copy is content-managed from config-home.yaml; the /api/statistics flow
- * is preserved.
+ * Ported from the landing redesign handoff (index.html): hero search + animated
+ * connect demo, five pillars (connected, open, decentralized, agent-ready,
+ * provenance), then one section per pillar. Styles live in
+ * components/marketing/landing/landing.css, scoped under `.lp`. Renders
+ * standalone, outside the app's Navbar/Footer/Theme chrome — see SiteChrome.
  */
 
-import yaml from "@/src/config/yaml/config-home.yaml";
-import toolsLib from "@/src/config/yaml/tools-libraries.yaml";
-import { useEffect, useState } from "react";
-import {
-  Brain, Database, FileText, Users, Sparkles, ExternalLink, Network, CheckCircle,
-  FileCheck, Code, Layers as LayersIcon, BookOpen, Search, UsersRound, Globe, FolderTree,
-  FileSearch, FileJson, Tag, MessageSquare, Eye, AlertCircle, Play,
-} from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
-import { BkbHero } from "@/src/app/components/design-system/BkbHero";
-import { Theme, FONTS } from "@/src/app/components/design-system";
-import "./user/dashboard/fonts.css";
+import MarketingHeader from "./components/marketing/MarketingHeader";
+import MarketingFooter from "./components/marketing/MarketingFooter";
+import { dmSans, plexMono, plexSans } from "./components/marketing/fonts";
+import HeroSearch, { FocusSearchLink } from "./components/marketing/landing/HeroSearch";
+import HeroDemo from "./components/marketing/landing/HeroDemo";
+import CompareSources from "./components/marketing/landing/CompareSources";
+import ReachRings from "./components/marketing/landing/ReachRings";
+import WhereResultsGo from "./components/marketing/landing/WhereResultsGo";
+import ProvenanceTrace from "./components/marketing/landing/ProvenanceTrace";
+import InstallCard from "./components/marketing/InstallCard";
+import { MCP_ENDPOINT, MCP_FLAG } from "./components/marketing/tokens";
+import "./components/marketing/landing/landing.css";
 
-// ─── Icon mapping (preserved from original) ─────────────────────────────
+const PILLARS = [
+  { href: "#connected", k: "c", name: "Connected", title: "Knowledge, not silos.", desc: "Facts are extracted from papers, datasets and reviews, then linked in one knowledge graph so you can discover connections across studies.", go: "See the graph →" },
+  { href: "#open", k: "g", name: "Open", title: "No login to read.", desc: "Public spaces are open to everyone: search, browse and download.", go: "What's open →" },
+  { href: "#agents", k: "b", name: "Agent-ready", title: "Bring your own client.", desc: "Ask Claude, ChatGPT, Perplexity, Cursor or VS Code to search and discover across the graph, over MCP and skills.", go: "Connect an agent →" },
+  { href: "#provenance", k: "a", name: "Provenance", title: "Every fact has a source.", desc: "Who added it, when, how, and from which sentence of which paper it was extracted.", go: "Trace a fact →" },
+  { href: "#decentralized", k: "v", name: "Decentralized", title: "Run it. Share if you want.", desc: "Run BrainKB and its extraction tools yourself. Contribute to the community only when you choose.", go: "Run & share →" },
+];
 
-const ICON_MAP: Record<string, any> = {
-  brain: Brain,
-  database: Database,
-  filetext: FileText,
-  users: Users,
-  code: Code,
-  layers: LayersIcon,
-  bookopen: BookOpen,
-  filecheck: FileCheck,
-  network: Network,
-  search: Search,
-  usersround: UsersRound,
-  globe: Globe,
-  foldertree: FolderTree,
-  filesearch: FileSearch,
-  filejson: FileJson,
-  tag: Tag,
-};
-const iconBySlug = (s?: string) => ICON_MAP[s?.toLowerCase() ?? ""] ?? Database;
+const AUDIENCES = [
+  { ico: "⌕", title: "Researchers", desc: "Answer questions across the literature in minutes, not weeks. Ask your agent in plain language and get linked answers with their sources.", more: "\"Which papers report PV cells in layer 4?\"" },
+  { ico: "▣", title: "Labs & consortia", desc: "Run your own BrainKB or use the shared one. Keep work private until it's ready, then publish it with full attribution.", more: "Private → team → public" },
+  { ico: "⌘", title: "Tool & AI builders", desc: "Build on a knowledge graph instead of scraping PDFs: open standards (RDF, PROV-O), an open API, and MCP for agents.", more: "RDF · PROV-O · MCP · HTTP" },
+];
 
-// ─── Section primitives ──────────────────────────────────────────────────
+const NO_LOGIN = [
+  { ok: true, t: "Search across all public spaces" },
+  { ok: true, t: "Browse and read public knowledge graphs" },
+  { ok: true, t: "Download public data as RDF" },
+  { ok: false, t: "Private spaces stay hidden" },
+  { ok: false, t: "No ingest, editing or sharing" },
+];
 
-function SectionTitle({ children, size = 46 }: { children: React.ReactNode; size?: number }) {
+const LOGGED_IN = [
+  "Your own and shared private spaces",
+  "Ingest RDF, extract entities, run reviews",
+  "Share spaces and publish them openly",
+  "Provenance and change history",
+  "Log in with Globus, ORCID or GitHub",
+];
+
+const DECENTRALIZED = [
+  { di: "⌂", title: "Run tools locally", desc: "Entity extraction (StructSense) and systematic reviews (SynthScholar) run on your own machine, as agent skills or from the command line." },
+  { di: "⚿", title: "Your models, your keys", desc: "Use the model provider you choose, or a local model. Papers and drafts don't have to leave your machine." },
+  { di: "▣", title: "Host your own BrainKB", desc: "The full stack (graph store, search, API, MCP) runs from one Docker Compose file, for a lab, a consortium or offline work." },
+  { di: "⇪", title: "Share with the community, your call", desc: "Keep it local, share with your team, or contribute to the community graph. Sharing is opt-in, and your name stays on what you add." },
+];
+
+const PROV_POINTS = [
+  { di: "❝", title: "Evidence-linked assertions", desc: "Each extracted fact keeps the sentence, section and paper that support it, so you can read the evidence yourself." },
+  { di: "◉", title: "Provenance and context", desc: "Who added it, when, and by which tool, model and settings, recorded as W3C PROV-O and queryable like the rest of the graph." },
+  { di: "↻", title: "Traceable updates", desc: "Each job's added triples are kept, so you can see what changed, compare versions and tell which source each claim came from." },
+  { di: "⚖", title: "Assess, don't assume", desc: "Provenance supports checking and verification. A sourced assertion can still be wrong, and the record lets you find out." },
+];
+
+const STEPS = [
+  { lbl: "INGEST", title: "Bring data in", desc: "Upload RDF, or send papers and text through the extraction tools." },
+  { lbl: "EXTRACT", title: "Find entities", desc: "Cell types, regions, genes and claims are extracted with their evidence." },
+  { lbl: "LINK", title: "Map to ontologies", desc: "Entities are aligned to ontology terms and reference taxonomies." },
+  { lbl: "QUERY", title: "Search & trace", desc: "Search, query the graph, and trace any fact back to its source." },
+];
+
+function SectionTitle({ eyebrow, color, title, children }: { eyebrow: string; color?: string; title: [string, string]; children: React.ReactNode }) {
   return (
-    <h2
-      style={{
-        fontFamily: FONTS.display,
-        fontSize: `clamp(30px, 6vw, ${size}px)`,
-        lineHeight: 1.06,
-        margin: 0,
-        letterSpacing: "-0.02em",
-        fontWeight: 400,
-      }}
-    >
-      {children}
-    </h2>
-  );
-}
-
-function SectionLead({ children }: { children: React.ReactNode }) {
-  return (
-    <p style={{ fontSize: 16, color: "var(--bkb-textMuted)", lineHeight: 1.65, margin: "16px 0 0", maxWidth: 720 }}>
-      {children}
-    </p>
-  );
-}
-
-function Eyebrow({ children, color = "var(--bkb-accent)" }: { children: React.ReactNode; color?: string }) {
-  return (
-    <div
-      style={{
-        fontFamily: FONTS.mono,
-        fontSize: 12,
-        letterSpacing: "0.18em",
-        textTransform: "uppercase",
-        color,
-        fontWeight: 600,
-        marginBottom: 18,
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-// Underlined accent link used in section headers ("View all … →").
-function MoreLink({ href, children, external = true }: { href: string; children: React.ReactNode; external?: boolean }) {
-  const style: React.CSSProperties = {
-    fontSize: 14,
-    fontWeight: 600,
-    color: "var(--bkb-accent)",
-    textDecoration: "none",
-    borderBottom: "2px solid color-mix(in oklch, var(--bkb-accent), transparent 60%)",
-    paddingBottom: 2,
-    whiteSpace: "nowrap",
-  };
-  return external ? (
-    <a href={href} target="_blank" rel="noopener noreferrer" style={style}>{children}</a>
-  ) : (
-    <Link href={href} style={style}>{children}</Link>
-  );
-}
-
-// VideoPlayer — lightweight YouTube facade. Shows the thumbnail + a play
-// button; only loads the (autoplaying) iframe once the user clicks, so the
-// landing page stays fast even with several videos.
-function VideoPlayer({ id, title, onPlay }: { id: string; title?: string; onPlay?: () => void }) {
-  const [playing, setPlaying] = useState(false);
-  return (
-    <div
-      style={{
-        position: "relative",
-        width: "100%",
-        paddingTop: "56.25%",
-        borderRadius: 14,
-        overflow: "hidden",
-        background: "linear-gradient(135deg, #14241c, #0d1813)",
-        boxShadow: "0 18px 40px -18px rgba(0,0,0,0.45)",
-      }}
-    >
-      {playing ? (
-        <iframe
-          src={`https://www.youtube-nocookie.com/embed/${id}?autoplay=1`}
-          title={title || "Video"}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowFullScreen
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }}
-        />
-      ) : (
-        <button
-          onClick={() => {
-            onPlay?.();
-            setPlaying(true);
-          }}
-          aria-label={`Play ${title || "video"}`}
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            border: 0,
-            padding: 0,
-            cursor: "pointer",
-            background: "transparent",
-            display: "block",
-          }}
-        >
-          {/* thumbnail (plain img — external host, no next/image config needed).
-              maxresdefault only exists for HD videos / once processed, so fall
-              back to hqdefault, which YouTube always generates. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={`https://i.ytimg.com/vi/${id}/maxresdefault.jpg`}
-            alt=""
-            onError={(e) => {
-              const img = e.currentTarget;
-              if (!img.dataset.fallback) {
-                img.dataset.fallback = "1";
-                img.src = `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
-              }
-            }}
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.5 }}
-          />
-          {title && (
-            <span
-              style={{
-                position: "absolute",
-                top: 22,
-                left: 26,
-                right: 26,
-                textAlign: "left",
-                fontFamily: FONTS.display,
-                fontSize: 18,
-                color: "rgba(255,255,255,0.92)",
-                letterSpacing: "-0.01em",
-              }}
-            >
-              {title}
-            </span>
-          )}
-          <span
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: 66,
-              height: 66,
-              borderRadius: "50%",
-              background: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "0 6px 20px rgba(0,0,0,0.3)",
-            }}
-          >
-            <Play style={{ width: 24, height: 24, marginLeft: 3 }} fill="#d12c2c" color="#d12c2c" />
-          </span>
-        </button>
-      )}
-    </div>
-  );
-}
-
-// Status pill styling for use-case rows
-const STATUS_PILL: Record<string, { label: string; fg: string; bg: string }> = {
-  available: { label: "Available", fg: "#0f7a52", bg: "color-mix(in oklch, #1db981, transparent 86%)" },
-  partially_available: { label: "Partially available", fg: "#1d6fb8", bg: "color-mix(in oklch, #2b8fe0, transparent 86%)" },
-  in_development: { label: "In development", fg: "#b4451f", bg: "color-mix(in oklch, #e0682b, transparent 86%)" },
-  in_review: { label: "In review", fg: "#9a6a12", bg: "color-mix(in oklch, #e0a52b, transparent 84%)" },
-  coming_soon: { label: "Coming soon", fg: "var(--bkb-textMuted)", bg: "color-mix(in oklch, var(--bkb-textMuted), transparent 88%)" },
-};
-
-// Shared accent palette for tool badges (falls back when YAML omits `color`)
-const TOOL_COLORS = ["#0f7a52", "#2563eb", "#b45309", "#7c3aed"];
-
-// VideoCarousel — featured player on the left, copy on the right. With more
-// than one video it auto-advances (pausing once the viewer interacts or hits
-// play); the headline/description swap to match the active video.
-function VideoCarousel({
-  videos,
-  eyebrow,
-  headline,
-  description,
-  buttonText,
-}: {
-  videos: any[];
-  eyebrow?: string;
-  headline?: string;
-  description?: string;
-  buttonText?: string;
-}) {
-  const [active, setActive] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const n = videos.length;
-
-  useEffect(() => {
-    if (paused || n <= 1) return;
-    const t = setInterval(() => setActive((a) => (a + 1) % n), 6500);
-    return () => clearInterval(t);
-  }, [paused, n]);
-
-  const cur = videos[active] || {};
-  const go = (i: number) => {
-    setPaused(true);
-    setActive(((i % n) + n) % n);
-  };
-
-  const navBtn: React.CSSProperties = {
-    width: 38,
-    height: 38,
-    borderRadius: 999,
-    border: "1px solid var(--bkb-border)",
-    background: "var(--bkb-surface)",
-    color: "var(--bkb-text)",
-    cursor: "pointer",
-    fontSize: 16,
-    lineHeight: 1,
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-  };
-
-  return (
-    <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "1.15fr 1fr", gap: 56, alignItems: "center" }}>
-      <VideoPlayer key={active} id={cur.youtube_id} title={cur.title} onPlay={() => setPaused(true)} />
+    <div className="section-title">
       <div>
-        {/* eyebrow + headline are fixed; only the video and its description cycle */}
-        <Eyebrow>{eyebrow || "See It in Action"}</Eyebrow>
-        <SectionTitle size={40}>{headline || "See It in Action"}</SectionTitle>
-        {(cur.description || description) && (
-          <p style={{ fontSize: 16, color: "var(--bkb-textMuted)", lineHeight: 1.7, margin: "16px 0 28px" }}>
-            {cur.description || description}
-          </p>
-        )}
-        <a
-          href={`https://youtu.be/${cur.youtube_id}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="bkb-btn bkb-btn-primary"
-          style={{ textDecoration: "none" }}
-        >
-          {buttonText || "Watch on YouTube"} →
-        </a>
+        <span className="eyebrow" style={color ? { color } : undefined}>{eyebrow}</span>
+        <h2>
+          {title[0]}
+          <br />
+          {title[1]}
+        </h2>
+      </div>
+      <p>{children}</p>
+    </div>
+  );
+}
 
-        {n > 1 && (
-          <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 32 }}>
-            <button onClick={() => go(active - 1)} aria-label="Previous video" style={navBtn}>←</button>
-            <div style={{ display: "flex", gap: 8 }}>
-              {videos.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => go(i)}
-                  aria-label={`Go to video ${i + 1}`}
-                  style={{
-                    width: i === active ? 26 : 9,
-                    height: 9,
-                    borderRadius: 999,
-                    border: 0,
-                    padding: 0,
-                    cursor: "pointer",
-                    transition: "all .3s ease",
-                    background: i === active ? "var(--bkb-accent)" : "var(--bkb-border)",
-                  }}
-                />
+export default function HomePage() {
+  return (
+    <div className={`lp ${dmSans.variable} ${plexMono.variable} ${plexSans.variable}`}>
+      <MarketingHeader />
+
+      <main id="top" className="wrap">
+        <section className="hero">
+          <div className="hero-copy">
+            <span className="badge"><i />OPEN · DECENTRALIZED · AGENT-READY</span>
+            <h1>
+              Neuroscience knowledge, <span>connected.</span>
+            </h1>
+            <p className="lead">
+              Explore neuroscience findings as connected, evidence-linked knowledge. Discover relationships across
+              studies, trace each one to its source, and use the structured knowledge through search, SPARQL and AI
+              agents.
+            </p>
+            <HeroSearch />
+          </div>
+          <HeroDemo />
+        </section>
+
+        <p className="pitch-k">WHY BRAINKB, IN FIVE WORDS</p>
+        <section className="pillars five" aria-label="What BrainKB stands for">
+          {PILLARS.map((p) => (
+            <a key={p.href} className="pillar" href={p.href}>
+              <span className={`k ${p.k}`}><i />{p.name}</span>
+              <h3>{p.title}</h3>
+              <p>{p.desc}</p>
+              <span className="go">{p.go}</span>
+            </a>
+          ))}
+        </section>
+
+        <section className="section" id="connected">
+          <SectionTitle eyebrow="The problem → the fix" color="#0e7490" title={["Knowledge is stuck", "in silos."]}>
+            The same cell type appears under a dozen names, findings sit in PDFs and supplementary tables, and
+            nothing links one result to the next. Researchers spend weeks re-reading what&apos;s already known. BrainKB
+            resolves the names to one entity, so related facts are one query apart.
+          </SectionTitle>
+          <CompareSources />
+        </section>
+
+        <section className="section flush" id="reach">
+          <ReachRings />
+        </section>
+
+        <section className="section flush" id="who">
+          <SectionTitle eyebrow="Who it's for" title={["Less searching.", "More science."]}>
+            One knowledge base, three ways it pays off.
+          </SectionTitle>
+          <div className="grid3">
+            {AUDIENCES.map((a) => (
+              <article key={a.title} className="card">
+                <div className="ico">{a.ico}</div>
+                <h3>{a.title}</h3>
+                <p>{a.desc}</p>
+                <span className="more">{a.more}</span>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="section open" id="open">
+          <SectionTitle eyebrow="Open knowledge · no login" title={["Access open knowledge.", "No need to log in."]}>
+            Public spaces in BrainKB are open to everyone. Search, browse and read them without an account. It is
+            read-only: nothing can be added or changed without logging in.
+          </SectionTitle>
+          <div className="access">
+            <div className="access-card free">
+              <h3>No login <span className="tag green">READ-ONLY</span></h3>
+              <p className="sub">Anyone, from the web, an AI agent or the API.</p>
+              <ul>
+                {NO_LOGIN.map((l) => (
+                  <li key={l.t} className={l.ok ? undefined : "off"}>
+                    <i>{l.ok ? "✓" : "✕"}</i>
+                    <span>{l.t}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="access-card">
+              <h3>Logged in <span className="tag blue">YOUR ACCOUNT</span></h3>
+              <p className="sub">Everything on the left, plus what your role allows.</p>
+              <ul>
+                {LOGGED_IN.map((t) => (
+                  <li key={t}>
+                    <i>✓</i>
+                    <span>{t}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+
+        <section className="section flush" id="agents">
+          <SectionTitle eyebrow="Agent-ready" title={["Use BrainKB from", "your favorite client."]}>
+            BrainKB is built to be driven by AI agents. Any MCP client can search, read, ingest and trace provenance in
+            plain language, and public data needs no login.
+          </SectionTitle>
+          <div className="connect-row">
+            <div>
+              <p>
+                Point your client at <code>{MCP_ENDPOINT}</code>. Public data needs no login; for anything else your
+                client signs in as you, never with a shared account.
+              </p>
+              <p>
+                Pick your client to get started. Every client, step by step, and the BrainKB skill are on the{" "}
+                <Link href="/mcp">Use with AI</Link> page.
+              </p>
+              <div className="connect-links">
+                <Link className="btn primary" href="/mcp">Set up your client →</Link>
+                <Link className="btn" href="/mcp#skill">Install the BrainKB skill</Link>
+              </div>
+            </div>
+            <InstallCard compact />
+          </div>
+          <div className="ways4">
+            <Link className="way" href="/mcp">
+              <span className="lbl">Hosted MCP</span>
+              <h3>Connect by URL</h3>
+              <p>Add one URL to your client. Log in only when you need private data.</p>
+              <div className="code"><b>https://</b>{MCP_ENDPOINT.replace(/^https?:\/\//, "")}</div>
+            </Link>
+            <div className="way">
+              <span className="lbl">Local MCP</span>
+              <h3>Run it yourself</h3>
+              <p>Run the MCP server locally and point it at your own BrainKB.</p>
+              <div className="code">MCP_TRANSPORT=<b>stdio</b></div>
+            </div>
+            <Link className="way" href="/mcp#skill">
+              <span className="lbl">BrainKB skill</span>
+              <h3>Teach your agent</h3>
+              <p>Installs the BrainKB skill and registers the MCP server with Claude Code; other agents add the server themselves.</p>
+              <div className="code"><b>npx</b> brainkb install{MCP_FLAG}</div>
+            </Link>
+            <div className="way">
+              <span className="lbl">API</span>
+              <h3>Plain HTTP</h3>
+              <p>Search and read public spaces with no token; open standards (RDF, PROV-O).</p>
+              <div className="code">GET <b>/api/search</b>?q=purkinje</div>
+            </div>
+          </div>
+        </section>
+
+        <section className="section" id="provenance">
+          <SectionTitle eyebrow="Provenance" title={["Every fact", "has a history."]}>
+            Trust comes from being able to check. Every triple in BrainKB records who added it, when, by which
+            process and the evidence behind it, as W3C PROV-O you can query. Provenance helps you assess a claim; it
+            does not by itself make the claim correct.
+          </SectionTitle>
+          <div className="prov">
+            <ProvenanceTrace />
+            <div className="prov-points">
+              {PROV_POINTS.map((p) => (
+                <div key={p.title} className="dec-item">
+                  <i className="di" aria-hidden="true">{p.di}</i>
+                  <h4>{p.title}</h4>
+                  <p>{p.desc}</p>
+                </div>
               ))}
             </div>
-            <button onClick={() => go(active + 1)} aria-label="Next video" style={navBtn}>→</button>
-            <span style={{ fontFamily: FONTS.mono, fontSize: 12, color: "var(--bkb-textSubtle)", marginLeft: 4 }}>
-              {String(active + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}
-            </span>
           </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ─── Page ────────────────────────────────────────────────────────────────
-
-export default function Home() {
-  const [structuedModelHeaderTitle, setStructuedModelHeaderTitle] = useState("");
-  const [structuedModelHeaderSubTitle, setStructuedModelHeaderSubTitle] = useState("");
-  const [dataCount, setCountData] = useState<any[]>([]);
-
-  useEffect(() => {
-    const sm = yaml.headersboxpage.find((p: any) => p.slug === "structuredmodelsheader");
-    setStructuedModelHeaderTitle(sm?.title ?? "");
-    setStructuedModelHeaderSubTitle(sm?.subtitle ?? "");
-
-    (async () => {
-      try {
-        const response = await fetch("/api/statistics");
-        const result = await response.json();
-        if (result.success && result.data) {
-          setCountData(Array.isArray(result.data) ? result.data : []);
-        } else {
-          setCountData([]);
-        }
-      } catch {
-        setCountData([]);
-      }
-    })();
-  }, []);
-
-  const videos: any[] = Array.isArray(yaml.videos?.items) ? yaml.videos.items : [];
-
-  // "open-source tools" counts everything on the Tools & Libraries page —
-  // the flagship apps plus the Python libraries.
-  const tl: any = toolsLib;
-  const openSourceCount =
-    (Array.isArray(tl.tools) ? tl.tools.length : 0) +
-    (Array.isArray(tl.libraries) ? tl.libraries.length : 0);
-
-  const heroStats = [
-    { value: openSourceCount, label: "open-source tools", href: "/tools-and-libraries" },
-    { value: Array.isArray(yaml.usecases?.cases) ? yaml.usecases.cases.length : 0, label: "active use cases" },
-    { value: "Multi-agent", label: "orchestration" },
-  ];
-
-  return (
-    <div style={{ background: "#f0eee9" }}>
-      <Theme theme="light" style={{ background: "transparent" }}>
-        <BkbHero stats={heroStats} />
-
-        {/* ── What is BrainKB (what it is) ─────────────────────────── */}
-        {yaml.whatisbrainkb && (
-          <section className="home-pad home-pad-y" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
-            <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "1.05fr 1fr", gap: 72, alignItems: "start", marginBottom: 64 }}>
-              <div>
-                <Eyebrow>{yaml.whatisbrainkb.eyebrow || "What is BrainKB"}</Eyebrow>
-                <SectionTitle>{yaml.whatisbrainkb.headline || yaml.whatisbrainkb.title || "What is BrainKB?"}</SectionTitle>
+          <div className="pipe-h">
+            <h3>How a fact gets here</h3>
+            <span>Provenance recorded at every step</span>
+          </div>
+          <div className="flow">
+            {STEPS.map((s, n) => (
+              <div key={s.lbl} className="step">
+                <span className="n">{String(n + 1).padStart(2, "0")}</span>
+                <span className="lbl">{s.lbl}</span>
+                <h4>{s.title}</h4>
+                <p>{s.desc}</p>
               </div>
-              <p style={{ fontSize: 17, color: "var(--bkb-textMuted)", lineHeight: 1.7, margin: 0, paddingTop: 6 }}>
-                {yaml.whatisbrainkb.description || yaml.whatisbrainkb.subtitle}
-              </p>
-            </div>
-            <div className="home-4col" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", borderTop: "1px solid var(--bkb-border)" }}>
-              {Array.isArray(yaml.whatisbrainkb.bullet_points) &&
-                yaml.whatisbrainkb.bullet_points.map((p: any, i: number) => (
-                  <div key={i} style={{ padding: "30px 30px 0", borderLeft: i ? "1px solid var(--bkb-border)" : "none" }}>
-                    <div style={{ fontFamily: FONTS.mono, fontSize: 13, color: "var(--bkb-accent)", marginBottom: 24 }}>
-                      {String(i + 1).padStart(2, "0")}
-                    </div>
-                    <h3 style={{ fontFamily: FONTS.display, fontSize: 22, fontWeight: 400, letterSpacing: "-0.01em", margin: "0 0 10px" }}>
-                      {p.heading}
-                    </h3>
-                    <p style={{ fontSize: 13.5, color: "var(--bkb-textMuted)", lineHeight: 1.6, margin: 0 }}>{p.title}</p>
-                  </div>
-                ))}
-            </div>
-          </section>
-        )}
-
-        {/* ── Use BrainKB from your AI assistant (MCP) — placed high so it's
-            seen; dark highlight card on the light page with a terminal mock ── */}
-        <section className="home-pad" style={{ padding: "0 64px 32px", maxWidth: 1200, margin: "0 auto" }}>
-          <div
-            style={{
-              background: "linear-gradient(160deg, #15271e 0%, #0c1611 62%)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 24,
-              padding: "clamp(28px, 5vw, 56px)",
-            }}
-          >
-            <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}>
-              <div>
-                <div style={{ fontFamily: FONTS.mono, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "#3ecf8e", fontWeight: 600, marginBottom: 18 }}>
-                  Model Context Protocol
-                </div>
-                <h2 style={{ fontFamily: FONTS.display, fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 400, color: "#f0eee9", letterSpacing: "-0.02em", lineHeight: 1.1, margin: 0 }}>
-                  Drive BrainKB from your AI assistant
-                </h2>
-                <p style={{ fontSize: 16, color: "rgba(240,238,233,0.7)", lineHeight: 1.7, margin: "18px 0 28px", maxWidth: 470 }}>
-                  Use the <strong style={{ color: "#f0eee9", fontWeight: 600 }}>MCP server</strong> directly with Claude or any
-                  MCP client — or the <strong style={{ color: "#f0eee9", fontWeight: 600 }}>BrainKB skill</strong>, which runs on
-                  the same MCP with guided workflows. Either way you ingest, search, and explore the graph in natural language,
-                  as yourself and under your own permissions.
-                </p>
-                <a
-                  href="/mcp"
-                  style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#1db981", color: "#0c1611", fontWeight: 600, fontSize: 14, padding: "12px 22px", borderRadius: 10, textDecoration: "none" }}
-                >
-                  Explore MCP &amp; skill →
-                </a>
-              </div>
-              {/* terminal mock */}
-              <div style={{ background: "rgba(0,0,0,0.32)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, overflow: "hidden" }}>
-                <div style={{ display: "flex", gap: 7, padding: "13px 15px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                  <span style={{ width: 11, height: 11, borderRadius: "50%", background: "#f2564f" }} />
-                  <span style={{ width: 11, height: 11, borderRadius: "50%", background: "#f4bf4f" }} />
-                  <span style={{ width: 11, height: 11, borderRadius: "50%", background: "#3ecf8e" }} />
-                </div>
-                <pre
-                  style={{
-                    fontFamily: FONTS.mono,
-                    fontSize: 12.5,
-                    lineHeight: 1.75,
-                    color: "rgba(240,238,233,0.9)",
-                    margin: 0,
-                    padding: "18px 20px",
-                    overflowX: "auto",
-                    whiteSpace: "pre",
-                  }}
-                >
-{`$ claude mcp add --transport http \\
-    brainkb https://mcp.brainkb.org/mcp
-
-> "Ingest my TTL into the hmba space,
-   then show what changed."`}
-                </pre>
-              </div>
-            </div>
+            ))}
           </div>
         </section>
 
-        {/* ── AbstractAtlas (what users can explore) ───────────────── */}
-        {yaml.abstractatlas && (
-          <section style={{ background: "linear-gradient(135deg, #e7efe9 0%, #eef2ed 100%)", borderTop: "1px solid var(--bkb-border)", borderBottom: "1px solid var(--bkb-border)" }}>
-            <div className="home-pad home-pad-y home-2col" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1.1fr", gap: 64, alignItems: "center" }}>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
-                  <span style={{ fontFamily: FONTS.mono, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--bkb-accent)", fontWeight: 600 }}>
-                    {yaml.abstractatlas.eyebrow || "Explore"}
-                  </span>
-                  {yaml.abstractatlas.badge && (
-                    <span style={{ fontFamily: FONTS.mono, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--bkb-publication)", border: "1px solid color-mix(in oklch, var(--bkb-publication), transparent 55%)", borderRadius: 999, padding: "2px 9px" }}>
-                      {yaml.abstractatlas.badge}
-                    </span>
-                  )}
+        <section className="section" id="decentralized">
+          <SectionTitle eyebrow="Decentralized" title={["Run your own.", "Share if you want."]}>
+            BrainKB isn&apos;t one central server you have to hand your data to. Run the tools and your own BrainKB,
+            keep it private as long as you like, and contribute to the community knowledge graph when you&apos;re
+            ready, with credit on every triple.
+          </SectionTitle>
+          <div className="dec">
+            <div className="dec-list">
+              {DECENTRALIZED.map((d) => (
+                <div key={d.title} className="dec-item">
+                  <i className="di" aria-hidden="true">{d.di}</i>
+                  <h4>{d.title}</h4>
+                  <p>{d.desc}</p>
                 </div>
-                <SectionTitle size={42}>{yaml.abstractatlas.title}</SectionTitle>
-                {yaml.abstractatlas.description && (
-                  <p style={{ fontSize: 16, color: "var(--bkb-textMuted)", lineHeight: 1.7, margin: "18px 0 28px", maxWidth: 520 }}>
-                    {yaml.abstractatlas.description}
-                  </p>
-                )}
-                <a
-                  href={yaml.abstractatlas.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bkb-btn bkb-btn-primary"
-                  style={{ textDecoration: "none" }}
-                >
-                  {yaml.abstractatlas.button_text || "Open AbstractAtlas"} →
-                </a>
-              </div>
-              <a
-                href={yaml.abstractatlas.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: "block",
-                  borderRadius: 16,
-                  overflow: "hidden",
-                  border: "1px solid var(--bkb-border)",
-                  background: "#fff",
-                  boxShadow: "0 24px 50px -26px rgba(0,0,0,0.25)",
-                  padding: 8,
-                }}
-              >
-                <Image
-                  src={yaml.abstractatlas.image}
-                  alt="AbstractAtlas — interactive map of the neuroscience literature"
-                  width={1200}
-                  height={680}
-                  style={{ width: "100%", height: "auto", display: "block", borderRadius: 10 }}
-                />
-              </a>
+              ))}
             </div>
-          </section>
-        )}
-
-        {/* ── BrainKB Tools (which tools enable it) ────────────────── */}
-        {yaml.tools && (
-          <section style={{ background: "var(--bkb-surface)", borderTop: "1px solid var(--bkb-border)", borderBottom: "1px solid var(--bkb-border)" }}>
-            <div className="home-pad home-pad-y" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
-              <div style={{ marginBottom: 56 }}>
-                <Eyebrow>{yaml.tools.eyebrow || "The Toolkit"}</Eyebrow>
-                <SectionTitle>{yaml.tools.title || "BrainKB Tools"}</SectionTitle>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 40, marginTop: 18, flexWrap: "wrap" }}>
-                  <p style={{ fontSize: 16, color: "var(--bkb-textMuted)", lineHeight: 1.65, margin: 0, maxWidth: 640 }}>{yaml.tools.subtitle}</p>
-                  {yaml.tools.more_link && (
-                    <MoreLink href={yaml.tools.more_link} external={false}>
-                      {yaml.tools.more_text || "View all tools"} →
-                    </MoreLink>
-                  )}
-                </div>
-              </div>
-              <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 22 }}>
-                {Array.isArray(yaml.tools.items) &&
-                  yaml.tools.items.map((t: any, i: number) => {
-                    const isExternal = t.link?.startsWith?.("http");
-                    const isComingSoon = !t.link || t.link === "#";
-                    const color = t.color || TOOL_COLORS[i % TOOL_COLORS.length];
-                    // Mixed-orientation logos: horizontal wordmarks fill width and
-                    // stay short; square/stacked logos fill the tile height so the
-                    // two kinds carry comparable visual weight.
-                    const isSquareLogo = t.logo_orientation === "square";
-                    const logoImgStyle: React.CSSProperties = isSquareLogo
-                      ? { width: "auto", height: "150px", maxWidth: "70%", objectFit: "contain" }
-                      : { width: "auto", height: "auto", maxWidth: "94%", maxHeight: 150, objectFit: "contain" };
-                    const Inner = (
-                      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-                        {t.category && (
-                          <div style={{ fontFamily: FONTS.mono, fontSize: 11, letterSpacing: "0.13em", textTransform: "uppercase", color: "var(--bkb-textSubtle)", marginBottom: 18, textAlign: "right" }}>
-                            {t.category}
-                          </div>
-                        )}
-                        {/* logo — no box; orientation-aware sizing */}
-                        <div
-                          style={{
-                            height: 96,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "flex-start",
-                            marginBottom: 22,
-                          }}
-                        >
-                          {t.logo ? (
-                            <Image src={t.logo} alt={t.name} width={280} height={150} style={logoImgStyle} />
-                          ) : (
-                            <span style={{ fontFamily: FONTS.display, fontSize: 28, color }}>{t.name}</span>
-                          )}
-                        </div>
-                        <p style={{ fontSize: 14, color: "var(--bkb-textMuted)", lineHeight: 1.65, margin: "0 0 20px", flex: 1 }}>{t.description}</p>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: isComingSoon ? "var(--bkb-textSubtle)" : "var(--bkb-accent)", display: "inline-flex", alignItems: "center", gap: 5 }}>
-                          {isComingSoon ? (
-                            <>{t.link_text || "Coming soon"}</>
-                          ) : (
-                            <>
-                              {t.link_text || "Learn more"}
-                              {isExternal ? <ExternalLink className="w-3.5 h-3.5" /> : <span>→</span>}
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    );
-                    const cardStyle: React.CSSProperties = {
-                      padding: 30,
-                      borderRadius: 16,
-                      textDecoration: "none",
-                      color: "inherit",
-                      display: "block",
-                      height: "100%",
-                      background: "var(--bkb-surfaceAlt)",
-                    };
-                    return isComingSoon ? (
-                      <div key={i} className="bkb-card" style={cardStyle}>{Inner}</div>
-                    ) : (
-                      <Link
-                        key={i}
-                        href={t.link}
-                        target={isExternal ? "_blank" : "_self"}
-                        rel={isExternal ? "noopener noreferrer" : ""}
-                        className="bkb-card"
-                        style={cardStyle}
-                      >
-                        {Inner}
-                      </Link>
-                    );
-                  })}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* ── Use Cases (where it applies) ─────────────────────────── */}
-        {yaml.usecases && (
-          <section className="home-pad home-pad-y" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
-            <div style={{ maxWidth: 720, marginBottom: 48 }}>
-              <Eyebrow color="#b4451f">{yaml.usecases.eyebrow || "In Practice"}</Eyebrow>
-              <SectionTitle>{yaml.usecases.title || "Use Cases"}</SectionTitle>
-              <SectionLead>{yaml.usecases.subtitle}</SectionLead>
-            </div>
-
-            <div className="bkb-card" style={{ padding: 0, borderRadius: 16, overflow: "hidden" }}>
-              {Array.isArray(yaml.usecases.cases) &&
-                yaml.usecases.cases.map((c: any, i: number) => {
-                  const pill = STATUS_PILL[c.status] || STATUS_PILL.coming_soon;
-                  const href = c.use_link || c.discussion_link || null;
-                  const linkExternal = href?.startsWith?.("http");
-                  return (
-                    <div
-                      key={i}
-                      className="home-usecase-row"
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "110px minmax(190px, 1fr) 1.4fr 150px 64px",
-                        gap: 24,
-                        alignItems: "center",
-                        padding: "26px 32px",
-                        borderTop: i ? "1px solid var(--bkb-border)" : "none",
-                      }}
-                    >
-                      <div style={{ fontFamily: FONTS.mono, fontSize: 12, color: "var(--bkb-textSubtle)", letterSpacing: "0.06em" }}>
-                        {`Case ${String(i + 1).padStart(2, "0")}`}
-                      </div>
-                      <h3 style={{ fontFamily: FONTS.display, fontSize: 21, fontWeight: 400, letterSpacing: "-0.01em", margin: 0 }}>{c.title}</h3>
-                      <p style={{ fontSize: 13.5, color: "var(--bkb-textMuted)", lineHeight: 1.55, margin: 0 }}>{c.description}</p>
-                      <div>
-                        <span style={{ fontSize: 12, fontWeight: 600, padding: "5px 12px", borderRadius: 999, color: pill.fg, background: pill.bg, whiteSpace: "nowrap" }}>
-                          {pill.label}
-                        </span>
-                      </div>
-                      <div style={{ textAlign: "right" }}>
-                        {href && (
-                          <Link
-                            href={href}
-                            target={linkExternal ? "_blank" : "_self"}
-                            rel={linkExternal ? "noopener noreferrer" : ""}
-                            style={{ fontSize: 13, fontWeight: 600, color: "var(--bkb-accent)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}
-                          >
-                            View <span>→</span>
-                          </Link>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-
-            {yaml.usecases.how_it_works && (
-              <div
-                className="home-hiw"
-                style={{
-                  marginTop: 28,
-                  background: "linear-gradient(135deg, #14241c, #0e1a14)",
-                  borderRadius: 20,
-                  padding: "48px 52px",
-                  display: "grid",
-                  gridTemplateColumns: "1.25fr 1fr 1fr 1fr",
-                  gap: 40,
-                }}
-              >
-                <div>
-                  <h3 style={{ fontFamily: FONTS.display, fontSize: 27, fontWeight: 400, color: "#f0eee9", margin: "0 0 14px", letterSpacing: "-0.01em" }}>
-                    {yaml.usecases.how_it_works.title}
-                  </h3>
-                  <p style={{ fontSize: 13.5, color: "rgba(240,238,233,0.6)", lineHeight: 1.6, margin: 0 }}>{yaml.usecases.how_it_works.subtitle}</p>
-                </div>
-                {Array.isArray(yaml.usecases.how_it_works.phases) &&
-                  yaml.usecases.how_it_works.phases.map((ph: any, i: number) => (
-                    <div key={i}>
-                      <div style={{ fontFamily: FONTS.mono, fontSize: 11.5, letterSpacing: "0.12em", textTransform: "uppercase", color: "#3ecf8e", marginBottom: 14 }}>
-                        {`${String(i + 1).padStart(2, "0")} · ${ph.label}`}
-                      </div>
-                      <p style={{ fontSize: 13.5, color: "rgba(240,238,233,0.75)", lineHeight: 1.6, margin: 0 }}>{ph.description}</p>
-                    </div>
-                  ))}
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* ── See It in Action (how it works) ──────────────────────── */}
-        {videos.length > 0 && (
-          <section className="home-pad home-pad-y" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
-            <VideoCarousel
-              videos={videos}
-              eyebrow={yaml.videos.eyebrow}
-              headline={yaml.videos.headline || yaml.videos.title}
-              description={yaml.videos.description}
-              buttonText={yaml.videos.button_text}
-            />
-          </section>
-        )}
-
-        {/* ── Structured Models (what models support it) ───────────── */}
-        <section style={{ background: "var(--bkb-surface)", borderTop: "1px solid var(--bkb-border)", borderBottom: "1px solid var(--bkb-border)" }}>
-          <div className="home-pad home-pad-y" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
-            <div style={{ marginBottom: 48 }}>
-              <Eyebrow>Foundations</Eyebrow>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 32, flexWrap: "wrap" }}>
-                <SectionTitle>{structuedModelHeaderTitle || "Structured Models"}</SectionTitle>
-                <MoreLink href="https://sensein.group/brainkbdocs/">View all models →</MoreLink>
-              </div>
-              <p style={{ fontSize: 16, color: "var(--bkb-textMuted)", lineHeight: 1.65, margin: "16px 0 0", maxWidth: 660 }}>
-                These models provide the shared structure behind BrainKB&apos;s graph, tools, and use cases.
-              </p>
-            </div>
-            <div className="home-4col" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
-              {Array.isArray(yaml.structuredmodelsbox) &&
-                yaml.structuredmodelsbox.map((m: any, i: number) => {
-                  const external = m.links?.startsWith?.("http");
-                  const coming = m.links === "#";
-                  const Inner = (
-                    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-                      <div style={{ fontFamily: FONTS.mono, fontSize: 15, color: "#b4451f", marginBottom: 18 }}>&lt;/&gt;</div>
-                      <h3 style={{ fontFamily: FONTS.display, fontSize: 20, fontWeight: 400, letterSpacing: "-0.01em", margin: "0 0 10px", lineHeight: 1.2 }}>{m.title}</h3>
-                      <p style={{ fontSize: 13, color: "var(--bkb-textMuted)", lineHeight: 1.55, margin: "0 0 18px", flex: 1 }}>{m.description}</p>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: coming ? "var(--bkb-textSubtle)" : "var(--bkb-accent)", display: "inline-flex", alignItems: "center", gap: 5 }}>
-                        {coming ? (
-                          "Coming soon"
-                        ) : (
-                          <>
-                            Read more {external ? <ExternalLink className="w-3.5 h-3.5" /> : <span>→</span>}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  );
-                  const cs: React.CSSProperties = {
-                    padding: 24,
-                    borderRadius: 14,
-                    textDecoration: "none",
-                    color: "inherit",
-                    display: "block",
-                    height: "100%",
-                    background: "var(--bkb-surfaceAlt)",
-                  };
-                  return coming ? (
-                    <div key={i} className="bkb-card" style={cs}>{Inner}</div>
-                  ) : (
-                    <Link
-                      key={i}
-                      href={m.links}
-                      target={external ? "_blank" : "_self"}
-                      rel={external ? "noopener noreferrer" : ""}
-                      className="bkb-card"
-                      style={cs}
-                    >
-                      {Inner}
-                    </Link>
-                  );
-                })}
-            </div>
+            <WhereResultsGo />
           </div>
         </section>
 
-        {/* ── Powered by AI agents (technical credibility, dark) ───── */}
-        <section style={{ background: "linear-gradient(160deg, #15271e 0%, #0c1611 60%)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-          <div className="home-pad home-pad-y" style={{ padding: "104px 64px", maxWidth: 1200, margin: "0 auto" }}>
-            <div className="home-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "start" }}>
-              <div>
-                <div style={{ fontFamily: FONTS.mono, fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "#3ecf8e", fontWeight: 600, marginBottom: 18 }}>
-                  {yaml.publications?.eyebrow || "Under the Hood"}
-                </div>
-                <h2 style={{ fontFamily: FONTS.display, fontSize: "clamp(30px, 6vw, 44px)", fontWeight: 400, color: "#f0eee9", letterSpacing: "-0.02em", lineHeight: 1.1, margin: 0 }}>
-                  {yaml.publications?.title || "Powered by advanced AI agents."}
-                </h2>
-                <p style={{ fontSize: 16, color: "rgba(240,238,233,0.7)", lineHeight: 1.7, margin: "20px 0 0", maxWidth: 480 }}>
-                  {yaml.publications?.description}
-                </p>
-              </div>
-              {yaml.publications?.citation && (
-                <div style={{ border: "1px solid rgba(255,255,255,0.14)", borderRadius: 18, padding: 36, background: "rgba(255,255,255,0.02)" }}>
-                  <div style={{ fontFamily: FONTS.mono, fontSize: 11.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "#3ecf8e", marginBottom: 18 }}>
-                    {(yaml.publications.citation.label || "Research Citation").replace(/:\s*$/, "")}
-                  </div>
-                  <p style={{ fontFamily: FONTS.mono, fontSize: 13.5, color: "rgba(240,238,233,0.85)", lineHeight: 1.7, margin: "0 0 24px" }}>
-                    {yaml.publications.citation.text}
-                  </p>
-                  <a
-                    href={yaml.publications.citation.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#1db981", color: "#0c1611", fontWeight: 600, fontSize: 14, padding: "11px 20px", borderRadius: 10, textDecoration: "none" }}
-                  >
-                    <Sparkles className="w-3.5 h-3.5" /> {yaml.publications.citation.button_text || "See research paper"} →
-                  </a>
-                </div>
-              )}
-            </div>
+        <section className="cta">
+          <div>
+            <h2>
+              Stop digging through PDFs.
+              <br />
+              Ask the graph.
+            </h2>
+            <p>Open to read, yours to run, shared with the community when you choose.</p>
+          </div>
+          <div className="actions">
+            <FocusSearchLink className="btn primary">Search BrainKB</FocusSearchLink>
+            <a className="btn" href="#agents">Connect your agent</a>
+            <a className="btn" href="#decentralized">Run it locally</a>
           </div>
         </section>
-      </Theme>
+      </main>
+
+      <MarketingFooter />
     </div>
   );
 }

@@ -1,49 +1,23 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Database, Brain, FileText, Upload, User, Activity } from "lucide-react";
-import { ENABLE_EXTRACTION_TOOLS, EXTRACTION_TOOL_HREFS } from "@/src/config/featureFlags";
+import { LayoutDashboard, Activity } from "lucide-react";
 
 const UserSideBar: React.FC = () => {
     const pathname = usePathname();
 
-    const allMenuItems = [
+    const menuItems = [
         {
             title: "Dashboard",
             href: "/user/dashboard",
             icon: LayoutDashboard,
         },
         {
-            title: "NER Extraction",
-            href: "/user/sie",
-            icon: Brain,
-        },
-        {
-            title: "Resource Extraction",
-            href: "/user/extract-resource",
-            icon: FileText,
-        },
-        {
             title: "Job Status",
             href: "/user/job-status",
             icon: Activity,
         },
-//         {
-//             title: "Pdf2Reproschema",
-//             href: "/user/pdf2reproschema",
-//             icon: Upload,
-//         },
-
     ];
-
-    // Hide the extraction tools while the backend cannot serve them — ml_service
-    // does not register their WebSocket endpoints without the structsense package.
-    // Entries are kept above, not deleted, so flipping the flag restores them.
-    const menuItems = ENABLE_EXTRACTION_TOOLS
-        ? allMenuItems
-        : allMenuItems.filter(
-              (item) => !(EXTRACTION_TOOL_HREFS as readonly string[]).includes(item.href),
-          );
 
     return (
         <>

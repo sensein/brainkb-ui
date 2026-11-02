@@ -1810,6 +1810,15 @@ function ReviewDetail({ reviewId }: { reviewId: string }) {
                   below — no longer a separate-page link. */}
               <button
                 className="bkb-btn bkb-btn-ghost"
+                onClick={() => exportMut.mutate({ reviewId, format: "pdf" })}
+                disabled={exportMut.isPending}
+                title="The review rendered as PDF"
+              >
+                <Icon name="evidence" size={11} />{" "}
+                {exportMut.isPending && exportMut.variables?.format === "pdf" ? "PDF…" : "PDF"}
+              </button>
+              <button
+                className="bkb-btn bkb-btn-ghost"
                 onClick={() => exportMut.mutate({ reviewId, format: "markdown" })}
                 disabled={exportMut.isPending}
               >
@@ -2474,14 +2483,20 @@ export default function SynthScholarPage() {
             Literature review (PRISMA-guided).
           </div>
         </div>
-        <button
-          type="button"
-          onClick={goToNew}
-          className="bkb-btn bkb-btn-primary"
-          style={{ fontSize: 13 }}
-        >
-          <Icon name="plus" size={12} /> Start a new review
-        </button>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {/* A review run with the synthscholar skill is ingested into a space. */}
+          <a href="/user/ingest-kg?kind=synthscholar" className="bkb-btn bkb-btn-ghost" style={{ fontSize: 13 }}>
+            Ingest a local run
+          </a>
+          <button
+            type="button"
+            onClick={goToNew}
+            className="bkb-btn bkb-btn-primary"
+            style={{ fontSize: 13 }}
+          >
+            <Icon name="plus" size={12} /> Start a new review
+          </button>
+        </div>
       </div>
 
       {/* home-2col collapses the list + detail columns to a single column on tablet/phone */}

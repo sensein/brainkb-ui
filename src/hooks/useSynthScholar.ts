@@ -188,6 +188,7 @@ function _downloadExport(blob: Blob, format: ExportFormat, model?: string) {
     charting_markdown: "md", charting_json: "json",
     appraisal_markdown: "md", appraisal_json: "json",
     narrative_summary_markdown: "md", narrative_summary_json: "json",
+    pdf: "pdf",
   };
   const STEM: Record<string, string> = {
     rubric_markdown: "prisma_rubrics", rubric_json: "prisma_rubrics",

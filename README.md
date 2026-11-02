@@ -382,6 +382,10 @@ The UI integrates with the `usermanagement_service` FastAPI backend
 - `/api/users/me` — fetched by `useCurrentUser()` to expose `isAdmin` / `hasRole`.
 - `/api/admin/*` — wrapped in `src/services/api/userManagement.ts`; powers the
   admin surfaces under `src/app/admin/{users,roles,page-access,dashboard}`.
+- The query service (spaces, capabilities, reserved graphs), through the Next.js
+  proxies under `src/app/api/{spaces,capabilities,reserved-graphs}` — powers
+  `/user/spaces`, `/admin/capabilities` and `/admin/reserved-graphs` (see
+  [Spaces and knowledge-graph permissions](#spaces-and-knowledge-graph-permissions)).
 - `/api/access/page/<page_key>` — checked by `<PageAccessGate>`
   (`src/app/components/auth/PageAccessGate.tsx`) on every workflow tool page.
 
@@ -616,6 +620,53 @@ set `adminOnly` only on the gate, the admin UI just shows the tool in
 the unregistered banner pointlessly; if you set it only on the registry,
 non-admins can still access the page (whatever its page-access entry
 says). Both should match.
+
+## Spaces and knowledge-graph permissions
+
+`/user/spaces` lists the spaces you can see and the controls your role allows; the
+query service enforces every rule (the UI only hides controls you couldn't use).
+
+| Who | Can do, from the UI |
+|---|---|
+| Anyone signed in | Create an individual space; see their spaces and all public ones |
+| A space's owner / manager | Switch it private/public; add, change or remove members (viewer, editor, owner); add **access rules**; create **subspaces** |
+| Admin / SuperAdmin | All of the above on every space; **Capabilities** and **Reserved graphs** pages |
+| SuperAdmin only | **Delete** a space |
+
+- **Subspaces.** "New subspace" on a space you manage creates one inside it, to any
+  depth; the list shows them as a tree. Everything in a public space is public: making a
+  space public makes its subspaces public, and they can't be made private on their own
+  (shown as "Public because … is public"). Under a private space each subspace can be
+  public or private. People with a role in a space have the same
+  role in every subspace below it (marked "from parent"); a subspace can add its own
+  members. Inherited members appear read-only under Manage access, with the space
+  they come from. Visibility is per space.
+- **Ingesting** (`/user/ingest-kg`). First say what you are ingesting — nothing is guessed from the files:
+  - **RDF files.** You pick a space, then one of its graphs. Only spaces you can add data to are listed — as an owner or editor (including a role from a parent space), through a write access rule, or as an admin — shown as a tree. A space with no graph yet gets an "Add graph to this space" form; graphs in no space are listed separately.
+  - **SynthScholar review.** Choose the output folder of a SynthScholar run (the folder holding `review.json` and `review.ttl`) and a space you own or edit. You see what will be kept; intermediate `work/` is left out and never uploaded (and recorded as left out). The query service puts the review's RDF and an import record (PROV-O, linking every kept file) into its own graph `https://brainkb.org/synthscholar/reviews/<review id>/` as an ordinary ingest job, and keeps the files. The page asks before you leave mid-upload; once the upload is done the rest runs on the server. `/user/ingest-kg?kind=synthscholar` opens this directly (SynthScholar → *Ingest a local run*).
+- **Ingested SynthScholar reviews** (`/knowledge-base/synth-scholar`, listed under the reviews run on BrainKB; `/knowledge-base/synth-scholar/ingested/[id]`). *Review*, *Manuscript* (the run's manuscript with its figures), *Files* and *Provenance* (who ingested it and when, space, graph and job, the run's searches, what each screening decision was judged on, full-text retrieval, verification). Visible to whoever can read the space. Reviews run on BrainKB also download as *PDF*.
+- **Access rules** (Manage access → Access rules). Allow a whole group (by role), one
+  person, or members of at least a given space role to **read**, **write** (add data)
+  or **manage** a space, without adding each of them as a member. Once an action has
+  rules, only people who match one can do it; the owner and admins always can.
+- **Deleting a space** (SuperAdmin): "Delete" on the space, then type its slug. It
+  removes the space's graphs, their ingestion history copies, members, rules, search
+  entries and literature reviews; the deletion itself is kept in the provenance record.
+  Its subspaces, at any depth, are deleted with it (the confirmation lists them).
+- **Capabilities** (`/admin/capabilities`, Admin/SuperAdmin). Look up a person to see
+  their roles and what they can do, then grant or revoke an extra capability — e.g.
+  create or manage team spaces, ingest, recover jobs, read private content — for that
+  person or for everyone with a role. `grant` and `sparql_admin` stay admin-only. To
+  make someone an **admin**, assign the role under **Users** (assigning Admin is
+  SuperAdmin-only).
+- **Reserved graphs** (`/admin/reserved-graphs`, Admin/SuperAdmin). Reserve one graph
+  IRI or every IRI under a prefix, with a reason, optionally for one space; then only
+  admins — or that space's managers — can register or add it. BrainKB's own metadata
+  and provenance graphs are always reserved and listed read-only.
+
+The same operations are available to AI assistants through the BrainKB MCP server
+(`brainkb_create_space(parent_slug=…)`, `brainkb_space_tree`, `brainkb_add_access_rule`,
+`brainkb_grant_capability`, `brainkb_reserve_graph`, `brainkb_delete_space`, …).
 
 ## OpenRouter API key (shared + personal)
 
