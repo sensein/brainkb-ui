@@ -29,7 +29,7 @@ interface InstallCardProps {
 
 const COMPACT_CLIENTS = ["Claude Code", "Perplexity · claude.ai · ChatGPT", "Cursor"];
 
-export default function InstallCard({ authNote = false, skillHref = "/mcp#skill", compact = false }: InstallCardProps) {
+export default function InstallCard({ authNote = false, skillHref = "/mcp#setup-skill", compact = false }: InstallCardProps) {
   const [i, setI] = useState(0);
   const [copied, setCopied] = useState(false);
   const clients = compact ? MCP_CLIENTS.filter((x) => COMPACT_CLIENTS.includes(x.name)) : MCP_CLIENTS;

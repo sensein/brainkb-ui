@@ -199,7 +199,7 @@ export default function HomePage() {
               </p>
               <div className="connect-links">
                 <Link className="btn primary" href="/mcp">Set up your client →</Link>
-                <Link className="btn" href="/mcp#skill">Install the BrainKB skill</Link>
+                <Link className="btn" href="/mcp#setup-skill">Install the BrainKB skill</Link>
               </div>
             </div>
             <InstallCard compact />
@@ -217,7 +217,7 @@ export default function HomePage() {
               <p>Run the MCP server locally and point it at your own BrainKB.</p>
               <div className="code">MCP_TRANSPORT=<b>stdio</b></div>
             </div>
-            <Link className="way" href="/mcp#skill">
+            <Link className="way" href="/mcp#setup-skill">
               <span className="lbl">BrainKB skill</span>
               <h3>Teach your agent</h3>
               <p>Installs the BrainKB skill and registers the MCP server with Claude Code; other agents add the server themselves.</p>
