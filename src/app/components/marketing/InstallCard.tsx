@@ -102,7 +102,7 @@ export default function InstallCard({ authNote = false, skillHref = "/mcp#setup-
       )}
       {authNote && (
         <p className="muted-p">
-          <span className="ok">✓</span> tested with BrainKB. No login is needed to read public spaces; for anything
+          <span className="ok">✓</span> tested with BrainKB. No sign-in is needed to read public spaces; for anything
           else your agent signs you in with Globus, ORCID or GitHub. More detail:{" "}
           <a href={MCP_SITE} target="_blank" rel="noopener noreferrer">setup guide ↗</a>
         </p>

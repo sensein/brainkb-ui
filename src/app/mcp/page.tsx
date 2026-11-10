@@ -60,7 +60,7 @@ export default function McpPage() {
             <span className="eyebrow title">Agent-ready · MCP</span>
             <h1>Use BrainKB from your AI agent.</h1>
             <p className="lead">
-              Connect Claude, Codex, VS Code and other MCP-compatible clients to BrainKB. Search neuroscience
+              Connect Claude, ChatGPT, Codex, Cursor, VS Code and other MCP clients to BrainKB. Search neuroscience
               knowledge, explore evidence-linked relationships, and work with your knowledge spaces in natural
               language.
             </p>
@@ -156,7 +156,7 @@ export default function McpPage() {
         <section className="help">
           <div>
             <h3>Need help connecting your client?</h3>
-            <p>Configuration examples, authentication and troubleshooting for Claude Code, Codex, VS Code, Cursor, Copilot and other clients.</p>
+            <p>Configuration examples, authentication and troubleshooting for Claude, ChatGPT, Codex, Cursor, VS Code and other clients.</p>
           </div>
           <a className="btn" href={MCP_SITE} target="_blank" rel="noopener noreferrer">Full setup guide ↗</a>
         </section>

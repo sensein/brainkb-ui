@@ -24,9 +24,9 @@ import "./components/marketing/landing/landing.css";
 
 const PILLARS = [
   { href: "#connected", k: "c", name: "Connected", title: "Knowledge, not silos.", desc: "Facts are extracted from papers, datasets and reviews, then linked in one knowledge graph so you can discover connections across studies.", go: "See the graph →" },
-  { href: "#open", k: "g", name: "Open", title: "No login to read.", desc: "Public spaces are open to everyone: search, browse and download.", go: "What's open →" },
-  { href: "#agents", k: "b", name: "Agent-ready", title: "Bring your own client.", desc: "Ask Claude, ChatGPT, Perplexity, Cursor or VS Code to search and discover across the graph, over MCP and skills.", go: "Connect an agent →" },
-  { href: "#provenance", k: "a", name: "Provenance", title: "Every fact has a source.", desc: "Who added it, when, how, and from which sentence of which paper it was extracted.", go: "Trace a fact →" },
+  { href: "#open", k: "g", name: "Open", title: "No sign-in to read.", desc: "Public spaces are open to everyone: search, browse and download.", go: "What's open →" },
+  { href: "#agents", k: "b", name: "Agent-ready", title: "Bring your own client.", desc: "Ask Claude, ChatGPT, Codex, Cursor, VS Code or another MCP client to search and discover across the graph.", go: "Connect an agent →" },
+  { href: "#provenance", k: "a", name: "Provenance", title: "Every fact has a history.", desc: "Who added it, when, how, and from which sentence of which paper it was extracted.", go: "Trace a fact →" },
   { href: "#decentralized", k: "v", name: "Decentralized", title: "Run it. Share if you want.", desc: "Run BrainKB and its extraction tools yourself. Contribute to the community only when you choose.", go: "Run & share →" },
 ];
 
@@ -49,7 +49,7 @@ const LOGGED_IN = [
   "Ingest RDF, extract entities, run reviews",
   "Share spaces and publish them openly",
   "Provenance and change history",
-  "Log in with Globus, ORCID or GitHub",
+  "Sign in with Globus, ORCID or GitHub",
 ];
 
 const DECENTRALIZED = [
@@ -133,7 +133,7 @@ export default function HomePage() {
         </section>
 
         <section className="section flush" id="who">
-          <SectionTitle eyebrow="Who it's for" title={["Less searching.", "More science."]}>
+          <SectionTitle eyebrow="Who it's for" title={["Built for researchers,", "labs and builders."]}>
             One knowledge base, three ways it pays off.
           </SectionTitle>
           <div className="grid3">
@@ -149,13 +149,13 @@ export default function HomePage() {
         </section>
 
         <section className="section open" id="open">
-          <SectionTitle eyebrow="Open knowledge · no login" title={["Access open knowledge.", "No need to log in."]}>
+          <SectionTitle eyebrow="Open knowledge · no login" title={["Access open knowledge.", "No need to sign in."]}>
             Public spaces in BrainKB are open to everyone. Search, browse and read them without an account. It is
-            read-only: nothing can be added or changed without logging in.
+            read-only: nothing can be added or changed without signing in.
           </SectionTitle>
           <div className="access">
             <div className="access-card free">
-              <h3>No login <span className="tag green">READ-ONLY</span></h3>
+              <h3>No sign-in <span className="tag green">READ-ONLY</span></h3>
               <p className="sub">Anyone, from the web, an AI agent or the API.</p>
               <ul>
                 {NO_LOGIN.map((l) => (
@@ -167,7 +167,7 @@ export default function HomePage() {
               </ul>
             </div>
             <div className="access-card">
-              <h3>Logged in <span className="tag blue">YOUR ACCOUNT</span></h3>
+              <h3>Signed in <span className="tag blue">YOUR ACCOUNT</span></h3>
               <p className="sub">Everything on the left, plus what your role allows.</p>
               <ul>
                 {LOGGED_IN.map((t) => (
@@ -185,12 +185,12 @@ export default function HomePage() {
         <section className="section flush" id="agents">
           <SectionTitle eyebrow="Agent-ready" title={["Use BrainKB from", "your favorite client."]}>
             BrainKB is built to be driven by AI agents. Any MCP client can search, read, ingest and trace provenance in
-            plain language, and public data needs no login.
+            plain language, and public data needs no sign-in.
           </SectionTitle>
           <div className="connect-row">
             <div>
               <p>
-                Point your client at <code>{MCP_ENDPOINT}</code>. Public data needs no login; for anything else your
+                Point your client at <code>{MCP_ENDPOINT}</code>. Public data needs no sign-in; for anything else your
                 client signs in as you, never with a shared account.
               </p>
               <p>
@@ -208,7 +208,7 @@ export default function HomePage() {
             <Link className="way" href="/mcp">
               <span className="lbl">Hosted MCP</span>
               <h3>Connect by URL</h3>
-              <p>Add one URL to your client. Log in only when you need private data.</p>
+              <p>Add one URL to your client. Sign in only when you need private data.</p>
               <div className="code"><b>https://</b>{MCP_ENDPOINT.replace(/^https?:\/\//, "")}</div>
             </Link>
             <div className="way">

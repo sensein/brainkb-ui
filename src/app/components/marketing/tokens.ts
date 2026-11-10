@@ -84,7 +84,7 @@ export const MCP_CLIENTS = [
 2. Server URL      ${MCP_ENDPOINT}
 3. Authentication  OAuth (leave client ID and secret empty)
 4. Sign in on the BrainKB page that opens, then allow access`,
-    steps: ["Only reading open knowledge? No need to log in: public spaces can be listed, searched and read without authentication."],
+    steps: ["Only reading open knowledge? No need to sign in: public spaces can be listed, searched and read without authentication."],
   },
   {
     name: "Cursor",

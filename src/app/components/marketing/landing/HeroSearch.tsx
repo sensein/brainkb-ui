@@ -66,7 +66,7 @@ export default function HeroSearch() {
         </button>
       </label>
       <div className="try">
-        <b>Try it now, no login:</b>
+        <b>Try it now, no sign-in:</b>
         {TRY.map((t) => (
           <button
             key={t}
