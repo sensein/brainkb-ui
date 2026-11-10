@@ -14,8 +14,6 @@ html:has(.lp){scroll-behavior:smooth}
 .lp code,.lp .mono{font-family:var(--font-plex-mono),ui-monospace,SFMono-Regular,Menlo,monospace}
 .lp .wrap{max-width:1360px;width:100%;margin:0 auto;padding:0 40px}
 .lp .eyebrow{font:12px var(--font-plex-mono),monospace;letter-spacing:1.5px;color:var(--blue);text-transform:uppercase}
-/* A section label set as a title (Use with AI page): larger, sans, sentence case. */
-.lp .eyebrow.title{display:inline-block;font:600 22px/1.25 var(--font-dm-sans),system-ui,sans-serif;letter-spacing:-.3px;text-transform:none}
 .lp h2{font-size:39px;font-weight:550;letter-spacing:-1.5px;margin:12px 0 0;line-height:1.18}
 .lp .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:7px;padding:12px 20px;font-size:14px;font-weight:600;transition:transform .2s,background .2s}
 .lp .btn:hover{background:#f1f4ff;transform:translateY(-2px)}
@@ -332,7 +330,6 @@ html:has(.lp){scroll-behavior:smooth}
   .lp .hero{padding:40px 0 44px}.lp h1{font-size:40px;letter-spacing:-2px}.lp .lead{font-size:16px}
   .lp .searchbox{padding:6px 6px 6px 14px}.lp .searchbox input{font-size:16px}.lp .searchbox kbd{display:none}.lp .searchbox .btn{padding:11px 14px}
   .lp .section{padding:58px 0}.lp .section-title{display:block}.lp .section-title>p{margin-top:16px}.lp h2{font-size:31px}
-  .lp .eyebrow.title{font-size:18px}
   .lp .grid3,.lp .access{grid-template-columns:1fr}.lp .flow{grid-template-columns:1fr}.lp .prov-points{grid-template-columns:1fr}
   .lp .cta{display:block;padding:32px 26px}.lp .cta .actions{margin-top:20px}
   .lp .section.open{padding:44px 20px;border-radius:14px}
@@ -683,3 +680,12 @@ html:has(.lp){scroll-behavior:smooth}
 @media(max-width:1100px){.lp .skill-steps.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:900px){.lp .ex-flow,.lp .ex-result{grid-template-columns:1fr}.lp .two-parts{grid-template-columns:1fr}}
 @media(max-width:680px){.lp .skill-steps.four{grid-template-columns:1fr}.lp .help{flex-direction:column;align-items:flex-start}.lp .example{padding:20px}.lp .ex-ask p{font-size:17px}}
+
+/* Section labels set as titles (Use with AI page): larger, sans, sentence case.
+   The heading under one steps down so the label leads. Kept last so these
+   override the page-hero h1 sizes above. */
+.lp .eyebrow.title{display:inline-block;font:600 28px/1.2 var(--font-dm-sans),system-ui,sans-serif;letter-spacing:-.5px;text-transform:none}
+.lp .eyebrow.title+h1{font-size:46px;letter-spacing:-1.8px;margin-top:14px}
+.lp .eyebrow.title+h2{font-size:32px;letter-spacing:-1px}
+@media(max-width:900px){.lp .eyebrow.title+h1{font-size:38px}}
+@media(max-width:680px){.lp .eyebrow.title{font-size:22px}.lp .eyebrow.title+h1{font-size:30px;letter-spacing:-1.2px}.lp .eyebrow.title+h2{font-size:26px}}
