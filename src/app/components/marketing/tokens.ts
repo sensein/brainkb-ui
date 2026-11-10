@@ -45,7 +45,7 @@ export const MCP_ENDPOINT = env.mcpEndpoint;
 // `npx brainkb install` registers production by default; add this on sandbox.
 export const MCP_FLAG = /\/\/mcp\.sandbox\./.test(MCP_ENDPOINT) ? " --mcp sandbox" : "";
 
-// The MCP server's own site (full per-client setup, FAQ), e.g. https://mcp.brainkb.org.
+// The MCP server's own site (full per-client setup, FAQ), e.g. https://mcp.sandbox.brainkb.org.
 export const MCP_SITE = MCP_ENDPOINT.replace(/\/mcp$/, "");
 
 // Setup per client, as on the MCP server's site (MCP_SITE). `tested` marks the
