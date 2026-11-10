@@ -57,12 +57,12 @@ export default function McpPage() {
       <main className="wrap">
         <section className="hero page" id="connect">
           <div className="hero-copy">
-            <span className="eyebrow">Agent-ready · MCP</span>
-            <h1>Use BrainKB from your AI agent.</h1>
+            <span className="eyebrow title">Use BrainKB from your AI agent</span>
+            <h1>Ask in plain language, get sourced answers.</h1>
             <p className="lead">
-              Connect Claude, Codex, VS Code and other MCP-compatible clients to BrainKB. Search neuroscience
-              knowledge, explore evidence-linked relationships, and work with your knowledge spaces in natural
-              language.
+              Connect Claude, ChatGPT, Codex, Cursor, VS Code and other MCP clients (MCP is the open protocol AI
+              assistants use to call tools) to BrainKB. Search neuroscience knowledge, explore evidence-linked
+              relationships, and work with your knowledge spaces in natural language.
             </p>
             <ul className="chips" aria-label="What you get">
               <li><a href="#setup-mcp">MCP server</a></li>
@@ -95,10 +95,10 @@ export default function McpPage() {
         <div className="wrap">
           <div className="section-title">
             <div>
-              <span className="eyebrow">What your agent can do</span>
-              <h2>Less SPARQL.<br />More science.</h2>
+              <span className="eyebrow title">What your agent can do</span>
+              <h2>Less SPARQL. More science.</h2>
+              <p className="title-lead one-line">No SPARQL queries to write: your agent picks the right BrainKB tools.</p>
             </div>
-            <p>Ask in plain language and your agent picks the right BrainKB tools. For example:</p>
           </div>
           <Group id="research" title="Research with your agent" caps={RESEARCH} />
           <Group id="manage" title="Manage knowledge" caps={MANAGE} />
@@ -109,13 +109,13 @@ export default function McpPage() {
         <section className="section" id="example">
           <div className="section-title">
             <div>
-              <span className="eyebrow">Research in action</span>
-              <h2>One question,<br />traced to its evidence.</h2>
+              <span className="eyebrow title">Research in action</span>
+              <h2>One question, traced to its evidence.</h2>
+              <p className="title-lead">
+                Why connect BrainKB to your agent: it answers from linked, sourced knowledge instead of from memory, and
+                shows you where each part of the answer came from.
+              </p>
             </div>
-            <p>
-              Why connect BrainKB to your agent: it answers from linked, sourced knowledge instead of from memory, and
-              shows you where each part of the answer came from.
-            </p>
           </div>
           <div className="example">
             <div className="ex-ask">
@@ -145,7 +145,7 @@ export default function McpPage() {
         <section className="section" id="setup">
           <div className="section-title center">
             <div>
-              <span className="eyebrow">Set up</span>
+              <span className="eyebrow title">Set up</span>
               <h2>Connect, sign in, check.</h2>
               <p>Pick the BrainKB skill (recommended) or connect the MCP server alone.</p>
             </div>
@@ -156,7 +156,7 @@ export default function McpPage() {
         <section className="help">
           <div>
             <h3>Need help connecting your client?</h3>
-            <p>Configuration examples, authentication and troubleshooting for Claude Code, Codex, VS Code, Cursor, Copilot and other clients.</p>
+            <p>Configuration examples, authentication and troubleshooting for Claude, ChatGPT, Codex, Cursor, VS Code and other clients.</p>
           </div>
           <a className="btn" href={MCP_SITE} target="_blank" rel="noopener noreferrer">Full setup guide ↗</a>
         </section>

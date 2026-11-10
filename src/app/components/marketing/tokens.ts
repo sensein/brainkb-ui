@@ -45,7 +45,7 @@ export const MCP_ENDPOINT = env.mcpEndpoint;
 // `npx brainkb install` registers production by default; add this on sandbox.
 export const MCP_FLAG = /\/\/mcp\.sandbox\./.test(MCP_ENDPOINT) ? " --mcp sandbox" : "";
 
-// The MCP server's own site (full per-client setup, FAQ), e.g. https://mcp.brainkb.org.
+// The MCP server's own site (full per-client setup, FAQ), e.g. https://mcp.sandbox.brainkb.org.
 export const MCP_SITE = MCP_ENDPOINT.replace(/\/mcp$/, "");
 
 // Setup per client, as on the MCP server's site (MCP_SITE). `tested` marks the
@@ -84,7 +84,7 @@ export const MCP_CLIENTS = [
 2. Server URL      ${MCP_ENDPOINT}
 3. Authentication  OAuth (leave client ID and secret empty)
 4. Sign in on the BrainKB page that opens, then allow access`,
-    steps: ["Only reading open knowledge? No need to log in: public spaces can be listed, searched and read without authentication."],
+    steps: ["Only reading open knowledge? No need to sign in: public spaces can be listed, searched and read without authentication."],
   },
   {
     name: "Cursor",

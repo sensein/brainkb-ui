@@ -130,7 +130,7 @@ sections:
                     cmd: |-
                       claude v0.1.1, current — /Users/you/.claude/skills/brainkb
                       codex  not installed (/Users/you/.agents/skills/brainkb)
-                      MCP    brainkb: registered (https://mcp.brainkb.org/mcp)
+                      MCP    brainkb: registered (https://mcp.sandbox.brainkb.org/mcp)
             - p: >-
                 `status` reports the MCP registration for Claude Code only. In any assistant, ask it to
                 describe the skill:

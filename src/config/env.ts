@@ -140,11 +140,11 @@ class EnvConfigManager {
 
   /**
    * Public MCP endpoint shown on the marketing pages, e.g.
-   * https://mcp.sandbox.brainkb.org/mcp (sandbox) or
-   * https://mcp.brainkb.org/mcp (production, the default).
+   * https://mcp.sandbox.brainkb.org/mcp (sandbox, the default) or
+   * https://mcp.brainkb.org/mcp (production).
    */
   public get mcpEndpoint(): string {
-    const base = (this.config.NEXT_PUBLIC_MCP_BASE_URL || 'https://mcp.brainkb.org').replace(/\/+$/, '');
+    const base = (this.config.NEXT_PUBLIC_MCP_BASE_URL || 'https://mcp.sandbox.brainkb.org').replace(/\/+$/, '');
     return `${base}/mcp`;
   }
 

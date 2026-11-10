@@ -13,7 +13,7 @@ const SCENES: Scene[] = [
     tab: "Ask an agent",
     icon: "✳",
     ctx: `Claude · ${MCP_ENDPOINT.replace(/^https?:\/\//, "")}`,
-    badge: "NO LOGIN",
+    badge: "NO SIGN-IN",
     via: <>Works in <b>Claude</b>, <b>ChatGPT</b>, <b>Perplexity</b>, <b>Cursor</b>…</>,
     lines: [
       ["ask", "Which genes are linked to disease-associated microglia in Alzheimer’s disease?"],

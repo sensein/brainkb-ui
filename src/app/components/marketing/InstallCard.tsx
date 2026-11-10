@@ -29,7 +29,7 @@ interface InstallCardProps {
 
 const COMPACT_CLIENTS = ["Claude Code", "Perplexity · claude.ai · ChatGPT", "Cursor"];
 
-export default function InstallCard({ authNote = false, skillHref = "/mcp#skill", compact = false }: InstallCardProps) {
+export default function InstallCard({ authNote = false, skillHref = "/mcp#setup-skill", compact = false }: InstallCardProps) {
   const [i, setI] = useState(0);
   const [copied, setCopied] = useState(false);
   const clients = compact ? MCP_CLIENTS.filter((x) => COMPACT_CLIENTS.includes(x.name)) : MCP_CLIENTS;
@@ -102,7 +102,7 @@ export default function InstallCard({ authNote = false, skillHref = "/mcp#skill"
       )}
       {authNote && (
         <p className="muted-p">
-          <span className="ok">✓</span> tested with BrainKB. No login is needed to read public spaces; for anything
+          <span className="ok">✓</span> tested with BrainKB. No sign-in is needed to read public spaces; for anything
           else your agent signs you in with Globus, ORCID or GitHub. More detail:{" "}
           <a href={MCP_SITE} target="_blank" rel="noopener noreferrer">setup guide ↗</a>
         </p>

@@ -680,3 +680,15 @@ html:has(.lp){scroll-behavior:smooth}
 @media(max-width:1100px){.lp .skill-steps.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:900px){.lp .ex-flow,.lp .ex-result{grid-template-columns:1fr}.lp .two-parts{grid-template-columns:1fr}}
 @media(max-width:680px){.lp .skill-steps.four{grid-template-columns:1fr}.lp .help{flex-direction:column;align-items:flex-start}.lp .example{padding:20px}.lp .ex-ask p{font-size:17px}}
+
+/* Section labels set as titles (Use with AI page): the blue label is the big
+   line and the heading under it is the smaller one. Kept last so these
+   override the page-hero h1 sizes above. */
+.lp .eyebrow.title{display:inline-block;font:600 32px/1.15 var(--font-dm-sans),system-ui,sans-serif;letter-spacing:-1px;text-transform:none;text-wrap:balance}
+.lp .hero-copy .eyebrow.title{font-size:46px;letter-spacing:-1.8px}
+.lp .eyebrow.title+h1,.lp .eyebrow.title+h2{font-size:28px;line-height:1.2;letter-spacing:-.5px;margin:12px 0 0}
+.lp .eyebrow.title+h1{margin-bottom:18px}
+.lp .section-title .title-lead{margin:14px 0 0;max-width:1040px;font-size:19px;line-height:1.6;color:var(--muted)}
+@media(min-width:901px){.lp .section-title .title-lead.one-line{max-width:none;white-space:nowrap}}
+@media(max-width:900px){.lp .hero-copy .eyebrow.title{font-size:38px}}
+@media(max-width:680px){.lp .eyebrow.title{font-size:26px}.lp .hero-copy .eyebrow.title{font-size:30px;letter-spacing:-1.2px}.lp .eyebrow.title+h1,.lp .eyebrow.title+h2{font-size:22px}.lp .section-title .title-lead{font-size:17px}}

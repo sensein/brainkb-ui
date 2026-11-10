@@ -24,14 +24,14 @@ import "./components/marketing/landing/landing.css";
 
 const PILLARS = [
   { href: "#connected", k: "c", name: "Connected", title: "Knowledge, not silos.", desc: "Facts are extracted from papers, datasets and reviews, then linked in one knowledge graph so you can discover connections across studies.", go: "See the graph →" },
-  { href: "#open", k: "g", name: "Open", title: "No login to read.", desc: "Public spaces are open to everyone: search, browse and download.", go: "What's open →" },
-  { href: "#agents", k: "b", name: "Agent-ready", title: "Bring your own client.", desc: "Ask Claude, ChatGPT, Perplexity, Cursor or VS Code to search and discover across the graph, over MCP and skills.", go: "Connect an agent →" },
-  { href: "#provenance", k: "a", name: "Provenance", title: "Every fact has a source.", desc: "Who added it, when, how, and from which sentence of which paper it was extracted.", go: "Trace a fact →" },
+  { href: "#open", k: "g", name: "Open", title: "No sign-in to read.", desc: "Public spaces are open to everyone: search, browse and download.", go: "What's open →" },
+  { href: "#agents", k: "b", name: "Agent-ready", title: "Bring your own client.", desc: "Ask Claude, ChatGPT, Codex, Cursor, VS Code or another MCP client to search and discover across the graph.", go: "Connect an agent →" },
+  { href: "#provenance", k: "a", name: "Provenance", title: "Every fact has a history.", desc: "Who added it, when, how, and from which sentence of which paper it was extracted.", go: "Trace a fact →" },
   { href: "#decentralized", k: "v", name: "Decentralized", title: "Run it. Share if you want.", desc: "Run BrainKB and its extraction tools yourself. Contribute to the community only when you choose.", go: "Run & share →" },
 ];
 
 const AUDIENCES = [
-  { ico: "⌕", title: "Researchers", desc: "Answer questions across the literature in minutes, not weeks. Ask your agent in plain language and get linked answers with their sources.", more: "\"Which papers report PV cells in layer 4?\"" },
+  { ico: "⌕", title: "Researchers", desc: "Answer questions across the literature without reading every paper first. Ask your agent in plain language and get linked answers with their sources.", more: "\"Which papers report PV cells in layer 4?\"" },
   { ico: "▣", title: "Labs & consortia", desc: "Run your own BrainKB or use the shared one. Keep work private until it's ready, then publish it with full attribution.", more: "Private → team → public" },
   { ico: "⌘", title: "Tool & AI builders", desc: "Build on a knowledge graph instead of scraping PDFs: open standards (RDF, PROV-O), an open API, and MCP for agents.", more: "RDF · PROV-O · MCP · HTTP" },
 ];
@@ -39,7 +39,7 @@ const AUDIENCES = [
 const NO_LOGIN = [
   { ok: true, t: "Search across all public spaces" },
   { ok: true, t: "Browse and read public knowledge graphs" },
-  { ok: true, t: "Download public data as RDF" },
+  { ok: true, t: "Download public data as RDF, the standard linked-data format" },
   { ok: false, t: "Private spaces stay hidden" },
   { ok: false, t: "No ingest, editing or sharing" },
 ];
@@ -49,7 +49,7 @@ const LOGGED_IN = [
   "Ingest RDF, extract entities, run reviews",
   "Share spaces and publish them openly",
   "Provenance and change history",
-  "Log in with Globus, ORCID or GitHub",
+  "Sign in with Globus, ORCID or GitHub",
 ];
 
 const DECENTRALIZED = [
@@ -77,14 +77,10 @@ function SectionTitle({ eyebrow, color, title, children }: { eyebrow: string; co
   return (
     <div className="section-title">
       <div>
-        <span className="eyebrow" style={color ? { color } : undefined}>{eyebrow}</span>
-        <h2>
-          {title[0]}
-          <br />
-          {title[1]}
-        </h2>
+        <span className="eyebrow title" style={color ? { color } : undefined}>{eyebrow}</span>
+        <h2>{title.join(" ")}</h2>
+        <p className="title-lead">{children}</p>
       </div>
-      <p>{children}</p>
     </div>
   );
 }
@@ -103,10 +99,10 @@ export default function HomePage() {
             </h1>
             <p className="lead">
               Explore neuroscience findings as connected, evidence-linked knowledge. Discover relationships across
-              studies, trace each one to its source, and use the structured knowledge through search, SPARQL and AI
+              studies, trace each one to its source, and use the structured knowledge through search, SPARQL (the graph query language) and AI
               agents.
             </p>
-            <HeroSearch />
+            {/* <HeroSearch /> */}
           </div>
           <HeroDemo />
         </section>
@@ -124,9 +120,9 @@ export default function HomePage() {
         </section>
 
         <section className="section" id="connected">
-          <SectionTitle eyebrow="The problem → the fix" color="#0e7490" title={["Knowledge is stuck", "in silos."]}>
+          <SectionTitle eyebrow="Connected" color="#0e7490" title={["Knowledge is stuck", "in silos."]}>
             The same cell type appears under a dozen names, findings sit in PDFs and supplementary tables, and
-            nothing links one result to the next. Researchers spend weeks re-reading what&apos;s already known. BrainKB
+            nothing links one result to the next. Researchers end up re-reading what&apos;s already known. BrainKB
             resolves the names to one entity, so related facts are one query apart.
           </SectionTitle>
           <CompareSources />
@@ -137,7 +133,7 @@ export default function HomePage() {
         </section>
 
         <section className="section flush" id="who">
-          <SectionTitle eyebrow="Who it's for" title={["Less searching.", "More science."]}>
+          <SectionTitle eyebrow="Who it's for" title={["Built for researchers,", "labs and builders."]}>
             One knowledge base, three ways it pays off.
           </SectionTitle>
           <div className="grid3">
@@ -153,13 +149,13 @@ export default function HomePage() {
         </section>
 
         <section className="section open" id="open">
-          <SectionTitle eyebrow="Open knowledge · no login" title={["Access open knowledge.", "No need to log in."]}>
+          <SectionTitle eyebrow="Open knowledge" title={["No account needed", "to read."]}>
             Public spaces in BrainKB are open to everyone. Search, browse and read them without an account. It is
-            read-only: nothing can be added or changed without logging in.
+            read-only: nothing can be added or changed without signing in.
           </SectionTitle>
           <div className="access">
             <div className="access-card free">
-              <h3>No login <span className="tag green">READ-ONLY</span></h3>
+              <h3>No sign-in <span className="tag green">READ-ONLY</span></h3>
               <p className="sub">Anyone, from the web, an AI agent or the API.</p>
               <ul>
                 {NO_LOGIN.map((l) => (
@@ -171,7 +167,7 @@ export default function HomePage() {
               </ul>
             </div>
             <div className="access-card">
-              <h3>Logged in <span className="tag blue">YOUR ACCOUNT</span></h3>
+              <h3>Signed in <span className="tag blue">YOUR ACCOUNT</span></h3>
               <p className="sub">Everything on the left, plus what your role allows.</p>
               <ul>
                 {LOGGED_IN.map((t) => (
@@ -188,13 +184,13 @@ export default function HomePage() {
 
         <section className="section flush" id="agents">
           <SectionTitle eyebrow="Agent-ready" title={["Use BrainKB from", "your favorite client."]}>
-            BrainKB is built to be driven by AI agents. Any MCP client can search, read, ingest and trace provenance in
-            plain language, and public data needs no login.
+            BrainKB is built to be driven by AI agents. Any MCP client (MCP is the open protocol AI assistants use to call
+            tools) can search, read, ingest and trace provenance in plain language.
           </SectionTitle>
           <div className="connect-row">
             <div>
               <p>
-                Point your client at <code>{MCP_ENDPOINT}</code>. Public data needs no login; for anything else your
+                Point your client at <code>{MCP_ENDPOINT}</code>. Public data needs no sign-in; for anything else your
                 client signs in as you, never with a shared account.
               </p>
               <p>
@@ -203,7 +199,7 @@ export default function HomePage() {
               </p>
               <div className="connect-links">
                 <Link className="btn primary" href="/mcp">Set up your client →</Link>
-                <Link className="btn" href="/mcp#skill">Install the BrainKB skill</Link>
+                <Link className="btn" href="/mcp#setup-skill">Install the BrainKB skill</Link>
               </div>
             </div>
             <InstallCard compact />
@@ -212,7 +208,7 @@ export default function HomePage() {
             <Link className="way" href="/mcp">
               <span className="lbl">Hosted MCP</span>
               <h3>Connect by URL</h3>
-              <p>Add one URL to your client. Log in only when you need private data.</p>
+              <p>Add one URL to your client. Sign in only when you need private data.</p>
               <div className="code"><b>https://</b>{MCP_ENDPOINT.replace(/^https?:\/\//, "")}</div>
             </Link>
             <div className="way">
@@ -221,7 +217,7 @@ export default function HomePage() {
               <p>Run the MCP server locally and point it at your own BrainKB.</p>
               <div className="code">MCP_TRANSPORT=<b>stdio</b></div>
             </div>
-            <Link className="way" href="/mcp#skill">
+            <Link className="way" href="/mcp#setup-skill">
               <span className="lbl">BrainKB skill</span>
               <h3>Teach your agent</h3>
               <p>Installs the BrainKB skill and registers the MCP server with Claude Code; other agents add the server themselves.</p>
@@ -239,7 +235,7 @@ export default function HomePage() {
         <section className="section" id="provenance">
           <SectionTitle eyebrow="Provenance" title={["Every fact", "has a history."]}>
             Trust comes from being able to check. Every triple in BrainKB records who added it, when, by which
-            process and the evidence behind it, as W3C PROV-O you can query. Provenance helps you assess a claim; it
+            process and the evidence behind it, as W3C PROV-O (the standard provenance vocabulary) you can query. Provenance helps you assess a claim; it
             does not by itself make the claim correct.
           </SectionTitle>
           <div className="prov">
