@@ -14,6 +14,8 @@ html:has(.lp){scroll-behavior:smooth}
 .lp code,.lp .mono{font-family:var(--font-plex-mono),ui-monospace,SFMono-Regular,Menlo,monospace}
 .lp .wrap{max-width:1360px;width:100%;margin:0 auto;padding:0 40px}
 .lp .eyebrow{font:12px var(--font-plex-mono),monospace;letter-spacing:1.5px;color:var(--blue);text-transform:uppercase}
+/* A section label set as a title (Use with AI page): larger, sans, sentence case. */
+.lp .eyebrow.title{display:inline-block;font:600 22px/1.25 var(--font-dm-sans),system-ui,sans-serif;letter-spacing:-.3px;text-transform:none}
 .lp h2{font-size:39px;font-weight:550;letter-spacing:-1.5px;margin:12px 0 0;line-height:1.18}
 .lp .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:7px;padding:12px 20px;font-size:14px;font-weight:600;transition:transform .2s,background .2s}
 .lp .btn:hover{background:#f1f4ff;transform:translateY(-2px)}
@@ -330,6 +332,7 @@ html:has(.lp){scroll-behavior:smooth}
   .lp .hero{padding:40px 0 44px}.lp h1{font-size:40px;letter-spacing:-2px}.lp .lead{font-size:16px}
   .lp .searchbox{padding:6px 6px 6px 14px}.lp .searchbox input{font-size:16px}.lp .searchbox kbd{display:none}.lp .searchbox .btn{padding:11px 14px}
   .lp .section{padding:58px 0}.lp .section-title{display:block}.lp .section-title>p{margin-top:16px}.lp h2{font-size:31px}
+  .lp .eyebrow.title{font-size:18px}
   .lp .grid3,.lp .access{grid-template-columns:1fr}.lp .flow{grid-template-columns:1fr}.lp .prov-points{grid-template-columns:1fr}
   .lp .cta{display:block;padding:32px 26px}.lp .cta .actions{margin-top:20px}
   .lp .section.open{padding:44px 20px;border-radius:14px}

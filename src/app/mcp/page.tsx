@@ -57,7 +57,7 @@ export default function McpPage() {
       <main className="wrap">
         <section className="hero page" id="connect">
           <div className="hero-copy">
-            <span className="eyebrow">Agent-ready · MCP</span>
+            <span className="eyebrow title">Agent-ready · MCP</span>
             <h1>Use BrainKB from your AI agent.</h1>
             <p className="lead">
               Connect Claude, Codex, VS Code and other MCP-compatible clients to BrainKB. Search neuroscience
@@ -95,7 +95,7 @@ export default function McpPage() {
         <div className="wrap">
           <div className="section-title">
             <div>
-              <span className="eyebrow">What your agent can do</span>
+              <span className="eyebrow title">What your agent can do</span>
               <h2>Less SPARQL.<br />More science.</h2>
             </div>
             <p>Ask in plain language and your agent picks the right BrainKB tools. For example:</p>
@@ -109,7 +109,7 @@ export default function McpPage() {
         <section className="section" id="example">
           <div className="section-title">
             <div>
-              <span className="eyebrow">Research in action</span>
+              <span className="eyebrow title">Research in action</span>
               <h2>One question,<br />traced to its evidence.</h2>
             </div>
             <p>
@@ -145,7 +145,7 @@ export default function McpPage() {
         <section className="section" id="setup">
           <div className="section-title center">
             <div>
-              <span className="eyebrow">Set up</span>
+              <span className="eyebrow title">Set up</span>
               <h2>Connect, sign in, check.</h2>
               <p>Pick the BrainKB skill (recommended) or connect the MCP server alone.</p>
             </div>
