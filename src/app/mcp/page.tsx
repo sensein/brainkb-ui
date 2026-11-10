@@ -60,9 +60,9 @@ export default function McpPage() {
             <span className="eyebrow title">Use BrainKB from your AI agent</span>
             <h1>Ask in plain language, get sourced answers.</h1>
             <p className="lead">
-              Connect Claude, ChatGPT, Codex, Cursor, VS Code and other MCP clients to BrainKB. Search neuroscience
-              knowledge, explore evidence-linked relationships, and work with your knowledge spaces in natural
-              language.
+              Connect Claude, ChatGPT, Codex, Cursor, VS Code and other MCP clients (MCP is the open protocol AI
+              assistants use to call tools) to BrainKB. Search neuroscience knowledge, explore evidence-linked
+              relationships, and work with your knowledge spaces in natural language.
             </p>
             <ul className="chips" aria-label="What you get">
               <li><a href="#setup-mcp">MCP server</a></li>
@@ -97,7 +97,7 @@ export default function McpPage() {
             <div>
               <span className="eyebrow title">What your agent can do</span>
               <h2>Less SPARQL. More science.</h2>
-              <p className="title-lead one-line">Ask in plain language and your agent picks the right BrainKB tools.</p>
+              <p className="title-lead one-line">No SPARQL queries to write: your agent picks the right BrainKB tools.</p>
             </div>
           </div>
           <Group id="research" title="Research with your agent" caps={RESEARCH} />

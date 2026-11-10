@@ -31,7 +31,7 @@ const PILLARS = [
 ];
 
 const AUDIENCES = [
-  { ico: "⌕", title: "Researchers", desc: "Answer questions across the literature in minutes, not weeks. Ask your agent in plain language and get linked answers with their sources.", more: "\"Which papers report PV cells in layer 4?\"" },
+  { ico: "⌕", title: "Researchers", desc: "Answer questions across the literature without reading every paper first. Ask your agent in plain language and get linked answers with their sources.", more: "\"Which papers report PV cells in layer 4?\"" },
   { ico: "▣", title: "Labs & consortia", desc: "Run your own BrainKB or use the shared one. Keep work private until it's ready, then publish it with full attribution.", more: "Private → team → public" },
   { ico: "⌘", title: "Tool & AI builders", desc: "Build on a knowledge graph instead of scraping PDFs: open standards (RDF, PROV-O), an open API, and MCP for agents.", more: "RDF · PROV-O · MCP · HTTP" },
 ];
@@ -39,7 +39,7 @@ const AUDIENCES = [
 const NO_LOGIN = [
   { ok: true, t: "Search across all public spaces" },
   { ok: true, t: "Browse and read public knowledge graphs" },
-  { ok: true, t: "Download public data as RDF" },
+  { ok: true, t: "Download public data as RDF, the standard linked-data format" },
   { ok: false, t: "Private spaces stay hidden" },
   { ok: false, t: "No ingest, editing or sharing" },
 ];
@@ -99,7 +99,7 @@ export default function HomePage() {
             </h1>
             <p className="lead">
               Explore neuroscience findings as connected, evidence-linked knowledge. Discover relationships across
-              studies, trace each one to its source, and use the structured knowledge through search, SPARQL and AI
+              studies, trace each one to its source, and use the structured knowledge through search, SPARQL (the graph query language) and AI
               agents.
             </p>
             <HeroSearch />
@@ -122,7 +122,7 @@ export default function HomePage() {
         <section className="section" id="connected">
           <SectionTitle eyebrow="Connected" color="#0e7490" title={["Knowledge is stuck", "in silos."]}>
             The same cell type appears under a dozen names, findings sit in PDFs and supplementary tables, and
-            nothing links one result to the next. Researchers spend weeks re-reading what&apos;s already known. BrainKB
+            nothing links one result to the next. Researchers end up re-reading what&apos;s already known. BrainKB
             resolves the names to one entity, so related facts are one query apart.
           </SectionTitle>
           <CompareSources />
@@ -184,8 +184,8 @@ export default function HomePage() {
 
         <section className="section flush" id="agents">
           <SectionTitle eyebrow="Agent-ready" title={["Use BrainKB from", "your favorite client."]}>
-            BrainKB is built to be driven by AI agents. Any MCP client can search, read, ingest and trace provenance in
-            plain language, and public data needs no sign-in.
+            BrainKB is built to be driven by AI agents. Any MCP client (MCP is the open protocol AI assistants use to call
+            tools) can search, read, ingest and trace provenance in plain language.
           </SectionTitle>
           <div className="connect-row">
             <div>
@@ -235,7 +235,7 @@ export default function HomePage() {
         <section className="section" id="provenance">
           <SectionTitle eyebrow="Provenance" title={["Every fact", "has a history."]}>
             Trust comes from being able to check. Every triple in BrainKB records who added it, when, by which
-            process and the evidence behind it, as W3C PROV-O you can query. Provenance helps you assess a claim; it
+            process and the evidence behind it, as W3C PROV-O (the standard provenance vocabulary) you can query. Provenance helps you assess a claim; it
             does not by itself make the claim correct.
           </SectionTitle>
           <div className="prov">
