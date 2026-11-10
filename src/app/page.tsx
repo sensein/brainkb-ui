@@ -102,7 +102,7 @@ export default function HomePage() {
               studies, trace each one to its source, and use the structured knowledge through search, SPARQL (the graph query language) and AI
               agents.
             </p>
-            <HeroSearch />
+            {/* <HeroSearch /> */}
           </div>
           <HeroDemo />
         </section>
