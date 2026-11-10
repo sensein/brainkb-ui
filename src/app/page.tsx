@@ -77,14 +77,10 @@ function SectionTitle({ eyebrow, color, title, children }: { eyebrow: string; co
   return (
     <div className="section-title">
       <div>
-        <span className="eyebrow" style={color ? { color } : undefined}>{eyebrow}</span>
-        <h2>
-          {title[0]}
-          <br />
-          {title[1]}
-        </h2>
+        <span className="eyebrow title" style={color ? { color } : undefined}>{eyebrow}</span>
+        <h2>{title.join(" ")}</h2>
+        <p className="title-lead">{children}</p>
       </div>
-      <p>{children}</p>
     </div>
   );
 }
