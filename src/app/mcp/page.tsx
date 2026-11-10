@@ -96,9 +96,9 @@ export default function McpPage() {
           <div className="section-title">
             <div>
               <span className="eyebrow title">What your agent can do</span>
-              <h2>Less SPARQL.<br />More science.</h2>
+              <h2>Less SPARQL. More science.</h2>
+              <p className="title-lead">Ask in plain language and your agent picks the right BrainKB tools. For example:</p>
             </div>
-            <p>Ask in plain language and your agent picks the right BrainKB tools. For example:</p>
           </div>
           <Group id="research" title="Research with your agent" caps={RESEARCH} />
           <Group id="manage" title="Manage knowledge" caps={MANAGE} />
