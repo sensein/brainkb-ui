@@ -684,7 +684,7 @@ html:has(.lp){scroll-behavior:smooth}
 /* Section labels set as titles (Use with AI page): the blue label is the big
    line and the heading under it is the smaller one. Kept last so these
    override the page-hero h1 sizes above. */
-.lp .eyebrow.title{display:inline-block;font:600 32px/1.15 var(--font-dm-sans),system-ui,sans-serif;letter-spacing:-1px;text-transform:none}
+.lp .eyebrow.title{display:inline-block;font:600 32px/1.15 var(--font-dm-sans),system-ui,sans-serif;letter-spacing:-1px;text-transform:none;text-wrap:balance}
 .lp .hero-copy .eyebrow.title{font-size:46px;letter-spacing:-1.8px}
 .lp .eyebrow.title+h1,.lp .eyebrow.title+h2{font-size:28px;line-height:1.2;letter-spacing:-.5px;margin:12px 0 0}
 .lp .eyebrow.title+h1{margin-bottom:18px}

@@ -57,8 +57,8 @@ export default function McpPage() {
       <main className="wrap">
         <section className="hero page" id="connect">
           <div className="hero-copy">
-            <span className="eyebrow title">Agent-ready · MCP</span>
-            <h1>Use BrainKB from your AI agent.</h1>
+            <span className="eyebrow title">Use BrainKB from your AI agent</span>
+            <h1>Ask in plain language, get sourced answers.</h1>
             <p className="lead">
               Connect Claude, ChatGPT, Codex, Cursor, VS Code and other MCP clients to BrainKB. Search neuroscience
               knowledge, explore evidence-linked relationships, and work with your knowledge spaces in natural

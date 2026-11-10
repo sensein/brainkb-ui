@@ -120,7 +120,7 @@ export default function HomePage() {
         </section>
 
         <section className="section" id="connected">
-          <SectionTitle eyebrow="The problem → the fix" color="#0e7490" title={["Knowledge is stuck", "in silos."]}>
+          <SectionTitle eyebrow="Connected" color="#0e7490" title={["Knowledge is stuck", "in silos."]}>
             The same cell type appears under a dozen names, findings sit in PDFs and supplementary tables, and
             nothing links one result to the next. Researchers spend weeks re-reading what&apos;s already known. BrainKB
             resolves the names to one entity, so related facts are one query apart.
@@ -149,7 +149,7 @@ export default function HomePage() {
         </section>
 
         <section className="section open" id="open">
-          <SectionTitle eyebrow="Open knowledge · no login" title={["Access open knowledge.", "No need to sign in."]}>
+          <SectionTitle eyebrow="Open knowledge" title={["No account needed", "to read."]}>
             Public spaces in BrainKB are open to everyone. Search, browse and read them without an account. It is
             read-only: nothing can be added or changed without signing in.
           </SectionTitle>
