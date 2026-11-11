@@ -1,0 +1,83 @@
+# The Privacy Policy, shown at /legal/privacy-policy. See README.md for the format.
+id: privacy-policy
+name: Privacy Policy
+tagline: Cookies, sign-in data, tokens and who can see what you submit.
+summary: >-
+  Welcome to BrainKB. Your privacy is important to us, and we are committed to protecting your personal
+  information. This Privacy Policy explains what data we collect, how we use it, and the measures we take to
+  safeguard your information.
+history:                        # newest first; the newest date is shown as "Updated"
+  - version: "2.1"
+    date: "2026-11-02"
+    author: Tek Raj Chhetri
+    changes: Moved to the Legal section. The Fair Use Policy became its own page, linked from here.
+  - version: "2.0"
+    date: "2026-10-20"
+    author: Tek Raj Chhetri
+    commit: 0f9af12
+    changes: >-
+      Rewritten to match the product: private spaces stay private, public only when the owner chooses; sign-in
+      with Globus, ORCID or GitHub; analytics explained apart from authentication cookies; last-updated date and
+      privacy contact added.
+  - version: "1.1"
+    date: "2025-11-13"
+    author: Tek Raj Chhetri
+    commit: 649db05
+    changes: Added the Fair Use Policy for public-release data.
+  - version: "1.0"
+    date: "2025-03-12"
+    author: Tek Raj Chhetri
+    commit: b68f72d
+    changes: First version.
+contact:
+  label: Privacy questions
+  email: tekraj@mit.edu
+sections:
+  - title: Information We Collect
+    blocks:
+      - h: Authentication Cookies
+      - p: >-
+          We use cookies to keep you signed in securely. Cookies are small data files stored on your device.
+          For more details on how cookies work, you can refer to
+          [HTTP cookies](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies).
+      - p: >-
+          When you sign in, BrainKB sets a session cookie that keeps you signed in. It is removed when you sign
+          out and otherwise expires after at most seven days. This cookie is necessary for signing in and is not
+          used for analytics.
+      - h: Analytics Cookies
+      - p: >-
+          With your consent, we use Google Tag Manager to collect analytics about how the website is used, so
+          that we can improve it. Analytics are loaded only after you click "Accept" on the cookie banner; if you
+          click "Decline", they are not loaded.
+      - p: >-
+          Your choice is stored in a cookie named `cookie_consent` for one year. You can change it by clearing
+          that cookie in your browser, after which the banner will ask you again.
+      - h: Personal Information
+      - p: >-
+          You can sign in with Globus, ORCID or GitHub. When you sign in, we receive basic profile details from
+          the provider you choose, such as your name, email address, and your ORCID iD or GitHub username. This
+          information is used solely for authentication and account management purposes.
+      - h: Personal Access Tokens
+      - p: >-
+          If you create a personal access token (for example, to use BrainKB from the command line or an AI
+          assistant), the token is linked to your account. It is shown to you once and stored only in hashed
+          form. You can revoke your tokens at any time.
+
+  - title: Use of Data
+    blocks:
+      - h: Data You Submit
+      - p: >-
+          Data you submit to BrainKB is stored in a space. Who can see it depends on the space's visibility,
+          which its owner controls:
+      - list:
+          - "**Private spaces**: data is visible only to the space's members (owners, editors and viewers)."
+          - "**Public spaces**: data can be read by anyone, including visitors who are not signed in."
+          - >-
+            Data becomes public only when its owner makes a space public, or submits it through a designated
+            public-release workflow (see the [Fair Use Policy](/legal/fair-use)).
+
+  - title: Contact
+    blocks:
+      - p: >-
+          If you have questions about this Privacy Policy or how your data is handled, contact us at
+          [tekraj@mit.edu](mailto:tekraj@mit.edu).

@@ -5,7 +5,8 @@ import { forwardToQueryService, spacePath } from '@/src/utils/api/query-service'
 // and graphs already in another space are refused by the query service.
 export const dynamic = 'force-dynamic';
 
-export async function POST(req: NextRequest, { params }: { params: { slug: string } }) {
+export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: string }> }) {
+    const params = await ctx.params;
     const { named_graph_url, description } = await req.json();
     return forwardToQueryService(spacePath(params.slug, '/graphs'), {
         method: 'POST',

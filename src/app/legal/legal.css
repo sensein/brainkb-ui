@@ -1,0 +1,143 @@
+/* Legal pages, on top of the shared `.lp` landing styles: the /legal index
+   (search + a row per policy) and a policy page (section list + text). */
+
+
+/* Search box and results */
+.lp .lg-search{display:flex;align-items:center;gap:10px;margin-top:26px;padding:0 14px;max-width:640px;border:1px solid var(--line);border-radius:10px;background:#fff;box-shadow:0 4px 14px #0b16280a}
+.lp .lg-search:focus-within{border-color:#93b4f5;box-shadow:0 0 0 3px #1d4ed81a}
+.lp .lg-search span{font-size:18px;color:var(--muted)}
+.lp .lg-search input{flex:1;min-width:0;border:0;outline:none;background:none;padding:13px 0;font:15px var(--font-dm-sans),sans-serif;color:var(--ink)}
+.lp .lg-hits{list-style:none;margin:12px 0 0;padding:0;max-width:640px;display:grid;gap:8px}
+.lp .lg-hits a{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);text-decoration:none;font-family:var(--font-dm-sans),sans-serif}
+.lp .lg-hits a:hover{border-color:#bfdbfe;background:var(--pale)}
+.lp .lg-hits b{font-size:14.5px;font-weight:600}
+.lp .lg-hits .pol{color:var(--muted);font-weight:500}
+.lp .lg-hits .snip{font-size:13.5px;line-height:1.55;color:var(--muted)}
+.lp .lg-hits mark{background:#fef08a;color:var(--ink);border-radius:3px;padding:0 2px}
+.lp .lg-none{margin:12px 0 0;font-size:14px;color:var(--muted)}
+
+/* /legal index: title and intro side by side, full-width search, then a row per policy */
+.lp .lg-index{max-width:1060px;margin:0 auto;padding:64px 0 96px}
+.lp .lg-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,460px);gap:24px 64px;align-items:end;margin-bottom:44px}
+.lp .lg-top h1{font-size:56px;letter-spacing:-2.4px;margin:16px 0 0}
+.lp .lg-top .lead{margin:0 0 6px;font-size:16.5px;color:#4b5870}
+.lp .lg-index>.lg-search{max-width:none;margin:0;padding:0 20px;border-color:#cfd6e2;border-radius:12px;box-shadow:none}
+.lp .lg-index>.lg-search input{padding:17px 0;font-size:16px}
+.lp .lg-index>.lg-hits{max-width:none}
+.lp .lg-sub{margin:36px 0 0;font:600 12px var(--font-plex-mono),monospace;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.lp .lg-rows{list-style:none;margin:40px 0 0;padding:0;border-top:1px solid var(--ink)}
+.lp .lg-sub+.lg-rows{margin-top:14px}
+.lp .lg-row{display:grid;grid-template-columns:80px minmax(0,1fr) auto;gap:0 16px;padding:32px 12px 28px;border-bottom:1px solid var(--line)}
+.lp .lg-row .n{padding-top:8px;font:13px var(--font-plex-mono),monospace;color:#8a93a3}
+.lp .lg-row h2{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0;font-size:24px;font-weight:550;letter-spacing:-.6px}
+.lp .lg-row h2 a{color:var(--ink)}
+.lp .lg-row h2 a:hover{color:var(--blue)}
+.lp .lg-row .badge{padding:3px 8px;border-radius:4px;background:var(--blue-50);border:1px solid var(--blue-100);font:500 11px var(--font-plex-mono),monospace;letter-spacing:1px;text-transform:uppercase;color:var(--blue)}
+.lp .lg-row p{margin:10px 0 0;max-width:560px;font-size:16px;line-height:1.6;color:#3d4a5f}
+.lp .lg-row .chips{list-style:none;margin:18px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.lp .lg-row .chips a{display:inline-block;font-family:var(--font-dm-sans),sans-serif;letter-spacing:0;text-transform:none;padding:5px 10px;border:1px solid #d9dee7;border-radius:6px;background:#fff;font-size:13.5px;color:#3d4a5f}
+.lp .lg-row .chips a:hover{border-color:#bfdbfe;background:var(--blue-50);color:var(--blue)}
+.lp .lg-row .side{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:16px;padding-top:8px}
+.lp .lg-row time{font:13px var(--font-plex-mono),monospace;color:#6b7789;white-space:nowrap}
+.lp .lg-row .read{font-size:15px;font-weight:600;color:var(--blue);white-space:nowrap}
+.lp .lg-row .read:hover{text-decoration:underline;text-underline-offset:3px}
+@media(max-width:900px){.lp .lg-top{grid-template-columns:1fr;align-items:start}.lp .lg-top h1{font-size:44px}}
+@media(max-width:680px){
+  .lp .lg-index{padding:40px 0 64px}
+  .lp .lg-top h1{font-size:36px;letter-spacing:-1.6px}
+  .lp .lg-row{grid-template-columns:1fr;padding:24px 0}
+  .lp .lg-row .n{padding:0 0 6px}
+  .lp .lg-row .side{flex-direction:row;align-items:center;margin-top:16px;padding:0}
+}
+
+/* A policy page, docs-style: plain header, then every policy on the left, the
+   text in the middle, and an "on this page" rail on the right that follows the
+   reader's scroll. Both side columns are sticky and scroll on their own. */
+.lp .lg-doc{max-width:1320px;margin:0 auto;padding:64px 0 96px}
+.lp .lg-doc-head{margin-bottom:0;padding-bottom:40px;border-bottom:1px solid var(--ink)}
+.lp .lg-doc-head .meta{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:14px;font:13px var(--font-plex-mono),monospace;color:#6b7789}
+.lp .lg-doc-grid{display:grid;grid-template-columns:240px minmax(0,1fr) 260px;gap:48px;padding-top:44px}
+.lp .lg-body{max-width:720px;width:100%;justify-self:center}
+
+.lp .lg-nav,.lp .lg-rail{position:sticky;top:96px;align-self:start;max-height:calc(100vh - 112px);overflow-y:auto;overscroll-behavior:contain;font-size:14px;scrollbar-width:thin}
+.lp .lg-nav h5,.lp .lg-rail h5{margin:0 0 12px;font:500 11.5px var(--font-plex-mono),monospace;letter-spacing:1.5px;text-transform:uppercase;color:#6b7789}
+.lp .lg-rail h5{margin-top:22px}
+.lp .lg-nav nav{display:flex;flex-direction:column;gap:2px}
+.lp .lg-nav nav a{display:flex;gap:10px;padding:9px 12px;border-radius:7px;line-height:1.4;color:#3d4a5f;transition:background .15s,color .15s}
+.lp .lg-nav nav a span{flex:none;font:12px/1.75 var(--font-plex-mono),monospace;color:#9aa3b2}
+.lp .lg-nav nav a:hover{background:var(--pale);color:var(--ink)}
+.lp .lg-nav nav a.cur{background:#e6eeff;color:var(--blue);font-weight:600}
+.lp .lg-nav nav a.cur span{color:var(--blue)}
+
+.lp .lg-rail{padding-right:4px}
+.lp .lg-rail .lg-search{margin:0 0 6px;padding:0 10px;border-radius:8px;box-shadow:none}
+.lp .lg-rail .lg-search input{padding:8px 0;font-size:13.5px}
+.lp .lg-rail .lg-hits a{padding:9px 11px}
+.lp .lg-toc{display:flex;flex-direction:column;gap:2px}
+.lp .lg-toc a{display:flex;gap:10px;padding:7px 12px;border-radius:7px;line-height:1.4;color:#3d4a5f;transition:background .15s,color .15s}
+.lp .lg-toc a span{flex:none;font:12px/1.75 var(--font-plex-mono),monospace;color:#9aa3b2}
+.lp .lg-toc a.sub{padding-left:34px;font-size:13.5px;color:#55627a}
+.lp .lg-toc a:hover{background:var(--pale);color:var(--ink)}
+.lp .lg-toc a.in{color:var(--ink);font-weight:600}
+.lp .lg-toc a.sel{background:#e6eeff;color:var(--blue);font-weight:600}
+.lp .lg-toc a.sel span{color:var(--blue)}
+
+.lp .lg-print,.lp .lg-all{display:block;margin-top:24px;padding:0 12px;border:0;background:none;font:14px var(--font-dm-sans),sans-serif;color:#3d4a5f;cursor:pointer;text-align:left}
+.lp .lg-all{margin-top:10px}
+.lp .lg-print:hover,.lp .lg-all:hover{color:var(--blue)}
+
+.lp .lg-body{min-width:0;font-size:16.5px;line-height:1.75;color:#2f3b50}
+.lp .lg-body p{margin:0}
+.lp .lg-body a{color:var(--blue);text-decoration:underline;text-decoration-color:#bfdbfe;text-underline-offset:3px}
+.lp .lg-body a:hover{text-decoration-color:var(--blue)}
+.lp .lg-body b{color:var(--ink);font-weight:600}
+.lp .lg-body code{font:.86em var(--font-plex-mono),monospace;color:#1e40af;background:var(--blue-50);border-radius:4px;padding:1px 5px}
+.lp .lg-intro{padding-bottom:32px;border-bottom:1px solid var(--line);font-size:17.5px;color:#3d4a5f}
+.lp .lg-sec{display:flex;flex-direction:column;gap:14px;padding:40px 0;border-bottom:1px solid var(--line);scroll-margin-top:90px}
+.lp .lg-sec .num{font:13px var(--font-plex-mono),monospace;color:#9aa3b2}
+.lp .lg-sec h2{margin:-8px 0 4px;font-size:26px;font-weight:550;letter-spacing:-.6px;color:var(--ink)}
+.lp .lg-sec h3{margin:12px 0 -4px;font-size:18px;font-weight:600;color:var(--ink);scroll-margin-top:96px}
+.lp .lg-list{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.lp .lg-list li{position:relative;padding-left:20px}
+.lp .lg-list li::before{content:"";position:absolute;left:3px;top:.75em;width:6px;height:6px;border-radius:50%;background:var(--blue)}
+.lp .lg-body .tut-note p,.lp .lg-body .tut-callout p{font-size:15px}
+.lp .lg-body .tut-table{font-family:var(--font-dm-sans),sans-serif}
+
+.lp .lg-history .lg-history-lead{font-size:15px;color:#55627a}
+.lp .lg-history table{font-size:14px}
+.lp .lg-history td{vertical-align:top;line-height:1.55}
+.lp .lg-history td.ver{white-space:nowrap;font:600 13px var(--font-plex-mono),monospace;color:var(--ink)}
+.lp .lg-history td.ver .cur{display:block;width:fit-content;margin-top:6px;padding:2px 6px;border-radius:4px;background:var(--blue-50);border:1px solid var(--blue-100);font:500 10px var(--font-plex-mono),monospace;letter-spacing:.8px;text-transform:uppercase;color:var(--blue)}
+.lp .lg-history td.when{white-space:nowrap;font:13px var(--font-plex-mono),monospace;color:#55627a}
+.lp .lg-history td.who{white-space:nowrap}
+.lp .lg-history td.commit{white-space:nowrap;font:13px var(--font-plex-mono),monospace;color:#9aa3b2}
+.lp .lg-history td.commit a{text-decoration:none}
+.lp .lg-history td.commit a:hover{text-decoration:underline}
+.lp .lg-pager{display:flex;gap:14px;margin-top:40px}
+.lp .lg-pager a{flex:1;display:flex;flex-direction:column;gap:4px;padding:20px 22px;border:1px solid var(--line);border-radius:10px;text-decoration:none;color:var(--ink)}
+.lp .lg-pager a.nx{align-items:flex-end;text-align:right}
+.lp .lg-pager a:hover{border-color:#bfdbfe;background:var(--pale)}
+.lp .lg-pager small{font-size:13.5px;color:#6b7789}
+.lp .lg-pager b{font-size:16.5px;font-weight:600}
+.lp .lg-ask{margin-top:28px !important;font-size:15px;color:#6b7789}
+.lp .lg-ask a{text-decoration:none}
+
+/* Narrower: drop the policies column (the pager and /legal still link them),
+   then on phones put the rail above the text, unstuck. */
+@media(max-width:1180px){
+  .lp .lg-doc-grid{grid-template-columns:minmax(0,1fr) 250px;gap:40px}
+  .lp .lg-nav{display:none}
+}
+@media(max-width:900px){
+  .lp .lg-doc-grid{display:flex;flex-direction:column-reverse;gap:8px;padding-top:28px}
+  .lp .lg-rail{position:static;max-height:none;overflow:visible;padding-bottom:20px;border-bottom:1px solid var(--line)}
+}
+@media(max-width:680px){.lp .lg-doc{padding:36px 0 64px}.lp .lg-sec h2{font-size:22px}.lp .lg-pager{flex-direction:column}}
+
+/* Print or save as PDF: just the policy. */
+@media print{
+  .lp>header,.lp>footer,.CookieConsent,.lp .lg-nav,.lp .lg-rail,.lp .lg-pager,.lp .lg-ask{display:none !important}
+  .lp .lg-doc{padding:0}
+  .lp .lg-doc-grid{display:block;padding-top:24px}
+  .lp .lg-sec{break-inside:avoid-page}
+}

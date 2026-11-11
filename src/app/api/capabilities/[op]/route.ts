@@ -21,13 +21,15 @@ const POSTS: Record<string, (b: any) => object> = {
     'revoke-role': (b) => ({ role: b.role, capability: b.capability }),
 };
 
-export async function GET(req: NextRequest, { params }: { params: { op: string } }) {
+export async function GET(req: NextRequest, ctx: { params: Promise<{ op: string }> }) {
+    const params = await ctx.params;
     const path = GETS[params.op]?.(req.nextUrl.searchParams);
     if (!path) return Response.json({ error: 'Unknown or incomplete request.' }, { status: 400 });
     return forwardToQueryService(path);
 }
 
-export async function POST(req: NextRequest, { params }: { params: { op: string } }) {
+export async function POST(req: NextRequest, ctx: { params: Promise<{ op: string }> }) {
+    const params = await ctx.params;
     const build = POSTS[params.op];
     if (!build) return Response.json({ error: 'Unknown request.' }, { status: 400 });
     return forwardToQueryService(`/admin/capabilities/${params.op}`, {

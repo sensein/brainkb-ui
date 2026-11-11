@@ -6,7 +6,7 @@ import { COLORS } from "./tokens";
 const LINKS = [
   { href: "https://docs.brainkb.org", label: "Docs" },
   { href: "https://github.com/sensein/brainkb", label: "GitHub" },
-  { href: "/privacy-policy", label: "Privacy" },
+  { href: "/legal", label: "Legal" },
   { href: "/contact", label: "Contact" },
 ];
 

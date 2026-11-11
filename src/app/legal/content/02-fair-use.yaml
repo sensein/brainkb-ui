@@ -1,0 +1,58 @@
+# The Fair Use Policy for public-release data. See README.md for the format.
+id: fair-use
+name: Fair Use Policy
+tagline: How public-release data, shared under CC0 1.0, may be reused.
+summary: >-
+  How data submitted through BrainKB's public-release workflows may be used, shared and redistributed.
+history:                        # newest first; the newest date is shown as "Updated"
+  - version: "1.2"
+    date: "2026-11-02"
+    author: Tek Raj Chhetri
+    changes: >-
+      Became its own policy page (it was a section of the Privacy Policy). The warning about personal or
+      sensitive data is now a highlighted callout.
+  - version: "1.1"
+    date: "2026-10-20"
+    author: Tek Raj Chhetri
+    commit: 0f9af12
+    changes: Refers to CC0 1.0 (Creative Commons Zero) as a public-domain dedication throughout.
+  - version: "1.0"
+    date: "2025-11-13"
+    author: Tek Raj Chhetri
+    commit: 649db05
+    changes: First version, as a section of the Privacy Policy.
+contact:
+  label: Questions
+  email: tekraj@mit.edu
+sections:
+  - title: Use of Public-Release Data
+    blocks:
+      - p: >-
+          This Fair Use Policy applies only to data that the Platform identifies as public-release data. Certain
+          data submission features, fields, or workflows are designated by the Platform as contributing to
+          publicly accessible or openly released datasets. Only data submitted through these designated
+          mechanisms will be distributed under the
+          [CC0 1.0 (Creative Commons Zero)](https://creativecommons.org/publicdomain/zero/1.0/) public-domain
+          dedication. By submitting data through these mechanisms, the user acknowledges and agrees to the
+          following:
+      - list:
+          - >-
+            Public-release data may be freely used, modified, redistributed, and incorporated into derivative
+            works by any third party without restriction, consistent with CC0 1.0 (Creative Commons Zero).
+          - >-
+            The Platform may collect, process, analyze, or transform public-release data for research,
+            evaluation, quality improvement, and dissemination.
+          - >-
+            The Platform may publish, share, or distribute aggregated, transformed, or derivative datasets created
+            from public-release data for educational, scientific, or public-interest purposes.
+      - callout:
+          title: Do not submit personal or sensitive information
+          text: >-
+            Users must avoid submitting personal, sensitive, or confidential information within any data submitted
+            through public-release mechanisms, as such data will become publicly accessible and cannot be withdrawn
+            once released.
+
+  - title: Contact
+    blocks:
+      - p: >-
+          If you have questions about this Fair Use Policy, contact us at [tekraj@mit.edu](mailto:tekraj@mit.edu).

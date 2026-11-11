@@ -1,20 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Entity } from "@/src/app/see/types";
 import { fetchEntityData } from "@/src/app/see/services/dataService";
 import Link from "next/link";
 
-interface EntityDetailPageProps {
-    params: {
-        type: string;
-        id: string;
-    };
-}
-
-export default function EntityDetailPage({ params }: EntityDetailPageProps) {
-    const { type, id } = params;
+export default function EntityDetailPage() {
+    const { type, id } = useParams<{ type: string; id: string }>();
     const router = useRouter();
     const [entity, setEntity] = useState<Entity | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);

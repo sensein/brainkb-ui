@@ -1,0 +1,100 @@
+# The Data Processing & Enrichment Policy: what BrainKB does with data, and what is sent to outside services. See README.md for the format.
+id: data-processing
+name: Data Processing & Enrichment Policy
+tagline: >-
+  Learn how BrainKB processes, indexes and enriches data, from AI-assisted extraction and ontology linking to
+  knowledge graph ingest, and what is sent to outside services.
+summary: >-
+  This policy explains how BrainKB processes the data you ingest, how its tools extract and enrich knowledge
+  from papers, where each step runs, and which outside services receive data along the way.
+history:                        # newest first; the newest date is shown as "Updated"
+  - version: "1.0"
+    date: "2026-11-02"
+    author: Tek Raj Chhetri
+    changes: First version.
+contact:
+  label: Processing questions
+  email: tekraj@mit.edu
+sections:
+  - title: Ingesting Data
+    blocks:
+      - p: >-
+          You can ingest RDF (Turtle, N-Triples, JSON-LD) into a space you are an owner or editor of, from the
+          website, a script with a personal access token, or an AI assistant. Each ingest runs as a background
+          job and is:
+      - list:
+          - "**Attributed** to the account that ran it."
+          - >-
+            **Recorded** in the space's provenance as W3C PROV-O: who ran the ingest, when, and the exact triples
+            it added.
+          - "**Stored** in the space, where the space's visibility decides who can read it."
+      - p: >-
+          See the [Data Sharing & Reuse Policy](/legal/data-sharing) for who can read a space.
+
+  - title: Search Indexing
+    blocks:
+      - p: >-
+          Data in a space is indexed so it can be searched. Searches made without signing in, including the
+          public search on the website, return results from public spaces only. A space's search entries are
+          removed when the space is deleted.
+
+  - title: Extraction & Enrichment Tools
+    blocks:
+      - p: >-
+          BrainKB provides tools that turn papers and text into structured, sourced knowledge: extracting
+          entities and relations, mapping them to ontology terms, and running systematic literature reviews.
+      - table:
+          cols: [Tool, Where it runs]
+          rows:
+            - [StructSense, "Your machine, through your AI assistant"]
+            - [Semantic Concept Mapper, Your machine or server]
+            - [SynthScholar skill, "Your machine, through your AI assistant"]
+            - [Literature reviews on this website, BrainKB's servers]
+      - p: >-
+          When a tool runs on your machine, BrainKB does not receive your papers, text or results. They reach
+          BrainKB only if you ingest the output into a space. Your AI assistant processes them under its
+          provider's terms.
+      - note: >-
+          Enrichment, such as mapping an entity to an ontology term, is part of a tool's output. Review it before
+          you ingest it; what you ingest is what is stored and shared.
+
+  - title: AI Models & Outside Services
+    blocks:
+      - p: "A literature review run on this website uses outside services:"
+      - list:
+          - >-
+            **AI models**, through [OpenRouter](https://openrouter.ai): the review question, protocol, and the
+            text of retrieved articles are sent to OpenRouter and the model provider you choose, to plan,
+            screen, extract, appraise and synthesize. These services handle that data under their own terms.
+          - >-
+            **Bibliographic sources**, such as PubMed, bioRxiv/medRxiv, OpenAlex and CORE: the search queries
+            for your review are sent to them to find articles.
+      - p: >-
+          Reviews use your own OpenRouter API key if you provide one, or a shared key that BrainKB provides. A
+          personal key is kept only in your browser session, and the key is not saved with the review.
+      - callout:
+          title: Do not put confidential information in a review
+          text: >-
+            Anything in a review's question or protocol is sent to outside AI services. Keep personal,
+            sensitive, or confidential information out of it.
+
+  - title: AI-Generated Output
+    blocks:
+      - p: >-
+          Extraction, ontology mapping and review synthesis use AI models, which can make mistakes. Outputs keep
+          the evidence they were drawn from so you can check each claim. Review outputs before you rely on them,
+          ingest them, or share them.
+
+  - title: AI Assistants (MCP)
+    blocks:
+      - p: >-
+          When you use BrainKB from an AI assistant, the assistant sends your requests to BrainKB and receives
+          the results. Your prompts and those results are processed by the assistant's provider under its own
+          terms. BrainKB returns only data your account is allowed to read, or public data if you are not signed
+          in.
+
+  - title: Contact
+    blocks:
+      - p: >-
+          If you have questions about this Data Processing & Enrichment Policy, contact us at
+          [tekraj@mit.edu](mailto:tekraj@mit.edu).

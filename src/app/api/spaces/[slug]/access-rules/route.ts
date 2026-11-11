@@ -6,11 +6,13 @@ import { forwardToQueryService, spacePath } from '@/src/utils/api/query-service'
 // space's managers (owner, admins, assigned managers) may change them.
 export const dynamic = 'force-dynamic';
 
-export async function GET(_req: Request, { params }: { params: { slug: string } }) {
+export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }> }) {
+    const params = await ctx.params;
     return forwardToQueryService(spacePath(params.slug, '/access-rules'));
 }
 
-export async function POST(req: NextRequest, { params }: { params: { slug: string } }) {
+export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: string }> }) {
+    const params = await ctx.params;
     const { action, subject_type, subject_value } = await req.json();
     return forwardToQueryService(spacePath(params.slug, '/access-rules'), {
         method: 'POST',

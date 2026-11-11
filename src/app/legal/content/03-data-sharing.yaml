@@ -1,0 +1,87 @@
+# The Data Sharing & Reuse Policy: who can see data in BrainKB and how it is shared. See README.md for the format.
+id: data-sharing
+name: Data Sharing & Reuse Policy
+tagline: Who can read the data in a space, how to share it, and what making it public means.
+summary: >-
+  Data in BrainKB lives in spaces, and each space decides who can read it. This policy explains how private and
+  public spaces work, how you share a space with other people, what happens when data is made public, and how
+  data is removed.
+history:                        # newest first; the newest date is shown as "Updated"
+  - version: "1.0"
+    date: "2026-11-02"
+    author: Tek Raj Chhetri
+    changes: First version.
+contact:
+  label: Data sharing questions
+  email: tekraj@mit.edu
+sections:
+  - title: Spaces and Visibility
+    blocks:
+      - p: >-
+          A space holds one or more knowledge graphs, along with anything ingested into them, such as literature
+          reviews and their files. Each space is either private or public:
+      - list:
+          - "**Private**: only the people added to the space can read it."
+          - >-
+            **Public**: anyone can read it, including visitors who are not signed in, on the website and through
+            BrainKB's search and AI-assistant (MCP) tools. Only members can add data to it.
+      - p: >-
+          Spaces can contain subspaces. People with a role in a space have the same role in its subspaces.
+          Everything inside a public space is public. Under a private space, each subspace can be made public on
+          its own.
+      - note: >-
+          A new space is private unless you make it public, or create it inside a public space.
+
+  - title: Sharing With People
+    blocks:
+      - p: "You share a space by giving people a role in it:"
+      - table:
+          cols: [Role, What they can do]
+          rows:
+            - [Viewer, Read the space's data.]
+            - [Editor, Read the space's data and ingest new data into it.]
+            - [Owner, "Full control, including who has access and whether the space is public."]
+      - p: >-
+          A space can also have access rules, which let a whole group, or one person, read, add data to, or manage
+          the space without adding each of them as a member. Once an action has rules, only people who match one
+          can do it. The space's owner and BrainKB administrators always can.
+      - p: >-
+          BrainKB administrators can see and manage spaces in order to operate the platform and help users.
+
+  - title: Making Data Public
+    blocks:
+      - p: >-
+          Data becomes public only when a space's owner makes the space public, or when data is submitted through a
+          designated public-release workflow. Data released through those workflows is shared under CC0 1.0, as
+          described in the [Fair Use Policy](/legal/fair-use).
+      - callout:
+          title: Check before you make a space public
+          text: >-
+            Make sure the space contains no personal, sensitive, or confidential information, and that you have
+            the right to share everything in it. Once data is public, others may read, copy, or reuse it, and
+            copies made while it was public cannot be recalled.
+      - p: >-
+          Making a space public also makes all of its subspaces public. BrainKB asks you to confirm before it does.
+
+  - title: Provenance
+    blocks:
+      - p: >-
+          BrainKB keeps a provenance record, in the W3C PROV-O standard, of what was ingested into each graph, when,
+          and by which account. This record is how people can check where a fact came from.
+
+  - title: Removing Data
+    blocks:
+      - p: >-
+          Deleting a space removes every graph in it, the ingestion-history copies of its data, and its members,
+          access rules, search entries, and literature reviews. Deletion is permanent and is carried out by a
+          BrainKB administrator. To have a space deleted, contact us. The record that the deletion took place is
+          kept in the provenance record.
+      - p: >-
+          If a space was public, copies that others made while it was public are outside BrainKB's control and are
+          not affected by the deletion.
+
+  - title: Contact
+    blocks:
+      - p: >-
+          If you have questions about this Data Sharing & Reuse Policy, or want a space shared, made private, or deleted,
+          contact us at [tekraj@mit.edu](mailto:tekraj@mit.edu).

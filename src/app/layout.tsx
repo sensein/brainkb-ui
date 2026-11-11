@@ -5,7 +5,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import SessionProvider from "./components/auth/SessionProvider";
 import SessionExpiryWatcher from "./components/auth/SessionExpiryWatcher";
-import dynamic from "next/dynamic"; // Required for Client Component import
 // Dynamically import the BrainKB Assistant client component
 // import BrainKBAssistantClient from "./components/assistant/BrainKBAssistantClient";
 import BrainKBAssistantWrapper from "./components/assistant/BrainKBAssistantClient";
@@ -14,12 +13,8 @@ import AssistantInitializer from "./components/assistant/AssistantInitializer";
 // react-query primitives). Mounted high so all client subtrees share one cache.
 import QueryProvider from "./components/synth-scholar/QueryProvider";
 
-// Dynamically import SiteChrome (client component — decides Navbar/Footer vs.
-// standalone marketing pages based on route; see its own doc comment)
-const SiteChrome = dynamic(() => import("./components/layout/SiteChrome"), { ssr: false });
-// Dynamically import the CookieConsentBanner (client component)
-const CookieConsentBanner = dynamic(() => import("./components/layout/CookieConsent"), { ssr: false
-});
+// SiteChrome and the cookie banner render on the client only (see ClientOnlyChrome).
+import { CookieConsentBanner, SiteChrome } from "./components/layout/ClientOnlyChrome";
 
 const inter = Inter({ subsets: ["latin"] });
 

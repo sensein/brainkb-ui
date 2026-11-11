@@ -30,7 +30,7 @@ const COLUMNS: { h: string; items: { label: string; href?: string }[] }[] = [
   {
     h: "About",
     items: [
-      { label: "Privacy", href: "/privacy-policy" },
+      { label: "Legal", href: "/legal" },
       { label: "Contact", href: "/contact" },
     ],
   },

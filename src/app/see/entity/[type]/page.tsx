@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { Entity, ProcessingResult, StatusFilter } from "@/src/app/see/types";
 import { fetchEntityData, saveEntityData } from "@/src/app/see/services/dataService";
 import Link from "next/link";
@@ -8,14 +9,8 @@ import { calculateStats, downloadAsCSV, downloadAsJSON } from "@/src/app/see/uti
 import EntityDetailModal from "../../components/EntityDetailModal";
 import StatsSection from "../../components/StatsSection";
 
-interface EntityTypePageProps {
-    params: {
-        type: string;
-    };
-}
-
-export default function EntityTypePage({ params }: EntityTypePageProps) {
-    const { type } = params;
+export default function EntityTypePage() {
+    const { type } = useParams<{ type: string }>();
     const [results, setResults] = useState<ProcessingResult | null>(null);
     const [entities, setEntities] = useState<Entity[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);

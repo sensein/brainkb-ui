@@ -13,7 +13,7 @@ import type { AgentId, Block, Code, Need, Section, Topic } from "./types";
 const slug = (s: string) => `t-${s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`;
 
 /** `code`, **bold**, *italic* and [text](href) in tutorial copy. */
-function Rich({ text, onHash }: { text: string; onHash?: (id: string) => void }) {
+export function Rich({ text, onHash }: { text: string; onHash?: (id: string) => void }) {
   const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^)]+\))/);
   return (
     <>
@@ -25,6 +25,7 @@ function Rich({ text, onHash }: { text: string; onHash?: (id: string) => void })
         if (link) {
           const [, label, href] = link;
           if (href.startsWith("http")) return <a key={n} href={href} target="_blank" rel="noopener noreferrer">{label}</a>;
+          if (href.startsWith("mailto:")) return <a key={n} href={href}>{label}</a>;
           if (href.startsWith("#")) {
             return (
               <a key={n} href={href} onClick={(e) => { e.preventDefault(); onHash?.(href.slice(1)); }}>{label}</a>

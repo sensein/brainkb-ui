@@ -22,12 +22,13 @@ export class CacheService {
   }
 
   /**
-   * Invalidate cache by tags
+   * Invalidate cache by tags. `{ expire: 0 }` expires them at once, as
+   * revalidateTag did before Next 16 made the profile argument required.
    */
   static async invalidateTags(tags: string[]): Promise<void> {
     try {
       tags.forEach((tag) => {
-        revalidateTag(tag);
+        revalidateTag(tag, { expire: 0 });
       });
     } catch (error) {
       console.error('[CacheService] Error invalidating cache tags:', error);
@@ -40,7 +41,7 @@ export class CacheService {
    */
   static async invalidateTag(tag: string): Promise<void> {
     try {
-      revalidateTag(tag);
+      revalidateTag(tag, { expire: 0 });
     } catch (error) {
       console.error('[CacheService] Error invalidating cache tag:', error);
     }

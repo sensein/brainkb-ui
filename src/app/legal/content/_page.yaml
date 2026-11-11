@@ -1,0 +1,11 @@
+# The text of the /legal page itself, around the list of policies. Not a policy.
+# In `intro`, {policies} becomes e.g. "Four policies" and {sections} the total number of sections.
+eyebrow: Legal
+title: Policies & terms
+intro: >-
+  How BrainKB handles your data, and the terms for using and sharing what is in it. {policies}, {sections}
+  sections in total.
+search_placeholder: Search every policy and section — cookies, CC0, tokens, AI models
+# Shown at the end of each policy that has a `contact`.
+contact_prompt: Questions about this policy?
+contact_link: Contact the BrainKB team

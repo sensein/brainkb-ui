@@ -16,6 +16,7 @@ const NAV_LINKS = [
   { href: "/knowledge-base/synth-scholar", label: "Literature reviews" },
   { href: "/skills", label: "Extraction tools" },
   { href: "/tutorial", label: "Tutorial" },
+  { href: "/legal", label: "Legal" },
 ];
 
 export default function MarketingHeader() {

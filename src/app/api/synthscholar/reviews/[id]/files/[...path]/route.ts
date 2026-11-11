@@ -7,7 +7,8 @@ export const dynamic = 'force-dynamic';
 
 const PASS = ['content-type', 'content-disposition', 'content-security-policy', 'x-content-type-options', 'etag'];
 
-export async function GET(req: Request, { params }: { params: { id: string; path: string[] } }) {
+export async function GET(req: Request, ctx: { params: Promise<{ id: string; path: string[] }> }) {
+    const params = await ctx.params;
     const path = params.path.map(encodeURIComponent).join('/');
     const incoming = new URL(req.url).searchParams;
     const qs = new URLSearchParams();
